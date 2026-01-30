@@ -131,8 +131,6 @@ open import N.Lemmas4-Sym p-2 p-prime
 open import N.Lemmas-3Q p-2 p-prime
 open import N.Pushing.DH p-2 p-prime
 open import N.Duality p-2 p-prime
-open import N.BR2.Calculations p-2 p-prime
-open import N.BR2.One.A p-2 p-prime
 
 
 open PB ((₂₊ n) QRel,_===_)

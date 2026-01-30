@@ -344,7 +344,7 @@ module Sol (m : ℕ) where
   aring : AlmostCommutativeRing _ _
   aring = fromCommutativeRing (+-*-commutativeRing m) meq0
 
-  open import Tactic.RingSolver.NonReflective (aring) using (solve ; solve₁) public
+  open import Tactic.RingSolver.NonReflective (aring) using (solve ) public
 --  open import Tactic.RingSolver using (solve) public
   open import Tactic.RingSolver.Core.Expression public
 
