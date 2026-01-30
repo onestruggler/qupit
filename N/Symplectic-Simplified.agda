@@ -567,7 +567,7 @@ module Lemmas1 (n : ℕ) where
     Mg ^ p-1 ≡⟨ Eq.cong (Mg ^_) (Eq.sym (toℕ-fromℕ< (NP.n<1+n p-1))) ⟩
     Mg^ (fromℕ< (NP.n<1+n p-1)) ≈⟨ axiom (M-power (₁₊ (fromℕ< _))) ⟩
     M (g^ p-1') ≡⟨ aux-M≡M (g^ p-1') ((g ^′ p-1 , lemma-g^′k≠0 p-1)) (Eq.cong (g ^′_) (toℕ-fromℕ< (NP.n<1+n p-1))) ⟩
-    M (g ^′ p-1 , lemma-g^′k≠0 p-1) ≡⟨ aux-M≡M ((g ^′ p-1 , lemma-g^′k≠0 p-1)) (1ₚ , λ ()) Zp.Fermats-little-theorem' ⟩
+    M (g ^′ p-1 , lemma-g^′k≠0 p-1) ≡⟨ aux-M≡M ((g ^′ p-1 , lemma-g^′k≠0 p-1)) (1ₚ , λ ()) Fermat's-little-theorem' ⟩
     M (1ₚ , λ ()) ≈⟨ sym (axiom (M-power ₀)) ⟩
     ε ∎
     where
