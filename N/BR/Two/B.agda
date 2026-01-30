@@ -35,25 +35,10 @@ open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
 open import Word.Properties
 import Presentation.Base as PB
 import Presentation.Properties as PP
-open PP using (NFProperty ; NFProperty')
-import Presentation.CosetNF as CA
-import Presentation.Reidemeister-Schreier as RS
-module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
-open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
-import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
-import Presentation.Construct.Properties.DirectProduct as DP
-import Presentation.Groups.Cyclic as Cyclic
-
-
-open import Data.Fin using (Fin ; toℕ ; suc ; zero ; fromℕ)
-open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
-import Data.Nat.Properties as NP
 open import Presentation.GroupLike
-open import Presentation.Tactics using ()
+
 open import Data.Nat.Primality
-
-
 
 module N.BR.Two.B (p-2 : ℕ) (p-prime : Prime (2+ p-2)) where
 
@@ -102,8 +87,6 @@ open LM2
 
 open import Zp.ModularArithmetic
 open import N.Lemmas-2Qupit-Sym p-2 p-prime
-open import N.NF2-Sym p-2 p-prime
---open Lemmas-2Q 2
 
 open import N.NF1 p-2 p-prime
 open import N.Ex-Sym p-2 p-prime
@@ -111,7 +94,7 @@ open import N.Ex-Sym1 p-2 p-prime
 open import N.Ex-Sym2 p-2 p-prime
 open import N.Ex-Sym3 p-2 p-prime
 open import N.Ex-Sym4 p-2 p-prime
-open import N.Ex-Sym5 p-2 p-prime hiding (module L0)
+--open import N.Ex-Sym5 p-2 p-prime hiding (module L0)
 open import N.Ex-Sym2n p-2 p-prime
 open import N.Ex-Sym3n p-2 p-prime
 
@@ -125,14 +108,14 @@ open Lemmas-Sym
 open Duality
 
 open import N.Completeness1-Sym p-2 p-prime renaming (module Completeness to CP1) using ()
-open import N.Coset2-Update-Sym p-2 p-prime renaming (module Completeness to CP2) using ()
+--open import N.Coset2-Update-Sym p-2 p-prime renaming (module Completeness to CP2) using ()
 open import N.Lemmas4-Sym p-2 p-prime
 open import N.Lemmas-3Q p-2 p-prime
 open import N.Pushing.DH p-2 p-prime
 open import N.Duality p-2 p-prime
+
 open import N.BR.Calculations p-2 p-prime
 open import N.BR.One.A p-2 p-prime
-open import N.BR.TwoQupit p-2 p-prime hiding (n)
 open import N.BR.Two.Lemmas p-2 p-prime hiding (n ; module L01 ; sa)
 open import N.BR.Two.D p-2 p-prime hiding (n ; module L01) renaming(dir-of to  dir-of-d)
 open import N.Embeding-1n p-2 p-prime

@@ -137,10 +137,10 @@ open Basis-Change _ ((₂₊ 0) QRel,_===_) grouplike
 import N.Duality p-2 p-prime as ND
 
 open import N.Cosets p-2 p-prime
+{-
 
-
-open import N.Proofs.P1 p-2 p-prime
-open import N.Proofs.P2 p-2 p-prime
+open import N.Proofs-bak.P1 p-2 p-prime
+open import N.Proofs-bak.P2 p-2 p-prime
 open import N.Lemmas-2Qupit-Sym p-2 p-prime as TQ
 
 open Duality
@@ -266,3 +266,4 @@ step-|-CZc m s' m' neq = claim
     aux = (lemma-⁻¹ʳ (aa) {{nztoℕ {y = aa} {neq0 = neq}}})
 
 
+-}

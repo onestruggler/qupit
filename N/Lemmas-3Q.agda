@@ -111,7 +111,7 @@ open import N.Ex-Sym1 p-2 p-prime
 open import N.Ex-Sym2 p-2 p-prime
 open import N.Ex-Sym3 p-2 p-prime
 open import N.Ex-Sym4 p-2 p-prime hiding (lemma-Ex-S^ᵏ)
-open import N.Ex-Sym5 p-2 p-prime hiding (module L0)
+--open import N.Ex-Sym5 p-2 p-prime hiding (module L0)
 open import N.Ex-Sym2n p-2 p-prime
 open import N.Ex-Sym3n p-2 p-prime
 open import N.Ex-Sym4n p-2 p-prime
@@ -128,7 +128,7 @@ open Lemmas-Sym
 open Duality
 
 open import N.Completeness1-Sym p-2 p-prime renaming (module Completeness to CP1) using ()
-open import N.Coset2-Update-Sym p-2 p-prime renaming (module Completeness to CP2) using ()
+--open import N.Coset2-Update-Sym p-2 p-prime renaming (module Completeness to CP2) using ()
 open import N.Lemmas4-Sym p-2 p-prime
 open import N.Pushing.DH p-2 p-prime
 open import N.Pushing.DS p-2 p-prime

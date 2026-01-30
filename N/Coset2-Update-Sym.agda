@@ -58,6 +58,7 @@ import Data.Fin.Properties as FP
 
 module N.Coset2-Update-Sym (p-2 : ℕ) (p-prime : Prime (2+ p-2))  where
 
+{-
 open import Zp.ModularArithmetic
 open PrimeModulus p-2 p-prime
 open import N.Symplectic p-2 p-prime
@@ -1128,3 +1129,4 @@ module Completeness where
   Lemma-two-qupit-completeness (case-nf1 x) (H-gen ↥) = (case-nf1 x) , (H , aux-comm-nf1-H↑ x)
   Lemma-two-qupit-completeness (case-nf1 x) (S-gen ↥) = (case-nf1 x) , (S , aux-comm-nf1-S↑ x)
 
+-}

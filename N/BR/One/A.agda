@@ -40,11 +40,6 @@ import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
-open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
-import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
-import Presentation.Construct.Properties.DirectProduct as DP
-import Presentation.Groups.Cyclic as Cyclic
-
 
 open import Data.Fin using (Fin ; toℕ ; suc ; zero ; fromℕ)
 open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
@@ -108,7 +103,7 @@ open import N.Ex-Sym1 p-2 p-prime
 open import N.Ex-Sym2 p-2 p-prime
 open import N.Ex-Sym3 p-2 p-prime
 open import N.Ex-Sym4 p-2 p-prime
-open import N.Ex-Sym5 p-2 p-prime hiding (module L0)
+--open import N.Ex-Sym5 p-2 p-prime hiding (module L0)
 open import N.Ex-Sym2n p-2 p-prime
 open import N.Ex-Sym3n p-2 p-prime
 
@@ -122,7 +117,7 @@ open Lemmas-Sym
 open Duality
 
 open import N.Completeness1-Sym p-2 p-prime renaming (module Completeness to CP1) using ()
-open import N.Coset2-Update-Sym p-2 p-prime renaming (module Completeness to CP2) using ()
+--open import N.Coset2-Update-Sym p-2 p-prime renaming (module Completeness to CP2) using ()
 open import N.Lemmas4-Sym p-2 p-prime
 open import N.Pushing.DH p-2 p-prime
 open import N.BR.Calculations p-2 p-prime
