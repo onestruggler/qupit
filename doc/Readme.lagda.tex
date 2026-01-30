@@ -1,0 +1,546 @@
+%\documentclass[copyright,creativecommons]{eptcs}
+\documentclass[a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\DisableLigatures{encoding=*,family=tt*}
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{mathpartir}
+\usepackage{agda}
+\usepackage{geometry}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=black, citecolor=black, filecolor=black, urlcolor=black}
+\usepackage[parfill]{parskip}
+\usepackage{color,colortbl,xcolor}
+\usepackage{booktabs}
+\usepackage{amsthm}
+
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+
+\newcommand{\hrefu}[2]{\href{#1}{\nolinkurl{#2}}}
+
+\theoremstyle{definition}
+\newtheorem{exercise}{Exercise}[section]
+
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+
+\hfuzz=1000pt
+
+\setcounter{secnumdepth}{1}
+
+\usepackage{newunicodechar}
+
+
+\newunicodechar{ℤ}{\ensuremath{\mathbb{Z}}}
+\newunicodechar{ℕ}{\ensuremath{\mathbb{N}}}
+\newunicodechar{⇒}{\ensuremath{\implies}}
+\newunicodechar{←}{\ensuremath{\leftarrow}}
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{λ}{\ensuremath{\lambda}}
+\newunicodechar{∀}{\ensuremath{\forall}}
+\newunicodechar{Π}{\ensuremath{\Pi}}
+\newunicodechar{Σ}{\ensuremath{\Sigma}}
+\newunicodechar{Γ}{\ensuremath{\Gamma}}
+\newunicodechar{≡}{\ensuremath{\equiv}}
+\newunicodechar{≅}{\ensuremath{\cong}}
+\newunicodechar{≈}{\ensuremath{\cong}}
+\newunicodechar{•}{\ensuremath{\bullet}}
+\newunicodechar{∎}{\ensuremath{\qed}}
+\newunicodechar{≐}{\ensuremath{\doteq}}
+\newunicodechar{∈}{\ensuremath{\in}}
+\newunicodechar{∧}{\ensuremath{\land}}
+\newunicodechar{∨}{\ensuremath{\lor}}
+\newunicodechar{⊤}{\ensuremath{\top}}
+\newunicodechar{⊥}{\ensuremath{\bot}}
+\newunicodechar{⊔}{\ensuremath{\sqcup}}
+\newunicodechar{∷}{\ensuremath{{::}}}
+\newunicodechar{ℓ}{\ensuremath{\ell}}
+\newunicodechar{ε}{\ensuremath{\epsilon}}
+\newunicodechar{ᵉ}{\ensuremath{{^e}}}
+\newunicodechar{ʷ}{\ensuremath{{^w}}}
+\newunicodechar{₀}{\ensuremath{{_0}}}
+\newunicodechar{₁}{\ensuremath{{_1}}}
+\newunicodechar{₂}{\ensuremath{{_2}}}
+\newunicodechar{₃}{\ensuremath{{_3}}}
+\newunicodechar{₄}{\ensuremath{{_4}}}
+\newunicodechar{₅}{\ensuremath{{_5}}}
+\newunicodechar{₆}{\ensuremath{{_6}}}
+\newunicodechar{₇}{\ensuremath{{_7}}}
+\newunicodechar{₈}{\ensuremath{{_8}}}
+\newunicodechar{₉}{\ensuremath{{_9}}}
+\newunicodechar{⟨}{\ensuremath{{\langle}}}
+\newunicodechar{⟩}{\ensuremath{{\rangle}}}
+\newunicodechar{̧}{\c}
+\newunicodechar{∘}{\ensuremath{\circ}}
+
+\newcommand\var[1]{\mathit{#1}}
+\newcommand\prim[1]{{\AgdaPrimitive{#1}}}
+\newcommand\ty[1]{{{\prim{Set}}_{#1}}}
+\newcommand\fun[1]{{\AgdaFunction{#1}}}
+\newcommand\data[1]{{\AgdaFunction{#1}}}
+\newcommand\con[1]{{\AgdaInductiveConstructor{#1}}}
+\newcommand\field[1]{{\AgdaField{#1}}}
+\newcommand\keyw[1]{{\AgdaKeyword{#1}}}
+\newcommand\lit[1]{{\AgdaNumber{#1}}}
+\newcommand\level{\fun{Level}}
+\newcommand\ite[3]{\fun{if}\  #1\  \fun{then}\  #2\  \fun{else}\  #3}
+
+\newcommand\Nat{\data{Nat}}
+\newcommand\zero{\con{zero}}
+\newcommand\suc{\con{suc}}
+\newcommand\Bool{\data{Bool}}
+\newcommand\true{\con{true}}
+\newcommand\false{\con{false}}
+\newcommand\just{\con{just}}
+\newcommand\nothing{\con{nothing}}
+\renewcommand\left{\con{left}}
+\renewcommand\right{\con{right}}
+\newcommand\List{\data{List}}
+\renewcommand\Vec{\data{Vec}}
+\newcommand\nil{\con{[]}}
+\newcommand\cons{\con{::}}
+\newcommand\Fin{\data{Fin}}
+\renewcommand\prod{\data{×}}
+\newcommand\sigmatype{\data{Σ}}
+\newcommand\toptype{\data{⊤}}
+\newcommand\bottomtype{\data{⊥}}
+\newcommand\Id{\data{≡}}
+\newcommand\refl{\con{refl}}
+
+
+\title{A documentation for the accompanying Agda code}
+
+\date{Version of \today}
+
+\begin{document}
+
+
+\begin{code}[hide]
+{-# OPTIONS --allow-unsolved-metas #-}
+open import Level using (0ℓ)
+open import Relation.Binary using (IsEquivalence ; Setoid ; Rel)
+
+open import Relation.Binary.Definitions using (DecidableEquality)
+open import Relation.Binary.Morphism.Definitions using (Homomorphic₂)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; _≢_ ; inspect ; setoid ; module ≡-Reasoning ; _≗_) renaming ([_] to [_]')
+import Relation.Binary.Reasoning.Setoid as SR
+import Relation.Binary.PropositionalEquality as Eq
+open import Relation.Nullary.Decidable using (yes ; no)
+
+
+open import Function using (_∘_ ; id)
+open import Function.Definitions using (Injective)
+
+open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; map₁ ; ∃ ; Σ ; Σ-syntax)
+open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
+open import Data.Nat hiding (_^_ ; _+_ ; _*_)
+open import Agda.Builtin.Nat using (_-_)
+import Data.Nat as Nat
+open import Data.Bool hiding (_<_ ; _≤_)
+open import Data.List hiding ([_] ; _++_ ; last ; head ; tail ; _∷ʳ_)
+open import Data.Vec hiding ([_])
+import Data.Vec as Vec
+open import Data.Fin hiding (_+_ ; _-_ ; _<_)
+
+open import Data.Maybe
+open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_] ; [_,_]′)
+open import Data.Unit using (⊤ ; tt)
+open import Data.Empty using (⊥ ; ⊥-elim)
+
+-- open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
+-- open import Word.Properties
+import Presentation.Base as PB
+import Presentation.Properties as PP
+open PP using (NFProperty ; NFProperty')
+import Presentation.CosetNF as CA
+import Presentation.Reidemeister-Schreier as RS
+module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
+
+open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
+import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
+import Presentation.Construct.Properties.DirectProduct as DP
+import Presentation.Groups.Cyclic as Cyclic
+
+
+open import Data.Fin using (Fin ; toℕ ; suc ; zero ; fromℕ)
+open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
+import Data.Nat.Properties as NP
+open import Presentation.GroupLike
+open import Presentation.Tactics hiding ([_])
+open import Data.Nat.Primality
+
+
+module doc.Readme  where
+open import Zp.ModularArithmetic
+open import Zp.Fermats-little-theorem using (module PrimeModulus')
+
+
+\end{code}
+
+\maketitle
+
+
+
+\section{Introduction}
+
+\begin{code}[hide]
+module Intro where
+\end{code}
+
+To show axioms implies box relations involves a large amount of
+computation, which is error-prone if we compute them by
+hand. Computing them in ordinary (non-proof-assistant) software might
+help, but it hard to argue that the computation is mathematically
+correct. So we use proof assitant, and the particular choice is Agda
+{\cite{Agda}}.
+
+
+In Agda, we can define sets and relations on a set, for example:
+
+\begin{code}[number]
+  data X : Set where
+    gen1 : X
+    gen2 : X
+    gen3 : X
+\end{code}
+\noindent defines a set with three element \con{gen1}, \con{gen2} and
+\con{gen3}. And
+
+\begin{code}[number]
+  data _===_ : X → X → Set where
+    eq : gen1 === gen2
+\end{code}
+defines a relation on \data{X} which relates two elements. Here we
+call \con{eq} an axiom which wittness the relation of \con{gen1} and
+\con{gen2}. By adding more axioms, we can get an equivalence relation
+on \data{X} (the subscript \data{₁} is to avoid name clashing):
+
+\begin{code}[number]
+  data _===₁_ : X → X → Set where
+    eq : gen1 ===₁ gen2
+    refl : ∀ {x : X} → x ===₁ x
+    sym : ∀ {x y : X} → x ===₁ y → y ===₁ x
+    trans : ∀ {x y z : X} → x ===₁ y → y ===₁ z → x ===₁ z
+\end{code}
+
+The the above code defines a transitive, symmetric, and reflexive
+closure of the axiom \con{eq}. The Agda standard library
+\cite{Agda_stdlib} provides a way to reasoning equivalence relations
+called setoid reasoning (a setoid is a set together with an
+equivalence relation on it). For example, we can show \con{gen2} is
+related to \con{gen1} by:
+\begin{code}[hide]
+  ≈-isEquivalence : IsEquivalence {A = X} _===₁_
+  ≈-isEquivalence = record
+    { refl  = refl
+    ; sym   = sym
+    ; trans = trans
+    }
+
+  X-setoid : Setoid 0ℓ 0ℓ
+  X-setoid = record { Carrier = X ; _≈_ = _===₁_ ; isEquivalence = ≈-isEquivalence }
+
+  open SR X-setoid
+\end{code}
+
+\begin{code}
+  gen2-gen1 : gen2 ===₁ gen1
+  gen2-gen1 = begin
+    gen2 ≈⟨ sym eq ⟩
+    gen1 ∎
+\end{code}
+which proves \con{gen2} is related to \con{gen1} by the symmetry of
+axiom \con{eq}. Agda checks if the relation claimed is indeed
+derivable from axioms. If it fails, Agda reports an error.
+
+
+\section{Word setoid}
+Normally, we model a circuit as a list of gates, and circuit
+composition as list concatenation, but list concatenation loses
+information of its operands, i.e., you cannot recover \data{lhs} and
+\data{rhs} from \data{lhs ++ rhs} in Agda.  We model circuit as words
+of gate set. A word is just a binary tree, where two branches keep
+track of the two operands of concatenation:
+\begin{code}[hide]
+module Hide1 where
+\end{code}
+\begin{code}
+  data Word (X : Set) : Set where
+    [_]ʷ : X → Word X
+    ε : Word X
+    _•_ : Word X → Word X → Word X
+\end{code}
+Here \data{X} is any gate set. The leaf node is either a gate or an
+empty circuit. Circuit equivalence is modelled by an equivlence
+relation on words that also respects the operation \con{•}. Such
+relation is called a congruence relation. To be precsie, the
+congruence closure of the a given relation \data{Γ} is
+\begin{code}[hide]
+module Hide2 where
+  open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
+  open import Word.Properties
+  private
+    variable
+      X : Set
+      w v u w' v' u' : Word X
+
+\end{code}
+\begin{code}
+  module Congruence-Closure (Γ : Word X → Word X → Set) where
+    infix 4 _≈_
+    data _≈_ : Word X → Word X → Set where
+      -- ≈ is a congruence.
+      refl : w ≈ w
+      sym : w ≈ v → v ≈ w
+      trans : w ≈ v → v ≈ u → w ≈ u
+      cong : w ≈ w' → v ≈ v' → w • v ≈ w' • v'
+
+      -- The monoid axioms: asociativity and the left and right unit laws.
+      assoc : (w • v) • u ≈ w • (v • u)
+      left-unit : ε • w ≈ w
+      right-unit : w • ε ≈ w
+
+      -- Axioms.
+      axiom : Γ w v → w ≈ v
+
+\end{code}
+
+Note that axioms of asociativity and the left and right unit laws is
+to make the concatenation of words compatible the usual concatenation
+of lists, which also make the word setoid a monoid.
+
+\section{Single-ququint example}
+
+\begin{code}[hide]
+
+module Example-Word where
+  open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
+  open import Word.Properties
+  pattern auto = Eq.refl
+
+  pattern ₀ = zero
+  pattern ₁ = suc ₀
+  pattern ₂ = suc ₁
+  pattern ₃ = suc ₂
+  pattern ₄ = suc ₃
+  pattern ₅ = suc ₄
+
+  pattern ₁₊ n = suc n
+  pattern ₂₊ n = suc (suc n)
+  pattern ₃₊ n = suc (₂₊ n)
+  pattern ₄₊ n = suc (₃₊ n)
+
+\end{code}
+
+We use gate set:
+\begin{code}
+  data Gate-Set : Set where
+    S-gen : Gate-Set
+    H-gen : Gate-Set
+\end{code}
+
+We lift gate to circuit by:
+\begin{code}
+  H : Word Gate-Set
+  H = [ H-gen ]ʷ
+
+  S : Word Gate-Set
+  S = [ S-gen ]ʷ
+\end{code}
+
+\iffalse
+We define a special circuit pattern called ZMultiplier as:
+\begin{code}
+  M : ℤ* ₅ → Word Gate-Set
+  M x' = S ^ x • H • S ^ ₁/x • H • S ^ x • H
+\end{code}
+\begin{code}[hide]
+    where
+    x = {!!}
+    ₁/x = {!!}
+\end{code}
+\fi
+
+
+\begin{code}[hide]
+module Example where
+  open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
+  open import Word.Properties
+  import Presentation.Base as PB
+  import Presentation.Properties as PP
+  open import Relation.Nullary.Decidable
+  5-is-prime : Prime 5
+  5-is-prime = from-yes (prime? 5)
+  open import N.LM-Sym 3 5-is-prime hiding (M)
+  p-prime = 5-is-prime
+
+  infix 4 _===₅_
+  open import N.Symplectic 3 5-is-prime as SQ
+  open Symplectic hiding (_QRel,_===_)
+  open PrimeModulus' 3 5-is-prime 
+  
+  Gate-Set = Gen 1
+  g : ℤ* ₅
+  g = (₂ , λ ())
+  p-2 = 3
+  M₂ : Word Gate-Set
+  M₂ = M g
+  M₂^ : ℤ ₚ → Word Gate-Set
+  M₂^ k = M₂ ^ toℕ k
+--  open Primitive-Root-Modp' g {!5-is-prime!}
+  ₂^ : ℕ → ℤ* ₅
+  ₂^ x = g ^' x
+  
+\end{code}
+
+We claim the following axiom is complete for the single-ququint
+symplectic group:
+
+\begin{code}  
+  data _===₅_ : Word Gate-Set → Word Gate-Set → Set where
+    order-S :          S ^ 5 ===₅ ε
+    order-H :          H ^ 2 ===₅ M₂ ^ 2
+    M-power : ∀ (k : ℕ) → (k < 5) →  M₂ ^ k ===₅ M (₂^ k)
+    semi-MS :         M₂ • S ===₅ S^ (₂ * ₂) • M₂
+\end{code}
+
+
+That is the congruence clouse of it implies all single-ququint box
+relations. The operators $*$ and \data{₂}$\wedge$ are multiplication
+and powers of base $2$ in $\mathbb{Z}_5$, and \[ M x = S^x • H •
+S^{\frac{1}{x}} • H • S^x • H \]
+
+We show one of the box relation follows from these axioms:
+
+\begin{code}[hide]
+module Example2 where
+  open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
+  open import Word.Properties
+  import Presentation.Base as PB
+  import Presentation.Properties as PP
+  open import Relation.Nullary.Decidable
+  p-2 = 3
+  5-is-prime : Prime 5
+  5-is-prime = from-yes (prime? 5)
+  open import N.LM-Sym 3 5-is-prime hiding (M)
+  p-prime = 5-is-prime
+  open import Algebra.Properties.Ring (+-*-ring p-2) renaming (-‿+-comm to -+-comm ; -‿involutive to -involutive)
+
+
+  open import N.Symplectic 3 5-is-prime as SQ
+  open Symplectic
+  open PrimeModulus' 3 5-is-prime 
+  open PB ((₁₊ 0) QRel,_===_) hiding (_===_)
+  open PP ((₁₊ 0) QRel,_===_)
+
+  open SR word-setoid
+  open Lemmas0 0 renaming (lemma-S^k+l to lemma-S[k+l])
+  open Lemmas-Sym
+  open Duality
+
+  open import N.Lemmas4-Sym p-2 p-prime
+  open import N.Pushing.DH p-2 p-prime
+  open import N.BR.Calculations p-2 p-prime
+\end{code}  
+\begin{code}
+
+  lemma-single-qupit-br-E : ∀ (b : ℤ ₅) →
+
+    [ b ]ᵉ • S ≈ [ b + - ₁ ]ᵉ
+
+  lemma-single-qupit-br-E b = begin
+    [ b ]ᵉ • S ≈⟨ refl ⟩
+    S^ (- b) • S ≈⟨ lemma-S[k+l] (- b) ₁ ⟩
+    S^ (- b + ₁) ≡⟨ Eq.cong S^ (Eq.cong (- b +_) (Eq.sym (-involutive ₁))) ⟩
+    S^ (- b + - - ₁) ≡⟨ Eq.cong S^ (-+-comm b (- ₁)) ⟩
+    S^ (- (b + - ₁)) ≈⟨ refl ⟩
+    [ b + - ₁ ]ᵉ ∎
+
+
+\end{code}
+
+Here \data{[ b ]ᵉ} is the E box with parameter \data{b}. The proof
+involves calling a lemma \data{lemma-S[k+l]}, arithmetics in $\mathbb Z
+_ 5$ (such as \data{-involutive} meaning taking inverse is
+involutive), and reflexitivity.
+
+\section{Derivation of box relations}
+
+The statement that box relations are derivable from axioms is in
+``./BoxRelations.agda'', which also contains proof pointers.
+
+The proofs are located at the folders ``./N/BR/One/'',
+``./N/BR/Two/'', and ``./N/BR/Three/'' for one, two, and three qupit
+box relations. In each folder, file name starts with letters ``A B D E
+L'' indicating the file is about the corresponding box. For example,
+in folder ``./N/BR/Two/'', the file ``L-CZ'' contains the proof of the
+rewrite rules of pushing a CZ gate through a 2-qupit L box is
+derivable.
+
+
+\section{The simplified relations}
+
+The proofs in BR folder is actually based on a more ``comprehensive''
+set of axioms, instead of the axioms in Fig 1. We show two sets of
+axioms are equivalent by showing there is a group isomorphism between
+two word setoids. The isomorphism can be found in
+``./N/Symplectic-Simplified.agda'' file; axioms in Fig 1 is also
+encoded here. The more "comprehensive" axioms can be found in
+``./N/Symplectic.agda''.
+
+
+\section{Agda and standard library version}
+
+Agda version 2.8.0 and standard library version 2.3 are used.
+
+\bibliography{biblio}
+\bibliographystyle{plain}
+
+\end{document}
+
+Here \data{M x = S^ x • H • S^ y • H • S^ x • H}, $y$ is the inverse
+of $x$ in $\mathbb{Z}$.  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Taking closures appears quite common,
+and we mostly focus on the non-structural axioms like \con{eq}, so we
+abstract the process of taking closures by:
+
+\begin{code}[number]
+  {-
+module Taking-Clousure (_===₂_ : X → X → Set) where
+  data _===₃_ : X → X → Set where
+    axiom : ∀ {x y : X} → x ===₂ y → y ===₃ x
+    refl : ∀ {x : X} → x ===₃ x
+    symm : ∀ {x y : X} → x ===₃ y → y ===₃ x
+    transi : ∀ {x y z : X} → x ===₃ y → y ===₃ z → x ===₃ z
+    -}
+\end{code}
+
+
+
+  

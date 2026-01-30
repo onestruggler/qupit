@@ -1,0 +1,627 @@
+{-# OPTIONS  --safe #-}
+{-# OPTIONS --termination-depth=2 #-}
+open import Level using (0ℓ)
+
+open import Relation.Binary using (Rel)
+open import Relation.Binary.Definitions using (DecidableEquality)
+open import Relation.Binary.Morphism.Definitions using (Homomorphic₂)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; _≢_ ; inspect ; setoid ; module ≡-Reasoning ; _≗_) renaming ([_] to [_]')
+import Relation.Binary.Reasoning.Setoid as SR
+import Relation.Binary.PropositionalEquality as Eq
+open import Relation.Nullary.Decidable using (yes ; no)
+
+
+open import Function using (_∘_ ; id)
+open import Function.Definitions using (Injective)
+
+open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; map₁ ; ∃ ; Σ ; Σ-syntax)
+open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
+open import Data.Nat hiding (_^_ ; _+_ ; _*_)
+open import Agda.Builtin.Nat using (_-_)
+import Data.Nat as Nat
+open import Data.Bool hiding (_<_ ; _≤_)
+open import Data.List hiding ([_] ; _++_ ; last ; head ; tail ; _∷ʳ_)
+open import Data.Vec hiding ([_])
+import Data.Vec as Vec
+open import Data.Fin hiding (_+_ ; _-_)
+
+open import Data.Maybe
+open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_] ; [_,_]′)
+open import Data.Unit using (⊤ ; tt)
+open import Data.Empty using (⊥ ; ⊥-elim)
+
+open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
+open import Word.Properties
+import Presentation.Base as PB
+import Presentation.Properties as PP
+open PP using (NFProperty ; NFProperty')
+import Presentation.CosetNF as CA
+import Presentation.Reidemeister-Schreier as RS
+module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
+
+open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
+import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
+import Presentation.Construct.Properties.DirectProduct as DP
+import Presentation.Groups.Cyclic as Cyclic
+
+
+open import Data.Fin using (Fin ; toℕ ; suc ; zero ; fromℕ)
+open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
+import Data.Nat.Properties as NP
+open import Presentation.GroupLike
+open import Presentation.Tactics hiding ([_])
+open import Data.Nat.Primality
+
+
+
+module N.EX-Rewriting (p-2 : ℕ) (p-prime : Prime (2+ p-2)) where
+
+pattern auto = Eq.refl
+
+pattern ₀ = zero
+pattern ₁ = suc ₀
+pattern ₂ = suc ₁
+pattern ₃ = suc ₂
+pattern ₄ = suc ₃
+pattern ₅ = 5
+pattern ₆ = 6
+pattern ₇ = 7
+pattern ₈ = 8
+pattern ₉ = 9
+pattern ₁₀ = 10
+pattern ₁₁ = 11
+pattern ₁₂ = 12
+pattern ₁₃ = 13
+pattern ₁₄ = 14
+pattern ₁₅ = 15
+
+pattern ₁₊ ⱼ = suc ⱼ
+pattern ₂₊ ⱼ = suc (suc ⱼ)
+pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
+
+
+open import Zp.ModularArithmetic
+open PrimeModulus p-2 p-prime
+
+
+module Symplectic-EX where
+
+  
+  -- p-1 : ℕ
+  -- p-1 = ₁₊ p-2
+  -- p : ℕ
+  -- p = ₁₊ p-1
+  -- ₚ = p
+  
+  data Gen : ℕ → Set where
+    H-gen : ∀ {n} → Gen (₁₊ n)
+    S-gen : ∀ {n} → Gen (₁₊ n)
+    CZ-gen : ∀ {n} → Gen (₂₊ n)
+    EX-gen : ∀ {n} → Gen (₂₊ n)
+    -- lift a generator from Gen n to Gen (₁₊ n). E.g., in a two
+    -- qupit circut H-gen = H 0, and H-gen ↥ = H 1.
+    _↥ : ∀ {n} → Gen n → Gen (suc n)
+
+  [_⇑] : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  [_⇑] {n} = ([_]ʷ ∘ _↥) WB.*
+
+  [_⇑]' : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  [_⇑]' {n} = wmap _↥
+
+  _↑ : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  _↑ = wmap _↥
+
+{-
+  _↓-gen : ∀ {n} → Gen n → Gen (suc n)
+  _↓-gen {zero} ()
+  _↓-gen {₁₊ n} H-gen = H-gen
+  _↓-gen {₁₊ n} S-gen = S-gen
+  _↓-gen {₁₊ .(₁₊ _)} CZ-gen = CZ-gen
+  _↓-gen {₁₊ .(₁₊ _)} EX-gen = EX-gen
+  _↓-gen {₁₊ n} (g ↥) = (g ↓-gen) ↥
+
+  _↓ : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  _↓ {n} = wmap _↓-gen
+-}
+
+  _↓ : ∀ {n} → Word (Gen n) → Word (Gen ( n))
+  _↓ {n} x = x 
+
+
+  lemma-[⇑]=[⇑]' : ∀ {n} (w : Word (Gen n)) → [ w ⇑] ≡ [ w ⇑]'
+  lemma-[⇑]=[⇑]' {n} [ x ]ʷ = Eq.refl
+  lemma-[⇑]=[⇑]' {n} ε = Eq.refl
+  lemma-[⇑]=[⇑]' {n} (w • w₁) = Eq.cong₂ _•_ (lemma-[⇑]=[⇑]' w) (lemma-[⇑]=[⇑]' w₁)
+
+  S : ∀ {n} → Word (Gen (₁₊ n))
+  S = [ S-gen ]ʷ
+
+  S⁻¹ : ∀ {n} → Word (Gen (₁₊ n))
+  S⁻¹ = S ^ p-1
+
+  H : ∀ {n} → Word (Gen (₁₊ n))
+  H = [ H-gen ]ʷ
+
+  HH : ∀ {n} → Word (Gen (₁₊ n))
+  HH = H ^ 2
+
+  H⁻¹ : ∀ {n} → Word (Gen (₁₊ n))
+  H⁻¹ = H ^ 3
+
+  CZ : ∀ {n} → Word (Gen (₂₊ n))
+  CZ = [ CZ-gen ]ʷ
+
+  CZ⁻¹ : ∀ {n} → Word (Gen (₂₊ n))
+  CZ⁻¹ = CZ ^ p-1
+
+  CX : ∀ {n} → Word (Gen (₂₊ n))
+  CX = H ↓ ^ 3 • CZ • H ↓ 
+
+  XC : ∀ {n} → Word (Gen (₂₊ n))
+  XC = H ↑ ^ 3 • CZ • H ↑ 
+
+  CX' : ∀ {n} → Word (Gen (₂₊ n))
+  CX' = H ↓ • CZ • H ↓ ^ 3
+
+  XC' : ∀ {n} → Word (Gen (₂₊ n))
+  XC' = H ↑ • CZ • H ↑ ^ 3
+
+  -- EX : ∀ {n} → Word (Gen (₂₊ n))
+  -- EX = [ EX-gen ]ʷ
+
+  ₕ|ₕ : ∀ {n} → Word (Gen (₂₊ n))
+  ₕ|ₕ = H ↓ • CZ • H ↓
+
+  ʰ|ʰ : ∀ {n} → Word (Gen (₂₊ n))
+  ʰ|ʰ = H ↑ • CZ • H ↑
+
+  ⊥⊤ : ∀ {n} → Word (Gen (₂₊ n))
+  ⊥⊤ = ₕ|ₕ • ʰ|ʰ
+
+  ⊤⊥ : ∀ {n} → Word (Gen (₂₊ n))
+  ⊤⊥ = ʰ|ʰ • ₕ|ₕ
+
+  H^ : ∀ {n} → ℤ ₄ -> Word (Gen (₁₊ n))
+  H^ k = H ^ toℕ k
+
+  S^ : ∀ {n} → ℤ ₚ -> Word (Gen (₁₊ n))
+  S^ k = S ^ toℕ k
+
+  CZ^ : ∀ {n} → ℤ ₚ -> Word (Gen (₂₊ n))
+  CZ^ k = CZ ^ toℕ k
+  
+  CX^ : ∀ {n} → ℤ ₚ -> Word (Gen (₂₊ n))
+  CX^ k = CX ^ toℕ k
+
+  M : ∀ {n} -> ℤ* ₚ -> Word (Gen (₁₊ n))
+  M x' = S^ x • H • S^ x⁻¹ • H • S^ x • H
+    where
+    x = x' .proj₁
+    x⁻¹ = ((x' ⁻¹) .proj₁ )
+
+  M₁ : ∀ {n} -> Word (Gen (₁₊ n))
+  M₁ = M ₁ₚ
+
+  infixr 9 _^2
+  _^2 : ℤ* ₚ -> ℤ ₚ
+  _^2 x' = let x = x' .proj₁ in x * x 
+
+  infixr 9 _^1
+  _^1 : ℤ* ₚ -> ℤ ₚ
+  _^1 x' = let x = x' .proj₁ in x
+
+
+  EX : ∀ {n} → Word (Gen (₂₊ n))
+  EX = [ EX-gen ]ʷ
+
+  Ex : ∀ {n} → Word (Gen (₂₊ n))
+  Ex = EX
+
+
+  CZ02 : ∀ {n} → Word (Gen (₃₊ n))
+  CZ02 = Ex • CZ ↑ • Ex
+
+  CZ02' : ∀ {n} → Word (Gen (₃₊ n))
+  CZ02' = Ex ↑ • CZ • Ex ↑
+
+  CZ02⁻¹ : ∀ {n} → Word (Gen (₃₊ n))
+  CZ02⁻¹ = Ex • CZ⁻¹ ↑ • Ex
+
+  CZ02k : ∀ {n} k → Word (Gen (₃₊ n))
+  CZ02k k = Ex • CZ ↑ ^ k • Ex
+
+  CZ02'k : ∀ {n} k → Word (Gen (₃₊ n))
+  CZ02'k k = Ex ↑ • CZ ^ k • Ex ↑
+
+  CZ02⁻ᵏ : ∀ {n} k → Word (Gen (₃₊ n))
+  CZ02⁻ᵏ k = Ex • CZ⁻¹ ↑ ^ k • Ex
+
+  CZ02'⁻ᵏ : ∀ {n} k → Word (Gen (₃₊ n))
+  CZ02'⁻ᵏ k = Ex ↑ • CZ⁻¹ ^ k • Ex ↑
+
+  CZ02'⁻¹ : ∀ {n} -> Word (Gen (₃₊ n))
+  CZ02'⁻¹ = Ex ↑ • CZ⁻¹ • Ex ↑
+
+  XC02 : ∀ {n} → Word (Gen (₃₊ n))
+  XC02 = H ↑ ↑ ^ 3 • CZ02 • H ↑ ↑
+
+  CX02 : ∀ {n} → Word (Gen (₃₊ n))
+  CX02 = H ^ 3 • CZ02 • H
+
+  CX'^ : ∀ {n} → ℤ ₚ -> Word (Gen (₂₊ n))
+  CX'^ k = H ^ 3 • CZ^ k • H
+
+  XC'^ : ∀ {n} → ℤ ₚ -> Word (Gen (₂₊ n))
+  XC'^ k = H ↑ ^ 3 • CZ^ k • H ↑
+
+  
+  infix 4 _QRel,_===_
+  data _QRel,_===_ : (n : ℕ) → WRel (Gen n) where
+
+    order-S :      ∀ {n} → (₁₊ n) QRel,  S ^ p === ε
+    order-H :      ∀ {n} → (₁₊ n) QRel,  H ^ 4 === ε
+    order-SH :     ∀ {n} → (₁₊ n) QRel,  (S • H) ^ 3 === ε
+    comm-HHS :     ∀ {n} → (₁₊ n) QRel,  H • H • S === S • H • H
+
+    semi-EX-S↓ :     ∀ {n} → (₂₊ n) QRel,  EX • S ↓ === S ↑ • EX
+    semi-EX-S↑ :     ∀ {n} → (₂₊ n) QRel,  EX • S ↑ === S ↓ • EX
+
+    semi-EX-H↓ :     ∀ {n} → (₂₊ n) QRel,  EX • H ↓ === H ↑ • EX
+    semi-EX-H↑ :     ∀ {n} → (₂₊ n) QRel,  EX • H ↑ === H ↓ • EX
+
+    comm-EX-CZ :     ∀ {n} → (₂₊ n) QRel,  EX • CZ === CZ • EX
+    semi-EXEX↑-CZ :  ∀ {n} → (₃₊ n) QRel,  EX • EX ↑ • CZ === CZ ↑ • EX • EX ↑
+    semi-EX↑EX-CZ↑ : ∀ {n} → (₃₊ n) QRel,  EX ↑ • EX • CZ ↑ === CZ • EX ↑ • EX
+
+    yang-baxter : ∀ {n} → (₃₊ n) QRel,  EX ↑ • EX • EX ↑ === EX • EX ↑ • EX
+
+    order-EX :     ∀ {n} → (₂₊ n) QRel,  EX ^ 2 === ε
+    comm-EX :   ∀ {n}{g} → (₃₊ n) QRel,  [ g ↥ ↥ ]ʷ • EX === EX • [ g ↥ ↥ ]ʷ
+
+    comm-H :    ∀ {n}{g} → (₂₊ n) QRel,  [ g ↥ ]ʷ • H === H • [ g ↥ ]ʷ
+    comm-S :    ∀ {n}{g} → (₂₊ n) QRel,  [ g ↥ ]ʷ • S === S • [ g ↥ ]ʷ
+    comm-CZ :   ∀ {n}{g} → (₃₊ n) QRel,  [ g ↥ ↥ ]ʷ • CZ === CZ • [ g ↥ ↥ ]ʷ
+
+    cong↑ : ∀ {n w v} → n QRel,  w === v → (₁₊ n) QRel,  w ↑ === v ↑
+
+
+
+  lemma-cong↑ : ∀ {n} w v →
+    let open PB (n QRel,_===_) using (_≈_) in
+    let open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↑_) using () in
+    w ≈ v → w ↑ ≈↑ v ↑
+  lemma-cong↑ {n} w v PB.refl = PB.refl
+  lemma-cong↑ {n} w v (PB.sym eq) = PB.sym (lemma-cong↑ v w eq)
+  lemma-cong↑ {n} w v (PB.trans eq eq₁) = PB.trans (lemma-cong↑ _ _ eq) (lemma-cong↑ _ _ eq₁)
+  lemma-cong↑ {n} w v (PB.cong eq eq₁) = PB.cong (lemma-cong↑ _ _ eq) (lemma-cong↑ _ _ eq₁)
+  lemma-cong↑ {n} w v PB.assoc = PB.assoc
+  lemma-cong↑ {n} w v PB.left-unit = PB.left-unit
+  lemma-cong↑ {n} w v PB.right-unit = PB.right-unit
+  lemma-cong↑ {n} w v (PB.axiom x) = PB.axiom (cong↑ x)
+
+module EX-Rewriting where
+
+  -- This module provides a complete rewrite system for 1-qubit
+  -- EX operators. It is specialized toward relations on qubit 0
+  -- (but can also be applied to qubit 1 via duality).
+  open Symplectic-EX
+  open Rewriting
+  open PB
+
+  step-EX : ∀ {n} -> let open PB ((₁₊ n) QRel,_===_) hiding (_===_) in Step-Function (Gen (₁₊ n))  ((₁₊ n) QRel,_===_)
+
+  -- Order of generators.
+  step-EX ((H-gen) ∷ (H-gen) ∷ (H-gen) ∷ (H-gen) ∷ xs) = just (xs , at-head (PB.axiom order-H))
+  step-EX ((H-gen ↥) ∷ (H-gen ↥) ∷ (H-gen ↥) ∷ (H-gen ↥) ∷ xs) = just (xs , at-head (PB.axiom (cong↑ order-H)))
+  step-EX ((H-gen ↥ ↥) ∷ (H-gen ↥ ↥) ∷ (H-gen ↥ ↥) ∷ (H-gen ↥ ↥) ∷ xs) = just (xs , at-head (PB.axiom (cong↑ (cong↑ order-H))))
+
+  step-EX ((S-gen) ∷ (H-gen) ∷ (S-gen) ∷ (H-gen) ∷ (S-gen) ∷ (H-gen) ∷ xs) = just (xs , at-head (PB.axiom order-SH))
+  step-EX ((S-gen ↥) ∷ (H-gen ↥) ∷ (S-gen ↥) ∷ (H-gen ↥) ∷ (S-gen ↥) ∷ (H-gen ↥) ∷ xs) = just (xs , at-head (PB.axiom (cong↑ order-SH)))
+  step-EX ((S-gen ↥ ↥) ∷ (H-gen ↥ ↥) ∷ (S-gen ↥ ↥) ∷ (H-gen ↥ ↥) ∷ (S-gen ↥ ↥) ∷ (H-gen ↥ ↥) ∷ xs) = just (xs , at-head (PB.axiom (cong↑ (cong↑ order-SH))))
+
+  step-EX (EX-gen ∷ EX-gen ∷ xs) = just (xs , at-head (axiom order-EX))
+  step-EX (EX-gen ↥ ∷ EX-gen ↥ ∷ xs) = just (xs , at-head ( (lemma-cong↑ _ _ (axiom order-EX))))
+
+  step-EX (EX-gen ∷ EX-gen ↥ ∷ CZ-gen ∷ xs) = just (CZ-gen ↥ ∷ EX-gen ∷ EX-gen ↥ ∷ xs , at-head ( (axiom semi-EXEX↑-CZ)))
+  step-EX (EX-gen ↥ ∷ EX-gen ∷ CZ-gen ↥ ∷ xs) = just (CZ-gen ∷ EX-gen ↥ ∷ EX-gen ∷ xs , at-head ( (axiom semi-EX↑EX-CZ↑)))
+
+  step-EX (EX-gen ↥ ∷ EX-gen ∷ EX-gen ↥ ∷ xs) = just (EX-gen ∷ EX-gen ↥ ∷ EX-gen ∷ xs , at-head ( (axiom yang-baxter)))
+
+  step-EX (EX-gen ∷ CZ-gen ∷ xs) = just (CZ-gen ∷ EX-gen ∷ xs , at-head ( (axiom comm-EX-CZ)))
+  step-EX (EX-gen ↥ ∷ CZ-gen ↥ ∷ xs) = just (CZ-gen ↥ ∷ EX-gen ↥ ∷ xs , at-head (( (lemma-cong↑ _ _ (axiom comm-EX-CZ)))))
+
+  step-EX (EX-gen ∷ H-gen ∷ xs) = just (H-gen ↥ ∷ EX-gen ∷ xs , at-head ( (axiom semi-EX-H↓)))
+  step-EX (EX-gen ↥ ∷ H-gen ↥ ∷ xs) = just (H-gen ↥ ↥ ∷ EX-gen ↥ ∷ xs , at-head ( ( (lemma-cong↑ _ _ (axiom semi-EX-H↓)))))
+
+  step-EX (EX-gen ∷ S-gen ∷ xs) = just (S-gen ↥ ∷ EX-gen ∷ xs , at-head ( (axiom semi-EX-S↓)))
+  step-EX (EX-gen ↥ ∷ S-gen ↥ ∷ xs) = just (S-gen ↥ ↥ ∷ EX-gen ↥ ∷ xs , at-head ( ( (lemma-cong↑ _ _ (axiom semi-EX-S↓)))))
+
+  step-EX (EX-gen ∷ S-gen ↥ ∷ xs) = just (S-gen ∷ EX-gen ∷ xs , at-head (((axiom semi-EX-S↑))))
+  step-EX (EX-gen ↥ ∷ S-gen ↥ ↥ ∷ xs) = just (S-gen ↥ ∷ EX-gen ↥ ∷ xs , at-head (lemma-cong↑ _ _ (axiom semi-EX-S↑)))
+
+  step-EX (EX-gen ∷ H-gen ↥ ∷ xs) = just (H-gen ∷ EX-gen ∷ xs , at-head (((axiom semi-EX-H↑ ))))
+  step-EX (EX-gen ↥ ∷ H-gen ↥ ↥ ∷ xs) = just (H-gen ↥ ∷ EX-gen ↥ ∷ xs , at-head (lemma-cong↑ _ _ (axiom semi-EX-H↑)))
+
+
+  -- Trivial commutations.
+  step-EX (EX-gen ↥ ∷ S-gen ∷ xs) = just (S-gen ∷ EX-gen ↥ ∷ xs , at-head ( ( (axiom comm-S))))
+  step-EX (EX-gen ↥ ∷ H-gen ∷ xs) = just (H-gen ∷ EX-gen ↥ ∷ xs , at-head ( ( (axiom comm-H))))
+  step-EX (EX-gen ∷ S-gen ↥ ↥ ∷ xs) = just (S-gen ↥ ↥ ∷ EX-gen ∷ xs , at-head ( ( sym (axiom comm-EX))))
+  step-EX (EX-gen ∷ H-gen ↥ ↥ ∷ xs) = just (H-gen ↥ ↥ ∷ EX-gen ∷ xs , at-head ( ( sym (axiom comm-EX))))
+
+
+
+  -- Catch-all
+  step-EX _ = nothing
+
+
+module Rewriting-EX (m : ℕ) where
+  open import N.Symplectic p-2 p-prime
+  open Symplectic
+  module L0 = Lemmas0 0
+  open Rewriting
+  open EX-Rewriting
+  open Rewriting.Step (step-cong (step-EX {m})) renaming (general-rewrite to rewrite-EX ; multistep to multi-ex-step) public
+
+module Homo (m : ℕ) where
+  open import N.Symplectic p-2 p-prime
+  open Symplectic
+  module L0 = Lemmas0 0
+
+  open import N.Lemmas-2Qupit-Sym p-2 p-prime
+  open import N.NF2-Sym p-2 p-prime
+  open import N.Cosets p-2 p-prime
+  open Lemmas-2Q 0
+
+  open import N.NF1-Sym p-2 p-prime
+  open import N.Ex-Sym p-2 p-prime
+  open import N.Ex-Sym1 p-2 p-prime
+  open import N.Ex-Sym2 p-2 p-prime
+  open import N.Ex-Sym3 p-2 p-prime
+  open import N.Ex-Sym2n p-2 p-prime
+  open import N.Ex-Sym3n p-2 p-prime
+  open import N.Ex-Sym4n p-2 p-prime
+  open import N.Ex-Sym4n2 p-2 p-prime
+
+  open import N.Lemma-Comm p-2 p-prime 0
+  open import N.Lemma-Postfix p-2 p-prime
+  open Lemmas0a
+  open Lemmas0a1
+  open Lemmas0b
+  open Lemmas0c
+
+  private
+    variable
+      n : ℕ
+
+
+  open LM2
+  open import N.Completeness1-Sym p-2 p-prime renaming (module Completeness to CP1) using ()
+
+  -- open Symplectic
+  -- open Symplectic-GroupLike
+
+  open import Data.Nat.DivMod
+  open import Data.Fin.Properties
+  --open Duality
+  open import Algebra.Properties.Ring (+-*-ring p-2)
+
+
+  open import Relation.Unary
+  open import Presentation.ListNF
+
+  module EX = Symplectic-EX
+  open EX using (_↥ ; H-gen ; S-gen ; CZ-gen ; EX-gen)
+
+
+
+--  open PB (n EX.QRel,_===_)renaming (_===_ to _===₀_ ; _≈_ to _≈₀_) using ()
+
+
+  f : EX.Gen n -> Word (Gen (n))
+  f H-gen = H
+  f S-gen = S
+  f CZ-gen = CZ
+  f EX-gen = Ex
+  f (x ↥) = f x ↑
+
+
+  f* : Word (EX.Gen n) -> Word (Gen (n))
+  f* {n} = f {n} WB.*
+
+  lemma-f* : let open PB ((n) QRel,_===_) in
+    ∀ w k -> f* (w ^ k) ≈ f* w ^ k
+  lemma-f* {n} w k@0 = PB.refl
+  lemma-f* {n} w k@1 = PB.refl
+  lemma-f* {n} w k@(₂₊ k') = begin
+    f* (w ^ k) ≈⟨ refl ⟩
+    f* w • f* (w ^ (₁₊ k')) ≈⟨ cright lemma-f* w (₁₊ k') ⟩
+    f* w • f* w ^ (₁₊ k') ≈⟨ sym (lemma-^-suc (f* w) (₁₊ k')) ⟩
+    f* w ^ k ∎
+    where
+    open PB ((n) QRel,_===_)
+    open PP ((n) QRel,_===_)
+    open SR word-setoid
+    
+
+
+  lemma-f*-↥ : let open PB ((₁₊ n) QRel,_===_) in
+    ∀ g -> f* ([ g ↥ ]ʷ) ≈ f* [ g ]ʷ ↑
+  lemma-f*-↥ {n} g = begin
+    f* ([ g ↥ ]ʷ) ≈⟨ refl ⟩
+    f* [ g ]ʷ ↑ ∎
+    where
+    open PB ((₁₊ n) QRel,_===_)
+    open PP ((₁₊ n) QRel,_===_)
+    open SR word-setoid
+
+  lemma-f*-↑ : let open PB ((₁₊ n) QRel,_===_) in
+    ∀ w -> f* (w EX.↑) ≈ f* w ↑
+  lemma-f*-↑ {n} [ x ]ʷ = PB.refl
+  lemma-f*-↑ {n} ε = PB.refl
+  lemma-f*-↑ {n} (w • w₁) = begin
+    f* ((w • w₁) EX.↑) ≈⟨ refl ⟩
+    f* ((w EX.↑ • w₁ EX.↑) ) ≈⟨ refl ⟩
+    f* (w EX.↑) • f* (w₁ EX.↑) ≈⟨ cong (lemma-f*-↑ w) (lemma-f*-↑ w₁) ⟩
+    f* w ↑ • f* w₁ ↑ ≈⟨ refl ⟩
+    (f* (w • w₁) ↑) ∎
+    where
+    open PB ((₁₊ n) QRel,_===_)
+    open PP ((₁₊ n) QRel,_===_)
+    open SR word-setoid
+
+
+
+{-
+  lemma-f*-Sᵏ↑ : ∀ k -> f* ((EX.S ^ k) EX.↑) ≈ (S ^ k) ↑
+  lemma-f*-Sᵏ↑ ₀ = refl
+  lemma-f*-Sᵏ↑ ₁ = refl
+  lemma-f*-Sᵏ↑ k@(₂₊ k') = begin
+    f* ((S ^ k) ↑) ≈⟨ refl ⟩
+    f* ((S • S ^ k'') ↑) ≈⟨ cong refl (lemma-f*-Sᵏ↑ (₁₊ k')) ⟩
+    (S • S ^ k'') ↑ ≈⟨ refl ⟩
+    (S ^ k) ↑ ∎
+    where
+    k'' = ₁₊ k'
+
+  lemma-f*-M : ∀ m -> f* (M m) ≈ M m
+  lemma-f*-M m = begin
+    f* (M m) ≈⟨ cong (lemma-f* S (toℕ x)) (cright cong (lemma-f* S (toℕ x⁻¹)) (cright (cleft lemma-f* S (toℕ x)))) ⟩
+    S^ x • H • S^ x⁻¹ • H • S^ x • H ≈⟨ refl ⟩
+    M m ∎
+    where
+    x' = m
+    x = x' .proj₁
+    x⁻¹ = ((x' ⁻¹) .proj₁ )
+
+  lemma-f*-M↑ : ∀ m -> f* (M m ↑) ≈ M m ↑
+  lemma-f*-M↑ m = begin
+    f* (M m ↑) ≈⟨ cong (lemma-f*-Sᵏ↑ (toℕ x)) (cright cong (lemma-f*-Sᵏ↑ (toℕ x⁻¹)) (cright (cleft lemma-f*-Sᵏ↑ (toℕ x)))) ⟩
+    M m ↑ ∎
+    where
+    x' = m
+    x = x' .proj₁
+    x⁻¹ = ((x' ⁻¹) .proj₁ )
+-}
+
+  open PB hiding (_≈_)
+  open Lemmas-Sym
+  
+  f-wd-ax :
+    let open PB (n EX.QRel,_===_)renaming (_===_ to _===₀_ ; _≈_ to _≈₀_) using () in
+    let open PB (n QRel,_===_) in
+    ∀ {w v} -> w ===₀ v -> (f*) w ≈ (f*) v
+  f-wd-ax {₁₊ n} EX.order-S = begin
+    f* (EX.S ^ p) ≈⟨ lemma-f* EX.S p ⟩
+    f* (EX.S) ^ p ≈⟨ PB.axiom order-S ⟩
+    f* ε ∎
+    where
+    open PB ((₁₊ n) QRel,_===_)
+    open PP ((₁₊ n) QRel,_===_)
+    open SR word-setoid
+  
+  f-wd-ax EX.order-H = axiom order-H
+  f-wd-ax EX.order-SH = axiom order-SH
+  f-wd-ax EX.comm-HHS = axiom comm-HHS
+  f-wd-ax EX.semi-EX-S↓ = lemma-Ex-S
+  f-wd-ax EX.semi-EX-S↑ = lemma-Ex-S↑-n
+  f-wd-ax EX.semi-EX-H↓ = lemma-Ex-H
+  f-wd-ax EX.semi-EX-H↑ = lemma-Ex-H↑-n
+  f-wd-ax EX.comm-EX-CZ = sym lemma-comm-Ex-CZ-n
+  f-wd-ax EX.semi-EXEX↑-CZ = lemma-Ex-Ex↑-CZ
+  f-wd-ax EX.semi-EX↑EX-CZ↑ = lemma-Ex↑-Ex-CZ↑
+  f-wd-ax EX.yang-baxter = lemma-yang-baxter
+  f-wd-ax EX.order-EX = lemma-order-Ex-n
+  f-wd-ax (EX.comm-EX {g = g}) = sym (lemma-comm-Ex-w↑↑ (f*  [ g ]ʷ))
+  f-wd-ax (EX.comm-CZ {g = g}) = sym (lemma-comm-CZ-w↑↑ (f*  [ g ]ʷ))
+  f-wd-ax (EX.comm-H {g = g}) = sym (lemma-comm-H-w↑ ((f*  [ g ]ʷ)))
+  f-wd-ax (EX.comm-S {g = g}) = sym (lemma-comm-S-w↑ ((f*  [ g ]ʷ)))
+  f-wd-ax {₁₊ n} (EX.cong↑ {w = w} {v = v} eq) = begin
+    f* (w EX.↑) ≈⟨ lemma-f*-↑ w ⟩
+    f* w ↑ ≈⟨ lemma-cong↑ _ _ (f-wd-ax eq) ⟩
+    f* v ↑ ≈⟨  PB.sym (lemma-f*-↑ v) ⟩
+    f* (v EX.↑) ∎
+    where
+    open PB ((₁₊ n) QRel,_===_)
+    open PP ((₁₊ n) QRel,_===_)
+    open SR word-setoid
+
+  open import Presentation.Morphism 
+
+  by-ex :
+    let
+    open PB (n EX.QRel,_===_)renaming (_≈_ to _≈₀_) using ()
+    open PB (n QRel,_===_)
+    in
+    ∀ {w v} -> w ≈₀ v -> (f*) w ≈ (f*) v
+  by-ex {n} {w} {v} eq = Star-Congruence.lemma-f*-cong ((n EX.QRel,_===_)) ((n QRel,_===_)) f f-wd-ax eq 
+
+
+  by-ex' :
+    let
+    open PB (n EX.QRel,_===_)renaming (_≈_ to _≈₀_) using ()
+    open PB (n QRel,_===_)
+    in
+    ∀ {w v w' v'} -> w ≈₀ v -> (f*) w ≈ w' -> (f*) v ≈ v' -> w' ≈ v'
+  by-ex' {n} {w} {v} {w'} {v'} eq eqw eqv = begin
+    w' ≈⟨ PB.sym eqw ⟩
+    (f*) w ≈⟨ by-ex eq ⟩
+    (f*) v ≈⟨ eqv ⟩
+    v' ∎
+    where
+    open PB (n QRel,_===_)
+    open PP (n QRel,_===_)
+    open SR word-setoid
+
+{-
+  lemma-f*^^ : ∀ w k l -> f* ((w ^ k) ^ l) ≈ ((f* w) ^ k) ^ l
+  lemma-f*^^ w k l = begin
+    f* ((w ^ k) ^ l) ≈⟨ (by-emb (P2.lemma-^^ w k l)) ⟩
+    f* (w ^ (k Nat.* l)) ≈⟨ lemma-f* w (k Nat.* l) ⟩
+    ((f* w) ^ (k Nat.* l)) ≈⟨ sym (lemma-^^ (f* w) k l) ⟩
+    ((f* w) ^ k) ^ l ∎
+    where
+    module P2 = PP (2 QRel,_===_)
+
+  lemma-f*S^^↑  : ∀ k l -> f* (((S ^ k) ^ l) ↑) ≈ (((S) ^ k) ^ l) ↑
+  lemma-f*S^^↑ k l = begin
+    f* (((S ^ k) ^ l) ↑) ≈⟨ (by-emb (lemma-cong↑ _ _ (P1.lemma-^^ S k l))) ⟩
+    f* ((S ^ (k Nat.* l)) ↑) ≈⟨ lemma-f*-Sᵏ↑ (k Nat.* l) ⟩
+    ((S) ^ (k Nat.* l)) ↑ ≈⟨ sym (lemma-cong↑ _ _ ( (Pn'.lemma-^^ (S) k l))) ⟩
+    (((S) ^ k) ^ l) ↑ ∎
+    where
+    module P1 = PP (1 QRel,_===_)
+    module P2 = PP (2 QRel,_===_)
+    module Pn' = PP ((₁₊ n) QRel,_===_)
+
+
+CZ-gen ∷ H-gen ∷ (H-gen ↥) ∷ CZ-gen ∷ H-gen ∷ (H-gen ↥) ∷ CZ-gen ∷ H-gen ∷ (H-gen ↥) ∷ (CZ-gen ↥) ∷ (H-gen ↥) ∷ ((H-gen ↥) ↥) ∷ (CZ-gen ↥) ∷ (H-gen ↥) ∷ ((H-gen ↥) ↥) ∷ (CZ-gen ↥) ∷ (H-gen ↥) ∷ ((H-gen ↥) ↥) ∷ CZ-gen ∷ H-gen ∷ (H-gen ↥) ∷ CZ-gen ∷ H-gen ∷ (H-gen ↥) ∷ CZ-gen ∷ H-gen ∷ CZ-gen ∷ (H-gen ↥) ∷ (CZ-gen ↥) ∷ CZ-gen ∷ H-gen ∷ (H-gen ↥) ∷ CZ-gen ∷ H-gen ∷ (H-gen ↥) ∷ CZ-gen ∷ H-gen ∷ (H-gen ↥) ∷ (CZ-gen ↥) ∷ (H-gen ↥) ∷ ((H-gen ↥) ↥) ∷ (CZ-gen ↥) ∷ (H-gen ↥) ∷ ((H-gen ↥) ↥) ∷ (CZ-gen ↥) ∷ (H-gen ↥) ∷ ((H-gen ↥) ↥) ∷ CZ-gen ∷ H-gen ∷ (H-gen ↥) ∷ CZ-gen ∷ H-gen ∷ (H-gen ↥) ∷ CZ-gen ∷ H-gen ∷ (H-gen ↥) ∷ [] 
+
+
+
+module Aux where
+
+  private
+    variable
+      n : ℕ
+      
+  open Symplectic-EX
+  
+  lemma-XC-CZ :
+    let
+    open PB ((₃₊ n) QRel,_===_)
+    in
+    XC • CZ ↑ ≈ CZ ↑ • CZ • XC
+  lemma-XC-CZ {n} = {!!}
+    where
+    
+    open PB ((₃₊ n) QRel,_===_)
+    open PP ((₃₊ n) QRel,_===_)
+    open SR word-setoid
+    open Rewriting-EX (₂₊ n)
+    aux : (Ex • Ex ↑ • Ex) • (XC • CZ ↑) • Ex • Ex ↑ • Ex ≈ (Ex • Ex ↑ • Ex) • (CZ ↑ • CZ02⁻¹ • XC) • Ex • Ex ↑ • Ex
+    aux = begin
+      (Ex • Ex ↑ • Ex) • (XC • CZ ↑) • Ex • Ex ↑ • Ex ≈⟨ rewrite-EX 100 auto ⟩
+      CX ↑ • CZ ≈⟨ {!Ex'!} ⟩
+      (Ex • Ex ↑ • Ex) • (CZ ↑ • CZ02⁻¹ • XC) • Ex • Ex ↑ • Ex ∎
+  -}

@@ -1,0 +1,815 @@
+{-# OPTIONS  --safe #-}
+{-# OPTIONS  --call-by-name #-}
+{-# OPTIONS --termination-depth=2 #-}
+open import Level using (0ℓ)
+
+open import Relation.Binary using (Rel)
+open import Relation.Binary.Definitions using (DecidableEquality)
+open import Relation.Binary.Morphism.Definitions using (Homomorphic₂)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; _≢_ ; inspect ; setoid ; module ≡-Reasoning ; _≗_) renaming ([_] to [_]')
+import Relation.Binary.Reasoning.Setoid as SR
+import Relation.Binary.PropositionalEquality as Eq
+open import Relation.Nullary.Decidable using (yes ; no)
+
+
+open import Function using (_∘_ ; id)
+open import Function.Definitions using (Injective)
+
+open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; map₁ ; ∃ ; Σ ; Σ-syntax)
+open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
+open import Data.Nat hiding (_^_ ; _+_ ; _*_ ;  _≟_)
+open import Agda.Builtin.Nat using (_-_)
+import Data.Nat as Nat
+open import Data.Bool hiding (_<_ ; _≤_ ; _≟_)
+open import Data.List hiding ([_] ; _++_ ; last ; head ; tail ; _∷ʳ_)
+open import Data.Vec hiding ([_])
+import Data.Vec as Vec
+open import Data.Fin hiding (_+_ ; _-_)
+
+open import Data.Maybe
+open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_] ; [_,_]′)
+open import Data.Unit using (⊤ ; tt)
+open import Data.Empty using (⊥ ; ⊥-elim)
+
+open import Word.Base as WB hiding (wfoldl ; _*)
+open import Word.Properties
+import Presentation.Base as PB
+import Presentation.Properties as PP
+open PP using (NFProperty ; NFProperty')
+import Presentation.CosetNF as CA
+import Presentation.Reidemeister-Schreier as RS
+module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
+
+open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
+import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
+import Presentation.Construct.Properties.DirectProduct as DP
+import Presentation.Groups.Cyclic as Cyclic
+
+
+open import Data.Fin using (Fin ; toℕ ; suc ; zero ; fromℕ)
+open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
+import Data.Nat.Properties as NP
+open import Presentation.GroupLike
+open import Presentation.Tactics hiding ([_] ; inspect)
+open import Data.Nat.Primality
+import Data.Fin.Properties as FP
+
+
+
+module N.Proofs.P7 (p-2 : ℕ) (p-prime : Prime (2+ p-2))  where
+
+pattern auto = Eq.refl
+
+pattern ₀ = zero
+pattern ₁ = suc ₀
+pattern ₂ = suc ₁
+pattern ₃ = suc ₂
+pattern ₄ = 4
+pattern ₅ = 5
+pattern ₆ = 6
+pattern ₇ = 7
+pattern ₈ = 8
+pattern ₉ = 9
+pattern ₁₀ = 10
+pattern ₁₁ = 11
+pattern ₁₂ = 12
+pattern ₁₃ = 13
+pattern ₁₄ = 14
+pattern ₁₅ = 15
+
+pattern ₁₊ ⱼ = suc ⱼ
+pattern ₂₊ ⱼ = suc (suc ⱼ)
+pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
+
+
+open import Zp.ModularArithmetic
+open PrimeModulus p-2 p-prime
+open import N.Symplectic p-2 p-prime
+open import N.Lemmas-2Qupit p-2 p-prime
+open import N.NF2-Sym p-2 p-prime
+--open Lemmas-2Q 2
+open Symplectic
+open Lemmas-Sym
+open import N.NF1-Sym p-2 p-prime
+open import N.Ex-Sym p-2 p-prime
+open import N.Ex-Sym1 p-2 p-prime
+open import N.Ex-Sym2 p-2 p-prime
+open import N.Ex-Sym3 p-2 p-prime
+open import N.Ex-Sym4 p-2 p-prime
+open import N.Ex-Sym5 p-2 p-prime hiding (module L0)
+open import N.Cosets p-2 p-prime
+
+open import N.Lemma-Comm p-2 p-prime
+open import N.Completeness1-Sym p-2 p-prime renaming (module Completeness to Cp1)
+open Lemmas0a
+open Lemmas0a1
+open Lemmas0b
+open Lemmas0c
+
+open LM2
+open import N.Completeness1-Sym p-2 p-prime renaming (module Completeness to CP1) using ()
+
+
+
+open PB (2 QRel,_===_)
+open PP (2 QRel,_===_)
+open SR word-setoid
+open Pattern-Assoc
+open Sym0-Rewriting 1
+
+open import N.Proofs.P1 p-2 p-prime
+open import N.Proofs.P2 p-2 p-prime
+open import N.Proofs.P3 p-2 p-prime
+open import N.Proofs.P4 p-2 p-prime
+open import N.Proofs.P5 p-2 p-prime
+open import N.Proofs.P6 p-2 p-prime
+open import N.Lemmas-2Qupit-Sym p-2 p-prime as TQ
+open import N.Lemma-Postfix p-2 p-prime
+open import N.Derived p-2 p-prime
+open import N.Derived2 p-2 p-prime
+--  open import N.NF1-Sym p-2 p-prime as NF1
+--  open NF1.Normal-Form1 using ()
+
+open TQ.Lemmas-2Q 0
+open Duality
+import N.Duality p-2 p-prime as ND
+open Lemmas0 1
+module L0 = Lemmas0 0
+open import Algebra.Properties.Ring (+-*-ring p-2)
+open import Zp.Mod-Lemmas p-2 p-prime
+
+
+Lemma-two-qupit-completeness-||-mε-mHS^k' :
+
+  ∀ cz* sl s m m'' k' ->
+  let
+  mc = (m , ε)
+  mc'' = (m'' , HS^ k')
+  lm = case-|| cz* sl (s , mc , mc'')
+  in
+  -------------------------------------------------
+  ∃ \ lm' -> ∃ \ w -> ⟦ lm ⟧₂ • CZ ≈ w ↑ • ⟦ lm' ⟧₂
+
+Lemma-two-qupit-completeness-||-mε-mHS^k' cz* sl s m m'' k'@(₁₊ k'-1)  with ((m ⁻¹) .proj₁ + - (m'' ⁻¹) .proj₁) | inspect (\ m -> ((m ⁻¹) .proj₁ + - (m'' ⁻¹) .proj₁)) m
+--Lemma-two-qupit-completeness-||-mε-mHS^k' cz* sl (s , mc@(m , c@ε) , mc''@(m'' , c''@(HS^ k'@(₁₊ k'-1))))) (CZ-gen) with ((m ⁻¹) .proj₁ + - (m'' ⁻¹) .proj₁) | inspect (\ m -> ((m ⁻¹) .proj₁ + - (m'' ⁻¹) .proj₁)) m
+... | (₁₊ st) | [ eq ]' = lm''' , w''' , claim''
+  where
+  mc = (m , ε)
+  mc'' = (m'' , HS^ k')
+  
+  m'′ = (m'' ⁻¹)
+  m' = -' m'′
+
+  m⁻¹ = (m ⁻¹) .proj₁
+  m⁻² = m⁻¹ * m⁻¹
+  m'⁻¹ = (m' ⁻¹) .proj₁
+  m'⁻² = m'⁻¹ * m'⁻¹
+  mf = m .proj₁
+  m'f = m' .proj₁
+  m''f = m'' .proj₁
+  a* = m ⁻¹
+  a = a* .proj₁
+  l = m' .proj₁
+  -l : ℤ ₚ
+  -l = - l
+  l⁻¹ : ℤ ₚ
+  l⁻¹ = ((m' ⁻¹) .proj₁)
+  -l⁻¹ : ℤ ₚ
+  -l⁻¹ = - l⁻¹
+  cz = ₀
+  cz' = cz* .proj₁
+
+  s' = k' * (m' .proj₁ * m' .proj₁)
+  s'' = -l * a + s'
+  s1' = - mf * m'⁻¹
+  mc1' : ZMultiplier × Cosets1
+  mc1' =  m , ε
+  nf1' : NF1
+  nf1' = (s1' , mc1')
+
+  aa = ((m ⁻¹) .proj₁ + - (m'' ⁻¹) .proj₁)
+  neqaa : aa ≢ ₀
+  neqaa eq0 = FP.0≢1+n (Eq.trans (Eq.sym eq0) eq)
+  aa* = (aa , neqaa)
+  maa = sl * (((m *' aa*) ⁻¹) .proj₁ * ((m *' aa*) ⁻¹) .proj₁)
+  lm' = case-| (aa* ⁻¹ , ε) (s' , m' , ε)
+
+  lm'′ = case-||ₐ ₀ (s , (aa* ⁻¹ , ε) , (-'₁ *' m' ⁻¹ , HS^ (s' * m'⁻²)))
+  w' = ⟦ m ⟧ₘ • M (aa , neqaa)
+
+
+  claim : ⟦ case-| (m , ε) (s' , m' , ε) ⟧₂ • CZ ≈ w' ↑ • ⟦ lm' ⟧₂
+  claim = step-|-CZb m s' m' neqaa
+
+
+  nf' = (k' * (m' .proj₁ * m' .proj₁) , m' , ε)
+
+
+  claim' : ⟦ case-||ₐ cz (s , mc , mc'') ⟧₂ • CZ ≈ (w' ↑) • ⟦ lm'′ ⟧₂ 
+  claim' = begin
+    ⟦ case-||ₐ cz (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cleft cright lemma-postfix-case-| s mc m'' k') ⟩
+    (CZ^ cz • S^ s • H ^ 3 • ⟦ case-| mc nf' ⟧₂) • CZ ≈⟨ ( special-assoc (□ ^ 4 • □) (□ ^ 3 • □ ^ 2) auto) ⟩
+    (CZ^ cz • S^ s • H ^ 3) • ⟦ case-| mc nf' ⟧₂ • CZ ≈⟨ ( cright claim) ⟩
+    (CZ^ cz • S^ s • H^ ₃) • w' ↑ • ⟦ lm' ⟧₂ ≈⟨ special-assoc (□ ^ 3 • □ ^ 2) (□ • (□ ^ 2 • □) • □) auto ⟩
+    CZ^ cz • ((S^ s • H^ ₃) • w' ↑) • ⟦ lm' ⟧₂ ≈⟨ (cright (cleft lemma-comm-S^aH^b s ₃ w')) ⟩
+    CZ^ cz • (w' ↑ • S^ s • H^ ₃) • ⟦ lm' ⟧₂ ≈⟨ special-assoc (□ • □ ^ 3 • □ ) (□ ^ 2 • □ ^ 3) auto ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • ⟦ lm' ⟧₂ ≈⟨ refl ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • ⟦ (s' , m' , ε) ⟧₁ ≈⟨ (cright cright cright cright trans (sym left-unit) (cleft (sym (axiom order-H)))) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H ^ 4 • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • ⟦ (s' , m' , ε) ⟧₁ ≈⟨ (cright cright cright cright special-assoc (□ ^ 4 • □ ^ 2) (□ • (□ ^ 3 • □) • □) auto) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • (H ^ 3 • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑) • ⟦ (s' , m' , ε) ⟧₁ ≈⟨ (cright cright cright cright cright (cleft lemma-comm-Hᵏ-w↑ 3 ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊)) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • (⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • H ^ 3) • ⟦ (s' , m' , ε) ⟧₁ ≈⟨ (cright cright cright cright cright assoc) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • H ^ 3 • ⟦ (s' , m' , ε) ⟧₁ ≈⟨ (cright cright cright cright cright cright (cright trans (cright right-unit) (lemma-S^kM (m' .proj₁) s' (m' .proj₂)))) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • H ^ 3 • ⟦ m' ⟧ₘ • S^ (s' * m'⁻²) ≈⟨ (cright cright cright cright cright cright special-assoc (□ ^ 3 • □) (□ ^ 2 • □ ^ 2) auto) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • HH • H • ⟦ m' ⟧ₘ • S^ (s' * m'⁻²) ≈⟨ (cright cright cright cright cright cright cright sym assoc) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • HH • (H • ⟦ m' ⟧ₘ) • S^ (s' * m'⁻²) ≈⟨ (cright cright cright cright cright cright  cong lemma-HH-M-1 (cleft semi-HM m')) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • M -'₁ • (⟦ m' ⁻¹ ⟧ₘ • H) • S^ (s' * m'⁻²) ≈⟨ (cright cright cright cright cright cright (special-assoc (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto)) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • (M -'₁ • ⟦ m' ⁻¹ ⟧ₘ) • H • S^ (s' * m'⁻²) ≈⟨ (cright cright cright cright cright cright cleft axiom (M-mul -'₁ (m' ⁻¹))) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • (⟦ -'₁ *' m' ⁻¹ ⟧ₘ) • H • S^ (s' * m'⁻²) ≈⟨ (cright (cright special-assoc (□ ^ 6) (□ ^ 3 • □ ^ 3) auto)) ⟩
+    (CZ^ cz • w' ↑) • S^ s • CX • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • ⟦ -'₁ *' m' ⁻¹ ⟧ₘ • H • S^ (s' * m'⁻²) ≈⟨ cong left-unit (trans (sym left-unit) (cright cright cright (cright cright refl))) ⟩
+    (w' ↑) • ε • S^ s • CX • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • ⟦ -'₁ *' m' ⁻¹ ⟧ₘ • H • S^ (s' * m'⁻²) ≈⟨ refl ⟩
+    (w' ↑) • ⟦ lm'′ ⟧₂  ∎
+
+  lm''' = case-|| (cz*  *' (m *' aa*))  maa  (s , (aa* ⁻¹ , ε) , (-'₁ *' m' ⁻¹ , HS^ (s' * m'⁻²)))
+  w''' = M ((m *' aa*) ⁻¹)
+
+
+  aux01 : m'⁻¹ ≡ - m'' .proj₁
+  aux01 = Eq.trans (inv-neg-comm m'′) (Eq.trans (Eq.cong -_ (inv-involutive m'')) auto)
+  aux02 : - mf * m'⁻¹ ≡ mf * m''f
+  aux02 = (Eq.trans (Eq.cong (- mf *_) aux01) (Eq.trans (Eq.sym (-‿distribʳ-* (- mf) m''f)) (Eq.trans (Eq.cong -_ (Eq.sym (-‿distribˡ-* mf m''f))) (-‿involutive (mf * m''f)))))
+  claim'' : ⟦ case-|| cz* sl (s , mc , mc'') ⟧₂ • CZ ≈ w''' ↑ • ⟦ lm''' ⟧₂
+  claim'' = begin
+    ⟦ case-|| cz* sl (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cleft (cright  (cright cright sym left-unit))) ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑ • ⟦ case-||ₐ ₀ (s , mc , mc'') ⟧₂) • CZ ≈⟨ special-assoc (□ ^ 4 • □) (□ ^ 3 • □ ^ 2) auto ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑) • ⟦ case-||ₐ ₀ (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cright claim') ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑) • (w' ↑) • ⟦ lm'′ ⟧₂  ≈⟨ ( cright cleft axiom (cong↑ (M-mul m aa*))) ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑) • (M (m *' aa*) ↑) • ⟦ lm'′ ⟧₂  ≈⟨ ( special-assoc (□ ^ 3 • □ ^ 2) (□ ^ 2 • □ ^ 2 • □) auto) ⟩
+    (CZ^ cz' • H ↑ ^ 3) • (S^ sl ↑ • M (m *' aa*) ↑) • ⟦ lm'′ ⟧₂  ≈⟨ ( cright cleft lemma-cong↑ _ _ (L0.lemma-S^kM ((m *' aa*) .proj₁) sl ((m *' aa*) .proj₂))) ⟩
+    (CZ^ cz' • H ↑ ^ 3) • (M (m *' aa*) ↑ • S^ maa ↑) • ⟦ lm'′ ⟧₂  ≈⟨ ( special-assoc (□ ^ 2 • □ ^ 2 • □) (□ • □ ^ 2 • □ ^ 2) auto) ⟩
+    CZ^ cz' • (H ↑ ^ 3 • M (m *' aa*) ↑) • S^ maa ↑ • ⟦ lm'′ ⟧₂  ≈⟨ ( cright cleft lemma-cong↑ _  _ (semi-H³M (m *' aa*))) ⟩
+    CZ^ cz' • (M ((m *' aa*) ⁻¹) ↑ • H ↑ ^ 3) • S^ maa ↑ • ⟦ lm'′ ⟧₂  ≈⟨ ( special-assoc (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto) ⟩
+    (CZ^ cz' • M ((m *' aa*) ⁻¹) ↑) • H ↑ ^ 3 • S^ maa ↑ • ⟦ lm'′ ⟧₂  ≈⟨ ( cleft lemma-CZ^kM↑ (((m *' aa*) ⁻¹) .proj₁) cz' (((m *' aa*) ⁻¹) .proj₂)) ⟩
+    (M ((m *' aa*) ⁻¹) ↑ • CZ^ (cz' * ((m *' aa*) ⁻¹ ⁻¹) .proj₁)) • H ↑ ^ 3 • S^ maa ↑ • ⟦ lm'′ ⟧₂  ≈⟨ ( assoc) ⟩
+    M ((m *' aa*) ⁻¹) ↑ • CZ^ (cz' * ((m *' aa*) ⁻¹ ⁻¹) .proj₁) • H ↑ ^ 3 • S^ maa ↑ • ⟦ lm'′ ⟧₂  ≈⟨ ( cright cleft refl' (Eq.cong CZ^ (Eq.cong (cz' *_) (inv-involutive (m *' aa*))))) ⟩
+    M ((m *' aa*) ⁻¹) ↑ • CZ^ (cz' * ((m *' aa*)) .proj₁) • H ↑ ^ 3 • S^ maa ↑ • ⟦ lm'′ ⟧₂  ≈⟨ ( cright cright cright cright left-unit) ⟩
+    M ((m *' aa*) ⁻¹) ↑ • CZ^ (cz' * ((m *' aa*)) .proj₁) • H ↑ ^ 3 • S^ maa ↑ • ⟦ (s , (aa* ⁻¹ , ε) , (-'₁ *' m' ⁻¹ , HS^ (s' * m'⁻²))) ⟧ₚ  ≈⟨ ( refl) ⟩
+
+    w''' ↑ • ⟦ lm''' ⟧₂  ∎
+
+
+
+... | ₀ | [ eq ]' = lm''' , w''' , claim''
+  where
+  mc = (m , ε)
+  mc'' = (m'' , HS^ k')
+
+  
+  m'′ = (m'' ⁻¹)
+  m' = -' m'′
+
+  m⁻¹ = (m ⁻¹) .proj₁
+  m⁻² = m⁻¹ * m⁻¹
+  m'⁻¹ = (m' ⁻¹) .proj₁
+  mf = m .proj₁
+  m'f = m' .proj₁
+  m''f = m'' .proj₁
+  a* = m ⁻¹
+  a = a* .proj₁
+  l = m' .proj₁
+  -l : ℤ ₚ
+  -l = - l
+  l⁻¹ : ℤ ₚ
+  l⁻¹ = ((m' ⁻¹) .proj₁)
+  -l⁻¹ : ℤ ₚ
+  -l⁻¹ = - l⁻¹
+  cz = ₀
+  cz' = cz* .proj₁
+
+  s' = k' * (m' .proj₁ * m' .proj₁)
+  s'' = -l * a + s'
+  s1' = - mf * m'⁻¹
+  mc1' : ZMultiplier × Cosets1
+  mc1' =  m , ε
+  nf1' : NF1
+  nf1' = (s1' , mc1')
+
+  lm' = case-nf1 (s' , m' , ε)
+  w' = ⟦ m ⟧ₘ
+  nf' = (k' * (m' .proj₁ * m' .proj₁) , m' , ε)
+
+  open CP1
+  tw : TopwWord {1} (S^ s • H^ ₃ • ⟦ (s' , m' , ε) ⟧₁)
+  tw = top-S^k (toℕ s) , (tt , tt , tt) , top-S^k {n = 1} (toℕ s') , top-M m' , tt
+
+  nf1'' = CP1.Theorem-single-qupit-completeness (S^ s • H^ ₃ • ⟦ (s' , m' , ε) ⟧₁) tw
+
+  lm'' = case-nf1 (nf1'' .proj₁)
+
+  claim' : ⟦ case-||ₐ cz (s , mc , mc'') ⟧₂ • CZ ≈ w' ↑ • ⟦ lm'' ⟧₂
+  claim' = begin
+    ⟦ case-||ₐ cz (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cleft cright lemma-postfix-case-| s mc m'' k') ⟩
+    (CZ^ cz • S^ s • H ^ 3 • ⟦ case-| mc nf' ⟧₂) • CZ ≈⟨ ( special-assoc (□ ^ 4 • □) (□ ^ 3 • □ ^ 2) auto) ⟩
+    (CZ^ cz • S^ s • H ^ 3) • ⟦ case-| mc nf' ⟧₂ • CZ ≈⟨ ( cright step-|-CZa m s' m' eq) ⟩
+    (CZ^ cz • S^ s • H^ ₃) • w' ↑ • ⟦ lm' ⟧₂ ≈⟨ special-assoc (□ ^ 3 • □ ^ 2) (□ • (□ ^ 2 • □) • □) auto ⟩
+    CZ^ cz • ((S^ s • H^ ₃) • w' ↑) • ⟦ lm' ⟧₂ ≈⟨ (cright (cleft lemma-comm-S^aH^b s ₃ w')) ⟩
+    CZ^ cz • (w' ↑ • S^ s • H^ ₃) • ⟦ lm' ⟧₂ ≈⟨ special-assoc (□ • □ ^ 3 • □ ) (□ ^ 2 • □ ^ 3) auto ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • ⟦ lm' ⟧₂ ≈⟨ (cleft left-unit) ⟩
+    (w' ↑) • S^ s • H^ ₃ • ⟦ lm' ⟧₂ ≈⟨ (cright nf1'' .proj₂) ⟩
+    w' ↑ • ⟦ lm'' ⟧₂ ∎
+
+
+  lm''' = case-| (cz* ⁻¹ *' (-'₁ *' m ⁻¹) , HS^ (sl * m⁻²)) (nf1'' .proj₁)
+  w''' = M cz*
+
+
+  aux01 : m'⁻¹ ≡ - m'' .proj₁
+  aux01 = Eq.trans (inv-neg-comm m'′) (Eq.trans (Eq.cong -_ (inv-involutive m'')) auto)
+  aux02 : - mf * m'⁻¹ ≡ mf * m''f
+  aux02 = (Eq.trans (Eq.cong (- mf *_) aux01) (Eq.trans (Eq.sym (-‿distribʳ-* (- mf) m''f)) (Eq.trans (Eq.cong -_ (Eq.sym (-‿distribˡ-* mf m''f))) (-‿involutive (mf * m''f)))))
+  claim'' : ⟦ case-|| cz* sl (s , mc , mc'') ⟧₂ • CZ ≈ w''' ↑ • ⟦ lm''' ⟧₂
+  claim'' = begin
+    ⟦ case-|| cz* sl (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cleft (cright  (cright cright sym left-unit))) ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑ • ⟦ case-||ₐ ₀ (s , mc , mc'') ⟧₂) • CZ ≈⟨ special-assoc (□ ^ 4 • □) (□ ^ 3 • □ ^ 2) auto ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑) • ⟦ case-||ₐ ₀ (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cright claim') ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑) • M m ↑ • ⟦ lm'' ⟧₂ ≈⟨ special-assoc (□ ^ 3 • □ ^ 2) (□ ^ 2 • □ ^ 2 • □) auto ⟩
+    (CZ^ cz' • H ↑ ^ 3) • (S^ sl ↑ • M m ↑) • ⟦ lm'' ⟧₂ ≈⟨ (cright cleft lemma-cong↑ _ _ (L0.lemma-S^kM (m .proj₁) sl (m .proj₂))) ⟩
+    (CZ^ cz' • H ↑ ^ 3) • (M m ↑ • S^ (sl * m⁻²) ↑) • ⟦ lm'' ⟧₂ ≈⟨ special-assoc (□ ^ 4 • □ ^ 2 • □) (□ • □ ^ 2 • □ ^ 2 • □ ^ 2) auto ⟩
+    CZ^ cz' • HH ↑ • (H ↑ • M m ↑) • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cright cong (lemma-cong↑ _ _ L0.lemma-HH-M-1) (cleft lemma-cong↑ _ _ (L0.semi-HM m))) ⟩
+    CZ^ cz' • M -'₁ ↑ • (M (m ⁻¹) ↑ • H ↑) • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cright special-assoc (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto) ⟩
+    CZ^ cz' • (M -'₁ ↑ • M (m ⁻¹) ↑) • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cright cleft axiom (cong↑ (M-mul -'₁ (m ⁻¹)))) ⟩
+    CZ^ cz' • (M (-'₁ *' m ⁻¹) ↑) • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ sym left-unit ⟩
+    ε • CZ^ cz' • (M (-'₁ *' m ⁻¹) ↑) • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cleft lemma-cong↑ _ _ (PB1.sym (L0.aux-M-mul cz*))) ⟩
+    (M cz* • M (cz* ⁻¹)) ↑ • CZ^ cz' • (M (-'₁ *' m ⁻¹) ↑) • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ special-assoc (□ ^ 2 • □ ^ 2) (□ • □ ^ 2 • □) auto ⟩
+    M cz* ↑ • (M (cz* ⁻¹) ↑ • CZ^ cz') • (M (-'₁ *' m ⁻¹) ↑) • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cright cleft lemma-M↑CZ^k ((cz* ⁻¹) .proj₁) cz' ((cz* ⁻¹) .proj₂)) ⟩
+    M cz* ↑ • (CZ^ (cz' * (cz* ⁻¹) .proj₁) • M (cz* ⁻¹) ↑) • (M (-'₁ *' m ⁻¹) ↑) • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cright (cleft (cleft refl' (Eq.cong CZ^ (lemma-⁻¹ʳ cz' {{nztoℕ {y = cz'} {neq0 = cz* .proj₂}}}))))) ⟩
+    M cz* ↑ • (CZ • M (cz* ⁻¹) ↑) • (M (-'₁ *' m ⁻¹) ↑) • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cright special-assoc (□ ^ 2 • □ ^ 2) (□ • □ ^ 2 • □) auto) ⟩
+    M cz* ↑ • CZ • (M (cz* ⁻¹) ↑ • M (-'₁ *' m ⁻¹) ↑) • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cright cright cleft axiom (cong↑ (M-mul (cz* ⁻¹) (-'₁ *' m ⁻¹)))) ⟩
+    M cz* ↑ • CZ • M (cz* ⁻¹ *' (-'₁ *' m ⁻¹)) ↑ • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cright cright special-assoc (□ ^ 4) (□ ^ 3 • □) auto) ⟩
+    M cz* ↑ • CZ • (M (cz* ⁻¹ *' (-'₁ *' m ⁻¹)) ↑ • H ↑ • S^ (sl * m⁻²) ↑) • ⟦ lm'' ⟧₂ ≈⟨ (cright cright cright refl) ⟩
+    M cz* ↑ • CZ • (M (cz* ⁻¹ *' (-'₁ *' m ⁻¹)) ↑ • H ↑ • S^ (sl * m⁻²) ↑) • ⟦ (nf1'' .proj₁) ⟧₁ ≈⟨ refl ⟩
+    w''' ↑ • ⟦ lm''' ⟧₂  ∎
+
+
+Lemma-two-qupit-completeness-||-mε-mHS^k'  cz* sl s m m'' k'@₀ with ((m ⁻¹) .proj₁ + - (m'' ⁻¹) .proj₁) | inspect (\ m -> ((m ⁻¹) .proj₁ + - (m'' ⁻¹) .proj₁)) m
+--Lemma-two-qupit-completeness-||-mε-mHS^₀ : lm@(case-|| cz* sl (s , mc@(m , c@ε) , mc''@(m'' , c''@(HS^ k'@₀)))) (CZ-gen) with ((m ⁻¹) .proj₁ + - (m'' ⁻¹) .proj₁) | inspect (\ m -> ((m ⁻¹) .proj₁ + - (m'' ⁻¹) .proj₁)) m
+... | (₁₊ st) | [ eq ]' = lm''' , w''' , claim''
+  where
+  mc = (m , ε)
+  mc'' = (m'' , HS^ k')
+  
+  m'′ = (m'' ⁻¹)
+  m' = -' m'′
+
+  m⁻¹ = (m ⁻¹) .proj₁
+  m⁻² = m⁻¹ * m⁻¹
+  m'⁻¹ = (m' ⁻¹) .proj₁
+  mf = m .proj₁
+  m'f = m' .proj₁
+  m''f = m'' .proj₁
+  a* = m ⁻¹
+  a = a* .proj₁
+  l = m' .proj₁
+  -l : ℤ ₚ
+  -l = - l
+  l⁻¹ : ℤ ₚ
+  l⁻¹ = ((m' ⁻¹) .proj₁)
+  -l⁻¹ : ℤ ₚ
+  -l⁻¹ = - l⁻¹
+  cz = ₀
+  cz' = cz* .proj₁
+
+  s' = k' * (m' .proj₁ * m' .proj₁)
+  s'' = -l * a + s'
+  s1' = - mf * m'⁻¹
+  mc1' : ZMultiplier × Cosets1
+  mc1' =  m , ε
+  nf1' : NF1
+  nf1' = (s1' , mc1')
+
+  aa = ((m ⁻¹) .proj₁ + - (m'' ⁻¹) .proj₁)
+  neqaa : aa ≢ ₀
+  neqaa eq0 = FP.0≢1+n (Eq.trans (Eq.sym eq0) eq)
+  aa* = (aa , neqaa)
+  maa = sl * (((m *' aa*) ⁻¹) .proj₁ * ((m *' aa*) ⁻¹) .proj₁)
+  lm' = case-| (aa* ⁻¹ , ε) (s' , m' , ε)
+
+  lm'′ = case-||ₐ ₀ (s , (aa* ⁻¹ , ε) , (-'₁ *' m' ⁻¹ , HS^ ₀))
+  w' = ⟦ m ⟧ₘ • M (aa , neqaa)
+
+
+  claim : ⟦ case-| (m , ε) (s' , m' , ε) ⟧₂ • CZ ≈ w' ↑ • ⟦ lm' ⟧₂
+  claim = step-|-CZb m s' m' neqaa
+
+
+  nf' = (k' * (m' .proj₁ * m' .proj₁) , m' , ε)
+
+
+  claim' : ⟦ case-||ₐ cz (s , mc , mc'') ⟧₂ • CZ ≈ (w' ↑) • ⟦ lm'′ ⟧₂ 
+  claim' = begin
+    ⟦ case-||ₐ cz (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cleft cright lemma-postfix-case-| s mc m'' k') ⟩
+    (CZ^ cz • S^ s • H ^ 3 • ⟦ case-| mc nf' ⟧₂) • CZ ≈⟨ ( special-assoc (□ ^ 4 • □) (□ ^ 3 • □ ^ 2) auto) ⟩
+    (CZ^ cz • S^ s • H ^ 3) • ⟦ case-| mc nf' ⟧₂ • CZ ≈⟨ ( cright claim) ⟩
+    (CZ^ cz • S^ s • H^ ₃) • w' ↑ • ⟦ lm' ⟧₂ ≈⟨ special-assoc (□ ^ 3 • □ ^ 2) (□ • (□ ^ 2 • □) • □) auto ⟩
+    CZ^ cz • ((S^ s • H^ ₃) • w' ↑) • ⟦ lm' ⟧₂ ≈⟨ (cright (cleft lemma-comm-S^aH^b s ₃ w')) ⟩
+    CZ^ cz • (w' ↑ • S^ s • H^ ₃) • ⟦ lm' ⟧₂ ≈⟨ special-assoc (□ • □ ^ 3 • □ ) (□ ^ 2 • □ ^ 3) auto ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • ⟦ lm' ⟧₂ ≈⟨ refl ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • ⟦ (s' , m' , ε) ⟧₁ ≈⟨ (cright cright cright cright trans (sym left-unit) (cleft (sym (axiom order-H)))) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H ^ 4 • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • ⟦ (s' , m' , ε) ⟧₁ ≈⟨ (cright cright cright cright special-assoc (□ ^ 4 • □ ^ 2) (□ • (□ ^ 3 • □) • □) auto) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • (H ^ 3 • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑) • ⟦ (s' , m' , ε) ⟧₁ ≈⟨ (cright cright cright cright cright (cleft lemma-comm-Hᵏ-w↑ 3 ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊)) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • (⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • H ^ 3) • ⟦ (s' , m' , ε) ⟧₁ ≈⟨ (cright cright cright cright cright assoc) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • H ^ 3 • ⟦ (s' , m' , ε) ⟧₁ ≈⟨ (cright cright cright cright cright cright (cright left-unit)) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • H ^ 3 • ⟦ (m' , ε) ⟧ₘ₊ ≈⟨ (cright cright cright cright cright cright special-assoc (□ ^ 3 • □) (□ ^ 2 • □ ^ 2) auto) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • HH • H • ⟦ (m' , ε) ⟧ₘ₊ ≈⟨ (cright cright cright cright cright cright cright cright right-unit) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • HH • H • ⟦ m' ⟧ₘ ≈⟨ (cright cright cright cright cright cright  cong lemma-HH-M-1 (semi-HM m')) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • M -'₁ • ⟦ m' ⁻¹ ⟧ₘ • H ≈⟨ (cright cright cright cright cright cright sym assoc) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • (M -'₁ • ⟦ m' ⁻¹ ⟧ₘ) • H ≈⟨ (cright cright cright cright cright cright cleft axiom (M-mul -'₁ (m' ⁻¹))) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • H • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • (⟦ -'₁ *' m' ⁻¹ ⟧ₘ) • H ≈⟨ (cright (cright special-assoc (□ ^ 6) (□ ^ 3 • □ ^ 3) auto)) ⟩
+    (CZ^ cz • w' ↑) • S^ s • CX • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • ⟦ -'₁ *' m' ⁻¹ ⟧ₘ • H ≈⟨ cong left-unit (trans (sym left-unit) (cright cright cright (cright cright sym right-unit))) ⟩
+    (w' ↑) • ε • S^ s • CX • ⟦ (aa* ⁻¹ , ε) ⟧ₘ₊ ↑ • ⟦ -'₁ *' m' ⁻¹ ⟧ₘ • H • S^ ₀ ≈⟨ refl ⟩
+    (w' ↑) • ⟦ lm'′ ⟧₂  ∎
+
+  lm''' = case-|| (cz*  *' (m *' aa*))  maa  (s , (aa* ⁻¹ , ε) , (-'₁ *' m' ⁻¹ , HS^ ₀))
+  w''' = M ((m *' aa*) ⁻¹)
+
+
+  aux01 : m'⁻¹ ≡ - m'' .proj₁
+  aux01 = Eq.trans (inv-neg-comm m'′) (Eq.trans (Eq.cong -_ (inv-involutive m'')) auto)
+  aux02 : - mf * m'⁻¹ ≡ mf * m''f
+  aux02 = (Eq.trans (Eq.cong (- mf *_) aux01) (Eq.trans (Eq.sym (-‿distribʳ-* (- mf) m''f)) (Eq.trans (Eq.cong -_ (Eq.sym (-‿distribˡ-* mf m''f))) (-‿involutive (mf * m''f)))))
+  claim'' : ⟦ case-|| cz* sl (s , mc , mc'') ⟧₂ • CZ ≈ w''' ↑ • ⟦ lm''' ⟧₂
+  claim'' = begin
+    ⟦ case-|| cz* sl (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cleft (cright  (cright cright sym left-unit))) ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑ • ⟦ case-||ₐ ₀ (s , mc , mc'') ⟧₂) • CZ ≈⟨ special-assoc (□ ^ 4 • □) (□ ^ 3 • □ ^ 2) auto ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑) • ⟦ case-||ₐ ₀ (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cright claim') ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑) • (w' ↑) • ⟦ lm'′ ⟧₂  ≈⟨ ( cright cleft axiom (cong↑ (M-mul m aa*))) ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑) • (M (m *' aa*) ↑) • ⟦ lm'′ ⟧₂  ≈⟨ ( special-assoc (□ ^ 3 • □ ^ 2) (□ ^ 2 • □ ^ 2 • □) auto) ⟩
+    (CZ^ cz' • H ↑ ^ 3) • (S^ sl ↑ • M (m *' aa*) ↑) • ⟦ lm'′ ⟧₂  ≈⟨ ( cright cleft lemma-cong↑ _ _ (L0.lemma-S^kM ((m *' aa*) .proj₁) sl ((m *' aa*) .proj₂))) ⟩
+    (CZ^ cz' • H ↑ ^ 3) • (M (m *' aa*) ↑ • S^ maa ↑) • ⟦ lm'′ ⟧₂  ≈⟨ ( special-assoc (□ ^ 2 • □ ^ 2 • □) (□ • □ ^ 2 • □ ^ 2) auto) ⟩
+    CZ^ cz' • (H ↑ ^ 3 • M (m *' aa*) ↑) • S^ maa ↑ • ⟦ lm'′ ⟧₂  ≈⟨ ( cright cleft lemma-cong↑ _  _ (semi-H³M (m *' aa*))) ⟩
+    CZ^ cz' • (M ((m *' aa*) ⁻¹) ↑ • H ↑ ^ 3) • S^ maa ↑ • ⟦ lm'′ ⟧₂  ≈⟨ ( special-assoc (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto) ⟩
+    (CZ^ cz' • M ((m *' aa*) ⁻¹) ↑) • H ↑ ^ 3 • S^ maa ↑ • ⟦ lm'′ ⟧₂  ≈⟨ ( cleft lemma-CZ^kM↑ (((m *' aa*) ⁻¹) .proj₁) cz' (((m *' aa*) ⁻¹) .proj₂)) ⟩
+    (M ((m *' aa*) ⁻¹) ↑ • CZ^ (cz' * ((m *' aa*) ⁻¹ ⁻¹) .proj₁)) • H ↑ ^ 3 • S^ maa ↑ • ⟦ lm'′ ⟧₂  ≈⟨ ( assoc) ⟩
+    M ((m *' aa*) ⁻¹) ↑ • CZ^ (cz' * ((m *' aa*) ⁻¹ ⁻¹) .proj₁) • H ↑ ^ 3 • S^ maa ↑ • ⟦ lm'′ ⟧₂  ≈⟨ ( cright cleft refl' (Eq.cong CZ^ (Eq.cong (cz' *_) (inv-involutive (m *' aa*))))) ⟩
+    M ((m *' aa*) ⁻¹) ↑ • CZ^ (cz' * ((m *' aa*)) .proj₁) • H ↑ ^ 3 • S^ maa ↑ • ⟦ lm'′ ⟧₂  ≈⟨ ( cright cright cright cright left-unit) ⟩
+    M ((m *' aa*) ⁻¹) ↑ • CZ^ (cz' * ((m *' aa*)) .proj₁) • H ↑ ^ 3 • S^ maa ↑ • ⟦ (s , (aa* ⁻¹ , ε) , (-'₁ *' m' ⁻¹ , HS^ ₀)) ⟧ₚ  ≈⟨ ( refl) ⟩
+
+    w''' ↑ • ⟦ lm''' ⟧₂  ∎
+
+
+... | ₀ | [ eq ]' = lm''' , w''' , claim''
+  where
+  mc = (m , ε)
+  mc'' = (m'' , HS^ k')
+  
+  m'′ = (m'' ⁻¹)
+  m' = -' m'′
+
+  m⁻¹ = (m ⁻¹) .proj₁
+  m⁻² = m⁻¹ * m⁻¹
+  m'⁻¹ = (m' ⁻¹) .proj₁
+  mf = m .proj₁
+  m'f = m' .proj₁
+  m''f = m'' .proj₁
+  a* = m ⁻¹
+  a = a* .proj₁
+  l = m' .proj₁
+  -l : ℤ ₚ
+  -l = - l
+  l⁻¹ : ℤ ₚ
+  l⁻¹ = ((m' ⁻¹) .proj₁)
+  -l⁻¹ : ℤ ₚ
+  -l⁻¹ = - l⁻¹
+  cz = ₀
+  cz' = cz* .proj₁
+
+  s' = k' * (m' .proj₁ * m' .proj₁)
+  s'' = -l * a + s'
+  s1' = - mf * m'⁻¹
+  mc1' : ZMultiplier × Cosets1
+  mc1' =  m , ε
+  nf1' : NF1
+  nf1' = (s1' , mc1')
+
+  lm' = case-nf1 (s' , m' , ε)
+  w' = ⟦ m ⟧ₘ
+  nf' = (k' * (m' .proj₁ * m' .proj₁) , m' , ε)
+
+  open CP1
+  tw : TopwWord {1} (S^ s • H^ ₃ • ⟦ (s' , m' , ε) ⟧₁)
+  tw = top-S^k (toℕ s) , (tt , tt , tt) , top-S^k {n = 1} (toℕ s') , top-M m' , tt
+
+  nf1'' = CP1.Theorem-single-qupit-completeness (S^ s • H^ ₃ • ⟦ (s' , m' , ε) ⟧₁) tw
+
+  lm'' = case-nf1 (nf1'' .proj₁)
+
+  claim' : ⟦ case-||ₐ cz (s , mc , mc'') ⟧₂ • CZ ≈ w' ↑ • ⟦ lm'' ⟧₂
+  claim' = begin
+    ⟦ case-||ₐ cz (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cleft cright lemma-postfix-case-| s mc m'' k') ⟩
+    (CZ^ cz • S^ s • H ^ 3 • ⟦ case-| mc nf' ⟧₂) • CZ ≈⟨ ( special-assoc (□ ^ 4 • □) (□ ^ 3 • □ ^ 2) auto) ⟩
+    (CZ^ cz • S^ s • H ^ 3) • ⟦ case-| mc nf' ⟧₂ • CZ ≈⟨ ( cright step-|-CZa m s' m' eq) ⟩
+    (CZ^ cz • S^ s • H^ ₃) • w' ↑ • ⟦ lm' ⟧₂ ≈⟨ special-assoc (□ ^ 3 • □ ^ 2) (□ • (□ ^ 2 • □) • □) auto ⟩
+    CZ^ cz • ((S^ s • H^ ₃) • w' ↑) • ⟦ lm' ⟧₂ ≈⟨ (cright (cleft lemma-comm-S^aH^b s ₃ w')) ⟩
+    CZ^ cz • (w' ↑ • S^ s • H^ ₃) • ⟦ lm' ⟧₂ ≈⟨ special-assoc (□ • □ ^ 3 • □ ) (□ ^ 2 • □ ^ 3) auto ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • ⟦ lm' ⟧₂ ≈⟨ (cleft left-unit) ⟩
+    (w' ↑) • S^ s • H^ ₃ • ⟦ lm' ⟧₂ ≈⟨ (cright nf1'' .proj₂) ⟩
+    w' ↑ • ⟦ lm'' ⟧₂ ∎
+
+
+  lm''' = case-| (cz* ⁻¹ *' (-'₁ *' m ⁻¹) , HS^ (sl * m⁻²)) (nf1'' .proj₁)
+  w''' = M cz*
+
+
+  aux01 : m'⁻¹ ≡ - m'' .proj₁
+  aux01 = Eq.trans (inv-neg-comm m'′) (Eq.trans (Eq.cong -_ (inv-involutive m'')) auto)
+  aux02 : - mf * m'⁻¹ ≡ mf * m''f
+  aux02 = (Eq.trans (Eq.cong (- mf *_) aux01) (Eq.trans (Eq.sym (-‿distribʳ-* (- mf) m''f)) (Eq.trans (Eq.cong -_ (Eq.sym (-‿distribˡ-* mf m''f))) (-‿involutive (mf * m''f)))))
+  claim'' : ⟦ case-|| cz* sl (s , mc , mc'') ⟧₂ • CZ ≈ w''' ↑ • ⟦ lm''' ⟧₂
+  claim'' = begin
+    ⟦ case-|| cz* sl (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cleft (cright  (cright cright sym left-unit))) ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑ • ⟦ case-||ₐ ₀ (s , mc , mc'') ⟧₂) • CZ ≈⟨ special-assoc (□ ^ 4 • □) (□ ^ 3 • □ ^ 2) auto ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑) • ⟦ case-||ₐ ₀ (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cright claim') ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑) • M m ↑ • ⟦ lm'' ⟧₂ ≈⟨ special-assoc (□ ^ 3 • □ ^ 2) (□ ^ 2 • □ ^ 2 • □) auto ⟩
+    (CZ^ cz' • H ↑ ^ 3) • (S^ sl ↑ • M m ↑) • ⟦ lm'' ⟧₂ ≈⟨ (cright cleft lemma-cong↑ _ _ (L0.lemma-S^kM (m .proj₁) sl (m .proj₂))) ⟩
+    (CZ^ cz' • H ↑ ^ 3) • (M m ↑ • S^ (sl * m⁻²) ↑) • ⟦ lm'' ⟧₂ ≈⟨ special-assoc (□ ^ 4 • □ ^ 2 • □) (□ • □ ^ 2 • □ ^ 2 • □ ^ 2) auto ⟩
+    CZ^ cz' • HH ↑ • (H ↑ • M m ↑) • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cright cong (lemma-cong↑ _ _ L0.lemma-HH-M-1) (cleft lemma-cong↑ _ _ (L0.semi-HM m))) ⟩
+    CZ^ cz' • M -'₁ ↑ • (M (m ⁻¹) ↑ • H ↑) • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cright special-assoc (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto) ⟩
+    CZ^ cz' • (M -'₁ ↑ • M (m ⁻¹) ↑) • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cright cleft axiom (cong↑ (M-mul -'₁ (m ⁻¹)))) ⟩
+    CZ^ cz' • (M (-'₁ *' m ⁻¹) ↑) • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ sym left-unit ⟩
+    ε • CZ^ cz' • (M (-'₁ *' m ⁻¹) ↑) • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cleft lemma-cong↑ _ _ (PB1.sym (L0.aux-M-mul cz*))) ⟩
+    (M cz* • M (cz* ⁻¹)) ↑ • CZ^ cz' • (M (-'₁ *' m ⁻¹) ↑) • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ special-assoc (□ ^ 2 • □ ^ 2) (□ • □ ^ 2 • □) auto ⟩
+    M cz* ↑ • (M (cz* ⁻¹) ↑ • CZ^ cz') • (M (-'₁ *' m ⁻¹) ↑) • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cright cleft lemma-M↑CZ^k ((cz* ⁻¹) .proj₁) cz' ((cz* ⁻¹) .proj₂)) ⟩
+    M cz* ↑ • (CZ^ (cz' * (cz* ⁻¹) .proj₁) • M (cz* ⁻¹) ↑) • (M (-'₁ *' m ⁻¹) ↑) • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cright (cleft (cleft refl' (Eq.cong CZ^ (lemma-⁻¹ʳ cz' {{nztoℕ {y = cz'} {neq0 = cz* .proj₂}}}))))) ⟩
+    M cz* ↑ • (CZ • M (cz* ⁻¹) ↑) • (M (-'₁ *' m ⁻¹) ↑) • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cright special-assoc (□ ^ 2 • □ ^ 2) (□ • □ ^ 2 • □) auto) ⟩
+    M cz* ↑ • CZ • (M (cz* ⁻¹) ↑ • M (-'₁ *' m ⁻¹) ↑) • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cright cright cleft axiom (cong↑ (M-mul (cz* ⁻¹) (-'₁ *' m ⁻¹)))) ⟩
+    M cz* ↑ • CZ • M (cz* ⁻¹ *' (-'₁ *' m ⁻¹)) ↑ • H ↑ • S^ (sl * m⁻²) ↑ • ⟦ lm'' ⟧₂ ≈⟨ (cright cright special-assoc (□ ^ 4) (□ ^ 3 • □) auto) ⟩
+    M cz* ↑ • CZ • (M (cz* ⁻¹ *' (-'₁ *' m ⁻¹)) ↑ • H ↑ • S^ (sl * m⁻²) ↑) • ⟦ lm'' ⟧₂ ≈⟨ (cright cright cright refl) ⟩
+    M cz* ↑ • CZ • (M (cz* ⁻¹ *' (-'₁ *' m ⁻¹)) ↑ • H ↑ • S^ (sl * m⁻²) ↑) • ⟦ (nf1'' .proj₁) ⟧₁ ≈⟨ refl ⟩
+    w''' ↑ • ⟦ lm''' ⟧₂  ∎
+
+
+
+
+
+Lemma-two-qupit-completeness-||-mHS^k-mHS^k' :
+
+  ∀ cz* sl s m k m'' k' ->
+  let
+  mc = (m , HS^ k)
+  mc'' = (m'' , HS^ k')
+  lm = case-|| cz* sl (s , mc , mc'')
+  in
+  -------------------------------------------------
+  ∃ \ lm' -> ∃ \ w -> ⟦ lm ⟧₂ • CZ ≈ w ↑ • ⟦ lm' ⟧₂
+
+Lemma-two-qupit-completeness-||-mHS^k-mHS^k' cz* sl s m k m'' k' with sl + m .proj₁ * m'' .proj₁ | inspect (sl +_) (m .proj₁ * m'' .proj₁)
+--Lemma-two-qupit-completeness lm@(case-|| cz* sl (s , mc@(m , c@(HS^ k)) , mc''@(m'' , c''@(HS^ k')))) (CZ-gen) with sl + m .proj₁ * m'' .proj₁ | inspect (sl +_) (m .proj₁ * m'' .proj₁)
+... | (₁₊ slm) | [ eq ]' = lm''' , w''' , claim''
+
+  where
+  mc = (m , HS^ k)
+  mc'' = (m'' , HS^ k')
+  
+  m'′ = (m'' ⁻¹)
+  m' = -' m'′
+
+  m⁻¹ = (m ⁻¹) .proj₁
+  m'⁻¹ = (m' ⁻¹) .proj₁
+  mf = m .proj₁
+  m'f = m' .proj₁
+  m''f = m'' .proj₁
+  a* = m ⁻¹
+  a = a* .proj₁
+  l = m' .proj₁
+  -l : ℤ ₚ
+  -l = - l
+  l⁻¹ : ℤ ₚ
+  l⁻¹ = ((m' ⁻¹) .proj₁)
+  -l⁻¹ : ℤ ₚ
+  -l⁻¹ = - l⁻¹
+  cz = ₀
+  cz' = cz* .proj₁
+
+  s' = k' * (m' .proj₁ * m' .proj₁)
+  s'' = -l * a + s'
+  s1' = - mf * m'⁻¹
+  mc1' =  m , HS^ (- (m' *' m) .proj₁ + k)
+  nf1' = (s1' , mc1')
+
+  w' = ⟦ - mf * m'⁻¹ ,  m *' m' ⁻¹ , HS^ (- mf * m'⁻¹) ⟧₁
+  lm' = case-| mc1' (-l * a + s' , m' , ε)
+  nf' = (k' * (m' .proj₁ * m' .proj₁) , m' , ε)
+
+  lm'' = case-||ₐ ₀  ( s , mc1' , (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))))
+  w'' = w'
+
+
+  claim' : ⟦ case-||ₐ cz (s , mc , mc'') ⟧₂ • CZ ≈ w'' ↑ • ⟦ lm'' ⟧₂
+  claim' = begin
+    ⟦ case-||ₐ cz (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cleft cright lemma-postfix-case-| s mc m'' k') ⟩
+    (CZ^ cz • S^ s • H ^ 3 • ⟦ case-| mc nf' ⟧₂) • CZ ≈⟨ ( special-assoc (□ ^ 4 • □) (□ ^ 3 • □ ^ 2) auto) ⟩
+    (CZ^ cz • S^ s • H ^ 3) • ⟦ case-| mc nf' ⟧₂ • CZ ≈⟨ ( cright step-|-CZ m k s' m') ⟩
+    (CZ^ cz • S^ s • H^ ₃) • w' ↑ • ⟦ lm' ⟧₂ ≈⟨ special-assoc (□ ^ 3 • □ ^ 2) (□ • (□ ^ 2 • □) • □) auto ⟩
+    CZ^ cz • ((S^ s • H^ ₃) • w' ↑) • ⟦ lm' ⟧₂ ≈⟨ (cright (cleft lemma-comm-S^aH^b s ₃ w')) ⟩
+    CZ^ cz • (w' ↑ • S^ s • H^ ₃) • ⟦ lm' ⟧₂ ≈⟨ special-assoc (□ • □ ^ 3 • □ ) (□ ^ 2 • □ ^ 3) auto ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • ⟦ lm' ⟧₂ ≈⟨ refl ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (s'' , m' , ε) ⟧₁  ≈⟨ ( cright cright cright cright cright cright right-unit ) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • ⟦ mc1' ⟧ₘ₊ ↑ • S^ s'' • ⟦ m' ⟧ₘ  ≈⟨ (cright cright cright cright cong (lemma-cong↑ _ _ PB1.refl) (lemma-S^kM (m' .proj₁) s'' (m' .proj₂))) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ m' ⟧ₘ • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ ( cright cright cright cright cright cright sym left-unit) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ m' ⟧ₘ • ε • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ ( cright cright cright cright cright cright (cleft sym (axiom order-H))) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ m' ⟧ₘ • H ^ 4 • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ ( cright cright cright cright cright special-assoc (□ • □ ^ 4 • □) (□ ^ 4 • □ ^ 2) auto) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • ⟦ mc1' ⟧ₘ₊ ↑ • (⟦ m' ⟧ₘ • H ^ 3) • H • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ ( cright cright cright cright cright cleft aux) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • ⟦ mc1' ⟧ₘ₊ ↑ • (H • ⟦ m'' ⟧ₘ) • H • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ ( cright  cright  cright  cright special-assoc (□  • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • (⟦ mc1' ⟧ₘ₊ ↑ • H) • ⟦ m'' ⟧ₘ • H • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ (cright cright cright cright cleft sym (lemma-comm-H-w↑ ⟦ mc1' ⟧ₘ₊)) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • (H • ⟦ mc1' ⟧ₘ₊ ↑) • ⟦ m'' ⟧ₘ • H • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ (cright cright special-assoc (□ • □ • □ ^ 2 • □) (□ ^ 3 • □ ^ 2) auto) ⟩
+    (CZ^ cz • w' ↑) • S^ s • (H^ ₃ • CZ • H) • ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ m'' ⟧ₘ • H • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ (cright cright cright cleft sym (lemma-cong↑ _ _ PB1.refl)) ⟩
+    (CZ^ cz • w' ↑) • S^ s • (H^ ₃ • CZ • H) • ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ m'' ⟧ₘ • H • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ (cleft left-unit) ⟩
+    (w' ↑) • S^ s • (H^ ₃ • CZ • H) • ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ m'' ⟧ₘ • H • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ (cright sym left-unit) ⟩
+    (w' ↑) •  CZ^ ₀ • S^ s • (H^ ₃ • CZ • H) • ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ m'' ⟧ₘ • H • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ refl ⟩
+    w' ↑ • ⟦ case-||ₐ ₀  ( s , mc1' , (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹)))) ⟧₂  ∎
+    where
+    aux : ⟦ m' ⟧ₘ • H ^ 3 ≈ H • ⟦ m'' ⟧ₘ
+    aux = begin
+      ⟦ m' ⟧ₘ • H ^ 3 ≈⟨ special-assoc (□ ^ 4) (□ ^ 3 • □) auto ⟩
+      (⟦ m' ⟧ₘ • HH) • H ≈⟨ (cleft cright lemma-HH-M-1) ⟩
+      (⟦ m' ⟧ₘ • M -'₁) • H ≈⟨ (cleft axiom (M-mul m' -'₁)) ⟩
+      (⟦ m' *' -'₁ ⟧ₘ) • H ≈⟨ refl ⟩
+      ⟦ m' *' -'₁ ⟧ₘ • H ≈⟨ (cleft aux-MM ((m' *' -'₁) .proj₂) (m'′ .proj₂) (Eq.trans (Eq.sym (-‿distribʳ-* (m' .proj₁) ₁)) (Eq.trans (Eq.cong -_ (*-identityʳ (m' .proj₁))) (-‿involutive (m'′ .proj₁))))) ⟩
+      ⟦ m'′ ⟧ₘ • H ≈⟨ sym (semi-HM m'') ⟩
+      H • ⟦ m'' ⟧ₘ ∎
+
+  ss : ℤ ₚ
+  ss = ₀
+  ss' = sl + (mf * m''f)
+  xx' = (mf * m''f)
+  mm = -'₁
+  mm' = m *' -' m''
+
+  mm'f = mm' .proj₁ 
+  mmf = mm .proj₁ 
+  y* = mm *' mm' ⁻¹
+  mm'⁻¹ = (mm' ⁻¹) .proj₁
+  y = y* .proj₁
+  neq : ss' ≢ ₀
+  neq ee = FP.0≢1+n (Eq.trans (Eq.sym ee) eq)
+
+  ss'* : ℤ* ₚ
+  ss'* = (ss' , neq)
+  [ss'*]⁻¹ = (ss'* ⁻¹) .proj₁
+  kk* = ss'* *' (mm' ⁻¹ *' mm' ⁻¹)
+  kk = kk* .proj₁
+  kk⁻¹ = (kk* ⁻¹) .proj₁
+  -kk⁻¹ = - kk⁻¹
+  -y/kk' = ((y* *' kk* ⁻¹) *' -'₁)
+  -y/kk = -y/kk' .proj₁
+  yy = (mmf * mmf) * (mm'⁻¹ * mm'⁻¹)
+
+  lm''' = case-|| (-' (cz* *' (-y/kk' ⁻¹) )) (-kk⁻¹ + xx')  (s , mc1' , (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))))
+  w''' = S^ (ss + - [ss'*]⁻¹ * mm ^2) • M -y/kk' • HH
+
+
+  aux01 : m'⁻¹ ≡ - m'' .proj₁
+  aux01 = Eq.trans (inv-neg-comm m'′) (Eq.trans (Eq.cong -_ (inv-involutive m'')) auto)
+  aux02 : - mf * m'⁻¹ ≡ mf * m''f
+  aux02 = (Eq.trans (Eq.cong (- mf *_) aux01) (Eq.trans (Eq.sym (-‿distribʳ-* (- mf) m''f)) (Eq.trans (Eq.cong -_ (Eq.sym (-‿distribˡ-* mf m''f))) (-‿involutive (mf * m''f)))))
+  claim'' : ⟦ case-|| cz* sl (s , mc , mc'') ⟧₂ • CZ ≈ w''' ↑ • ⟦ lm''' ⟧₂
+  claim'' = begin
+    ⟦ case-|| cz* sl (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cleft (cright  (cright cright sym left-unit))) ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑ • ⟦ case-||ₐ ₀ (s , mc , mc'') ⟧₂) • CZ ≈⟨ special-assoc (□ ^ 4 • □) (□ ^ 3 • □ ^ 2) auto ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑) • ⟦ case-||ₐ ₀ (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cright claim') ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑) • w' ↑ • ⟦ case-||ₐ ₀  ( s , mc1' , (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹)))) ⟧₂ ≈⟨ (cright cright left-unit) ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑) • ⟦ - mf * m'⁻¹ ,  m *' m' ⁻¹ , HS^ (- mf * m'⁻¹) ⟧₁ ↑ • ⟦ ( s , mc1' , (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹)))) ⟧ₚ ≈⟨ special-assoc (□ ^ 2 • □ • □ ) (□ • □ ^ 2 • □) auto ⟩
+    CZ^ cz' • ((H ↑ ^ 3 • S^ sl ↑) • ⟦ - mf * m'⁻¹ ,  m *' m' ⁻¹ , HS^ (- mf * m'⁻¹) ⟧₁ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft cleft sym left-unit) ⟩
+    CZ^ cz' • ((ε • H ↑ ^ 3 • S^ sl ↑) • ⟦ - mf * m'⁻¹ ,  m *' m' ⁻¹ , HS^ (- mf * m'⁻¹) ⟧₁ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft cright cong (refl' (Eq.cong (\ xx -> S^ xx ↑) aux02)) (cong (lemma-cong↑ _ _ (L0.aux-MM ((m *' m' ⁻¹) .proj₂) ((m *' -' m'') .proj₂) (Eq.cong ( mf *_) (Eq.trans (inv-neg-comm m'′) ( Eq.cong -_ (inv-involutive m'')))))) (cright refl' (Eq.cong (\ xx -> S^ xx ↑) aux02)))) ⟩
+    CZ^ cz' • ((ε • H ↑ ^ 3 • S^ sl ↑) • ⟦ mf * m''f ,  m *' -' m'' , HS^ (mf * m''f) ⟧₁ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft special-assoc (□ ^ 3 • □ ^ 3) (□ ^ 2 • □ ^ 2 • □ ^ 2) auto) ⟩
+    CZ^ cz' • ((ε • H ↑ ^ 3) • (S^ sl ↑ • S^ (mf * m''f) ↑) • ⟦ m *' -' m'' , HS^ (mf * m''f) ⟧ₘ₊ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft cright cleft lemma-cong↑ _ _ (L0.lemma-S^k+l sl (mf * m''f))) ⟩
+    CZ^ cz' • ((ε • H ↑ ^ 3) • S^ (sl + (mf * m''f)) ↑ • ⟦ m *' -' m'' , HS^ (mf * m''f) ⟧ₘ₊ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨  (cright cleft cleft rewrite-sym0 100 auto) ⟩
+    CZ^ cz' • ((HH ↑ • H ↑) • S^ (sl + (mf * m''f)) ↑ • ⟦ m *' -' m'' , HS^ (mf * m''f) ⟧ₘ₊ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨  (cright cleft cleft cleft lemma-cong↑ _ _ L0.lemma-HH-M-1) ⟩
+    CZ^ cz' • ((M -'₁ ↑ • H ↑) • S^ (sl + (mf * m''f)) ↑ • ⟦ m *' -' m'' , HS^ (mf * m''f) ⟧ₘ₊ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨  (cright cleft trans assoc (sym left-unit)) ⟩
+    CZ^ cz' • (ε • M -'₁ ↑ • H ↑ • S^ (sl + (mf * m''f)) ↑ • ⟦ m *' -' m'' , HS^ (mf * m''f) ⟧ₘ₊ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨  (cright cleft  ( lemma-cong↑ _ _ (lemma-nf1*nf1' ss ss' xx' mm mm' neq))) ⟩
+
+    CZ^ cz' • (S^ (ss + - [ss'*]⁻¹ * mm ^2 ) • M -y/kk' • H • S^ (-kk⁻¹ + xx')) ↑ • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ special-assoc (□ • □ ^ 4 • □) (□ ^ 2 • □ ^ 4) auto ⟩
+    (CZ^ cz' • S^ (ss + - [ss'*]⁻¹ * mm ^2) ↑) • M -y/kk' ↑  • H ↑ • S^ (-kk⁻¹ + xx') ↑ • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cleft aux-comm-CZ^a-S^b↑ cz' (ss + - [ss'*]⁻¹ * mm ^2)) ⟩
+    (S^ (ss + - [ss'*]⁻¹ * mm ^2) ↑ • CZ^ cz') • M -y/kk' ↑ • H ↑ • S^ (-kk⁻¹ + xx') ↑ • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ special-assoc (□ ^ 2 • □ ^ 2) (□ • □ ^ 2 • □) auto ⟩
+    S^ (ss + - [ss'*]⁻¹ * mm ^2) ↑ • (CZ^ cz' • M -y/kk' ↑) • H ↑ • S^ (-kk⁻¹ + xx') ↑ • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft lemma-CZ^kM↑ (-y/kk' .proj₁) cz' (-y/kk' .proj₂)) ⟩
+    S^ (ss + - [ss'*]⁻¹ * mm ^2) ↑ • (M -y/kk' ↑ • CZ^ (cz' * (-y/kk' ⁻¹) .proj₁)) • H ↑ • S^ (-kk⁻¹ + xx') ↑ • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft cright trans (sym left-unit) (cleft sym (axiom (cong↑ order-H)))) ⟩
+    S^ (ss + - [ss'*]⁻¹ * mm ^2) ↑ • (M -y/kk' ↑ • H ↑ ^ 4 • CZ^ (cz' * (-y/kk' ⁻¹) .proj₁)) • H ↑ • S^ (-kk⁻¹ + xx') ↑ • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft (cright special-assoc (□ ^ 4 • □) (□ ^ 2 • □ ^ 2 • □) auto)) ⟩
+    S^ (ss + - [ss'*]⁻¹ * mm ^2) ↑ • (M -y/kk' ↑ • HH ↑ • (HH ↑ • CZ^ (cz' * (-y/kk' ⁻¹) .proj₁))) • H ↑ • S^ (-kk⁻¹ + xx') ↑ • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft cright cright lemma-semi-HH↑-CZ^k ((cz' * (-y/kk' ⁻¹) .proj₁))) ⟩
+    S^ (ss + - [ss'*]⁻¹ * mm ^2) ↑ • (M -y/kk' ↑ • HH ↑ • (CZ^ (- (cz' * (-y/kk' ⁻¹) .proj₁)) • HH ↑)) • H ↑ • S^ (-kk⁻¹ + xx') ↑ • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ special-assoc (□ • □ ^ 5 • □ ^ 2) (□ ^ 3 • □ • □ ^ 3 • □) auto ⟩
+    (S^ (ss + - [ss'*]⁻¹ * mm ^2) • M -y/kk' • HH) ↑ • CZ^ (- (cz' * (-y/kk' ⁻¹) .proj₁)) • H ↑ ^ 3 • S^ (-kk⁻¹ + xx') ↑ • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft refl' (Eq.cong CZ^ aux04)) ⟩
+    (S^ (ss + - [ss'*]⁻¹ * mm ^2) • M -y/kk' • HH) ↑ • ⟦ case-|| (-' (cz* *' -y/kk' ⁻¹)) (-kk⁻¹ + xx')  (s , mc1' , (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹)))) ⟧₂ ≈⟨ refl ⟩
+    w''' ↑ • ⟦ lm''' ⟧₂  ∎
+    where
+    aux04 : - (cz' * (-y/kk' ⁻¹) .proj₁) ≡ (-' (cz* *' -y/kk' ⁻¹)) .proj₁
+    aux04 = auto
+
+... | ₀ | [ eq ]' = lm''' , w''' , claim''
+
+  where
+  mc = (m , HS^ k)
+  mc'' = (m'' , HS^ k')
+  
+  m'′ = (m'' ⁻¹)
+  m' = -' m'′
+
+  m⁻¹ = (m ⁻¹) .proj₁
+  m'⁻¹ = (m' ⁻¹) .proj₁
+  mf = m .proj₁
+  m'f = m' .proj₁
+  m''f = m'' .proj₁
+  a* = m ⁻¹
+  a = a* .proj₁
+  l = m' .proj₁
+  -l : ℤ ₚ
+  -l = - l
+  l⁻¹ : ℤ ₚ
+  l⁻¹ = ((m' ⁻¹) .proj₁)
+  -l⁻¹ : ℤ ₚ
+  -l⁻¹ = - l⁻¹
+  cz = ₀
+  cz' = cz* .proj₁
+
+  s' = k' * (m' .proj₁ * m' .proj₁)
+  s'' = -l * a + s'
+  s1' = - mf * m'⁻¹
+  mc1' =  m , HS^ (- (m' *' m) .proj₁ + k)
+  nf1' = (s1' , mc1')
+
+  w' = ⟦ - mf * m'⁻¹ ,  m *' m' ⁻¹ , HS^ (- mf * m'⁻¹) ⟧₁
+  lm' = case-| mc1' (-l * a + s' , m' , ε)
+  nf' = (k' * (m' .proj₁ * m' .proj₁) , m' , ε)
+
+  lm'' = case-||ₐ ₀  ( s , mc1' , (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))))
+  w'' = w'
+
+
+  lm''' = case-||ₐ  (cz' * ((m *' -' m'')) .proj₁) ( s , mc1' , (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))))
+  w''' = ⟦ (m *' -' m'') ⁻¹ ⟧ₘ • S^ (mf * m''f)
+
+  claim' : ⟦ case-||ₐ cz (s , mc , mc'') ⟧₂ • CZ ≈ w'' ↑ • ⟦ lm'' ⟧₂
+  claim' = begin
+    ⟦ case-||ₐ cz (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cleft cright lemma-postfix-case-| s mc m'' k') ⟩
+    (CZ^ cz • S^ s • H ^ 3 • ⟦ case-| mc nf' ⟧₂) • CZ ≈⟨ ( special-assoc (□ ^ 4 • □) (□ ^ 3 • □ ^ 2) auto) ⟩
+    (CZ^ cz • S^ s • H ^ 3) • ⟦ case-| mc nf' ⟧₂ • CZ ≈⟨ ( cright step-|-CZ m k s' m') ⟩
+    (CZ^ cz • S^ s • H^ ₃) • w' ↑ • ⟦ lm' ⟧₂ ≈⟨ special-assoc (□ ^ 3 • □ ^ 2) (□ • (□ ^ 2 • □) • □) auto ⟩
+    CZ^ cz • ((S^ s • H^ ₃) • w' ↑) • ⟦ lm' ⟧₂ ≈⟨ (cright (cleft lemma-comm-S^aH^b s ₃ w')) ⟩
+    CZ^ cz • (w' ↑ • S^ s • H^ ₃) • ⟦ lm' ⟧₂ ≈⟨ special-assoc (□ • □ ^ 3 • □ ) (□ ^ 2 • □ ^ 3) auto ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • ⟦ lm' ⟧₂ ≈⟨ refl ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (s'' , m' , ε) ⟧₁  ≈⟨ ( cright cright cright cright cright cright right-unit ) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • ⟦ mc1' ⟧ₘ₊ ↑ • S^ s'' • ⟦ m' ⟧ₘ  ≈⟨ (cright cright cright cright cong (lemma-cong↑ _ _ PB1.refl) (lemma-S^kM (m' .proj₁) s'' (m' .proj₂))) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ m' ⟧ₘ • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ ( cright cright cright cright cright cright sym left-unit) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ m' ⟧ₘ • ε • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ ( cright cright cright cright cright cright (cleft sym (axiom order-H))) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ m' ⟧ₘ • H ^ 4 • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ ( cright cright cright cright cright special-assoc (□ • □ ^ 4 • □) (□ ^ 4 • □ ^ 2) auto) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • ⟦ mc1' ⟧ₘ₊ ↑ • (⟦ m' ⟧ₘ • H ^ 3) • H • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ ( cright cright cright cright cright cleft aux) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • ⟦ mc1' ⟧ₘ₊ ↑ • (H • ⟦ m'' ⟧ₘ) • H • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ ( cright  cright  cright  cright special-assoc (□  • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • (⟦ mc1' ⟧ₘ₊ ↑ • H) • ⟦ m'' ⟧ₘ • H • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ (cright cright cright cright cleft sym (lemma-comm-H-w↑ ⟦ mc1' ⟧ₘ₊)) ⟩
+    (CZ^ cz • w' ↑) • S^ s • H^ ₃ • CZ • (H • ⟦ mc1' ⟧ₘ₊ ↑) • ⟦ m'' ⟧ₘ • H • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ (cright cright special-assoc (□ • □ • □ ^ 2 • □) (□ ^ 3 • □ ^ 2) auto) ⟩
+    (CZ^ cz • w' ↑) • S^ s • (H^ ₃ • CZ • H) • ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ m'' ⟧ₘ • H • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ (cright cright cright cleft sym (lemma-cong↑ _ _ PB1.refl)) ⟩
+    (CZ^ cz • w' ↑) • S^ s • (H^ ₃ • CZ • H) • ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ m'' ⟧ₘ • H • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ (cleft left-unit) ⟩
+    (w' ↑) • S^ s • (H^ ₃ • CZ • H) • ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ m'' ⟧ₘ • H • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ (cright sym left-unit) ⟩
+    (w' ↑) •  CZ^ ₀ • S^ s • (H^ ₃ • CZ • H) • ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ m'' ⟧ₘ • H • S^ (s'' * ((m' ⁻¹) .proj₁ * (m' ⁻¹) .proj₁))  ≈⟨ refl ⟩
+    w' ↑ • ⟦ case-||ₐ ₀  ( s , mc1' , (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹)))) ⟧₂  ∎
+    where
+    aux : ⟦ m' ⟧ₘ • H ^ 3 ≈ H • ⟦ m'' ⟧ₘ
+    aux = begin
+      ⟦ m' ⟧ₘ • H ^ 3 ≈⟨ special-assoc (□ ^ 4) (□ ^ 3 • □) auto ⟩
+      (⟦ m' ⟧ₘ • HH) • H ≈⟨ (cleft cright lemma-HH-M-1) ⟩
+      (⟦ m' ⟧ₘ • M -'₁) • H ≈⟨ (cleft axiom (M-mul m' -'₁)) ⟩
+      (⟦ m' *' -'₁ ⟧ₘ) • H ≈⟨ refl ⟩
+      ⟦ m' *' -'₁ ⟧ₘ • H ≈⟨ (cleft aux-MM ((m' *' -'₁) .proj₂) (m'′ .proj₂) (Eq.trans (Eq.sym (-‿distribʳ-* (m' .proj₁) ₁)) (Eq.trans (Eq.cong -_ (*-identityʳ (m' .proj₁))) (-‿involutive (m'′ .proj₁))))) ⟩
+      ⟦ m'′ ⟧ₘ • H ≈⟨ sym (semi-HM m'') ⟩
+      H • ⟦ m'' ⟧ₘ ∎
+
+
+  aux01 : m'⁻¹ ≡ - m'' .proj₁
+  aux01 = Eq.trans (inv-neg-comm m'′) (Eq.trans (Eq.cong -_ (inv-involutive m'')) auto)
+  aux02 : - mf * m'⁻¹ ≡ mf * m''f
+  aux02 = (Eq.trans (Eq.cong (- mf *_) aux01) (Eq.trans (Eq.sym (-‿distribʳ-* (- mf) m''f)) (Eq.trans (Eq.cong -_ (Eq.sym (-‿distribˡ-* mf m''f))) (-‿involutive (mf * m''f)))))
+  claim'' : ⟦ case-|| cz* sl (s , mc , mc'') ⟧₂ • CZ ≈ w''' ↑ • ⟦ lm''' ⟧₂
+  claim'' = begin
+    ⟦ case-|| cz* sl (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cleft (cright  (cright cright sym left-unit))) ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑ • ⟦ case-||ₐ ₀ (s , mc , mc'') ⟧₂) • CZ ≈⟨ special-assoc (□ ^ 4 • □) (□ ^ 3 • □ ^ 2) auto ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑) • ⟦ case-||ₐ ₀ (s , mc , mc'') ⟧₂ • CZ ≈⟨ (cright claim') ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑) • w' ↑ • ⟦ case-||ₐ ₀  ( s , mc1' , (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹)))) ⟧₂ ≈⟨ (cright cright left-unit) ⟩
+    (CZ^ cz' • H ↑ ^ 3 • S^ sl ↑) • ⟦ - mf * m'⁻¹ ,  m *' m' ⁻¹ , HS^ (- mf * m'⁻¹) ⟧₁ ↑ • ⟦ ( s , mc1' , (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹)))) ⟧ₚ ≈⟨ special-assoc (□ ^ 2 • □ • □ ) (□ • □ ^ 2 • □) auto ⟩
+    CZ^ cz' • ((H ↑ ^ 3 • S^ sl ↑) • ⟦ - mf * m'⁻¹ ,  m *' m' ⁻¹ , HS^ (- mf * m'⁻¹) ⟧₁ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft cleft sym left-unit) ⟩
+    CZ^ cz' • ((ε • H ↑ ^ 3 • S^ sl ↑) • ⟦ - mf * m'⁻¹ ,  m *' m' ⁻¹ , HS^ (- mf * m'⁻¹) ⟧₁ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft cright cong (refl' (Eq.cong (\ xx -> S^ xx ↑) aux02)) (cong (lemma-cong↑ _ _ (L0.aux-MM ((m *' m' ⁻¹) .proj₂) ((m *' -' m'') .proj₂) (Eq.cong ( mf *_) (Eq.trans (inv-neg-comm m'′) ( Eq.cong -_ (inv-involutive m'')))))) (cright refl' (Eq.cong (\ xx -> S^ xx ↑) aux02)))) ⟩
+    CZ^ cz' • ((ε • H ↑ ^ 3 • S^ sl ↑) • ⟦ mf * m''f ,  m *' -' m'' , HS^ (mf * m''f) ⟧₁ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft special-assoc (□ ^ 3 • □ ^ 3) (□ ^ 2 • □ ^ 2 • □ ^ 2) auto) ⟩
+    CZ^ cz' • ((ε • H ↑ ^ 3) • (S^ sl ↑ • S^ (mf * m''f) ↑) • ⟦ m *' -' m'' , HS^ (mf * m''f) ⟧ₘ₊ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft cright cleft lemma-cong↑ _ _ (L0.lemma-S^k+l sl (mf * m''f))) ⟩
+    CZ^ cz' • ((ε • H ↑ ^ 3) • S^ (sl + (mf * m''f)) ↑ • ⟦ m *' -' m'' , HS^ (mf * m''f) ⟧ₘ₊ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft cright (cleft refl' (Eq.cong (\ xx -> S^ xx ↑) eq))) ⟩
+    CZ^ cz' • ((ε • H ↑ ^ 3) • S^ ₀ ↑ • ⟦ m *' -' m'' , HS^ (mf * m''f) ⟧ₘ₊ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft  (cright left-unit)) ⟩
+    CZ^ cz' • ((ε • H ↑ ^ 3) • ⟦ m *' -' m'' , HS^ (mf * m''f) ⟧ₘ₊ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft  special-assoc (□ ^ 2 • □ ^ 2) (□ • □ ^ 2 • □) auto) ⟩
+    CZ^ cz' • (ε • (H ↑ ^ 3 • ⟦ m *' -' m'' ⟧ₘ ↑) • ⟦ HS^ (mf * m''f) ⟧ₕₛ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft cright cleft lemma-cong↑ _ _ (semi-H³M (m *' -' m''))) ⟩
+    CZ^ cz' • (ε • (⟦ (m *' -' m'') ⁻¹ ⟧ₘ ↑ • H ↑ ^ 3) • ⟦ HS^ (mf * m''f) ⟧ₕₛ ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft  special-assoc (□ • □ ^ 4 • □ ^ 2) (□ • □ • □ ^ 4 • □) auto) ⟩
+    CZ^ cz' • (ε • ⟦ (m *' -' m'') ⁻¹ ⟧ₘ ↑ • H ↑ ^ 4 • S^ (mf * m''f) ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft (cright cright cleft axiom (cong↑ order-H))) ⟩
+    CZ^ cz' • (ε • ⟦ (m *' -' m'') ⁻¹ ⟧ₘ ↑ • ε • S^ (mf * m''f) ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft trans left-unit (cright left-unit)) ⟩
+    CZ^ cz' • (⟦ (m *' -' m'') ⁻¹ ⟧ₘ ↑ • S^ (mf * m''f) ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ special-assoc (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto ⟩
+    (CZ^ cz' • ⟦ (m *' -' m'') ⁻¹ ⟧ₘ ↑) • S^ (mf * m''f) ↑ • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cleft lemma-CZ^kM↑ (((m *' -' m'') ⁻¹) .proj₁) cz' (((m *' -' m'') ⁻¹) .proj₂)) ⟩
+    (⟦ (m *' -' m'') ⁻¹ ⟧ₘ ↑ • CZ^ (cz' * (((m *' -' m'') ⁻¹)⁻¹) .proj₁)) • S^ (mf * m''f) ↑ • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cleft cright refl' (Eq.cong CZ^ (Eq.cong (cz' *_) (inv-involutive (m *' -' m''))))) ⟩
+    (⟦ (m *' -' m'') ⁻¹ ⟧ₘ ↑ • CZ^ (cz' * ((m *' -' m'')) .proj₁)) • S^ (mf * m''f) ↑ • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ sym (special-assoc (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto) ⟩
+    ⟦ (m *' -' m'') ⁻¹ ⟧ₘ ↑ • (CZ^ (cz' * ((m *' -' m'')) .proj₁) • S^ (mf * m''f) ↑) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ (cright cleft aux-comm-CZ^a-S^b↑ ((cz' * ((m *' -' m'')) .proj₁)) (mf * m''f)) ⟩
+    ⟦ (m *' -' m'') ⁻¹ ⟧ₘ ↑ • (S^ (mf * m''f) ↑ • CZ^ (cz' * ((m *' -' m'')) .proj₁)) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ special-assoc (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto ⟩
+    (⟦ (m *' -' m'') ⁻¹ ⟧ₘ ↑ • S^ (mf * m''f) ↑) • CZ^ (cz' * ((m *' -' m'')) .proj₁) • S^ s • CX •  ⟦ mc1' ⟧ₘ₊ ↑ • ⟦ (m'' , HS^ (s'' * (m'⁻¹ * m'⁻¹))) ⟧ₘ₊ ≈⟨ refl ⟩
+    w''' ↑ • ⟦ lm''' ⟧₂  ∎
+
+
+

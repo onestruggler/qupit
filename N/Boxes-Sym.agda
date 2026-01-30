@@ -1,0 +1,80 @@
+------------------------------------------------------------------------
+-- Various box definitions. The interpretation of box as circuits is
+-- defined somewhere else.
+------------------------------------------------------------------------
+
+{-# OPTIONS  --safe #-}
+{-# OPTIONS  --call-by-name #-}
+
+open import Data.Nat
+open import Data.Nat.Primality
+open import Data.Product using (_×_ ; _,_ ; Σ-syntax)
+open import Data.Sum using (_⊎_)
+open import Data.Unit using (⊤)
+open import Data.Vec
+open import Relation.Binary.PropositionalEquality using (_≢_)
+
+
+open import Zp.ModularArithmetic
+
+module N.Boxes-Sym (p-2 : ℕ) (p-prime : Prime (2+ p-2))  where
+
+open PrimeModulus p-2 p-prime
+open import N.Cosets p-2 p-prime
+
+private
+  variable
+    n : ℕ
+
+
+A : Set
+A = Σ[ ab ∈ (ℤ ₚ × ℤ ₚ) ] (ab ≢ (₀ , ₀))
+
+B : Set
+B = ℤ ₚ × ℤ ₚ
+
+B' : Set
+B' = B ⊎ ⊤
+
+D : Set
+D = ℤ ₚ × ℤ ₚ
+
+D' = D
+
+E : Set
+E = ℤ ₚ
+
+Lj : (j : ℕ) → Set
+Lj j = Vec B j × A
+
+-- Natural numbers that are less than (₁₊ n).
+LE : (n : ℕ) → Set
+LE n = Σ[ j ∈ ℕ ] j ≤ n
+
+-- n-indexed boxes (L, M, LM, NF) is of width n.
+L : (n : ℕ) → Set
+L 0 = ⊤
+L 1 = A
+L (₂₊ n) = Σ[ (j , le) ∈ LE (₁₊ n) ] Lj ((₁₊ n) ∸ j)
+
+L' : ℕ → Set
+L' 0 = ⊤
+L' 1 = A
+L' 2 = ⊤
+L' (₂₊ n) = Vec B (₁₊ n) × A
+
+M : ℕ → Set
+M 0 = ⊤
+M 1 = E
+M (₂₊ n) = E × Vec D (₁₊ n)
+
+LM : (n : ℕ) → Set
+LM 0 = ⊤
+LM 1 = NF1
+LM 2 = Cosets2
+LM n@(₃₊ n') = D' × LM (₂₊ n') × B'
+
+
+NF : (n : ℕ) → Set
+NF 0 = ⊤
+NF (₁₊ n) = NF n × LM (₁₊ n)

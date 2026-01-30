@@ -1,0 +1,735 @@
+{-# OPTIONS  --safe #-}
+--{-# OPTIONS --termination-depth=2 #-}
+open import Level using (0ℓ)
+
+open import Relation.Binary using (Rel)
+open import Relation.Binary.Definitions using (DecidableEquality)
+open import Relation.Binary.Morphism.Definitions using (Homomorphic₂)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; _≢_ ; inspect ; setoid ; module ≡-Reasoning ; _≗_) renaming ([_] to [_]')
+import Relation.Binary.Reasoning.Setoid as SR
+import Relation.Binary.PropositionalEquality as Eq
+open import Relation.Nullary.Decidable using (yes ; no)
+
+
+open import Function using (_∘_ ; id)
+open import Function.Definitions using (Injective)
+
+open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; map₁ ; ∃ ; Σ ; Σ-syntax)
+open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
+open import Data.Nat hiding (_^_ ; _+_ ; _*_)
+open import Agda.Builtin.Nat using (_-_)
+import Data.Nat as Nat
+open import Data.Bool hiding (_<_ ; _≤_)
+open import Data.List hiding ([_] ; _++_ ; last ; head ; tail ; _∷ʳ_)
+open import Data.Vec hiding ([_])
+import Data.Vec as Vec
+open import Data.Fin hiding (_+_ ; _-_)
+
+open import Data.Maybe
+open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_] ; [_,_]′)
+open import Data.Unit using (⊤ ; tt)
+open import Data.Empty using (⊥ ; ⊥-elim)
+
+open import Word.Base as WB hiding (wfoldl ; _*)
+open import Word.Properties
+import Presentation.Base as PB
+import Presentation.Properties as PP
+open PP using (NFProperty ; NFProperty')
+import Presentation.CosetNF as CA
+import Presentation.Reidemeister-Schreier as RS
+module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
+
+open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
+import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
+import Presentation.Construct.Properties.DirectProduct as DP
+import Presentation.Groups.Cyclic as Cyclic
+
+
+open import Data.Fin using (Fin ; toℕ ; suc ; zero ; fromℕ)
+open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
+import Data.Nat.Properties as NP
+open import Presentation.GroupLike
+open import Presentation.Tactics hiding ([_])
+open import Data.Nat.Primality
+
+
+
+module N.Ex-Sym4n (p-2 : ℕ) (p-prime : Prime (2+ p-2)) where
+
+pattern auto = Eq.refl
+
+pattern ₀ = zero
+pattern ₁ = suc ₀
+pattern ₂ = suc ₁
+pattern ₃ = suc ₂
+pattern ₄ = 4
+pattern ₅ = 5
+pattern ₆ = 6
+pattern ₇ = 7
+pattern ₈ = 8
+pattern ₉ = 9
+pattern ₁₀ = 10
+pattern ₁₁ = 11
+pattern ₁₂ = 12
+pattern ₁₃ = 13
+pattern ₁₄ = 14
+pattern ₁₅ = 15
+
+pattern ₁₊ ⱼ = suc ⱼ
+pattern ₂₊ ⱼ = suc (suc ⱼ)
+pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
+
+private
+  variable
+    n : ℕ
+
+open import Zp.ModularArithmetic
+open PrimeModulus p-2 p-prime
+open import N.Symplectic p-2 p-prime
+open import N.Lemmas-2Qupit-Sym p-2 p-prime
+open import N.Ex-Sym p-2 p-prime
+open import N.Ex-Sym2 p-2 p-prime
+open import N.Ex-Sym2n p-2 p-prime
+open import N.Ex-Sym3n p-2 p-prime
+open Lemmas0a
+open Lemmas0b hiding (lemma-comm-Ex-H')
+
+
+open Symplectic
+open Lemmas-Sym
+
+open Symplectic-GroupLike
+
+open import Data.Nat.DivMod
+open import Data.Fin.Properties
+
+
+open import N.Ex-Sym1 p-2 p-prime
+open Lemmas0a1
+
+open import N.Embeding-2n p-2 p-prime
+open Lemmas0b hiding (lemma-comm-Ex-H')
+
+open Duality
+
+lemma-Fig3-C17 : let open PB ((₃₊ n) QRel,_===_) in
+  Ex • Ex ↑ • CZ ≈ CZ ↑ • Ex • Ex ↑
+lemma-Fig3-C17 = lemma-Ex-Ex↑-CZ
+
+lemma-Ex-Ex↑-CZ' : let open PB ((₃₊ n) QRel,_===_) in
+  Ex ↑ • CZ • Ex ↑ ≈ Ex • CZ ↑ • Ex
+lemma-Ex-Ex↑-CZ' {n} = lemma-CZ02-alt
+
+lemma-yang-baxter : let open PB ((₃₊ n) QRel,_===_) in
+  Ex ↑ • Ex • Ex ↑ ≈ Ex • Ex ↑ • Ex
+lemma-yang-baxter {n} = begin
+  Ex ↑ • Ex • Ex ↑ ≈⟨ rewrite-powers 100 auto ⟩
+  (Ex ↑ • CZ • Ex ↑) • (Ex ↑ • H ↓ • Ex ↑) • (Ex ↑ •  H ↑ • Ex ↑) • (Ex ↑ • CZ • Ex ↑) • (Ex ↑ • H ↓ • Ex ↑) • (Ex ↑ • H ↑ • Ex ↑) • (Ex ↑ • CZ • Ex ↑) • (Ex ↑ • H ↓ • Ex ↑) • (Ex ↑ • H ↑ • Ex ↑) ≈⟨ cong lemma-Ex-Ex↑-CZ' (cright cright cong lemma-Ex-Ex↑-CZ' (cright cright cleft lemma-Ex-Ex↑-CZ')) ⟩
+  (Ex • CZ ↑ • Ex) • (Ex ↑ • H ↓ • Ex ↑) • (Ex ↑ •  H ↑ • Ex ↑) • (Ex • CZ ↑ • Ex) • (Ex ↑ • H ↓ • Ex ↑) • (Ex ↑ • H ↑ • Ex ↑) • (Ex • CZ ↑ • Ex) • (Ex ↑ • H ↓ • Ex ↑) • (Ex ↑ • H ↑ • Ex ↑) ≈⟨ rewrite-swap0 100 auto ⟩
+  (Ex • CZ ↑ • Ex) • (H ↓) • (H ↑ ↑) • (Ex • CZ ↑ • Ex) • (H ↓) • (H ↑ ↑) • (Ex • CZ ↑ • Ex) • (H ↓) • (H ↑ ↑) ≈⟨ rewrite-swap0 100 auto ⟩
+  Ex • (CZ ↑ • H ↑ • H ↑ ↑ • CZ ↑ • H ↑ • H ↑ ↑ • CZ ↑ • H ↑ • H ↑ ↑) • Ex ≈⟨ general-comm auto ⟩
+  Ex • Ex ↑ • Ex ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Powers (₂₊ n)
+  open Commuting-Symplectic (suc n)
+  open Sym0-Rewriting (₂₊ n)
+  open Rewriting-Swap0 (₂₊ n)
+
+
+lemma-comm-CZ⊤⊥↑CZ-⊥⊤↑ : let open PB ((₃₊ n) QRel,_===_) in
+  CZ • ⊤⊥ ↑ • CZ • ⊥⊤ ↑ ≈ (⊤⊥ ↑ • CZ • ⊥⊤ ↑) • CZ
+lemma-comm-CZ⊤⊥↑CZ-⊥⊤↑ {n} = begin  
+  CZ • ⊤⊥ ↑ • CZ • ⊥⊤ ↑ ≈⟨ cong refl (axiom selinger-c13) ⟩
+  CZ • ⊥⊤ ↓ • CZ ↑ • ⊤⊥ ↓ ≈⟨ (cright sym lemma-Ex-Ex↑-CZ'b) ⟩
+  CZ • Ex • CZ ↑ • Ex ≈⟨ sym assoc ⟩
+  (CZ • Ex) • CZ ↑ • Ex ≈⟨ (cleft lemma-comm-Ex-CZ-n) ⟩
+  (Ex • CZ) • CZ ↑ • Ex ≈⟨ by-assoc auto ⟩
+  Ex • (CZ • CZ ↑) • Ex ≈⟨ (cright cleft sym (axiom selinger-c12)) ⟩
+  Ex • (CZ ↑ • CZ) • Ex ≈⟨ cong refl assoc ⟩
+  Ex • CZ ↑ • CZ • Ex ≈⟨ (cright cright lemma-comm-Ex-CZ-n) ⟩
+  Ex • CZ ↑ • Ex • CZ ≈⟨ by-assoc auto ⟩
+  (Ex • CZ ↑ • Ex) • CZ ≈⟨ (cleft lemma-Ex-Ex↑-CZ'b) ⟩
+  (⊥⊤ ↓ • CZ ↑ • ⊤⊥ ↓) • CZ ≈⟨ sym (cong (axiom selinger-c13) refl) ⟩
+  (⊤⊥ ↑ • CZ • ⊥⊤ ↑) • CZ ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Swap (₂₊ n)
+  module RW = Rewriting-Swap (₁₊ n)
+  open Rewriting-Powers (₂₊ n)
+  open Commuting-Symplectic (₁₊ n)
+  open Symplectic-GroupLike
+  open Basis-Change _ ((₃₊ n) QRel,_===_) grouplike
+  open Pattern-Assoc
+
+
+lemma-comm-CZ-ₕ|ₕ↑CZₕ|ₕ↑ : let open PB ((₃₊ n) QRel,_===_) in
+  CZ • ₕ|ₕ ↑ • CZ • ₕ|ₕ ↑ ≈ ₕ|ₕ ↑ • CZ • ₕ|ₕ ↑ • CZ
+lemma-comm-CZ-ₕ|ₕ↑CZₕ|ₕ↑ {n} = begin
+  CZ • ₕ|ₕ ↑ • CZ • ₕ|ₕ ↑ ≈⟨ bbc (ʰ|ʰ ↑) (ʰ|ʰ ↑) aux ⟩
+  ₕ|ₕ ↑ • CZ • ₕ|ₕ ↑ • CZ ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Swap (₂₊ n)
+  module RW = Rewriting-Swap (₁₊ n)
+  open Rewriting-Powers (₂₊ n)
+  open Commuting-Symplectic (₁₊ n)
+  open Symplectic-GroupLike
+  open Basis-Change _ ((₃₊ n) QRel,_===_) grouplike
+  open Pattern-Assoc
+  aux : (ʰ|ʰ ↑) • (CZ • (ₕ|ₕ ↑) • CZ • (ₕ|ₕ ↑)) • (ʰ|ʰ ↑) ≈ (ʰ|ʰ ↑) • ((ₕ|ₕ ↑) • CZ • (ₕ|ₕ ↑) • CZ) • (ʰ|ʰ ↑)
+  aux = begin
+    (ʰ|ʰ ↑) • (CZ • (ₕ|ₕ ↑) • CZ • (ₕ|ₕ ↑)) • (ʰ|ʰ ↑) ≈⟨ general-comm auto ⟩
+    CZ • ⊤⊥ ↑ • CZ • ⊥⊤ ↑ ≈⟨ lemma-comm-CZ⊤⊥↑CZ-⊥⊤↑ ⟩
+    (⊤⊥ ↑ • CZ • ⊥⊤ ↑) • CZ ≈⟨ general-comm auto ⟩
+    (ʰ|ʰ ↑) • ((ₕ|ₕ ↑) • CZ • (ₕ|ₕ ↑) • CZ) • (ʰ|ʰ ↑) ∎
+
+
+aux-CZ⁻¹-CZ' : let open PB ((₂₊ n) QRel,_===_) in CZ⁻¹ • CZ  ≈ ε
+aux-CZ⁻¹-CZ' {n} = begin
+  CZ⁻¹ • CZ ≈⟨ word-comm p-1 1 refl ⟩
+  CZ • CZ⁻¹ ≈⟨ axiom order-CZ ⟩
+  ε ∎
+  where
+  open PB ((₂₊ n) QRel,_===_)
+  open PP ((₂₊ n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+
+lemma-ₕ|ₕʰ|ʰₕ|ₕ : let open PB ((₂₊ n) QRel,_===_) in
+  ₕ|ₕ • ʰ|ʰ • ₕ|ₕ ≈ ʰ|ʰ • ₕ|ₕ • ʰ|ʰ
+lemma-ₕ|ₕʰ|ʰₕ|ₕ {n} = begin
+  ₕ|ₕ • ʰ|ʰ • ₕ|ₕ ≈⟨ general-comm auto ⟩
+  (H ↓ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑ • CZ) • H ↓ ≈⟨ (cleft lemma-comm-Ex-H') ⟩
+  ((CZ • H • H ↑ • CZ • H • H ↑ • CZ) • H ↑) • H ↓ ≈⟨ general-comm auto ⟩
+  ((CZ • H ↑ • H • CZ • H ↑ • H • CZ) • H) • H ↑ ≈⟨ (cleft sym lemma-comm-Ex-H↑'-n) ⟩
+  (H ↑  • CZ • H ↑  • H • CZ • H ↑  • H • CZ) • H ↑ ≈⟨ general-comm auto ⟩
+  ʰ|ʰ • ₕ|ₕ • ʰ|ʰ ∎
+  where
+  open PB ((₂₊ n) QRel,_===_)
+  open PP ((₂₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Swap (₁₊ n)
+  open Commuting-Symplectic (n)
+
+
+lemma-CZ-ₕ|ₕ↑ : let open PB ((₃₊ n) QRel,_===_) in
+  CZ • ₕ|ₕ ↑ ≈ ₕ|ₕ ↑ • CZ⁻¹ • Ex • CZ⁻¹ ↑ • Ex
+lemma-CZ-ₕ|ₕ↑ {n} = begin
+  CZ • ₕ|ₕ ↑ ≈⟨ bbc ε (Ex • CZ ↑ • Ex • CZ • ₕ|ₕ ↑) aux ⟩
+  ₕ|ₕ ↑ • CZ⁻¹ • Ex • CZ⁻¹ ↑ • Ex ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Swap (₂₊ n)
+  module RW = Rewriting-Swap (₁₊ n)
+  open Rewriting-Powers (₂₊ n)
+  open Commuting-Symplectic (₁₊ n)
+  open Symplectic-GroupLike
+  open Basis-Change _ ((₃₊ n) QRel,_===_) grouplike
+  open Pattern-Assoc
+  aux0 : ((ₕ|ₕ ↑) • CZ⁻¹) • ((CZ • (ₕ|ₕ ↑)) • ((⊥⊤ ↓) • (CZ ↑) • (⊤⊥ ↓)) • CZ • (ₕ|ₕ ↑)) •  CZ • (ₕ|ₕ ↑) ≈ ((ₕ|ₕ ↑) • CZ⁻¹) • ε • CZ • (ₕ|ₕ ↑)
+  aux0 = begin
+    ((ₕ|ₕ ↑) • CZ⁻¹) • ((CZ • (ₕ|ₕ ↑)) • ((⊥⊤ ↓) • (CZ ↑) • (⊤⊥ ↓)) • CZ • (ₕ|ₕ ↑)) •  CZ • (ₕ|ₕ ↑) ≈⟨ sym assoc ⟩
+    (((ₕ|ₕ ↑) • CZ⁻¹) • (CZ • (ₕ|ₕ ↑)) • ((⊥⊤ ↓) • (CZ ↑) • (⊤⊥ ↓)) • CZ • (ₕ|ₕ ↑)) •  CZ • (ₕ|ₕ ↑) ≈⟨ (cleft assoc) ⟩
+    ((ₕ|ₕ ↑) • CZ⁻¹ • (CZ • (ₕ|ₕ ↑)) • ((⊥⊤ ↓) • (CZ ↑) • (⊤⊥ ↓)) • CZ • (ₕ|ₕ ↑)) •  CZ • (ₕ|ₕ ↑) ≈⟨ (cleft cright special-assoc (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto) ⟩
+    ((ₕ|ₕ ↑) • (CZ⁻¹ • CZ) • (ₕ|ₕ ↑) • ((⊥⊤ ↓) • (CZ ↑) • (⊤⊥ ↓)) • CZ • (ₕ|ₕ ↑)) •  CZ • (ₕ|ₕ ↑) ≈⟨ (cleft cright cleft  aux-CZ⁻¹-CZ') ⟩
+    ((ₕ|ₕ ↑) • ε • (ₕ|ₕ ↑) • ((⊥⊤ ↓) • (CZ ↑) • (⊤⊥ ↓)) • CZ • (ₕ|ₕ ↑)) •  CZ • (ₕ|ₕ ↑) ≈⟨ rewrite-powers 100 auto ⟩
+    ((⊥⊤ ↓) • (CZ ↑) • (⊤⊥ ↓)) • CZ • (ₕ|ₕ ↑) •  CZ • (ₕ|ₕ ↑) ≈⟨ cong (sym (axiom selinger-c13)) refl ⟩
+    (⊤⊥ ↑ • CZ ↓ • ⊥⊤ ↑) • CZ • (ₕ|ₕ ↑) •  CZ • (ₕ|ₕ ↑) ≈⟨ (cright lemma-comm-CZ-ₕ|ₕ↑CZₕ|ₕ↑) ⟩
+    (⊤⊥ ↑ • CZ ↓ • ⊥⊤ ↑) • ₕ|ₕ ↑ • CZ • ₕ|ₕ ↑ • CZ ≈⟨ general-comm auto ⟩
+    (⊤⊥ ↑ • CZ ↓) • (ₕ|ₕ • ʰ|ʰ • ₕ|ₕ) ↑ • CZ • ₕ|ₕ ↑ • CZ ≈⟨ (cright cleft lemma-cong↑ _ _ lemma-ₕ|ₕʰ|ʰₕ|ₕ) ⟩
+    (⊤⊥ ↑ • CZ ↓) • (ʰ|ʰ • ₕ|ₕ • ʰ|ʰ) ↑ • CZ • ₕ|ₕ ↑ • CZ ≈⟨ general-comm auto ⟩
+    (⊤⊥ ↑ • CZ ↓) ^ 3 ≈⟨ axiom selinger-c14 ⟩
+    ε ≈⟨ rewrite-powers 100 auto ⟩
+    (ₕ|ₕ ↑) • (ε) • (ₕ|ₕ ↑) ≈⟨ (cright cleft sym aux-CZ⁻¹-CZ') ⟩
+    (ₕ|ₕ ↑) • (CZ⁻¹ • CZ) • (ₕ|ₕ ↑) ≈⟨ special-assoc (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto ⟩
+    ((ₕ|ₕ ↑) • CZ⁻¹) • CZ • (ₕ|ₕ ↑) ≈⟨ (cright sym left-unit) ⟩
+    ((ₕ|ₕ ↑) • CZ⁻¹) • ε • CZ • (ₕ|ₕ ↑) ∎
+
+  aux : ε • (CZ • (ₕ|ₕ ↑)) • Ex • (CZ ↑) • Ex • CZ • (ₕ|ₕ ↑) ≈  ε • ((ₕ|ₕ ↑) • (CZ⁻¹) • Ex • (CZ⁻¹ ↑) • Ex) • Ex • (CZ ↑) • Ex • CZ • (ₕ|ₕ ↑)
+  aux = begin
+    ε • (CZ • (ₕ|ₕ ↑)) • Ex • (CZ ↑) • Ex • CZ • (ₕ|ₕ ↑) ≈⟨ rewrite-powers 1000 auto ⟩
+    (CZ • ₕ|ₕ ↑) • (Ex • CZ ↑ • Ex) • CZ • ₕ|ₕ ↑ ≈⟨ (cright cleft lemma-Ex-Ex↑-CZ'b) ⟩
+    (CZ • ₕ|ₕ ↑) • (⊥⊤ ↓ • CZ ↑ • ⊤⊥ ↓) • CZ • ₕ|ₕ ↑ ≈⟨ bbc (ₕ|ₕ ↑ • CZ⁻¹) (CZ • ₕ|ₕ ↑) aux0 ⟩
+    ε ≈⟨ by-assoc auto ⟩
+    ε • ε ≈⟨ sym (cright lemma-cong↑ _ _ lemma-order-ₕ|ₕ) ⟩
+    ε • ((ₕ|ₕ ↑) • (ₕ|ₕ ↑)) ≈⟨ cright cong refl (sym left-unit) ⟩
+    ε • ((ₕ|ₕ ↑) • ε • (ₕ|ₕ ↑)) ≈⟨ cright (cright cleft sym aux-CZ⁻¹-CZ') ⟩
+    ε • ((ₕ|ₕ ↑) • (CZ⁻¹ • CZ) • (ₕ|ₕ ↑)) ≈⟨ cright (cright assoc) ⟩
+    ε • ((ₕ|ₕ ↑) • (CZ⁻¹) • CZ • (ₕ|ₕ ↑)) ≈⟨ cright cright cright rewrite-powers 1000 auto ⟩
+    ε • ((ₕ|ₕ ↑) • (CZ⁻¹) • Ex • Ex • CZ • (ₕ|ₕ ↑)) ≈⟨ (cright special-assoc (□  ^ 6) (□ ^ 3 • □ ^ 3) auto) ⟩
+    ε • ((ₕ|ₕ ↑) • CZ⁻¹ • Ex) • Ex • CZ • (ₕ|ₕ ↑) ≈⟨ (cright cright sym left-unit) ⟩
+    ε • ((ₕ|ₕ ↑) • CZ⁻¹ • Ex) • ε • Ex • CZ • (ₕ|ₕ ↑) ≈⟨ (cright cright cleft sym (lemma-cong↑ _ _  aux-CZ⁻¹-CZ')) ⟩
+    ε • ((ₕ|ₕ ↑) • CZ⁻¹ • Ex) • (CZ⁻¹ ↑ • CZ ↑) • Ex • CZ • (ₕ|ₕ ↑) ≈⟨ (cright special-assoc (□ ^ 3 • □ ^ 2 • □) (□ ^ 4 • □ ^ 2) auto) ⟩
+    ε • ((ₕ|ₕ ↑) • (CZ⁻¹) • Ex • CZ⁻¹ ↑) • CZ ↑ • Ex • CZ • (ₕ|ₕ ↑) ≈⟨ (cright cright rewrite-powers 1000 auto) ⟩
+    ε • ((ₕ|ₕ ↑) • (CZ⁻¹) • Ex • CZ⁻¹ ↑) • Ex • Ex • CZ ↑ • Ex • CZ • (ₕ|ₕ ↑) ≈⟨ (cright special-assoc (□ ^ 4 • □ ^ 3) (□ ^ 5 • □ ^ 2) auto) ⟩
+    ε • ((ₕ|ₕ ↑) • (CZ⁻¹) • Ex • (CZ⁻¹ ↑) • Ex) • Ex • (CZ ↑) • Ex • CZ • (ₕ|ₕ ↑) ∎
+
+
+aux-CZ02 : let open PB ((₃₊ n) QRel,_===_) in
+  ∀ k -> CZ02 ^ k ≈ CZ02k k
+aux-CZ02 {n} k@₀ = rewrite-powers 100 auto
+  where
+  open Rewriting-Powers (₂₊ n)
+aux-CZ02 {n} k@₁ = PB.refl
+aux-CZ02 {n} k@(₁₊ k'@(₁₊ k'')) = begin
+  CZ02 ^ k ≈⟨ refl ⟩
+  CZ02 • CZ02 ^ k' ≈⟨ (cright aux-CZ02 k') ⟩
+  CZ02 • CZ02k k' ≈⟨ rewrite-powers 100 auto ⟩
+  Ex • CZ ↑ • Ex ^ 2 • CZ ↑ ^ k' • Ex ≈⟨ (cright cright cleft rewrite-powers 100 auto) ⟩
+  Ex • CZ ↑ • ε • CZ ↑ ^ k' • Ex ≈⟨ rewrite-powers 100 auto ⟩
+  CZ02k k ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Powers (₂₊ n)
+
+
+aux-CZ02-alt : let open PB ((₃₊ n) QRel,_===_) in
+  ∀ k -> CZ02' ^ k ≈ CZ02'k k
+aux-CZ02-alt {n} k@₀ = rewrite-powers 100 auto
+  where
+  open Rewriting-Powers (₂₊ n)
+aux-CZ02-alt {n} k@₁ = PB.refl
+aux-CZ02-alt {n} k@(₁₊ k'@(₁₊ k'')) = begin
+  CZ02' ^ k ≈⟨ refl ⟩
+  CZ02' • CZ02' ^ k' ≈⟨ (cright aux-CZ02-alt k') ⟩
+  CZ02' • CZ02'k k' ≈⟨ rewrite-powers 100 auto ⟩
+  Ex ↑ • CZ • Ex ↑ ^ 2 • CZ ^ k' • Ex ↑ ≈⟨ (cright cright cleft rewrite-powers 100 auto) ⟩
+  Ex ↑ • CZ • ε • CZ ^ k' • Ex ↑ ≈⟨ rewrite-powers 100 auto ⟩
+  CZ02'k k ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Powers (₂₊ n)
+
+
+aux-CZ02⁻¹ : let open PB ((₃₊ n) QRel,_===_) in
+  CZ02⁻¹ ≈ CZ02 ^ p-1
+aux-CZ02⁻¹ {n} = begin
+  CZ02⁻¹ ≈⟨ (cright cleft sym (refl' (lemma-^-↑ CZ p-1))) ⟩
+  CZ02k p-1 ≈⟨ sym (aux-CZ02 p-1) ⟩
+  CZ02 ^ p-1 ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+
+lemma-comm-CZ↑-CZ02 : let open PB ((₃₊ n) QRel,_===_) in
+  CZ ↑ • CZ02 ≈ CZ02 • CZ ↑
+lemma-comm-CZ↑-CZ02 {n} = begin
+  CZ ↑ • CZ02 ≈⟨ (cright sym lemma-CZ02-alt) ⟩
+  CZ ↑ • Ex ↑ • CZ • Ex ↑ ≈⟨ sym assoc ⟩
+  (CZ ↑ • Ex ↑) • CZ • Ex ↑ ≈⟨ (cleft lemma-cong↑ _ _ lemma-comm-Ex-CZ-n) ⟩
+  (Ex ↑ • CZ ↑) • CZ • Ex ↑ ≈⟨ by-assoc auto ⟩
+  Ex ↑ • (CZ ↑ • CZ) • Ex ↑ ≈⟨ (cright cleft axiom selinger-c12) ⟩
+  Ex ↑ • (CZ • CZ ↑) • Ex ↑ ≈⟨ by-assoc auto ⟩
+  Ex ↑ • CZ • CZ ↑ • Ex ↑ ≈⟨ (cright cright lemma-cong↑ _ _ lemma-comm-Ex-CZ-n) ⟩
+  Ex ↑ • CZ • Ex ↑ • CZ ↑ ≈⟨ by-assoc auto ⟩
+  (Ex ↑ • CZ • Ex ↑) • CZ ↑ ≈⟨ (cleft lemma-CZ02-alt) ⟩
+  CZ02 • CZ ↑ ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Powers (₂₊ n)
+  open Commuting-Symplectic (suc n)
+  open Sym0-Rewriting (₂₊ n)
+  open Rewriting-Swap (₂₊ n)
+  open Basis-Change _ ((₃₊ n) QRel,_===_) grouplike
+
+
+lemma-comm-CZ-CZ02 : let open PB ((₃₊ n) QRel,_===_) in
+  CZ • CZ02 ≈ CZ02 • CZ
+lemma-comm-CZ-CZ02 {n} = begin
+  CZ • Ex • CZ ↑ • Ex ≈⟨ sym assoc ⟩
+  (CZ • Ex) • CZ ↑ • Ex ≈⟨ (cleft lemma-comm-Ex-CZ-n) ⟩
+  (Ex • CZ) • CZ ↑ • Ex ≈⟨ by-assoc auto ⟩
+  Ex • (CZ • CZ ↑) • Ex ≈⟨ sym (cright cleft axiom selinger-c12) ⟩
+  Ex • (CZ ↑ • CZ) • Ex ≈⟨ by-assoc auto ⟩
+  Ex • CZ ↑ • CZ • Ex ≈⟨ (cright cright lemma-comm-Ex-CZ-n) ⟩
+  Ex • CZ ↑ • Ex • CZ ≈⟨ by-assoc auto ⟩
+  CZ02 • CZ ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Powers (₂₊ n)
+  open Commuting-Symplectic (suc n)
+  open Sym0-Rewriting (₂₊ n)
+  open Rewriting-Swap (₂₊ n)
+  open Basis-Change _ ((₃₊ n) QRel,_===_) grouplike
+
+
+aux-comm-CZ02 : let open PB ((₃₊ n) QRel,_===_) in ∀ k l m ->
+  (Ex • (CZ ^ k) ↑ • Ex) • (CZ ^ l) ^ m ≈ (CZ ^ l) ^ m • (Ex • (CZ ^ k) ↑ • Ex)
+aux-comm-CZ02 {n} k l m = begin
+  (Ex • (CZ ^ k) ↑ • Ex) • (CZ ^ l) ^ m ≈⟨ cong (cright cleft refl' (Eq.sym (lemma-^-↑ CZ k))) (lemma-^^ CZ l m) ⟩
+  (Ex • (CZ ↑ ^ k) • Ex) • CZ ^ (l Nat.* m) ≈⟨ (cleft sym (aux-CZ02 k)) ⟩
+  (Ex • (CZ ↑) • Ex) ^ k • CZ ^ (l Nat.* m) ≈⟨ word-comm k (l Nat.* m) (sym lemma-comm-CZ-CZ02) ⟩
+  CZ ^ (l Nat.* m) • (Ex • (CZ ↑) • Ex) ^ k  ≈⟨ (cright aux-CZ02 k) ⟩
+  CZ ^ (l Nat.* m) • (Ex • (CZ ↑ ^ k) • Ex) ≈⟨ cong (sym (lemma-^^ CZ l m)) (cright cleft refl' ( (lemma-^-↑ CZ k))) ⟩
+  (CZ ^ l) ^ m • Ex • (CZ ^ k) ↑ • Ex ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Swap (₂₊ n)
+  module RW = Rewriting-Swap (₁₊ n)
+  open Rewriting-Powers (₂₊ n)
+  open Commuting-Symplectic (₁₊ n)
+  open Symplectic-GroupLike
+  open Basis-Change _ ((₃₊ n) QRel,_===_) grouplike
+  open Pattern-Assoc
+
+lemma-comm-CZ-CZ02⁻¹ : let open PB ((₃₊ n) QRel,_===_) in
+  CZ • CZ02⁻¹ ≈ CZ02⁻¹ • CZ
+lemma-comm-CZ-CZ02⁻¹ {n} = begin
+  CZ • CZ02⁻¹ ≈⟨ (cright aux-CZ02⁻¹) ⟩
+  CZ • CZ02 ^ p-1 ≈⟨ word-comm 1 p-1 lemma-comm-CZ-CZ02 ⟩
+  CZ02 ^ p-1 • CZ ≈⟨ (cleft sym aux-CZ02⁻¹) ⟩
+  CZ02⁻¹ • CZ ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+aux-CZ02k : let open PB ((₃₊ n) QRel,_===_) in
+  ∀ k -> CZ02 • CZ02k k ≈ CZ02k (₁₊ k)
+aux-CZ02k {n} k = begin
+  CZ02 • CZ02k k ≈⟨ special-assoc (□ ^ 3 • □ ^ 3) (□ • □ • □ ^ 2 • □ ^ 2) auto ⟩
+  Ex • CZ ↑ • (Ex • Ex) • CZ ↑ ^ k • Ex ≈⟨ (cright cright cleft lemma-order-Ex-n) ⟩
+  Ex • CZ ↑ • ε • CZ ↑ ^ k • Ex ≈⟨ (cright cright left-unit) ⟩
+  Ex • CZ ↑ • CZ ↑ ^ k • Ex ≈⟨ sym (cong refl assoc) ⟩
+  Ex • (CZ ↑ • CZ ↑ ^ k) • Ex ≈⟨ (cright cleft sym (lemma-^-suc (CZ ↑) k)) ⟩
+  CZ02k (₁₊ k) ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+aux-CZ02'k : let open PB ((₃₊ n) QRel,_===_) in
+  ∀ k -> CZ02' • CZ02'k k ≈ CZ02'k (₁₊ k)
+aux-CZ02'k {n} k = begin
+  CZ02' • CZ02'k k ≈⟨ special-assoc (□ ^ 3 • □ ^ 3) (□ • □ • □ ^ 2 • □ ^ 2) auto ⟩
+  Ex ↑ • CZ • (Ex ↑ • Ex ↑) • CZ ^ k • Ex ↑ ≈⟨ (cright cright cleft lemma-cong↑ _ _ lemma-order-Ex-n) ⟩
+  Ex ↑ • CZ • ε • CZ ^ k • Ex ↑ ≈⟨ (cright cright left-unit) ⟩
+  Ex ↑ • CZ • CZ ^ k • Ex ↑ ≈⟨ sym (cong refl assoc) ⟩
+  Ex ↑ • (CZ • CZ ^ k) • Ex ↑ ≈⟨ (cright cleft sym (lemma-^-suc (CZ) k)) ⟩
+  CZ02'k (₁₊ k) ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+
+lemma-CZ02k-alt : let open PB ((₃₊ n) QRel,_===_) in ∀ k -> CZ02k k ≈ CZ02'k k
+lemma-CZ02k-alt {n} k@0 = rewrite-powers 100 auto
+  where
+  open Rewriting-Powers (₂₊ n)
+lemma-CZ02k-alt {n} k@1 = begin
+  Ex • CZ ↑ • Ex ≈⟨ sym lemma-CZ02-alt ⟩
+  CZ02'k 1 ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Powers (₂₊ n)
+lemma-CZ02k-alt {n} k@(₁₊ k'@(₁₊ k'')) = begin
+  Ex • CZ ↑ ^ k • Ex ≈⟨ (cright cleft refl) ⟩
+  Ex • (CZ ↑ • CZ ↑ ^ k') • Ex ≈⟨ (cright cleft cright sym left-unit) ⟩
+  Ex • (CZ ↑ • ε • CZ ↑ ^ k') • Ex ≈⟨ (cright cleft cright cleft sym lemma-order-Ex-n) ⟩
+  Ex • (CZ ↑ • (Ex • Ex) • CZ ↑ ^ k') • Ex ≈⟨ special-assoc (□ • (□ • □ ^ 2 • □) • □) (□ ^ 3 • □ ^ 3) auto ⟩
+  (Ex • CZ ↑ • Ex) • (Ex • CZ ↑ ^ k' • Ex) ≈⟨ cong (lemma-CZ02k-alt 1) (lemma-CZ02k-alt k') ⟩
+  CZ02'k 1 • CZ02'k k' ≈⟨ aux-CZ02'k k' ⟩
+  CZ02'k k ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+  open Rewriting-Powers (₂₊ n)
+
+
+
+
+aux-CZ02⁻ᵏ : let open PB ((₃₊ n) QRel,_===_) in
+  ∀ k -> CZ02⁻¹ • CZ02⁻ᵏ k ≈ CZ02⁻ᵏ (₁₊ k)
+aux-CZ02⁻ᵏ {n} k = begin
+  CZ02⁻¹ • CZ02⁻ᵏ k ≈⟨ special-assoc (□ ^ 3 • □ ^ 3) (□ • □ • □ ^ 2 • □ ^ 2) auto ⟩
+  Ex • CZ⁻¹ ↑ • (Ex • Ex) • CZ⁻¹ ↑ ^ k • Ex ≈⟨ (cright cright cleft lemma-order-Ex-n) ⟩
+  Ex • CZ⁻¹ ↑ • ε • CZ⁻¹ ↑ ^ k • Ex ≈⟨ (cright cright left-unit) ⟩
+  Ex • CZ⁻¹ ↑ • CZ⁻¹ ↑ ^ k • Ex ≈⟨ sym (cong refl assoc) ⟩
+  Ex • (CZ⁻¹ ↑ • CZ⁻¹ ↑ ^ k) • Ex ≈⟨ (cright cleft sym (lemma-^-suc (CZ⁻¹ ↑) k)) ⟩
+  CZ02⁻ᵏ (₁₊ k) ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+
+aux-CZ02'⁻ᵏ : let open PB ((₃₊ n) QRel,_===_) in
+  ∀ k -> CZ02'⁻¹ • CZ02'⁻ᵏ k ≈ CZ02'⁻ᵏ (₁₊ k)
+aux-CZ02'⁻ᵏ {n} k = begin
+  CZ02'⁻¹ • CZ02'⁻ᵏ k ≈⟨ special-assoc (□ ^ 3 • □ ^ 3) (□ • □ • □ ^ 2 • □ ^ 2) auto ⟩
+  Ex ↑ • CZ⁻¹ • (Ex ↑ • Ex ↑) • CZ⁻¹ ^ k • Ex ↑ ≈⟨ (cright cright cleft (lemma-cong↑ _ _ lemma-order-Ex-n)) ⟩
+  Ex ↑ • CZ⁻¹ • ε • CZ⁻¹ ^ k • Ex ↑ ≈⟨ (cright cright left-unit) ⟩
+  Ex ↑ • CZ⁻¹ • CZ⁻¹ ^ k • Ex ↑ ≈⟨ sym (cong refl assoc) ⟩
+  Ex ↑ • (CZ⁻¹ • CZ⁻¹ ^ k) • Ex ↑ ≈⟨ (cright cleft sym (lemma-^-suc (CZ⁻¹) k)) ⟩
+  CZ02'⁻ᵏ (₁₊ k) ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+
+
+lemma-CZ02⁻ᵏ-alt : let open PB ((₃₊ n) QRel,_===_) in ∀ k -> CZ02⁻ᵏ k ≈ CZ02'⁻ᵏ k
+lemma-CZ02⁻ᵏ-alt {n} k@0 = rewrite-powers 100 auto
+  where
+  open Rewriting-Powers (₂₊ n)
+lemma-CZ02⁻ᵏ-alt {n} k@1 = begin
+  Ex • CZ⁻¹ ↑ • Ex ≈⟨ (cright cleft refl' (Eq.sym (lemma-^-↑ CZ p-1))) ⟩
+  Ex • CZ ↑ ^ p-1 • Ex ≈⟨ sym (aux-CZ02 p-1) ⟩
+  CZ02 ^ p-1 ≈⟨ lemma-^-cong _ _ p-1 (sym lemma-CZ02-alt) ⟩
+  (Ex ↑ • CZ • Ex ↑) ^ p-1 ≈⟨ aux-CZ02-alt p-1 ⟩
+  (Ex ↑ • CZ ^ p-1 • Ex ↑) ≈⟨ refl ⟩
+  CZ02'⁻ᵏ 1 ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Powers (₂₊ n)
+lemma-CZ02⁻ᵏ-alt {n} k@(₁₊ k'@(₁₊ k'')) = begin
+  Ex • CZ⁻¹ ↑ ^ k • Ex ≈⟨ (cright cleft refl) ⟩
+  Ex • (CZ⁻¹ ↑ • CZ⁻¹ ↑ ^ k') • Ex ≈⟨ (cright cleft cright sym left-unit) ⟩
+  Ex • (CZ⁻¹ ↑ • ε • CZ⁻¹ ↑ ^ k') • Ex ≈⟨ (cright cleft cright cleft sym lemma-order-Ex-n) ⟩
+  Ex • (CZ⁻¹ ↑ • (Ex • Ex) • CZ⁻¹ ↑ ^ k') • Ex ≈⟨ special-assoc (□ • (□ • □ ^ 2 • □) • □) (□ ^ 3 • □ ^ 3) auto ⟩
+  (Ex • CZ⁻¹ ↑ • Ex) • (Ex • CZ⁻¹ ↑ ^ k' • Ex) ≈⟨ cong (lemma-CZ02⁻ᵏ-alt 1) (lemma-CZ02⁻ᵏ-alt k') ⟩
+  CZ02'⁻ᵏ 1 • CZ02'⁻ᵏ k' ≈⟨ aux-CZ02'⁻ᵏ k' ⟩
+  CZ02'⁻ᵏ k ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+  open Rewriting-Powers (₂₊ n)
+
+
+
+lemma-CZ^k-ₕ|ₕ↑ : let open PB ((₃₊ n) QRel,_===_) in
+  ∀ k -> CZ ^ k • ₕ|ₕ ↑ ≈ ₕ|ₕ ↑ • CZ⁻¹ ^ k • Ex • (CZ⁻¹ ^ k) ↑ • Ex
+lemma-CZ^k-ₕ|ₕ↑ {n} k@₀ = rewrite-powers 100 auto
+  where
+  open Rewriting-Powers (₂₊ n)
+
+lemma-CZ^k-ₕ|ₕ↑ {n} k@1 = lemma-CZ-ₕ|ₕ↑
+lemma-CZ^k-ₕ|ₕ↑ {n} k@(₁₊ k'@(₁₊ k-2)) = begin
+  (CZ • CZ ^ ₁₊ k-2) • (ₕ|ₕ ↑) ≈⟨ assoc ⟩
+  CZ • CZ ^ k' • (ₕ|ₕ ↑) ≈⟨ (cright lemma-CZ^k-ₕ|ₕ↑ k') ⟩
+  CZ • ₕ|ₕ ↑ • CZ⁻¹ ^ k' • Ex • (CZ⁻¹ ^ k') ↑ • Ex ≈⟨ sym assoc ⟩
+  (CZ • ₕ|ₕ ↑) • CZ⁻¹ ^ k' • Ex • (CZ⁻¹ ^ k') ↑ • Ex ≈⟨ (cleft lemma-CZ-ₕ|ₕ↑) ⟩
+  (ₕ|ₕ ↑ • CZ⁻¹ • Ex • CZ⁻¹ ↑ • Ex) • CZ⁻¹ ^ k' • Ex • (CZ⁻¹ ^ k') ↑ • Ex ≈⟨ special-assoc (□ ^ 5 • □ ^ 4) (□ ^ 2 • (□ ^ 3 • □) • □ ^ 3) auto ⟩
+  (ₕ|ₕ ↑ • CZ⁻¹) • ((Ex • CZ⁻¹ ↑ • Ex) • CZ⁻¹ ^ k') • Ex • (CZ⁻¹ ^ k') ↑ • Ex ≈⟨ (cright cleft aux-comm-CZ02 p-1 p-1 k') ⟩
+  (ₕ|ₕ ↑ • CZ⁻¹) • (CZ⁻¹ ^ k' • (Ex • CZ⁻¹ ↑ • Ex)) • Ex • (CZ⁻¹ ^ k') ↑ • Ex ≈⟨ (cright  special-assoc ((□ • □ ^ 3) • □ ^ 3) (□ ^ 3 • □ ^ 2 • □ ^ 2) auto) ⟩
+  (ₕ|ₕ ↑ • CZ⁻¹) • (CZ⁻¹ ^ k' • (Ex • CZ⁻¹ ↑)) • Ex ^ 2 • (CZ⁻¹ ^ k') ↑ • Ex ≈⟨ (cright  (cright trans (cleft lemma-order-Ex-n) left-unit)) ⟩
+  (ₕ|ₕ ↑ • CZ⁻¹) • (CZ⁻¹ ^ k' • (Ex • CZ⁻¹ ↑)) • (CZ⁻¹ ^ k') ↑ • Ex ≈⟨ (cright  special-assoc (□ ^ 3 • □ ^ 2) (□ ^ 2 • □ ^ 2 • □) auto) ⟩
+  (ₕ|ₕ ↑ • CZ⁻¹) • (CZ⁻¹ ^ k' • Ex) • (CZ⁻¹ • CZ⁻¹ ^ k') ↑ • Ex ≈⟨ (cright  (cright cleft refl)) ⟩
+  (ₕ|ₕ ↑ • CZ⁻¹) • (CZ⁻¹ ^ k' • Ex) • (CZ⁻¹ ^ k) ↑ • Ex ≈⟨ (  special-assoc (□ ^ 2 • □ ^ 2 • □ ^ 2) (□ • □ ^ 2 • □ ^ 3) auto) ⟩
+  ₕ|ₕ ↑ • (CZ⁻¹ • CZ⁻¹ ^ k') • Ex • (CZ⁻¹ ^ k) ↑ • Ex ≈⟨ (  refl) ⟩
+  (ₕ|ₕ ↑) • (CZ⁻¹ • CZ⁻¹ ^ ₁₊ k-2) • Ex • ((CZ⁻¹ • CZ⁻¹ ^ ₁₊ k-2) ↑) • Ex ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Swap (₂₊ n)
+  module RW = Rewriting-Swap (₁₊ n)
+  open Rewriting-Powers (₂₊ n)
+  open Commuting-Symplectic (₁₊ n)
+  open Symplectic-GroupLike
+  open Basis-Change _ ((₃₊ n) QRel,_===_) grouplike
+  open Pattern-Assoc
+
+
+lemma-C18-CX-CZ' : let open PB ((₃₊ n) QRel,_===_) in
+  CZ • CX ↑ ≈ CX ↑ • CZ • CZ02
+lemma-C18-CX-CZ' {n@0} = begin
+  CZ • CX ↑ ≈⟨ by-assoc auto ⟩
+  (CZ • H ↑ ^ 2) • ₕ|ₕ ↑ ≈⟨ (cleft lemma-semi-CZ-HH↑) ⟩
+  (H ↑ ^ 2 • CZ^ ₋₁) • ₕ|ₕ ↑ ≈⟨ by-assoc auto ⟩
+  H ↑ ^ 2 • CZ^ ₋₁ • ₕ|ₕ ↑ ≈⟨ (cright (cleft refl' (Eq.cong (CZ ^_) (toℕ-fromℕ< (NP.n<1+n p-1)))) ) ⟩
+  H ↑ ^ 2 • CZ⁻¹ • ₕ|ₕ ↑ ≈⟨ (cright lemma-CZ^k-ₕ|ₕ↑ p-1 ) ⟩
+  H ↑ ^ 2 • ₕ|ₕ ↑ • CZ⁻¹ ^ p-1 • Ex • (CZ⁻¹ ^ p-1) ↑ • Ex ≈⟨ (cright cright cleft  aux-CZ⁻¹⁻¹) ⟩
+  H ↑ ^ 2 • ₕ|ₕ ↑ • CZ • Ex • (CZ⁻¹ ^ p-1) ↑ • Ex ≈⟨ (cright cright cright cright cleft lemma-cong↑ _ _  aux-CZ⁻¹⁻¹) ⟩
+  H ↑ ^ 2 • ₕ|ₕ ↑ • CZ • Ex • (CZ) ↑ • Ex ≈⟨ by-assoc auto ⟩
+  CX ↑ • CZ • CZ02 ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Powers (₂₊ n)
+  open Commuting-Symplectic (suc n)
+  open Sym0-Rewriting (₂₊ n)
+  open Rewriting-Swap (₂₊ n)
+  open Lemmas-2Q (₁₊ n)
+lemma-C18-CX-CZ' {n@(suc _)} = begin
+  CZ • CX ↑ ≈⟨ by-assoc auto ⟩
+  (CZ • H ↑ ^ 2) • ₕ|ₕ ↑ ≈⟨ (cleft lemma-semi-CZ-HH↑) ⟩
+  (H ↑ ^ 2 • CZ^ ₋₁) • ₕ|ₕ ↑ ≈⟨ by-assoc auto ⟩
+  H ↑ ^ 2 • CZ^ ₋₁ • ₕ|ₕ ↑ ≈⟨ (cright (cleft refl' (Eq.cong (CZ ^_) (toℕ-fromℕ< (NP.n<1+n p-1)))) ) ⟩
+  H ↑ ^ 2 • CZ⁻¹ • ₕ|ₕ ↑ ≈⟨ (cright lemma-CZ^k-ₕ|ₕ↑ p-1 ) ⟩
+  H ↑ ^ 2 • ₕ|ₕ ↑ • CZ⁻¹ ^ p-1 • Ex • (CZ⁻¹ ^ p-1) ↑ • Ex ≈⟨ (cright cright cleft  aux-CZ⁻¹⁻¹) ⟩
+  H ↑ ^ 2 • ₕ|ₕ ↑ • CZ • Ex • (CZ⁻¹ ^ p-1) ↑ • Ex ≈⟨ (cright cright cright cright cleft lemma-cong↑ _ _  aux-CZ⁻¹⁻¹) ⟩
+  H ↑ ^ 2 • ₕ|ₕ ↑ • CZ • Ex • (CZ) ↑ • Ex ≈⟨ by-assoc auto ⟩
+  CX ↑ • CZ • CZ02 ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Powers (₂₊ n)
+  open Commuting-Symplectic (suc n)
+  open Sym0-Rewriting (₂₊ n)
+  open Rewriting-Swap (₂₊ n)
+  open Lemmas-2Q (₁₊ n)
+
+
+
+lemma-C18-CX-CZ : let open PB ((₃₊ n) QRel,_===_) in
+  CZ • CX ↑ ≈ (CZ02) • CX ↑ • CZ
+lemma-C18-CX-CZ {n@0} = begin
+  CZ • CX ↑ ≈⟨ lemma-C18-CX-CZ' ⟩
+  CX ↑ • CZ • CZ02 ≈⟨ (cright cright sym lemma-Ex-Ex↑-CZ') ⟩
+  CX ↑ • CZ • Ex ↑ • CZ • Ex ↑ ≈⟨ (cright cright lemma-Ex-Ex↑-CZ'a) ⟩
+  CX ↑ • CZ • ⊤⊥ ↑ • CZ • ⊥⊤ ↑ ≈⟨ (cright lemma-comm-CZ⊤⊥↑CZ-⊥⊤↑) ⟩
+  CX ↑ • (⊤⊥ ↑ • CZ • ⊥⊤ ↑) • CZ ≈⟨ ((cright cleft sym lemma-Ex-Ex↑-CZ'a)) ⟩
+  CX ↑ • (Ex ↑ • CZ • Ex ↑) • CZ ≈⟨ general-comm auto ⟩
+  (CX ↑ • Ex ↑) • CZ • Ex ↑ • CZ ≈⟨ ((cleft lemma-cong↑ _ _ (rewrite-swap 100 auto))) ⟩
+  (Ex ↑ • XC ↑) • CZ • Ex ↑ • CZ ≈⟨ general-comm auto ⟩
+  (Ex ↑) • CZ • (XC ↑ • Ex ↑) • CZ ≈⟨ (cright cright (cleft lemma-cong↑ _ _ (rewrite-swap 100 auto))) ⟩
+  (Ex ↑) • CZ • (Ex ↑ • CX ↑) • CZ ≈⟨ general-comm auto ⟩
+  (Ex ↑ • CZ • Ex ↑) • CX ↑ • CZ ≈⟨ (cleft lemma-Ex-Ex↑-CZ') ⟩
+  (CZ02) • CX ↑ • CZ ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Powers (₂₊ n)
+  open Commuting-Symplectic (suc n)
+  open Sym0-Rewriting (₂₊ n)
+  open Rewriting-Swap (₁₊ n)
+
+
+lemma-C18-CX-CZ {n@(suc _)} = begin
+  CZ • CX ↑ ≈⟨ lemma-C18-CX-CZ' ⟩
+  CX ↑ • CZ • CZ02 ≈⟨ (cright cright sym lemma-Ex-Ex↑-CZ') ⟩
+  CX ↑ • CZ • Ex ↑ • CZ • Ex ↑ ≈⟨ (cright cright lemma-Ex-Ex↑-CZ'a) ⟩
+  CX ↑ • CZ • ⊤⊥ ↑ • CZ • ⊥⊤ ↑ ≈⟨ (cright lemma-comm-CZ⊤⊥↑CZ-⊥⊤↑) ⟩
+  CX ↑ • (⊤⊥ ↑ • CZ • ⊥⊤ ↑) • CZ ≈⟨ ((cright cleft sym lemma-Ex-Ex↑-CZ'a)) ⟩
+  CX ↑ • (Ex ↑ • CZ • Ex ↑) • CZ ≈⟨ general-comm auto ⟩
+  (CX ↑ • Ex ↑) • CZ • Ex ↑ • CZ ≈⟨ ((cleft lemma-cong↑ _ _ (rewrite-swap 100 auto))) ⟩
+  (Ex ↑ • XC ↑) • CZ • Ex ↑ • CZ ≈⟨ general-comm auto ⟩
+  (Ex ↑) • CZ • (XC ↑ • Ex ↑) • CZ ≈⟨ (cright cright (cleft lemma-cong↑ _ _ (rewrite-swap 100 auto))) ⟩
+  (Ex ↑) • CZ • (Ex ↑ • CX ↑) • CZ ≈⟨ general-comm auto ⟩
+  (Ex ↑ • CZ • Ex ↑) • CX ↑ • CZ ≈⟨ (cleft lemma-Ex-Ex↑-CZ') ⟩
+  (CZ02) • CX ↑ • CZ ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Powers (₂₊ n)
+  open Commuting-Symplectic (suc n)
+  open Sym0-Rewriting (₂₊ n)
+  open Rewriting-Swap (₁₊ n)
+
+aux-CZ02-CZ02⁻¹ : let open PB ((₃₊ n) QRel,_===_) in
+  CZ02 • CZ02⁻¹ ≈ ε
+aux-CZ02-CZ02⁻¹ {n} = begin
+  CZ02 • CZ02⁻¹ ≈⟨ refl ⟩
+  (Ex • CZ ↑ • Ex) • Ex • CZ⁻¹ ↑ • Ex ≈⟨ by-assoc auto ⟩
+  (Ex • CZ ↑) • (Ex • Ex) • CZ⁻¹ ↑ • Ex ≈⟨ (cright cleft lemma-order-Ex-n) ⟩
+  (Ex • CZ ↑) • ε • CZ⁻¹ ↑ • Ex ≈⟨ by-assoc auto ⟩
+  Ex • (CZ ↑ • CZ⁻¹ ↑) • Ex ≈⟨ (cright cleft lemma-cong↑ _ _ ( B1.axiom order-CZ)) ⟩
+  Ex • ε • Ex ≈⟨ (cright left-unit) ⟩
+  Ex • Ex ≈⟨ lemma-order-Ex-n ⟩
+  ε ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Rewriting-Powers (₂₊ n)
+  open Commuting-Symplectic (suc n)
+  open Sym0-Rewriting (₂₊ n)
+  open Rewriting-Swap (₁₊ n)
+  module B1 = PB ((₂₊ n) QRel,_===_)
+
+lemma-CX↑-CZ : let open PB ((₃₊ n) QRel,_===_) in
+  CX ↑ • CZ ≈ CZ • CZ02⁻¹ • CX ↑
+lemma-CX↑-CZ {n} = bbc CZ02 ε aux
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+  open Rewriting-Powers (₂₊ n)
+  open Commuting-Symplectic (suc n)
+  open Sym0-Rewriting (₂₊ n)
+  open Rewriting-Swap (₁₊ n)
+  open Basis-Change _ ((₃₊ n) QRel,_===_) grouplike
+  aux : CZ02 • ((CX ↑) • CZ) • ε ≈ CZ02 • (CZ • CZ02⁻¹ • (CX ↑)) • ε
+  aux = begin
+    CZ02 • ((CX ↑) • CZ) • ε ≈⟨ cong refl right-unit ⟩
+    CZ02 • CX ↑ • CZ ≈⟨ sym lemma-C18-CX-CZ ⟩
+    CZ • CX ↑ ≈⟨ sym (cong refl left-unit) ⟩
+    CZ • ε • CX ↑ ≈⟨ (cright cleft sym aux-CZ02-CZ02⁻¹) ⟩
+    CZ • (CZ02 • CZ02⁻¹) • CX ↑ ≈⟨ special-assoc (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto ⟩
+    (CZ • CZ02) • CZ02⁻¹ • CX ↑ ≈⟨ (cleft lemma-comm-CZ-CZ02) ⟩
+    (CZ02 • CZ) • CZ02⁻¹ • CX ↑ ≈⟨ assoc ⟩
+    CZ02 • (CZ • CZ02⁻¹ • (CX ↑)) ≈⟨ sym (cong refl right-unit) ⟩
+    CZ02 • (CZ • CZ02⁻¹ • (CX ↑)) • ε ∎
+
+lemma-CX↑-CZ^k : let open PB ((₃₊ n) QRel,_===_) in
+  ∀ k -> CX ↑ • CZ ^ k ≈ CZ ^ k • CZ02⁻ᵏ k • CX ↑
+lemma-CX↑-CZ^k {n} k@0 = rewrite-powers 100 auto
+  where
+  open Rewriting-Powers (₂₊ n)
+lemma-CX↑-CZ^k {n} k@1 = lemma-CX↑-CZ
+lemma-CX↑-CZ^k {n} k@(₁₊ k'@(₁₊ k'')) = begin
+  (CX ↑) • CZ ^ ₂₊ k'' ≈⟨ sym assoc ⟩
+  (CX ↑ • CZ) • CZ ^ k' ≈⟨ (cleft lemma-CX↑-CZ) ⟩
+  (CZ • CZ02⁻¹ • CX ↑) • CZ ^ k' ≈⟨ special-assoc (□ ^ 3 • □) (□ ^ 2 • □ ^ 2) auto ⟩
+  (CZ • CZ02⁻¹) • CX ↑ • CZ ^ k' ≈⟨ (cright lemma-CX↑-CZ^k k') ⟩
+  (CZ • CZ02⁻¹) • CZ ^ k' • CZ02⁻ᵏ k' • CX ↑ ≈⟨ special-assoc (□ ^ 2 • □ ^ 3) (□ • □ ^ 2 • □ ^ 2) auto ⟩
+  CZ • (CZ02⁻¹ • CZ ^ k') • CZ02⁻ᵏ k' • CX ↑ ≈⟨ (cright cleft word-comm 1 k' (sym lemma-comm-CZ-CZ02⁻¹)) ⟩
+  CZ • (CZ ^ k' • CZ02⁻¹) • CZ02⁻ᵏ k' • CX ↑ ≈⟨ special-assoc (□ • □ ^ 2 • □ ^ 2) (□ ^ 2 • □ ^ 2 • □) auto ⟩
+  (CZ • CZ ^ k') • (CZ02⁻¹ • CZ02⁻ᵏ k') • CX ↑ ≈⟨ (cright cleft aux-CZ02⁻ᵏ k') ⟩
+  (CZ • CZ ^ k') • (CZ02⁻ᵏ (₁₊ k')) • CX ↑ ≈⟨ refl ⟩
+  CZ ^ ₂₊ k'' • CZ02⁻ᵏ (₂₊ k'') • (CX ↑) ∎
+  where
+  open PB ((₃₊ n) QRel,_===_)
+  open PP ((₃₊ n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+  open Rewriting-Powers (₂₊ n)
+  open Commuting-Symplectic (suc n)
+  open Sym0-Rewriting (₂₊ n)
+  open Rewriting-Swap (₁₊ n)
+  open Basis-Change _ ((₃₊ n) QRel,_===_) grouplike
+

@@ -1,0 +1,381 @@
+{-# OPTIONS  --safe #-}
+{-# OPTIONS  --call-by-name #-}
+{-# OPTIONS --termination-depth=4 #-}
+open import Level using (0ℓ)
+
+open import Relation.Binary using (Rel)
+open import Relation.Binary.Definitions using (DecidableEquality)
+open import Relation.Binary.Morphism.Definitions using (Homomorphic₂)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; _≢_ ; inspect ; setoid ; module ≡-Reasoning ; _≗_) renaming ([_] to [_]')
+import Relation.Binary.Reasoning.Setoid as SR
+import Relation.Binary.PropositionalEquality as Eq
+open import Relation.Nullary.Decidable using (yes ; no)
+
+
+open import Function using (_∘_ ; id)
+open import Function.Definitions using (Injective)
+
+open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; map₁ ; ∃ ; Σ ; Σ-syntax)
+open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
+open import Data.Nat hiding (_^_ ; _+_ ; _*_)
+open import Agda.Builtin.Nat using (_-_)
+import Data.Nat as Nat
+open import Data.Bool hiding (_<_ ; _≤_)
+--open import Data.List using () hiding ([_] ; _++_ ; last ; head ; tail ; _∷ʳ_)
+open import Data.Vec hiding ([_])
+open import Data.Vec as V
+open import Data.Fin hiding (_+_ ; _-_ ; _≤_ ; _<_)
+
+open import Data.Maybe
+open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_] ; [_,_]′)
+open import Data.Unit using (⊤ ; tt)
+open import Data.Empty using (⊥ ; ⊥-elim)
+
+open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
+open import Word.Properties
+import Presentation.Base as PB
+import Presentation.Properties as PP
+open PP using (NFProperty ; NFProperty')
+import Presentation.CosetNF as CA
+import Presentation.Reidemeister-Schreier as RS
+module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
+
+open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
+import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
+import Presentation.Construct.Properties.DirectProduct as DP
+import Presentation.Groups.Cyclic as Cyclic
+
+
+open import Data.Fin using (Fin ; toℕ ; suc ; zero ; fromℕ)
+open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
+import Data.Nat.Properties as NP
+open import Presentation.GroupLike
+open import Presentation.Tactics using ()
+open import Data.Nat.Primality
+
+
+
+module N.Pushing.DS (p-2 : ℕ) (p-prime : Prime (2+ p-2))  where
+
+private
+  variable
+    n : ℕ
+    
+pattern auto = Eq.refl
+
+pattern ₀ = zero
+pattern ₁ = suc ₀
+pattern ₂ = suc ₁
+pattern ₃ = suc ₂
+pattern ₅ = 5
+pattern ₆ = 6
+pattern ₇ = 7
+pattern ₈ = 8
+pattern ₉ = 9
+pattern ₁₀ = 10
+pattern ₁₁ = 11
+pattern ₁₂ = 12
+pattern ₁₃ = 13
+pattern ₁₄ = 14
+pattern ₁₅ = 15
+
+pattern ₁₊ ⱼ = suc ⱼ
+pattern ₂₊ ⱼ = suc (suc ⱼ)
+pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
+pattern ₄₊ ⱼ = suc (suc (suc (suc ⱼ)))
+
+
+open import Zp.ModularArithmetic
+open PrimeModulus p-2 p-prime
+open import N.Cosets p-2 p-prime
+open import N.Symplectic p-2 p-prime
+open Symplectic renaming (M to ZM)
+open import N.NF1-Sym p-2 p-prime
+open import N.LM-Sym p-2 p-prime
+
+open import N.Action p-2 p-prime
+open import N.Action-Lemmas p-2 p-prime
+open import Algebra.Properties.Ring (+-*-ring p-2)
+open import N.NF2-Sym p-2 p-prime
+open LM2
+
+
+open import Zp.ModularArithmetic
+open import N.Lemmas-2Qupit-Sym p-2 p-prime
+open import N.NF2-Sym p-2 p-prime
+--open Lemmas-2Q 2
+
+open import N.NF1 p-2 p-prime
+open import N.Ex-Sym p-2 p-prime
+open import N.Ex-Sym1 p-2 p-prime
+open import N.Ex-Sym2 p-2 p-prime
+open import N.Ex-Sym3 p-2 p-prime
+open import N.Ex-Sym4 p-2 p-prime
+open import N.Ex-Sym5 p-2 p-prime hiding (module L0)
+open import N.Ex-Sym2n p-2 p-prime
+open import N.Ex-Sym3n p-2 p-prime
+
+open import N.Lemma-Comm-n p-2 p-prime
+open import N.Completeness1-Sym p-2 p-prime renaming (module Completeness to Cp1)
+open Lemmas0a
+open Lemmas0a1
+open Lemmas0b
+open Lemmas0c
+open Lemmas-Sym
+open Duality
+
+open import N.Completeness1-Sym p-2 p-prime renaming (module Completeness to CP1) using ()
+open import N.Coset2-Update-Sym p-2 p-prime renaming (module Completeness to CP2) using ()
+open import N.Lemmas4-Sym p-2 p-prime
+open import N.Pushing.DH p-2 p-prime
+
+
+
+dir-of-DS : D -> Word (Gen (₁₊ n))
+dir-of-DS (₀ , ₀) = S
+dir-of-DS (₀ , ₁₊ _) = ε
+dir-of-DS (₁₊ _ , ₀) = ε
+dir-of-DS (a@(₁₊ _) , b@(₁₊ _)) = S^ [ab]⁻¹
+  where
+  [ab]⁻¹* = (  (a , λ ()) *' (b , λ ())  ) ⁻¹
+  [ab]⁻¹ = [ab]⁻¹* .proj₁
+
+
+d-of-DS : D -> D
+d-of-DS (₀ , ₀) = ₀ , ₀
+d-of-DS (₀ , b@(₁₊ _)) = b , ₀
+d-of-DS (a@(₁₊ _) , ₀) = ₀ , - a
+d-of-DS (a@(₁₊ _) , b@(₁₊ _)) = (b , - a)
+
+aux-DS : let open PB ((₂₊ n) QRel,_===_) in
+
+  ∀ d ->
+  let
+  d' = d-of-DS d
+  w = dir-of-DS d
+  in
+  [ d ]ᵈ • H ≈ w ↑ • [ d' ]ᵈ
+
+aux-DS {n} d@(₀ , b@(₁₊ _)) = claim
+  where
+  open PB ((₂₊ n) QRel,_===_)  
+  open PP ((₂₊ n) QRel,_===_)
+  open SR word-setoid
+  open Lemmas0 (₁₊ n)
+  open Pattern-Assoc
+  open Lemmas-2Q n
+
+  b* : ℤ* ₚ
+  b* = (b , λ ())
+  nz : b ≢ ₀
+  nz = λ ()
+
+  b⁻¹ : ℤ* ₚ
+  b⁻¹ = b* ⁻¹
+  b⁻¹' = b⁻¹ .proj₁
+
+  w = ε
+  d' = (b , ₀)
+  claim : [ d ]ᵈ • H ≈ w ↑ • [ d' ]ᵈ
+  claim = begin
+    ([ d ]ᵈ • H) ≈⟨ ( (cleft aux-dbox-nzb' b nz)) ⟩
+    ((Ex • CZ^ (- ₁) • ⟦ (b , nz) ⁻¹ ⟧ₘ) • H) ≈⟨ ( trans assoc (cong refl assoc)) ⟩
+    (Ex • CZ^ (- ₁) • ⟦ (b , nz) ⁻¹ ⟧ₘ • H) ≈⟨ ( (cright cright cright sym right-unit)) ⟩
+    (Ex • CZ^ (- ₁) • ⟦ (b , nz) ⁻¹ ⟧ₘ • H • ε) ≈⟨ ( (cright cright cright cright sym (refl' (Eq.cong (S^) (Eq.trans (Eq.cong (_* b⁻¹') -0#≈0#) (*-zeroˡ b⁻¹')))))) ⟩
+    (Ex • CZ^ (- ₁) • ⟦ (b , nz) ⁻¹ ⟧ₘ • H • S^ (- ₀ * b⁻¹')) ≈⟨ ( sym (aux-dbox-nza' b ₀ nz)) ⟩
+    [ (b , ₀) ]ᵈ  ≈⟨ sym left-unit ⟩
+    ε • [ (b , ₀) ]ᵈ  ∎
+
+
+aux-DS {n} d@(a@(₁₊ _) , b@(₁₊ _)) = trans claim claim'
+  where
+  a⁻¹ = ((a , λ ()) ⁻¹) .proj₁
+  -a⁻¹ = ((-'(a , λ ())) ⁻¹) .proj₁
+  -b/a = - b * a⁻¹
+  b/a = - b * -a⁻¹
+
+  x = -b/a
+  nz : x ≢ ₀
+  nz = (-' (b , λ ()) *' ((a , λ ()) ⁻¹)) .proj₂
+  y = a⁻¹
+  nzy : y ≢ ₀
+  nzy = ((a , λ ()) ⁻¹) .proj₂
+  
+  y⁻¹ = ((y , nzy) ⁻¹) .proj₁
+  x⁻¹ = ((x , nz) ⁻¹) .proj₁
+  x⁻¹⁻¹ = (((x , nz) ⁻¹) ⁻¹) .proj₁
+  y⁻¹⁻¹ = (((y , nzy) ⁻¹) ⁻¹) .proj₁
+  -x⁻¹ = - x⁻¹
+  mnz = (-' (x , nz)) .proj₂
+  -y/x' = (((y , nzy) *' ((x , nz) ⁻¹)) *' -'₁)
+  -y/x = -y/x' .proj₁
+  a' = - x * y⁻¹
+  b' = - y⁻¹
+  
+  nza' = (-' (x , nz) *' (y , nzy) ⁻¹) .proj₂
+  a'⁻¹ = ((a' , nza') ⁻¹) .proj₁
+  -b'/a' = - b' * a'⁻¹
+
+  aux1 : -y/x ≡ a'⁻¹
+  aux1 = Eq.sym ( begin
+    ((- x * y⁻¹ , nza') ⁻¹) .proj₁ ≡⟨ (inv-distrib ((- x , mnz)) (((y , nzy) ⁻¹))) ⟩
+    (((- x , mnz) ⁻¹) .proj₁ * y⁻¹⁻¹) ≡⟨ Eq.cong (\ xx -> (((- x , mnz) ⁻¹) .proj₁ * xx)) (inv-involutive (y , nzy)) ⟩
+    (((- x , mnz) ⁻¹) .proj₁ * y) ≡⟨ Eq.cong (\ xx -> (xx * y)) (inv-neg-comm (x , nz)) ⟩
+    ((-' (x , nz) ⁻¹) .proj₁ * y) ≡⟨ (*-comm -x⁻¹ y) ⟩
+    (y * -x⁻¹) ≡⟨ Eq.sym (-‿distribʳ-* y x⁻¹) ⟩
+    - (y * x⁻¹) ≡⟨ Eq.sym (-1*x≈-x ((y * x⁻¹))) ⟩
+    - ₁ * (y * x⁻¹) ≡⟨ *-comm (- ₁) ((y * x⁻¹)) ⟩
+    (y * x⁻¹) * - ₁ ≡⟨ auto ⟩
+    -y/x ∎
+    )
+    where
+    open ≡-Reasoning
+  
+  aux2a : -b'/a' ≡ -x⁻¹
+  aux2a = begin
+    -b'/a' ≡⟨ Eq.cong (_* ((- x * y⁻¹ , nza') ⁻¹) .proj₁) ( -‿involutive y⁻¹) ⟩
+    y⁻¹ * ((- x * y⁻¹ , nza') ⁻¹) .proj₁ ≡⟨ Eq.cong (y⁻¹ *_) (inv-distrib ((- x , mnz)) (((y , nzy) ⁻¹))) ⟩
+    y⁻¹ * (((- x , mnz) ⁻¹) .proj₁ * y⁻¹⁻¹) ≡⟨ Eq.cong (\ xx -> y⁻¹ * (((- x , mnz) ⁻¹) .proj₁ * xx)) (inv-involutive (y , nzy)) ⟩
+    y⁻¹ * (((- x , mnz) ⁻¹) .proj₁ * y) ≡⟨ Eq.cong (\ xx -> y⁻¹ * (xx * y)) (inv-neg-comm (x , nz)) ⟩
+    y⁻¹ * ((-' (x , nz) ⁻¹) .proj₁ * y) ≡⟨ Eq.cong (y⁻¹ *_) (*-comm -x⁻¹ y) ⟩
+    y⁻¹ * (y * -x⁻¹) ≡⟨ Eq.sym (*-assoc (y⁻¹) y -x⁻¹) ⟩
+    y⁻¹ * y * -x⁻¹ ≡⟨ Eq.cong (_* -x⁻¹) (lemma-⁻¹ˡ y {{nztoℕ {y = y} {neq0 = nzy}}}) ⟩
+    ₁ * -x⁻¹ ≡⟨ *-identityˡ -x⁻¹ ⟩
+    -x⁻¹ ∎
+    where
+    open ≡-Reasoning
+
+
+  w = S^ (-x⁻¹ * (y * y))
+  d' = (a' , b')
+
+  [ab]⁻¹* = (  (a , λ ()) *' (b , λ ())  ) ⁻¹
+  [ab]⁻¹ = [ab]⁻¹* .proj₁
+
+  w' = S^ [ab]⁻¹
+  d'' = (b , - a)
+
+  aux'-2 : a' ≡ b
+  aux'-2 = begin
+    - x * y⁻¹ ≡⟨ Eq.cong (- x *_) (inv-involutive (a , (λ ()))) ⟩
+    - -b/a * a ≡⟨ Eq.cong (_* a) (-‿distribˡ-* (- b) a⁻¹) ⟩
+    (- - b * a⁻¹) * a ≡⟨ Eq.cong (\ xx -> (xx * a⁻¹) * a) (-‿involutive b) ⟩
+    (b * a⁻¹) * a ≡⟨ *-assoc b a⁻¹ a ⟩
+    b * (a⁻¹ * a) ≡⟨ Eq.cong (b *_) (lemma-⁻¹ˡ a {{nztoℕ {y = a} {neq0 = λ ()}}}) ⟩
+    b * ₁ ≡⟨ *-identityʳ b ⟩
+    b ∎
+    where
+    open ≡-Reasoning
+
+  aux'-3 : b' ≡ - a
+  aux'-3 = begin
+    - y⁻¹ ≡⟨ Eq.cong -_ (inv-involutive (a , (λ ()))) ⟩
+    - a ∎
+    where
+    open ≡-Reasoning
+
+  b* : ℤ* ₚ
+  b* = (b , λ ())
+  b⁻¹ = (b* ⁻¹) .proj₁
+  
+  a* : ℤ* ₚ
+  a* = (a , λ ())
+  
+  aux'-1 : -x⁻¹ * (y * y) ≡ [ab]⁻¹
+  aux'-1 = begin
+    -x⁻¹ * (y * y) ≡⟨ Eq.cong (\ xx -> - xx * (y * y)) (inv-distrib (-' b*) (a* ⁻¹)) ⟩
+    - (((-' b*) ⁻¹) .proj₁ * (a* ⁻¹ ⁻¹) .proj₁) * (a⁻¹ * a⁻¹) ≡⟨ Eq.cong (_* (a⁻¹ * a⁻¹)) (-‿distribˡ-* (((-' b*) ⁻¹) .proj₁) ((a* ⁻¹ ⁻¹) .proj₁)) ⟩
+    (- ((-' b*) ⁻¹) .proj₁ * (a* ⁻¹ ⁻¹) .proj₁) * (a⁻¹ * a⁻¹) ≡⟨ Eq.cong₂ (\ xx yy -> (xx * yy) * (a⁻¹ * a⁻¹)) (Eq.cong -_ (inv-neg-comm b*)) (inv-involutive a*) ⟩
+    (- - (b⁻¹) * a) * (a⁻¹ * a⁻¹) ≡⟨ Eq.cong (\ xx -> (xx * a) * (a⁻¹ * a⁻¹)) (-‿involutive ((b⁻¹))) ⟩
+    ((b⁻¹) * a) * (a⁻¹ * a⁻¹) ≡⟨ *-assoc b⁻¹ a (a⁻¹ * a⁻¹) ⟩
+    (b⁻¹) * (a * (a⁻¹ * a⁻¹)) ≡⟨ Eq.cong ((b⁻¹) *_) (Eq.sym (*-assoc a a⁻¹ a⁻¹)) ⟩
+    (b⁻¹) * ((a * a⁻¹) * a⁻¹) ≡⟨ Eq.cong (\ xx -> (b⁻¹) * (xx * a⁻¹)) (lemma-⁻¹ʳ a {{nztoℕ {y = a} {neq0 = λ ()}}} ) ⟩
+    (b⁻¹) * (₁ * a⁻¹) ≡⟨ Eq.cong ((b⁻¹) *_) (*-identityˡ ((a⁻¹))) ⟩
+    (b⁻¹) * a⁻¹ ≡⟨ *-comm ((b⁻¹)) a⁻¹ ⟩
+    a⁻¹ * (b⁻¹) ≡⟨ Eq.sym (inv-distrib a* b*) ⟩
+    [ab]⁻¹ ∎
+    where
+    open ≡-Reasoning
+
+
+  open PB ((₂₊ n) QRel,_===_)  
+  open PP ((₂₊ n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+  open Lemmas0 (₁₊ n)
+
+  claim' : S^ (-x⁻¹ * (y * y)) ↑ • [ a' , b' ]ᵈ ≈ w' ↑ • [ d'' ]ᵈ
+  claim' = begin
+    S^ (-x⁻¹ * (y * y)) ↑ • [ a' , b' ]ᵈ ≈⟨ cong (refl' (Eq.cong (\ xx -> S^ xx ↑) aux'-1)) (refl' (Eq.cong₂ (\ xx yy -> [ ( xx , yy) ]ᵈ ) aux'-2 aux'-3)) ⟩
+    w' ↑ • [ d'' ]ᵈ ∎
+
+  claim : [ d ]ᵈ • H ≈ w ↑ • [ d' ]ᵈ
+  claim = begin
+    [ d ]ᵈ • H ≈⟨ special-assoc (□ ^ 3 • □) (□ ^ 4) auto ⟩
+    (Ex • CZ^ (- ₁) • [ (a , b) , (λ ()) ]ᵃ • H) ≈⟨ ( cright cright sym refl) ⟩
+    (Ex • CZ^ (- ₁) • (ZM ((a , λ ()) ⁻¹) • H • S^ -b/a) • H) ≈⟨ ( cright cright special-assoc (□ ^ 3 • □) (□ ^ 2 • □ ^ 2) auto) ⟩
+    (Ex • CZ^ (- ₁) • (ZM ((a , λ ()) ⁻¹) • H) • S^ -b/a • H) ≈⟨ ( cright cright assoc) ⟩
+    (Ex • CZ^ (- ₁) • ZM ((a , λ ()) ⁻¹) • H • S^ -b/a • H) ≈⟨ ( cright cright derived-7 x y nz nzy) ⟩
+    (Ex • CZ^ (- ₁) • S^ (-x⁻¹ * (y * y)) • ZM -y/x' • (H • S^ -x⁻¹)) ≈⟨ ( cright sym assoc) ⟩
+    (Ex • (CZ^ (- ₁) • S^ (-x⁻¹ * (y * y))) • ZM -y/x' • (H • S^ -x⁻¹)) ≈⟨ ( cright cleft word-comm (toℕ (- ₁)) (toℕ (-x⁻¹ * (y * y))) (axiom comm-CZ-S↓)) ⟩
+    (Ex • (S^ (-x⁻¹ * (y * y)) • CZ^ (- ₁)) • ZM -y/x' • (H • S^ -x⁻¹)) ≈⟨ ( special-assoc (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto) ⟩
+    ((Ex • S^ (-x⁻¹ * (y * y))) • CZ^ (- ₁) • ZM -y/x' • (H • S^ -x⁻¹)) ≈⟨ ( cleft lemma-Induction lemma-Ex-S (toℕ (-x⁻¹ * (y * y)))) ⟩
+    ((S ↑ ^ toℕ (-x⁻¹ * (y * y)) • Ex) • CZ^ (- ₁) • ZM -y/x' • (H • S^ -x⁻¹)) ≈⟨ ( cleft cleft refl' (lemma-^-↑ S ( toℕ (-x⁻¹ * (y * y))))) ⟩
+    (((S ^ toℕ (-x⁻¹ * (y * y))) ↑ • Ex) • CZ^ (- ₁) • ZM -y/x' • (H • S^ -x⁻¹)) ≈⟨ assoc ⟩
+    S^ (-x⁻¹ * (y * y)) ↑ • (Ex • CZ^ (- ₁) • ZM -y/x' • (H • S^ -x⁻¹)) ≈⟨ (cright  cright cright cong (aux-MM (-y/x' .proj₂) (((a' , nza') ⁻¹) .proj₂) aux1) (cright refl' (Eq.cong S^ (Eq.sym aux2a)))) ⟩
+    S^ (-x⁻¹ * (y * y)) ↑ • (Ex • CZ^ (- ₁) • ⟦ (a' , nza') ⁻¹ , HS^ -b'/a' ⟧ₘ₊) ≈⟨ (cright  sym (aux-dbox-nza' a' b' nza')) ⟩
+    S^ (-x⁻¹ * (y * y)) ↑ • [ a' , b' ]ᵈ ∎
+
+  
+
+aux-DS {n} d@(₀ , ₀) = PB.sym lemma-comm-Ex-H-n
+
+
+aux-DS {n} d@(a@(₁₊ _) , b@₀) = claim
+  where
+  a⁻¹ = ((a , λ ()) ⁻¹) .proj₁
+  -a⁻¹ = ((-'(a , λ ())) ⁻¹) .proj₁
+  -b/a = - b * a⁻¹
+  b/a = - b * -a⁻¹
+  aux : -b/a ≡ ₀
+  aux = begin
+    (- b * a⁻¹) ≡⟨ Eq.cong (_* a⁻¹) -0#≈0# ⟩
+    (₀ * a⁻¹) ≡⟨ *-zeroˡ a⁻¹ ⟩
+    ₀ ∎
+    where
+    open ≡-Reasoning
+    
+  aux2 : ((a , λ ()) ⁻¹ *' -'₁) .proj₁ ≡ ((-' (a , λ ())) ⁻¹) .proj₁
+  aux2 = begin
+    ((a , λ ()) ⁻¹ *' -'₁) .proj₁ ≡⟨ *-comm a⁻¹ (- ₁) ⟩
+    (-'₁ *' (a , λ ()) ⁻¹) .proj₁ ≡⟨ -1*x≈-x a⁻¹ ⟩
+    (-' (a , λ ()) ⁻¹) .proj₁ ≡⟨ Eq.sym (inv-neg-comm (a , (λ ()))) ⟩
+    ((-' (a , λ ())) ⁻¹) .proj₁ ∎
+    where
+    open ≡-Reasoning
+
+  
+  open PB ((₂₊ n) QRel,_===_)  
+  open PP ((₂₊ n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+  open Lemmas0 (₁₊ n)
+
+  w = ε
+  d' = (₀ , - a)
+  
+  claim : [ d ]ᵈ • H ≈ w ↑ • ([ d' ]ᵈ)
+  claim = begin
+    ([ d ]ᵈ • H) ≈⟨ ( trans assoc (cong refl assoc)) ⟩
+    (Ex • CZ^ (- ₁) • [ (a , b) , (λ ()) ]ᵃ • H) ≈⟨ ( cright cright sym refl) ⟩
+    (Ex • CZ^ (- ₁) • (ZM ((a , λ ()) ⁻¹) • H • S^ -b/a) • H) ≈⟨ ( cright cright special-assoc (□ ^ 3 • □) (□ ^ 2 • □ ^ 2) auto) ⟩
+    (Ex • CZ^ (- ₁) • (ZM ((a , λ ()) ⁻¹) • H) • S^ -b/a • H) ≈⟨ ( cright cright assoc) ⟩
+    (Ex • CZ^ (- ₁) • ZM ((a , λ ()) ⁻¹) • H • S^ -b/a • H) ≈⟨ ( cright cright cright (cright cleft refl' (Eq.cong S^ aux))) ⟩
+    (Ex • CZ^ (- ₁) • ZM ((a , λ ()) ⁻¹) • H • ε • H) ≈⟨ ( cright cright cright cong refl left-unit) ⟩
+    (Ex • CZ^ (- ₁) • ZM ((a , λ ()) ⁻¹) • H • H) ≈⟨ ( cright cright cright lemma-HH-M-1) ⟩
+    (Ex • CZ^ (- ₁) • ZM ((a , λ ()) ⁻¹) • ZM -'₁) ≈⟨ ( cright cright axiom (M-mul ((a , λ ()) ⁻¹) -'₁)) ⟩
+    (Ex • CZ^ (- ₁) • ZM ((a , λ ()) ⁻¹ *' -'₁)) ≈⟨ ( cright  cright aux-MM (((a , λ ()) ⁻¹ *' -'₁) .proj₂) (((-' (a , λ ())) ⁻¹) .proj₂) aux2 ) ⟩
+    (Ex • CZ^ (- ₁) • ZM ((-' (a , λ ())) ⁻¹)) ≈⟨ ( sym (aux-dbox-nzb' (- a) (((-' (a , λ ())) ) .proj₂))) ⟩
+    ([ ₀ , - a ]ᵈ) ≈⟨ sym left-unit ⟩
+    ε • ([ ₀ , - a ]ᵈ)  ∎
+

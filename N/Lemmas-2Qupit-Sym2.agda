@@ -1,0 +1,398 @@
+{-# OPTIONS  --safe #-}
+{-# OPTIONS --termination-depth=2 #-}
+open import Level using (0ℓ)
+
+open import Relation.Binary using (Rel)
+open import Relation.Binary.Definitions using (DecidableEquality)
+open import Relation.Binary.Morphism.Definitions using (Homomorphic₂)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; _≢_ ; inspect ; setoid ; module ≡-Reasoning ; _≗_) renaming ([_] to [_]')
+import Relation.Binary.Reasoning.Setoid as SR
+import Relation.Binary.PropositionalEquality as Eq
+open import Relation.Nullary.Decidable using (yes ; no)
+
+
+open import Function using (_∘_ ; id)
+open import Function.Definitions using (Injective)
+
+open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; map₁ ; ∃ ; Σ ; Σ-syntax)
+open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
+open import Data.Nat hiding (_^_ ; _+_ ; _*_)
+open import Agda.Builtin.Nat using (_-_)
+import Data.Nat as Nat
+open import Data.Bool hiding (_<_ ; _≤_)
+open import Data.List hiding ([_] ; _++_ ; last ; head ; tail ; _∷ʳ_)
+open import Data.Vec hiding ([_])
+import Data.Vec as Vec
+open import Data.Fin hiding (_+_ ; _-_)
+
+open import Data.Maybe
+open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_] ; [_,_]′)
+open import Data.Unit using (⊤ ; tt)
+open import Data.Empty using (⊥ ; ⊥-elim)
+
+open import Word.Base as WB hiding (wfoldl ; _*)
+open import Word.Properties
+import Presentation.Base as PB
+import Presentation.Properties as PP
+open PP using (NFProperty ; NFProperty')
+import Presentation.CosetNF as CA
+import Presentation.Reidemeister-Schreier as RS
+module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
+
+open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
+import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
+import Presentation.Construct.Properties.DirectProduct as DP
+import Presentation.Groups.Cyclic as Cyclic
+
+
+open import Data.Fin using (Fin ; toℕ ; suc ; zero ; fromℕ)
+open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
+import Data.Nat.Properties as NP
+open import Presentation.GroupLike
+open import Presentation.Tactics hiding ([_])
+open import Data.Nat.Primality
+
+
+
+module N.Lemmas-2Qupit-Sym2 (p-2 : ℕ) (p-prime : Prime (2+ p-2))  where
+
+pattern auto = Eq.refl
+
+pattern ₀ = zero
+pattern ₁ = suc ₀
+pattern ₂ = suc ₁
+pattern ₃ = suc ₂
+pattern ₄ = 4
+pattern ₅ = 5
+pattern ₆ = 6
+pattern ₇ = 7
+pattern ₈ = 8
+pattern ₉ = 9
+pattern ₁₀ = 10
+pattern ₁₁ = 11
+pattern ₁₂ = 12
+pattern ₁₃ = 13
+pattern ₁₄ = 14
+pattern ₁₅ = 15
+
+pattern ₁₊ ⱼ = suc ⱼ
+pattern ₂₊ ⱼ = suc (suc ⱼ)
+pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
+
+
+open import Zp.ModularArithmetic
+open PrimeModulus p-2 p-prime
+open import N.Symplectic p-2 p-prime
+
+
+open Symplectic
+open Lemmas-Sym
+
+open import N.GroupLike p-2 p-prime
+
+lemma-Induction : ∀ {n} -> let open PB ((₁₊ n) QRel,_===_) in ∀ {w v v'} -> w • v ≈ v' • w -> ∀ k -> w • v ^ k ≈ v' ^ k • w
+lemma-Induction {n} {w} {v} {v'} eq k@0 = trans right-unit (sym left-unit)
+  where open PB ((₁₊ n) QRel,_===_)
+lemma-Induction {n} {w} {v} {v'} eq k@1 = eq
+lemma-Induction {n} {w} {v} {v'} eq k@(₂₊ k') = begin
+  w • v ^ k ≈⟨ sym assoc ⟩
+  (w • v) • v ^ (₁₊ k') ≈⟨ (cleft eq) ⟩
+  (v' • w) • v ^ (₁₊ k') ≈⟨ assoc ⟩
+  v' • w • v ^ (₁₊ k') ≈⟨ (cright lemma-Induction eq (₁₊ k')) ⟩
+  v' • v' ^ (₁₊ k') • w ≈⟨ sym assoc ⟩
+  v' ^ k • w ∎
+  where
+  open PP ((₁₊ n) QRel,_===_)
+  open PB ((₁₊ n) QRel,_===_)
+  open SR word-setoid
+
+
+
+
+module Lemmas-2Q (n : ℕ) where
+
+  open PB ((₂₊ n) QRel,_===_) hiding (_===_)
+  open PP ((₂₊ n) QRel,_===_)
+  open Pattern-Assoc
+  open import Data.Nat.DivMod
+  open import Data.Fin.Properties
+
+
+  lemma-CZ^kM↑ : ∀ x k -> (nz : x ≢ ₀) -> let x⁻¹ = ((x , nz) ⁻¹) .proj₁ in let -x⁻¹ = - x⁻¹ in
+    CZ^ k • M (x , nz) ↑ ≈ M (x , nz) ↑ • CZ^ (k * x⁻¹)
+  lemma-CZ^kM↑ x k nz = bbc (M ((x , nz) ⁻¹) ↑) (M ((x , nz) ⁻¹) ↑) aux
+    where
+    open Basis-Change _ ((₂₊ n) QRel,_===_) grouplike
+    open SR word-setoid
+    x⁻¹ = ((x , nz) ⁻¹) .proj₁
+    -x⁻¹ = - x⁻¹
+    aux : M ((x , nz) ⁻¹) ↑ • (CZ^ k • M (x , nz) ↑) • M ((x , nz) ⁻¹) ↑ ≈ M ((x , nz) ⁻¹) ↑ • (M (x , nz) ↑ • CZ^ (k * x⁻¹)) • M ((x , nz) ⁻¹) ↑
+    aux = begin
+      M ((x , nz) ⁻¹) ↑ • (CZ^ k • M (x , nz) ↑) • M ((x , nz) ⁻¹) ↑ ≈⟨ cong refl assoc ⟩
+      M ((x , nz) ⁻¹) ↑ • CZ^ k • M (x , nz) ↑ • M ((x , nz) ⁻¹) ↑ ≈⟨ sym assoc ⟩
+      (M ((x , nz) ⁻¹) ↑ • CZ^ k) • M (x , nz) ↑ • M ((x , nz) ⁻¹) ↑ ≈⟨ (cleft lemma-M↑CZ^k x⁻¹ k (((x , nz) ⁻¹) .proj₂)) ⟩
+      (CZ^ (k * x⁻¹) • M ((x , nz) ⁻¹) ↑) • M (x , nz) ↑ • M ((x , nz) ⁻¹) ↑ ≈⟨ assoc ⟩
+      CZ^ (k * x⁻¹) • M ((x , nz) ⁻¹) ↑ • M (x , nz) ↑ • M ((x , nz) ⁻¹) ↑ ≈⟨ (cright sym assoc) ⟩
+      CZ^ (k * x⁻¹) • (M ((x , nz) ⁻¹) ↑ • M (x , nz) ↑) • M ((x , nz) ⁻¹) ↑ ≈⟨  (cright cleft lemma-cong↑ _ _ (L0.aux-M-mulˡ (x , nz))) ⟩
+      CZ^ (k * x⁻¹) • ε ↑ • M ((x , nz) ⁻¹) ↑ ≈⟨ cong refl left-unit ⟩
+      CZ^ (k * x⁻¹) • M ((x , nz) ⁻¹) ↑ ≈⟨ sym left-unit ⟩
+      ε • CZ^ (k * x⁻¹) • M ((x , nz) ⁻¹) ↑ ≈⟨ (cleft sym (lemma-cong↑ _ _ (L0.aux-M-mulˡ (x , nz)))) ⟩
+      (M ((x , nz) ⁻¹) ↑ • M (x , nz) ↑) • CZ^ (k * x⁻¹) • M ((x , nz) ⁻¹) ↑ ≈⟨ assoc ⟩
+      M ((x , nz) ⁻¹) ↑ • M (x , nz) ↑ • CZ^ (k * x⁻¹) • M ((x , nz) ⁻¹) ↑ ≈⟨ sym (cong refl assoc) ⟩
+      M ((x , nz) ⁻¹) ↑ • (M (x , nz) ↑ • CZ^ (k * x⁻¹)) • M ((x , nz) ⁻¹) ↑ ∎
+      where
+      module L0 = Lemmas0 n
+
+
+
+
+
+  lemma-CZM↑ : ∀ x -> (nz : x ≢ ₀) -> let x⁻¹ = ((x , nz) ⁻¹) .proj₁ in let -x⁻¹ = - x⁻¹ in
+    CZ • M (x , nz) ↑ ≈ M (x , nz) ↑ • CZ^ x⁻¹
+  lemma-CZM↑ x nz = begin
+    CZ • M (x , nz) ↑ ≈⟨ lemma-CZ^kM↑ x ₁ nz ⟩
+    M (x , nz) ↑ • CZ^ (₁ * x⁻¹) ≈⟨ (cright refl' (Eq.cong CZ^ (*-identityˡ x⁻¹))) ⟩
+    M (x , nz) ↑ • CZ^ x⁻¹ ∎
+    where
+    open SR word-setoid
+    x⁻¹ = ((x , nz) ⁻¹) .proj₁
+    -x⁻¹ = - x⁻¹
+
+
+
+
+
+
+
+
+  lemma-CZ^kM↓ : ∀ x k -> (nz : x ≢ ₀) -> let x⁻¹ = ((x , nz) ⁻¹) .proj₁ in let -x⁻¹ = - x⁻¹ in
+    CZ^ k • M (x , nz) ↓ ≈ M (x , nz) ↓ • CZ^ (k * x⁻¹)
+  lemma-CZ^kM↓ x k nz = bbc (M ((x , nz) ⁻¹) ↓) (M ((x , nz) ⁻¹) ↓) aux
+    where
+    open Basis-Change _ ((₂₊ n) QRel,_===_) grouplike
+    open SR word-setoid
+    x⁻¹ = ((x , nz) ⁻¹) .proj₁
+    -x⁻¹ = - x⁻¹
+    aux : M ((x , nz) ⁻¹) ↓ • (CZ^ k • M (x , nz) ↓) • M ((x , nz) ⁻¹) ↓ ≈ M ((x , nz) ⁻¹) ↓ • (M (x , nz) ↓ • CZ^ (k * x⁻¹)) • M ((x , nz) ⁻¹) ↓
+    aux = begin
+      M ((x , nz) ⁻¹) ↓ • (CZ^ k • M (x , nz) ↓) • M ((x , nz) ⁻¹) ↓ ≈⟨ cong refl assoc ⟩
+      M ((x , nz) ⁻¹) ↓ • CZ^ k • M (x , nz) ↓ • M ((x , nz) ⁻¹) ↓ ≈⟨ sym assoc ⟩
+      (M ((x , nz) ⁻¹) ↓ • CZ^ k) • M (x , nz) ↓ • M ((x , nz) ⁻¹) ↓ ≈⟨ (cleft lemma-M↓CZ^k x⁻¹ k (((x , nz) ⁻¹) .proj₂)) ⟩
+      (CZ^ (k * x⁻¹) • M ((x , nz) ⁻¹) ↓) • M (x , nz) ↓ • M ((x , nz) ⁻¹) ↓ ≈⟨ assoc ⟩
+      CZ^ (k * x⁻¹) • M ((x , nz) ⁻¹) ↓ • M (x , nz) ↓ • M ((x , nz) ⁻¹) ↓ ≈⟨ (cright sym assoc) ⟩
+      CZ^ (k * x⁻¹) • (M ((x , nz) ⁻¹) ↓ • M (x , nz) ↓) • M ((x , nz) ⁻¹) ↓ ≈⟨  (cright cleft (aux-M-mulˡ (x , nz))) ⟩
+      CZ^ (k * x⁻¹) • ε ↓ • M ((x , nz) ⁻¹) ↓ ≈⟨ cong refl left-unit ⟩
+      CZ^ (k * x⁻¹) • M ((x , nz) ⁻¹) ↓ ≈⟨ sym left-unit ⟩
+      ε • CZ^ (k * x⁻¹) • M ((x , nz) ⁻¹) ↓ ≈⟨ (cleft sym ((aux-M-mulˡ (x , nz)))) ⟩
+      (M ((x , nz) ⁻¹) ↓ • M (x , nz) ↓) • CZ^ (k * x⁻¹) • M ((x , nz) ⁻¹) ↓ ≈⟨ assoc ⟩
+      M ((x , nz) ⁻¹) ↓ • M (x , nz) ↓ • CZ^ (k * x⁻¹) • M ((x , nz) ⁻¹) ↓ ≈⟨ sym (cong refl assoc) ⟩
+      M ((x , nz) ⁻¹) ↓ • (M (x , nz) ↓ • CZ^ (k * x⁻¹)) • M ((x , nz) ⁻¹) ↓ ∎
+      where
+      open Lemmas0 (₁₊ n)
+
+
+  lemma-CZM↓ : ∀ x -> (nz : x ≢ ₀) -> let x⁻¹ = ((x , nz) ⁻¹) .proj₁ in let -x⁻¹ = - x⁻¹ in
+    CZ • M (x , nz) ↓ ≈ M (x , nz) ↓ • CZ^ x⁻¹
+  lemma-CZM↓ x nz = begin
+    CZ • M (x , nz) ↓ ≈⟨ lemma-CZ^kM↓ x ₁ nz ⟩
+    M (x , nz) ↓ • CZ^ (₁ * x⁻¹) ≈⟨ (cright refl' (Eq.cong CZ^ (*-identityˡ x⁻¹))) ⟩
+    M (x , nz) ↓ • CZ^ x⁻¹ ∎
+    where
+    open SR word-setoid
+    x⁻¹ = ((x , nz) ⁻¹) .proj₁
+    -x⁻¹ = - x⁻¹
+
+  lemma-semi-CZ-HH↓ : 
+
+    CZ • H ↓ ^ 2 ≈ H ↓ ^ 2 • CZ^ ₋₁
+    
+  lemma-semi-CZ-HH↓ = begin
+    CZ • H ↓ ^ 2 ≈⟨ (cright lemma-HH-M-1) ⟩
+    CZ • M -'₁ ≈⟨ (cright refl) ⟩
+    CZ^ ₁ • M -'₁ ↓ ≡⟨ Eq.cong (\ xx -> CZ^ xx • M -'₁ ↓) (Eq.sym aux-₋₁*₋₁=₁) ⟩
+    CZ^ (₋₁ * ₋₁) • M -'₁ ↓ ≡⟨ Eq.cong (\ xx -> CZ^ (₋₁ * xx) • M -'₁ ↓) (Eq.sym aux-1=-1) ⟩
+    CZ^ (₋₁ * -'₁ .proj₁) • M -'₁ ↓ ≈⟨ sym (lemma-M↓CZ^k (-'₁ .proj₁) ₋₁ (-'₁ .proj₂)) ⟩
+    M -'₁ ↓ • CZ^ ₋₁ ≈⟨ (cleft refl) ⟩
+    M -'₁ • CZ^ ₋₁ ≈⟨ (cleft sym lemma-HH-M-1) ⟩
+    H ↓ ^ 2 • CZ^ ₋₁ ∎
+    where
+    open SR word-setoid
+    open Lemmas0 (₁₊ n)
+
+
+
+  lemma-semi-CZ-HH↑ : 
+
+    CZ • H ↑ ^ 2 ≈ H ↑ ^ 2 • CZ^ ₋₁
+    
+  lemma-semi-CZ-HH↑ = begin
+    CZ • H ↑ ^ 2 ≈⟨ (cright (lemma-cong↑ _ _ lemma-HH-M-1)) ⟩
+    CZ^ ₁ • M -'₁ ↑ ≡⟨ Eq.cong (\ xx -> CZ^ xx • M -'₁ ↑) (Eq.sym aux-₋₁*₋₁=₁) ⟩
+    CZ^ (₋₁ * ₋₁) • M -'₁ ↑ ≡⟨ Eq.cong (\ xx -> CZ^ (₋₁ * xx) • M -'₁ ↑) (Eq.sym aux-1=-1) ⟩
+    CZ^ (₋₁ * -'₁ .proj₁) • M -'₁ ↑ ≈⟨ sym (lemma-M↑CZ^k (-'₁ .proj₁) ₋₁ (-'₁ .proj₂)) ⟩
+    M -'₁ ↑ • CZ^ ₋₁ ≈⟨ (cleft sym (lemma-cong↑ _ _ lemma-HH-M-1)) ⟩
+    H ↑ ^ 2 • CZ^ ₋₁ ∎
+    where
+    open SR word-setoid
+    open Lemmas0 (n)
+
+  lemma-CZ-CZ^₋₁ : CZ • CZ^ ₋₁ ≈ ε
+  lemma-CZ-CZ^₋₁ = begin
+    CZ • CZ^ ₋₁ ≈⟨ (cright refl' (Eq.cong (CZ ^_)  lemma-toℕ₋₁)) ⟩
+    CZ • CZ ^ p-1 ≈⟨ axiom order-CZ ⟩
+    ε ∎
+    where
+    open SR word-setoid
+    open Lemmas0 (₁₊ n)
+
+  lemma-semi-HH↓-CZ : 
+
+    H ↓ ^ 2 • CZ ≈ CZ^ ₋₁ • H ↓ ^ 2
+    
+  lemma-semi-HH↓-CZ = bbc CZ (CZ^ ₋₁) aux
+    where
+    open SR word-setoid
+    open Lemmas0 (₁₊ n)
+    open Symplectic-GroupLike
+    open Basis-Change _ ((₂₊ n) QRel,_===_) grouplike
+    aux : CZ • (H ↓ ^ 2 • CZ) • CZ^ ₋₁ ≈ CZ • (CZ^ ₋₁ • H ↓ ^ 2) • CZ^ ₋₁
+    aux = begin
+      CZ • (H ↓ ^ 2 • CZ) • CZ^ ₋₁ ≈⟨ by-assoc auto ⟩
+      (CZ • H ↓ ^ 2) • CZ • CZ^ ₋₁ ≈⟨ (cright lemma-CZ-CZ^₋₁) ⟩
+      (CZ • H ↓ ^ 2) • ε ≈⟨ right-unit ⟩
+      (CZ • H ↓ ^ 2) ≈⟨ lemma-semi-CZ-HH↓ ⟩
+      H ↓ ^ 2 • CZ^ ₋₁ ≈⟨ sym left-unit ⟩
+      ε • H ↓ ^ 2 • CZ^ ₋₁ ≈⟨ cleft sym lemma-CZ-CZ^₋₁ ⟩
+      (CZ • CZ^ ₋₁) • H ↓ ^ 2 • CZ^ ₋₁ ≈⟨ special-assoc (□ ^ 2 • □ ^ 2) (□ • □ ^ 2 • □) auto ⟩
+      CZ • (CZ^ ₋₁ • H ↓ ^ 2) • CZ^ ₋₁ ∎
+
+
+
+  lemma-semi-HH↑-CZ : 
+
+    H ↑ ^ 2 • CZ ≈ CZ^ ₋₁ • H ↑ ^ 2
+    
+  lemma-semi-HH↑-CZ = bbc CZ (CZ^ ₋₁) aux
+    where
+    open SR word-setoid
+    open Lemmas0 (₁₊ n)
+    open Symplectic-GroupLike
+    open Basis-Change _ ((₂₊ n) QRel,_===_) grouplike
+    aux : CZ • (H ↑ ^ 2 • CZ) • CZ^ ₋₁ ≈ CZ • (CZ^ ₋₁ • H ↑ ^ 2) • CZ^ ₋₁
+    aux = begin
+      CZ • (H ↑ ^ 2 • CZ) • CZ^ ₋₁ ≈⟨ by-assoc auto ⟩
+      (CZ • H ↑ ^ 2) • CZ • CZ^ ₋₁ ≈⟨ (cright lemma-CZ-CZ^₋₁) ⟩
+      (CZ • H ↑ ^ 2) • ε ≈⟨ right-unit ⟩
+      (CZ • H ↑ ^ 2) ≈⟨ lemma-semi-CZ-HH↑ ⟩
+      H ↑ ^ 2 • CZ^ ₋₁ ≈⟨ sym left-unit ⟩
+      ε • H ↑ ^ 2 • CZ^ ₋₁ ≈⟨ cleft sym lemma-CZ-CZ^₋₁ ⟩
+      (CZ • CZ^ ₋₁) • H ↑ ^ 2 • CZ^ ₋₁ ≈⟨ special-assoc (□ ^ 2 • □ ^ 2) (□ • □ ^ 2 • □) auto ⟩
+      CZ • (CZ^ ₋₁ • H ↑ ^ 2) • CZ^ ₋₁ ∎
+
+
+
+  lemma-semi-HH↓-CZ^k : ∀ k ->
+
+    H ↓ ^ 2 • CZ ^ k ≈ (CZ^ ₋₁) ^ (k) • H ↓ ^ 2
+
+  lemma-semi-HH↓-CZ^k = lemma-Induction lemma-semi-HH↓-CZ
+
+
+  lemma-semi-HH↑-CZ^k′ : ∀ k ->
+
+    H ↑ ^ 2 • CZ ^ k ≈ (CZ^ ₋₁) ^ (k) • H ↑ ^ 2
+
+  lemma-semi-HH↑-CZ^k′ = lemma-Induction lemma-semi-HH↑-CZ
+
+  open import Algebra.Properties.Ring (+-*-ring p-2)
+
+  aux-CZ^-k : ∀ k -> (CZ^ ₋₁) ^ toℕ k ≈ CZ^ (- k)
+  aux-CZ^-k k = begin
+    (CZ^ ₋₁) ^ toℕ k ≈⟨ lemma-^^ CZ (toℕ (ₚ₋₁)) (toℕ k) ⟩
+    CZ ^ (toℕ (ₚ₋₁) Nat.* toℕ k) ≈⟨ lemma-CZ^k-% (toℕ (ₚ₋₁) Nat.* toℕ k) ⟩
+    CZ ^ ((toℕ (ₚ₋₁) Nat.* toℕ k) Nat.% p) ≡⟨ Eq.cong (CZ ^_) (Eq.sym (toℕ-fromℕ< (m%n<n (toℕ (ₚ₋₁) Nat.* toℕ k) p))) ⟩
+    CZ^ (₋₁ * k) ≡⟨ Eq.cong ( \ xx -> CZ^ (xx * k)) p-1=-1ₚ ⟩
+    CZ^ (- ₁ * k) ≈⟨ refl' (Eq.cong CZ^ ( -1*x≈-x k)) ⟩
+    CZ^ (- k) ∎
+    where
+    open SR word-setoid
+
+
+  lemma-semi-HH↓-CZ^k' : ∀ k ->
+
+    H ↓ ^ 2 • CZ^ k ≈ CZ^ (- k) • H ↓ ^ 2
+
+  lemma-semi-HH↓-CZ^k' k = trans (lemma-semi-HH↓-CZ^k (toℕ k)) (cleft aux-CZ^-k k)
+
+
+
+
+  lemma-semi-HH↑-CZ^k : ∀ k ->
+
+    HH ↑ • CZ^ k ≈ CZ^ (- k) • HH ↑
+    
+  lemma-semi-HH↑-CZ^k k = begin
+    HH ↑ • CZ^ k ≈⟨ (cleft lemma-cong↑ _ _ lemma-HH-M-1) ⟩
+    M -'₁ ↑ • CZ^ k ≈⟨ lemma-M↑CZ^k (- ₁) k (-'₁ .proj₂) ⟩
+    CZ^ (k * - ₁) • M -'₁ ↑ ≈⟨ cong (refl' (Eq.cong CZ^ (*-comm k (- ₁)))) (sym (lemma-cong↑ _ _ lemma-HH-M-1)) ⟩
+    CZ^ (- ₁ * k) • HH ↑ ≈⟨ cleft (refl' (Eq.cong CZ^ (-1*x≈-x k)))  ⟩
+    CZ^ (- k) • HH ↑ ∎
+    where
+    open SR word-setoid
+    open Lemmas0 (n)
+
+
+  lemma-semi-HH↓-CZ^k'' : ∀ k ->
+
+    HH ↓ • CZ^ (- k) ≈ CZ^ k • HH ↓
+    
+  lemma-semi-HH↓-CZ^k'' k = begin
+    HH ↓ • CZ^ (- k) ≈⟨ lemma-semi-HH↓-CZ^k' (- k) ⟩
+    CZ^ (- - k) • HH ≈⟨ (cleft refl' (Eq.cong CZ^ (-‿involutive k))) ⟩
+    CZ^ k • HH ↓ ∎
+    where
+    open SR word-setoid
+    open Lemmas0 (n)
+    module L1 = Lemmas0 (₁₊ n)
+
+
+  lemma-semi-HH↑-CZ^k'' : ∀ k ->
+
+    HH ↑ • CZ^ (- k) ≈ CZ^ k • HH ↑
+    
+  lemma-semi-HH↑-CZ^k'' k = begin
+    HH ↑ • CZ^ (- k) ≈⟨ lemma-semi-HH↑-CZ^k (- k) ⟩
+    CZ^ (- - k) • HH ↑ ≈⟨ (cleft refl' (Eq.cong CZ^ (-‿involutive k))) ⟩
+    CZ^ k • HH ↑ ∎
+    where
+    open SR word-setoid
+    open Lemmas0 (n)
+    module L1 = Lemmas0 (₁₊ n)
+
+
+
+  lemma-semi-CZ^k-HH↑ : ∀ k ->
+
+    CZ^ k • HH ↑ ≈ HH ↑ • CZ^ (- k)
+    
+  lemma-semi-CZ^k-HH↑ k = begin
+    CZ^ k • HH ↑ ≈⟨ sym (lemma-semi-HH↑-CZ^k'' k) ⟩
+    HH ↑ • CZ^ (- k) ∎
+    where
+    open SR word-setoid
+    open Lemmas0 (n)
+    module L1 = Lemmas0 (₁₊ n)
+
+  lemma-semi-CZ^k-HH↓ : ∀ k ->
+
+    CZ^ k • HH ↓ ≈ HH ↓ • CZ^ (- k)
+    
+  lemma-semi-CZ^k-HH↓ k = begin
+    CZ^ k • HH ↓ ≈⟨ sym (lemma-semi-HH↓-CZ^k'' k) ⟩
+    HH ↓ • CZ^ (- k) ∎
+    where
+    open SR word-setoid
+    open Lemmas0 (n)
+    module L1 = Lemmas0 (₁₊ n)
+
+

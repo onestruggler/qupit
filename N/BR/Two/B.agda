@@ -1,0 +1,523 @@
+{-# OPTIONS  --safe #-}
+{-# OPTIONS  --call-by-name #-}
+{-# OPTIONS --termination-depth=4 #-}
+open import Level using (0ℓ)
+
+open import Relation.Binary using (Rel)
+open import Relation.Binary.Definitions using (DecidableEquality)
+open import Relation.Binary.Morphism.Definitions using (Homomorphic₂)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; _≢_ ; inspect ; setoid ; module ≡-Reasoning ; _≗_) renaming ([_] to [_]')
+import Relation.Binary.Reasoning.Setoid as SR
+import Relation.Binary.PropositionalEquality as Eq
+open import Relation.Nullary.Decidable using (yes ; no)
+
+
+open import Function using (_∘_ ; id)
+open import Function.Definitions using (Injective)
+
+open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; map₁ ; ∃ ; Σ ; Σ-syntax)
+open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
+open import Data.Nat hiding (_^_ ; _+_ ; _*_)
+open import Agda.Builtin.Nat using (_-_)
+import Data.Nat as Nat
+open import Data.Bool hiding (_<_ ; _≤_)
+--open import Data.List using () hiding ([_] ; _++_ ; last ; head ; tail ; _∷ʳ_)
+open import Data.Vec hiding ([_])
+open import Data.Vec as V
+open import Data.Fin hiding (_+_ ; _-_ ; _≤_ ; _<_)
+
+open import Data.Maybe
+open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_] ; [_,_]′)
+open import Data.Unit using (⊤ ; tt)
+open import Data.Empty using (⊥ ; ⊥-elim)
+
+open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
+open import Word.Properties
+import Presentation.Base as PB
+import Presentation.Properties as PP
+open PP using (NFProperty ; NFProperty')
+import Presentation.CosetNF as CA
+import Presentation.Reidemeister-Schreier as RS
+module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
+
+open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
+import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
+import Presentation.Construct.Properties.DirectProduct as DP
+import Presentation.Groups.Cyclic as Cyclic
+
+
+open import Data.Fin using (Fin ; toℕ ; suc ; zero ; fromℕ)
+open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
+import Data.Nat.Properties as NP
+open import Presentation.GroupLike
+open import Presentation.Tactics using ()
+open import Data.Nat.Primality
+
+
+
+module N.BR.Two.B (p-2 : ℕ) (p-prime : Prime (2+ p-2)) where
+
+n : ℕ
+n = 0
+    
+pattern auto = Eq.refl
+
+pattern ₀ = zero
+pattern ₁ = suc ₀
+pattern ₂ = suc ₁
+pattern ₃ = suc ₂
+pattern ₅ = 5
+pattern ₆ = 6
+pattern ₇ = 7
+pattern ₈ = 8
+pattern ₉ = 9
+pattern ₁₀ = 10
+pattern ₁₁ = 11
+pattern ₁₂ = 12
+pattern ₁₃ = 13
+pattern ₁₄ = 14
+pattern ₁₅ = 15
+
+pattern ₁₊ ⱼ = suc ⱼ
+pattern ₂₊ ⱼ = suc (suc ⱼ)
+pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
+pattern ₄₊ ⱼ = suc (suc (suc (suc ⱼ)))
+
+
+open import Zp.ModularArithmetic
+open import Zp.Mod-Lemmas p-2 p-prime
+open PrimeModulus p-2 p-prime
+open import N.Cosets p-2 p-prime
+open import N.Symplectic p-2 p-prime
+open Symplectic renaming (M to ZM)
+open import N.NF1-Sym p-2 p-prime
+open import N.LM-Sym p-2 p-prime
+
+open import N.Action p-2 p-prime
+open import N.Action-Lemmas p-2 p-prime
+open import Algebra.Properties.Ring (+-*-ring p-2)
+open import N.NF2-Sym p-2 p-prime
+open LM2
+
+
+open import Zp.ModularArithmetic
+open import N.Lemmas-2Qupit-Sym p-2 p-prime
+open import N.NF2-Sym p-2 p-prime
+--open Lemmas-2Q 2
+
+open import N.NF1 p-2 p-prime
+open import N.Ex-Sym p-2 p-prime
+open import N.Ex-Sym1 p-2 p-prime
+open import N.Ex-Sym2 p-2 p-prime
+open import N.Ex-Sym3 p-2 p-prime
+open import N.Ex-Sym4 p-2 p-prime
+open import N.Ex-Sym5 p-2 p-prime hiding (module L0)
+open import N.Ex-Sym2n p-2 p-prime
+open import N.Ex-Sym3n p-2 p-prime
+
+open import N.Lemma-Comm-n p-2 p-prime 0
+open import N.Completeness1-Sym p-2 p-prime renaming (module Completeness to Cp1)
+open Lemmas0a
+open Lemmas0a1
+open Lemmas0b
+open Lemmas0c
+open Lemmas-Sym
+open Duality
+
+open import N.Completeness1-Sym p-2 p-prime renaming (module Completeness to CP1) using ()
+open import N.Coset2-Update-Sym p-2 p-prime renaming (module Completeness to CP2) using ()
+open import N.Lemmas4-Sym p-2 p-prime
+open import N.Lemmas-3Q p-2 p-prime
+open import N.Pushing.DH p-2 p-prime
+open import N.Duality p-2 p-prime
+open import N.BR.Calculations p-2 p-prime
+open import N.BR.One.A p-2 p-prime
+open import N.BR.TwoQupit p-2 p-prime hiding (n)
+open import N.BR.Two.Lemmas p-2 p-prime hiding (n ; module L01 ; sa)
+open import N.BR.Two.D p-2 p-prime hiding (n ; module L01) renaming(dir-of to  dir-of-d)
+open import N.Embeding-1n p-2 p-prime
+
+
+open PB ((₂₊ n) QRel,_===_)
+open PP ((₂₊ n) QRel,_===_)
+open SR word-setoid
+open Pattern-Assoc renaming (special-assoc to sa)
+open Lemmas0 n
+module L01 = Lemmas0 (₁₊ n)
+open Lemmas-2Q n
+open Sym0-Rewriting (₁₊ n)
+open Rewriting-Swap 1
+open Symplectic-GroupLike
+open Basis-Change _ ((₂₊ 0) QRel,_===_) grouplike
+
+
+
+lemma-B~dualD : ∀ (x : B) -> [ x ]ᵇ ≈ H ↑ • dual [ x ]ᵈ • H ^ 3
+lemma-B~dualD x@(a@₀ , b) = begin
+  Ex • CX'^ b ≈⟨ sa (□ • (□ ^ 3 • □ ^ 2)) (□ ^ 2 • (□ ^ 2 • □) • □) auto ⟩
+  (Ex • H) • (H ^ 2 • CZ^ b) • H ≈⟨ cright cleft lemma-semi-HH↓-CZ^k' b ⟩
+  (Ex • H) • (CZ^ (- b) • H ^ 2) • H ≈⟨ cright sa (□ ^ 3 • □) (□ • □ ^ 3) auto ⟩
+  (Ex • H) • CZ^ (- b) • H ^ 3 ≈⟨ cong (rewrite-swap 100 auto) refl ⟩
+  (H ↑ • Ex) • CZ^ (- b) • H ^ 3 ≈⟨ sa (□ ^ 2 • □ ^ 2) (□ • □ ^ 2 • □) auto ⟩
+  H ↑ • (Ex • CZ^ (- b)) • H ^ 3 ≈⟨ sym (cright cleft cong ( aux-dual-Ex) ( (refl' (aux-dual-CZ^k (toℕ (- b)))))) ⟩
+  H ↑ • dual (Ex • CZ^ (- b)) • H ^ 3 ∎
+lemma-B~dualD x@(a@(₁₊ _) , b) = begin
+  Ex • CX'^ a • H ↑ • S^ -b/a ↑ ≈⟨ sa (□ • (□ ^ 3 • □ ^ 2) • □ ^ 2) (□ ^ 2 • (□ ^ 2 • □) • □ ^ 3) auto ⟩
+  (Ex • H) • (HH • CZ^ a) • H • H ↑ • S^ -b/a ↑ ≈⟨ cong (rewrite-swap 100 auto) (cleft lemma-semi-HH↓-CZ^k' a) ⟩
+  (H ↑ • Ex) • (CZ^ (- a) • HH) • H • H ↑ • S^ -b/a ↑ ≈⟨ sa (□ ^ 2 • □ ^ 3 • □ ^ 3) (□ • □ • □ • □ ^ 3 • □ ^ 2) auto ⟩
+  H ↑ • Ex • CZ^ (- a) • H ^ 3 • H ↑ • S^ -b/a ↑ ≈⟨ cright cright cright lemma-comm-Hᵏ-w↑ 3 (H • S^ -b/a) ⟩
+  H ↑ • Ex • CZ^ (- a) • (H ↑ • S^ -b/a ↑) • H ^ 3 ≈⟨ sa (□ • □ • □ • □ ^ 2 • □) (□ • □ ^ 4 • □) auto ⟩
+  H ↑ • (Ex • CZ^ (- a) • H ↑ • S^ -b/a ↑) • H ^ 3 ≈⟨ sym (cright cleft cong aux-dual-Ex (cong (refl' (aux-dual-CZ^k (toℕ (- a)))) (cright refl' (aux-dual-S^k (toℕ -b/a))))) ⟩
+  H ↑ • dual (Ex • CZ^ (- a) • H • S^ -b/a) • H ^ 3 ∎
+  where
+  a⁻¹ = ((a , λ ()) ⁻¹) .proj₁
+  -b/a = - b * a⁻¹
+
+
+
+dir-and-b' : ∀ (d : B) (g : Gen 2) (neqH : g ≢ H-gen) (neqCZ : g ≢ CZ-gen) -> Word (Gen 2) × B
+
+dir-and-b' d@(a , b)                   H-gen neqH neqCZ  =  ⊥-elim (neqH  auto)
+dir-and-b' d@(a , b)                  CZ-gen neqH neqCZ  =  ⊥-elim (neqCZ auto)
+dir-and-b' d@(a , b)               (H-gen ↥) neqH neqCZ  =  dual dir               ,   d'
+  where
+  ed = dir-of-d d H-gen λ ()
+  dir = (S^ (ed .proj₁) • (ed .proj₂) ↑)
+  d' = d'-of d H-gen λ ()
+dir-and-b' d@(a , b)               (S-gen ↥) neqH neqCZ  =  dual dir               ,   d'
+  where
+  ed = dir-of-d d S-gen λ ()
+  dir = (S^ (ed .proj₁) • (ed .proj₂) ↑)
+  d' = d'-of d S-gen λ ()
+dir-and-b' d@(a@₀ , b@₀)               S-gen neqH neqCZ  =  S ↑                    ,   (a , b)
+dir-and-b' d@(a@₀ , b@(₁₊ _))          S-gen neqH neqCZ  =  S ↑ • S • CZ^ (- ₁)    ,   (a , b)
+dir-and-b' d@(a@(₁₊ _) , b)            S-gen neqH neqCZ  =  S ↑ • S • CZ^ (- ₁)    ,   (a , b)
+
+
+lemma-CX^k-S : ∀ (k*@(k , nz) : ℤ* ₚ) ->
+
+  CX^ k • S ≈ S • S^ (k * k) ↑ • CZ^ (- k) • CX^ k
+
+lemma-CX^k-S k*@(k , nz) = bbc (ZM (k* ⁻¹) ↑) ε claim
+  where
+  k⁻¹ = (k* ⁻¹) .proj₁
+  k⁻¹⁻¹ = (k* ⁻¹ ⁻¹) .proj₁
+  claim : ZM (k* ⁻¹) ↑ • (CX^ k • S) • ε ≈ ZM (k* ⁻¹) ↑ • (S • S^ (k * k) ↑ • CZ^ (- k) • CX^ k) • ε
+  claim = begin
+    ZM (k* ⁻¹) ↑ • (CX^ k • S) • ε ≈⟨ cong refl right-unit ⟩
+    ZM (k* ⁻¹) ↑ • (CX^ k • S) ≈⟨ sym assoc ⟩
+    (ZM (k* ⁻¹) ↑ • CX^ k) • S ≈⟨ cleft aux-M↑CX^k (k* ⁻¹) k ⟩
+    (CX^ (k * k⁻¹) • ZM (k* ⁻¹) ↑) • S ≈⟨ assoc ⟩
+    CX^ (k * k⁻¹) • ZM (k* ⁻¹) ↑ • S ≈⟨ cong (refl' (Eq.cong CX^ (lemma-⁻¹ʳ k {{nztoℕ {y = k} {neq0 = nz}}}))) (sym (lemma-comm-S-w↑ (ZM (k* ⁻¹)))) ⟩
+    CX • S • ZM (k* ⁻¹) ↑ ≈⟨ sym assoc ⟩
+    (CX • S) • ZM (k* ⁻¹) ↑ ≈⟨ cleft sym (lemma-CXS^k ₁) ⟩
+    (S • S ↑ • CZ^ (- ₁) • CX) • ZM (k* ⁻¹) ↑ ≈⟨ sa (□ ^ 4 • □) (□ ^ 3 • □ ^ 2) auto ⟩
+    (S • S ↑ • CZ^ (- ₁)) • CX • ZM (k* ⁻¹) ↑ ≈⟨ cright cleft sym ((refl' (Eq.cong CX^ (lemma-⁻¹ʳ k {{nztoℕ {y = k} {neq0 = nz}}})))) ⟩
+    (S • S ↑ • CZ^ (- ₁)) • CX^ (k * k⁻¹) • ZM (k* ⁻¹) ↑ ≈⟨ cright sym (aux-M↑CX^k (k* ⁻¹) k ) ⟩
+    (S • S ↑ • CZ^ (- ₁)) • ZM (k* ⁻¹) ↑ • CX^ k ≈⟨ sa (□ ^ 3 • □ ^ 2) (□ ^ 2 • □ ^ 2 • □) auto ⟩
+    (S • S ↑) • (CZ^ (- ₁) • ZM (k* ⁻¹) ↑) • CX^ k ≈⟨ cright cleft lemma-CZ^kM↑ k⁻¹ (- ₁) ((k* ⁻¹) .proj₂) ⟩
+    (S • S ↑) • (ZM (k* ⁻¹) ↑ • CZ^ (- ₁ * k⁻¹⁻¹)) • CX^ k ≈⟨ cright cleft cright refl' (Eq.cong CZ^ (Eq.trans (-1*x≈-x k⁻¹⁻¹) (Eq.cong -_ (inv-involutive k*)))) ⟩
+    (S • S ↑) • (ZM (k* ⁻¹) ↑ • CZ^ (- k)) • CX^ k ≈⟨ sa (□ ^ 2 • □ ^ 2 • □) (□ • □ ^ 2 • □ ^ 2) auto ⟩
+    S • (S ↑ • ZM (k* ⁻¹) ↑) • CZ^ (- k) • CX^ k ≈⟨ cright cleft lemma-cong↑ _ _ (lemma-S^kM k⁻¹ ₁ ((k* ⁻¹) .proj₂)) ⟩
+    S • (ZM (k* ⁻¹) ↑ • S^ (₁ * (k⁻¹⁻¹ * k⁻¹⁻¹)) ↑) • CZ^ (- k) • CX^ k ≈⟨ cright cleft cright refl' (Eq.cong (\ xx -> S^ xx ↑) (Eq.trans (*-identityˡ (k⁻¹⁻¹ * k⁻¹⁻¹)) (Eq.trans (Eq.cong₂ _*_ (inv-involutive k*) (inv-involutive k*)) auto))) ⟩
+    S • (ZM (k* ⁻¹) ↑ • S^ (k * k) ↑) • CZ^ (- k) • CX^ k ≈⟨ sa (□ • □ ^ 2 • □ ^ 2) (□ ^ 2 • □ ^ 3) auto ⟩
+    (S • ZM (k* ⁻¹) ↑) • S^ (k * k) ↑ • CZ^ (- k) • CX^ k ≈⟨ cleft lemma-comm-S-w↑ (ZM (k* ⁻¹)) ⟩
+    (ZM (k* ⁻¹) ↑ • S) • S^ (k * k) ↑ • CZ^ (- k) • CX^ k ≈⟨ assoc ⟩
+    ZM (k* ⁻¹) ↑ • S • S^ (k * k) ↑ • CZ^ (- k) • CX^ k ≈⟨ sym (cong refl right-unit) ⟩
+    ZM (k* ⁻¹) ↑ • (S • S^ (k * k) ↑ • CZ^ (- k) • CX^ k) • ε ∎
+
+
+
+aux-H↑-MS : ∀ m k -> H ↑ • ZM m • S^ k ≈ (ZM m • S^ k) • H ↑
+aux-H↑-MS m k = begin
+  H ↑ • ZM m • S^ k ≈⟨ sym assoc ⟩
+  (H ↑ • ZM m) • S^ k ≈⟨ cleft sym (aux-comm-m-H↑ m) ⟩
+  (ZM m • H ↑) • S^ k ≈⟨ assoc ⟩
+  ZM m • H ↑ • S^ k ≈⟨ cright sym (lemma-comm-Sᵏ-w↑ (toℕ k) [ H-gen ]ʷ) ⟩
+  ZM m • S^ k • H ↑ ≈⟨ sym assoc ⟩
+  (ZM m • S^ k) • H ↑ ∎
+
+
+
+b'-of : ∀ (d : B) (g : Gen 2) (neqH : g ≢ H-gen) (neqCZ : g ≢ CZ-gen) -> B
+
+b'-of (a , b) (H-gen ↥) _ _  =  (b , - a)
+b'-of (a , b) (S-gen ↥) _ _  =  (a , b + - a)
+b'-of (a , b)     S-gen _ _  =  (a , b)
+
+b'-of (a , b) H-gen nH nCZ   =  ⊥-elim (nH  auto)
+b'-of (a , b) CZ-gen nH nCZ  =  ⊥-elim (nCZ auto)
+
+
+dir-of : ∀ (d : B) (g : Gen 2) (neqH : g ≢ H-gen) (neqCZ : g ≢ CZ-gen) -> Word (Gen 2)
+
+dir-of d@(a , b)               (H-gen ↥) _ _  =  dual dir
+  where
+  ed = dir-of-d d H-gen λ ()
+  dir = (S^ (ed .proj₁) • (ed .proj₂) ↑)
+dir-of d@(a , b)               (S-gen ↥) _ _  =  dual dir
+  where
+  ed = dir-of-d d S-gen λ ()
+  dir = (S^ (ed .proj₁) • (ed .proj₂) ↑)
+dir-of d@(a@₀ , b@₀)               S-gen _ _  =  S ↑                
+dir-of d@(a@₀ , b@(₁₊ _))          S-gen _ _  =  S ↑ • S^ (b * b) • CZ^ (- b)
+dir-of d@(a@(₁₊ _) , b)            S-gen _ _  =  S ↑ • S^ (a * a) • CZ^ (- a)
+
+dir-of d@(a , b)            H-gen neqH neqCZ  =  ⊥-elim (neqH  auto)
+dir-of d@(a , b)           CZ-gen neqH neqCZ  =  ⊥-elim (neqCZ auto)
+
+
+lemma-B-br : ∀ (b : B) (g : Gen 2) (neqH : g ≢ H-gen) (neqCZ : g ≢ CZ-gen) ->
+  let
+  dir = dir-of b g neqH neqCZ
+  b' = b'-of b g neqH neqCZ
+  in
+
+  [ b ]ᵇ • [ g ]ʷ ≈ dir • [ b' ]ᵇ
+
+lemma-B-br d@(a@₀ , b@₀) g@(S-gen) neqH neqCZ = begin
+  [ d ]ᵇ • S ≈⟨ assoc ⟩
+  Ex • CX'^ b • S ≈⟨ rewrite-sym0 10 auto ⟩
+  Ex • S ≈⟨ rewrite-swap 100 auto ⟩
+  dir • [ d' ]ᵇ ∎
+  where
+  dir = dir-of d g neqH neqCZ
+  d' = b'-of d g neqH neqCZ
+
+lemma-B-br d@(a@₀ , b@(₁₊ _)) g@(S-gen) neqH neqCZ = begin
+  [ d ]ᵇ • S ≈⟨ assoc ⟩
+  Ex • CX'^ b • S ≈⟨ cright (cleft sym (aux-CX^-CX'^ b)) ⟩
+  Ex • CX^ b • S ≈⟨ cright lemma-CX^k-S (b , (λ ())) ⟩
+  Ex • S • S^ (b * b) ↑ • CZ^ (- b) • CX^ b ≈⟨ sa (□ ^ 3) (□ ^ 2 • □) auto ⟩
+  (Ex • S) • S^ (b * b) ↑ • CZ^ (- b) • CX^ b ≈⟨ cleft lemma-Ex-S ⟩
+  (S ↑ • Ex) • S^ (b * b) ↑ • CZ^ (- b) • CX^ b ≈⟨ sa (□ ^ 2 • □ ^ 2) (□ • □ ^ 2 • □) auto ⟩
+  S ↑ • (Ex • S^ (b * b) ↑) • CZ^ (- b) • CX^ b ≈⟨ cright cleft lemma-Ex-Sᵏ↑ (toℕ (b * b)) ⟩
+  S ↑ • (S^ (b * b) • Ex) • CZ^ (- b) • CX^ b ≈⟨ sa (□ • □ ^ 2 • □ ^ 2) (□ ^ 2 • □ ^ 2 • □) auto ⟩
+  (S ↑ • S^ (b * b)) • (Ex • CZ^ (- b)) • CX^ b ≈⟨ cright cleft word-comm 1 (toℕ (- b)) (sym lemma-comm-Ex-CZ) ⟩
+  (S ↑ • S^ (b * b)) • (CZ^ (- b) • Ex) • CX^ b ≈⟨ sa (□ ^ 2 • □ ^ 2 • □) (□ ^ 3 • □ ^ 2) auto ⟩
+  (S ↑ • S^ (b * b) • CZ^ (- b)) • Ex • CX^ b ≈⟨ cright (cright aux-CX^-CX'^ b) ⟩
+  (S ↑ • S^ (b * b) • CZ^ (- b)) • Ex • CX'^ b ≈⟨ cright refl ⟩
+  dir • [ d' ]ᵇ ∎
+  where
+  dir = dir-of d g neqH neqCZ
+  d' = b'-of d g neqH neqCZ
+
+
+lemma-B-br d@(a@(₁₊ _) , b) g@(S-gen) neqH neqCZ = begin
+  (Ex • CX'^ a • (H • S^ -b/a) ↑) • S ≈⟨ sa (□ ^ 3 • □) (□ ^ 2 • □ ^ 2) auto ⟩
+  (Ex • CX'^ a) • (H • S^ -b/a) ↑ • S ≈⟨ cright sym (lemma-comm-S-w↑ (H • S^ -b/a)) ⟩
+  (Ex • CX'^ a) • S • (H • S^ -b/a) ↑ ≈⟨ sa (□ ^ 2 • □ ^ 2) ((□ ^ 2 • □) • □) auto ⟩
+  ((Ex • CX'^ a) • S) • (H • S^ -b/a) ↑ ≈⟨ cleft lemma-B-br ((₀ , a)) S-gen (λ ()) (λ ()) ⟩
+  ((S ↑ • S^ (a * a) • CZ^ (- a)) • Ex • CX'^ a) • (H • S^ -b/a) ↑ ≈⟨ sa ((□ ^ 3 • □ ^ 2) • □) (□ ^ 3 • □ ^ 3) auto ⟩
+  ((S ↑ • S^ (a * a) • CZ^ (- a))) • Ex • CX'^ a • (H • S^ -b/a) ↑ ≈⟨ refl ⟩
+  dir • [ d' ]ᵇ ∎
+  where
+  dir = dir-of d g neqH neqCZ
+  d' = b'-of d g neqH neqCZ
+  a⁻¹ = ((a , λ ()) ⁻¹) .proj₁
+  -b/a = - b * a⁻¹
+
+
+lemma-B-br d@(a@₀ , b@₀) g@(H-gen ↥) neqH neqCZ = begin
+  [ d ]ᵇ • H ↑ ≈⟨ cleft lemma-B~dualD d ⟩
+  (H ↑ • dual [ d ]ᵈ • H ^ 3) • H ↑ ≈⟨ refl ⟩
+  dual (H • [ d ]ᵈ • H ↑  ^ 3) • dual H ≈⟨ sa (□ ^ 3 • □) (□ ^ 4) auto ⟩
+  dual (H • [ d ]ᵈ • H ↑  ^ 3 • H) ≈⟨ by-duality {w = H • [ d ]ᵈ • H ↑  ^ 3 • H } {u = H • [ d ]ᵈ • H • H ↑  ^ 3} (cright cright sym (lemma-comm-H-w↑ (H ^ 3))) ⟩
+  dual (H • [ d ]ᵈ • H • H ↑ ^ 3) ≈⟨ by-duality  {w = H • [ d ]ᵈ • H • H ↑  ^ 3 } {u = H • ([ d ]ᵈ • H) • H ↑ ^ 3}(sa (□ ^ 4) (□ • □ ^ 2 • □) auto) ⟩
+  dual (H • ([ d ]ᵈ • H) • H ↑ ^ 3) ≈⟨ by-duality {w = (H • ([ d ]ᵈ • H) • H ↑ ^ 3)} {u = (H • (dirs • diro • [ d' ]ᵈ) • H ↑ ^ 3)} (cright cleft lemma-D-br d H-gen (λ ())) ⟩
+  dual (H • (dirs • diro • [ d' ]ᵈ) • H ↑ ^ 3) ≈⟨ refl ⟩
+  H ↑ • (dual dirs • dual diro • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft left-unit ⟩
+  H ↑ • (dual diro • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft refl ⟩
+  H ↑ • (H • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ sa (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto ⟩
+  (H ↑ • H) • dual [ d' ]ᵈ • H ^ 3 ≈⟨ cleft axiom comm-H ⟩
+  (H • H ↑) • dual [ d' ]ᵈ • H ^ 3 ≈⟨ assoc ⟩
+  H • H ↑ • dual [ d' ]ᵈ • H ^ 3 ≈⟨ cright sym (lemma-B~dualD d') ⟩
+  H • [ d' ]ᵇ ≈⟨ sym (trans assoc left-unit) ⟩
+  dual dir • [ d' ]ᵇ ∎
+  where
+  ed = dir-of-d d H-gen λ ()
+  dir = (S^ (ed .proj₁) • (ed .proj₂) ↑)
+  dirs = S^ (ed .proj₁)
+  diro = (ed .proj₂) ↑
+  d' = d'-of d H-gen λ ()
+
+
+lemma-B-br d@(a@₀ , b@(₁₊ _)) g@(H-gen ↥) neqH neqCZ = begin
+  [ d ]ᵇ • H ↑ ≈⟨ cleft lemma-B~dualD d ⟩
+  (H ↑ • dual [ d ]ᵈ • H ^ 3) • H ↑ ≈⟨ refl ⟩
+  dual (H • [ d ]ᵈ • H ↑  ^ 3) • dual H ≈⟨ sa (□ ^ 3 • □) (□ ^ 4) auto ⟩
+  dual (H • [ d ]ᵈ • H ↑  ^ 3 • H) ≈⟨ by-duality {w = H • [ d ]ᵈ • H ↑  ^ 3 • H } {u = H • [ d ]ᵈ • H • H ↑  ^ 3} (cright cright sym (lemma-comm-H-w↑ (H ^ 3))) ⟩
+  dual (H • [ d ]ᵈ • H • H ↑ ^ 3) ≈⟨ by-duality  {w = H • [ d ]ᵈ • H • H ↑  ^ 3 } {u = H • ([ d ]ᵈ • H) • H ↑ ^ 3}(sa (□ ^ 4) (□ • □ ^ 2 • □) auto) ⟩
+  dual (H • ([ d ]ᵈ • H) • H ↑ ^ 3) ≈⟨ by-duality {w = (H • ([ d ]ᵈ • H) • H ↑ ^ 3)} {u = (H • (dirs • diro • [ d' ]ᵈ) • H ↑ ^ 3)} (cright cleft lemma-D-br d H-gen (λ ())) ⟩
+  dual (H • (dirs • diro • [ d' ]ᵈ) • H ↑ ^ 3) ≈⟨ refl ⟩
+  H ↑ • (dual dirs • dual diro • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft left-unit ⟩
+  H ↑ • (dual diro • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft refl ⟩
+  H ↑ • (ε • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft left-unit ⟩
+  H ↑ • (dual [ d' ]ᵈ) • H ^ 3 ≈⟨ sym (lemma-B~dualD d') ⟩
+  [ d' ]ᵇ ≈⟨ sym left-unit ⟩
+  ε • [ d' ]ᵇ ≈⟨ cleft sym left-unit ⟩
+  dual dir • [ d' ]ᵇ ∎
+  where
+  ed = dir-of-d d H-gen λ ()
+  dir = (S^ (ed .proj₁) • (ed .proj₂) ↑)
+  dirs = S^ (ed .proj₁)
+  diro = (ed .proj₂) ↑
+  d' = d'-of d H-gen λ ()
+
+
+lemma-B-br d@(a@(₁₊ _) , b@₀) g@(H-gen ↥) neqH neqCZ = begin
+  [ d ]ᵇ • H ↑ ≈⟨ cleft lemma-B~dualD d ⟩
+  (H ↑ • dual [ d ]ᵈ • H ^ 3) • H ↑ ≈⟨ refl ⟩
+  dual (H • [ d ]ᵈ • H ↑  ^ 3) • dual H ≈⟨ sa (□ ^ 3 • □) (□ ^ 4) auto ⟩
+  dual (H • [ d ]ᵈ • H ↑  ^ 3 • H) ≈⟨ by-duality {w = H • [ d ]ᵈ • H ↑  ^ 3 • H } {u = H • [ d ]ᵈ • H • H ↑  ^ 3} (cright cright sym (lemma-comm-H-w↑ (H ^ 3))) ⟩
+  dual (H • [ d ]ᵈ • H • H ↑ ^ 3) ≈⟨ by-duality  {w = H • [ d ]ᵈ • H • H ↑  ^ 3 } {u = H • ([ d ]ᵈ • H) • H ↑ ^ 3}(sa (□ ^ 4) (□ • □ ^ 2 • □) auto) ⟩
+  dual (H • ([ d ]ᵈ • H) • H ↑ ^ 3) ≈⟨ by-duality {w = (H • ([ d ]ᵈ • H) • H ↑ ^ 3)} {u = (H • (dirs • diro • [ d' ]ᵈ) • H ↑ ^ 3)} (cright cleft lemma-D-br d H-gen (λ ())) ⟩
+  dual (H • (dirs • diro • [ d' ]ᵈ) • H ↑ ^ 3) ≈⟨ refl ⟩
+  H ↑ • (dual dirs • dual diro • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft left-unit ⟩
+  H ↑ • (dual diro • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft refl ⟩
+  H ↑ • (HH • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ sa (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto ⟩
+  (H ↑ • HH) • dual [ d' ]ᵈ • H ^ 3 ≈⟨ sym (cleft lemma-comm-Hᵏ-w↑ 2 H) ⟩
+  (HH • H ↑) • dual [ d' ]ᵈ • H ^ 3 ≈⟨ assoc ⟩
+  HH • H ↑ • dual [ d' ]ᵈ • H ^ 3 ≈⟨ cright sym (lemma-B~dualD d') ⟩
+  HH • [ d' ]ᵇ ≈⟨ sym left-unit ⟩
+  ε • HH • [ d' ]ᵇ ≈⟨ sym assoc ⟩
+  dual dir • [ d' ]ᵇ ∎
+  where
+  ed = dir-of-d d H-gen λ ()
+  dir = (S^ (ed .proj₁) • (ed .proj₂) ↑)
+  dirs = S^ (ed .proj₁)
+  diro = (ed .proj₂) ↑
+  d' = d'-of d H-gen λ ()
+
+
+lemma-B-br d@(a@(₁₊ _) , b@(₁₊ _)) g@(H-gen ↥) neqH neqCZ = begin
+  [ d ]ᵇ • H ↑ ≈⟨ cleft lemma-B~dualD d ⟩
+  (H ↑ • dual [ d ]ᵈ • H ^ 3) • H ↑ ≈⟨ refl ⟩
+  dual (H • [ d ]ᵈ • H ↑  ^ 3) • dual H ≈⟨ sa (□ ^ 3 • □) (□ ^ 4) auto ⟩
+  dual (H • [ d ]ᵈ • H ↑  ^ 3 • H) ≈⟨ by-duality {w = H • [ d ]ᵈ • H ↑  ^ 3 • H } {u = H • [ d ]ᵈ • H • H ↑  ^ 3} (cright cright sym (lemma-comm-H-w↑ (H ^ 3))) ⟩
+  dual (H • [ d ]ᵈ • H • H ↑ ^ 3) ≈⟨ by-duality  {w = H • [ d ]ᵈ • H • H ↑  ^ 3 } {u = H • ([ d ]ᵈ • H) • H ↑ ^ 3}(sa (□ ^ 4) (□ • □ ^ 2 • □) auto) ⟩
+  dual (H • ([ d ]ᵈ • H) • H ↑ ^ 3) ≈⟨ by-duality {w = (H • ([ d ]ᵈ • H) • H ↑ ^ 3)} {u = (H • (dirs • diro • [ d' ]ᵈ) • H ↑ ^ 3)} (cright cleft lemma-D-br d H-gen (λ ())) ⟩
+  dual (H • (dirs • diro • [ d' ]ᵈ) • H ↑ ^ 3) ≈⟨ refl ⟩
+  H ↑ • (dual dirs • dual diro • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft left-unit ⟩
+  H ↑ • (dual diro • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft refl ⟩
+  H ↑ • (dual ((ZM a/b • S^ b/a) ↑) • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft (cleft cong (refl' (aux-dual-Mx↑ a/b)) (refl' (aux-dual-S^k↑ (toℕ b/a)))) ⟩
+  H ↑ • ((ZM a/b • S^ b/a) • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ sa (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto ⟩
+  (H ↑ • (ZM a/b • S^ b/a)) • dual [ d' ]ᵈ • H ^ 3 ≈⟨ cleft aux-H↑-MS a/b b/a ⟩
+  ((ZM a/b • S^ b/a) • H ↑) • dual [ d' ]ᵈ • H ^ 3 ≈⟨ assoc ⟩
+  (ZM a/b • S^ b/a) • H ↑ • dual [ d' ]ᵈ • H ^ 3 ≈⟨ cright sym (lemma-B~dualD d') ⟩
+  (ZM a/b • S^ b/a) • [ d' ]ᵇ ≈⟨ cleft sym (refl' (Eq.cong₂ _•_ (aux-dual-Mx↑ a/b) (aux-dual-S^k↑ (toℕ b/a)))) ⟩  
+  dual ((ZM a/b • S^ b/a) ↑) • [ d' ]ᵇ ≈⟨ cleft sym left-unit ⟩  
+  dual dir • [ d' ]ᵇ ∎
+  where
+  ed = dir-of-d d H-gen λ ()
+  dir = (S^ (ed .proj₁) • (ed .proj₂) ↑)
+  dirs = S^ (ed .proj₁)
+  diro = (ed .proj₂) ↑
+  d' = d'-of d H-gen λ ()
+  a⁻¹ = ((a , λ ()) ⁻¹) .proj₁
+  b/a = b * a⁻¹
+  a/b = (a , λ ()) *' (b , λ ()) ⁻¹
+
+
+lemma-B-br d@(a@₀ , b@(₁₊ _)) g@(S-gen ↥) neqH neqCZ = begin
+  [ d ]ᵇ • S ↑ ≈⟨ cleft lemma-B~dualD d ⟩
+  (H ↑ • dual [ d ]ᵈ • H ^ 3) • S ↑ ≈⟨ refl ⟩
+  dual (H • [ d ]ᵈ • H ↑  ^ 3) • dual S ≈⟨ sa (□ ^ 3 • □) (□ ^ 4) auto ⟩
+  dual (H • [ d ]ᵈ • H ↑  ^ 3 • S) ≈⟨ by-duality {w = H • [ d ]ᵈ • H ↑  ^ 3 • S} {u = H • [ d ]ᵈ • S • H ↑  ^ 3} (cright cright sym (lemma-comm-S-w↑ (H ^ 3))) ⟩
+  dual (H • [ d ]ᵈ • S • H ↑ ^ 3) ≈⟨ by-duality  {w = H • [ d ]ᵈ • S • H ↑  ^ 3 } {u = H • ([ d ]ᵈ • S) • H ↑ ^ 3}(sa (□ ^ 4) (□ • □ ^ 2 • □) auto) ⟩
+  dual (H • ([ d ]ᵈ • S) • H ↑ ^ 3) ≈⟨ by-duality {w = (H • ([ d ]ᵈ • S) • H ↑ ^ 3)} {u = (H • (dirs • diro • [ d' ]ᵈ) • H ↑ ^ 3)} (cright cleft lemma-D-br d S-gen (λ ())) ⟩
+  dual (H • (dirs • diro • [ d' ]ᵈ) • H ↑ ^ 3) ≈⟨ refl ⟩
+  H ↑ • (dual dirs • dual diro • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft left-unit ⟩
+  H ↑ • (dual diro • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft refl ⟩
+  H ↑ • (dual (S ↑) • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft (cleft refl' (aux-dual-S^k↑ 1)) ⟩
+  H ↑ • (S • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ sa (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto ⟩
+  (H ↑ • S) • dual [ d' ]ᵈ • H ^ 3 ≈⟨ cleft sym (lemma-comm-Sᵏ-w↑ 1 H) ⟩
+  (S • H ↑) • dual [ d' ]ᵈ • H ^ 3 ≈⟨ assoc ⟩
+  S • H ↑ • dual [ d' ]ᵈ • H ^ 3 ≈⟨ cright sym (lemma-B~dualD d') ⟩
+  S • [ d' ]ᵇ ≈⟨ refl ⟩  
+  dual (S ↑) • [ d' ]ᵇ ≈⟨ cleft sym left-unit ⟩  
+  dual dir • [ d' ]ᵇ ∎
+  where
+  ed = dir-of-d d S-gen λ ()
+  dir = (S^ (ed .proj₁) • (ed .proj₂) ↑)
+  dirs = S^ (ed .proj₁)
+  diro = (ed .proj₂) ↑
+  d' = d'-of d S-gen λ ()
+  b* = (b , λ ())
+  b⁻² = ((b* ⁻¹) .proj₁) * ((b* ⁻¹) .proj₁)
+
+
+
+lemma-B-br d@(a@₀ , b@₀) g@(S-gen ↥) neqH neqCZ = begin
+  [ d ]ᵇ • S ↑ ≈⟨ cleft lemma-B~dualD d ⟩
+  (H ↑ • dual [ d ]ᵈ • H ^ 3) • S ↑ ≈⟨ refl ⟩
+  dual (H • [ d ]ᵈ • H ↑  ^ 3) • dual S ≈⟨ sa (□ ^ 3 • □) (□ ^ 4) auto ⟩
+  dual (H • [ d ]ᵈ • H ↑  ^ 3 • S) ≈⟨ by-duality {w = H • [ d ]ᵈ • H ↑  ^ 3 • S } {u = H • [ d ]ᵈ • S • H ↑  ^ 3} (cright cright sym (lemma-comm-S-w↑ (H ^ 3))) ⟩
+  dual (H • [ d ]ᵈ • S • H ↑ ^ 3) ≈⟨ by-duality  {w = H • [ d ]ᵈ • S • H ↑  ^ 3 } {u = H • ([ d ]ᵈ • S) • H ↑ ^ 3}(sa (□ ^ 4) (□ • □ ^ 2 • □) auto) ⟩
+  dual (H • ([ d ]ᵈ • S) • H ↑ ^ 3) ≈⟨ by-duality {w = (H • ([ d ]ᵈ • S) • H ↑ ^ 3)} {u = (H • (dirs • diro • [ d' ]ᵈ) • H ↑ ^ 3)} (cright cleft lemma-D-br d S-gen (λ ())) ⟩
+  dual (H • (dirs • diro • [ d' ]ᵈ) • H ↑ ^ 3) ≈⟨ refl ⟩
+  H ↑ • (dual dirs • dual diro • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft left-unit ⟩
+  H ↑ • (dual diro • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft refl ⟩
+  H ↑ • (S • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ sa (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto ⟩
+  (H ↑ • S) • dual [ d' ]ᵈ • H ^ 3 ≈⟨ cleft axiom comm-S ⟩
+  (S • H ↑) • dual [ d' ]ᵈ • H ^ 3 ≈⟨ assoc ⟩
+  S • H ↑ • dual [ d' ]ᵈ • H ^ 3 ≈⟨ cright sym (lemma-B~dualD d') ⟩
+  S • [ d' ]ᵇ ≈⟨ sym (trans assoc left-unit) ⟩
+  dual dir • [ d' ]ᵇ ∎
+  where
+  ed = dir-of-d d S-gen λ ()
+  dir = (S^ (ed .proj₁) • (ed .proj₂) ↑)
+  dirs = S^ (ed .proj₁)
+  diro = (ed .proj₂) ↑
+  d' = d'-of d S-gen λ ()
+
+
+lemma-B-br d@(a@(₁₊ _) , b@₀) g@(S-gen ↥) neqH neqCZ = begin
+  [ d ]ᵇ • S ↑ ≈⟨ cleft lemma-B~dualD d ⟩
+  (H ↑ • dual [ d ]ᵈ • H ^ 3) • S ↑ ≈⟨ refl ⟩
+  dual (H • [ d ]ᵈ • H ↑  ^ 3) • dual S ≈⟨ sa (□ ^ 3 • □) (□ ^ 4) auto ⟩
+  dual (H • [ d ]ᵈ • H ↑  ^ 3 • S) ≈⟨ by-duality {w = H • [ d ]ᵈ • H ↑  ^ 3 • S } {u = H • [ d ]ᵈ • S • H ↑  ^ 3} (cright cright sym (lemma-comm-S-w↑ (H ^ 3))) ⟩
+  dual (H • [ d ]ᵈ • S • H ↑ ^ 3) ≈⟨ by-duality  {w = H • [ d ]ᵈ • S • H ↑  ^ 3 } {u = H • ([ d ]ᵈ • S) • H ↑ ^ 3}(sa (□ ^ 4) (□ • □ ^ 2 • □) auto) ⟩
+  dual (H • ([ d ]ᵈ • S) • H ↑ ^ 3) ≈⟨ by-duality {w = (H • ([ d ]ᵈ • S) • H ↑ ^ 3)} {u = (H • (dirs • diro • [ d' ]ᵈ) • H ↑ ^ 3)} (cright cleft lemma-D-br d S-gen (λ ())) ⟩
+  dual (H • (dirs • diro • [ d' ]ᵈ) • H ↑ ^ 3) ≈⟨ refl ⟩
+  H ↑ • (dual dirs • dual diro • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft left-unit ⟩
+  H ↑ • (dual diro • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ refl ⟩
+  H ↑ • (ε • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft left-unit ⟩
+  H ↑ • (dual [ d' ]ᵈ) • H ^ 3 ≈⟨ sym (lemma-B~dualD d') ⟩
+  [ d' ]ᵇ ≈⟨ sym left-unit ⟩
+  ε • [ d' ]ᵇ ≈⟨ cleft sym left-unit ⟩
+  dual dir • [ d' ]ᵇ ∎
+  where
+  ed = dir-of-d d S-gen λ ()
+  dir = (S^ (ed .proj₁) • (ed .proj₂) ↑)
+  dirs = S^ (ed .proj₁)
+  diro = (ed .proj₂) ↑
+  d' = d'-of d S-gen λ ()
+
+lemma-B-br d@(a@(₁₊ _) , b@(₁₊ _)) g@(S-gen ↥) neqH neqCZ = begin
+  [ d ]ᵇ • S ↑ ≈⟨ cleft lemma-B~dualD d ⟩
+  (H ↑ • dual [ d ]ᵈ • H ^ 3) • S ↑ ≈⟨ refl ⟩
+  dual (H • [ d ]ᵈ • H ↑  ^ 3) • dual S ≈⟨ sa (□ ^ 3 • □) (□ ^ 4) auto ⟩
+  dual (H • [ d ]ᵈ • H ↑  ^ 3 • S) ≈⟨ by-duality {w = H • [ d ]ᵈ • H ↑  ^ 3 • S } {u = H • [ d ]ᵈ • S • H ↑  ^ 3} (cright cright sym (lemma-comm-S-w↑ (H ^ 3))) ⟩
+  dual (H • [ d ]ᵈ • S • H ↑ ^ 3) ≈⟨ by-duality  {w = H • [ d ]ᵈ • S • H ↑  ^ 3 } {u = H • ([ d ]ᵈ • S) • H ↑ ^ 3}(sa (□ ^ 4) (□ • □ ^ 2 • □) auto) ⟩
+  dual (H • ([ d ]ᵈ • S) • H ↑ ^ 3) ≈⟨ by-duality {w = (H • ([ d ]ᵈ • S) • H ↑ ^ 3)} {u = (H • (dirs • diro • [ d' ]ᵈ) • H ↑ ^ 3)} (cright cleft lemma-D-br d S-gen (λ ())) ⟩
+  dual (H • (dirs • diro • [ d' ]ᵈ) • H ↑ ^ 3) ≈⟨ refl ⟩
+  H ↑ • (dual dirs • dual diro • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft left-unit ⟩
+  H ↑ • (dual diro • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ refl ⟩
+  H ↑ • (ε • dual [ d' ]ᵈ) • H ^ 3 ≈⟨ cright cleft left-unit ⟩
+  H ↑ • (dual [ d' ]ᵈ) • H ^ 3 ≈⟨ sym (lemma-B~dualD d') ⟩
+  [ d' ]ᵇ ≈⟨ sym left-unit ⟩
+  ε • [ d' ]ᵇ ≈⟨ cleft sym left-unit ⟩
+  dual dir • [ d' ]ᵇ ∎
+  where
+  ed = dir-of-d d S-gen λ ()
+  dir = (S^ (ed .proj₁) • (ed .proj₂) ↑)
+  dirs = S^ (ed .proj₁)
+  diro = (ed .proj₂) ↑
+  d' = d'-of d S-gen λ ()
+
+
+
+lemma-B-br d@(a , b)                   H-gen neqH neqCZ  =  ⊥-elim (neqH  auto)
+lemma-B-br d@(a , b)                  CZ-gen neqH neqCZ  =  ⊥-elim (neqCZ auto)
+

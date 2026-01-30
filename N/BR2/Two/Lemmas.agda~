@@ -1,0 +1,179 @@
+{-# OPTIONS  --safe #-}
+{-# OPTIONS  --call-by-name #-}
+{-# OPTIONS --termination-depth=4 #-}
+open import Level using (0ℓ)
+
+open import Relation.Binary using (Rel)
+open import Relation.Binary.Definitions using (DecidableEquality)
+open import Relation.Binary.Morphism.Definitions using (Homomorphic₂)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; _≢_ ; inspect ; setoid ; module ≡-Reasoning ; _≗_) renaming ([_] to [_]')
+import Relation.Binary.Reasoning.Setoid as SR
+import Relation.Binary.PropositionalEquality as Eq
+open import Relation.Nullary.Decidable using (yes ; no)
+
+
+open import Function using (_∘_ ; id)
+open import Function.Definitions using (Injective)
+
+open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; map₁ ; ∃ ; Σ ; Σ-syntax)
+open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
+open import Data.Nat hiding (_^_ ; _+_ ; _*_)
+open import Agda.Builtin.Nat using (_-_)
+import Data.Nat as Nat
+open import Data.Bool hiding (_<_ ; _≤_)
+--open import Data.List using () hiding ([_] ; _++_ ; last ; head ; tail ; _∷ʳ_)
+open import Data.Vec hiding ([_])
+open import Data.Vec as V
+open import Data.Fin hiding (_+_ ; _-_ ; _≤_ ; _<_)
+
+open import Data.Maybe
+open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_] ; [_,_]′)
+open import Data.Unit using (⊤ ; tt)
+open import Data.Empty using (⊥ ; ⊥-elim)
+
+open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
+open import Word.Properties
+import Presentation.Base as PB
+import Presentation.Properties as PP
+open PP using (NFProperty ; NFProperty')
+import Presentation.CosetNF as CA
+import Presentation.Reidemeister-Schreier as RS
+module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
+
+open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
+import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
+import Presentation.Construct.Properties.DirectProduct as DP
+import Presentation.Groups.Cyclic as Cyclic
+
+
+open import Data.Fin using (Fin ; toℕ ; suc ; zero ; fromℕ)
+open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
+import Data.Nat.Properties as NP
+open import Presentation.GroupLike
+open import Presentation.Tactics using ()
+open import Data.Nat.Primality
+
+
+
+module N.BR2.Two.Lemmas (p-2 : ℕ) (p-prime : Prime (2+ p-2)) where
+
+n : ℕ
+n = 0
+    
+pattern auto = Eq.refl
+
+pattern ₀ = zero
+pattern ₁ = suc ₀
+pattern ₂ = suc ₁
+pattern ₃ = suc ₂
+pattern ₅ = 5
+pattern ₆ = 6
+pattern ₇ = 7
+pattern ₈ = 8
+pattern ₉ = 9
+pattern ₁₀ = 10
+pattern ₁₁ = 11
+pattern ₁₂ = 12
+pattern ₁₃ = 13
+pattern ₁₄ = 14
+pattern ₁₅ = 15
+
+pattern ₁₊ ⱼ = suc ⱼ
+pattern ₂₊ ⱼ = suc (suc ⱼ)
+pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
+pattern ₄₊ ⱼ = suc (suc (suc (suc ⱼ)))
+
+
+open import Zp.ModularArithmetic
+open import Zp.Mod-Lemmas p-2 p-prime
+open PrimeModulus p-2 p-prime
+open import N.Cosets p-2 p-prime
+open import N.Symplectic p-2 p-prime
+open Symplectic renaming (M to ZM)
+open import N.NF1-Sym p-2 p-prime
+open import N.LM-Sym p-2 p-prime
+
+open import N.Action p-2 p-prime
+open import N.Action-Lemmas p-2 p-prime
+open import Algebra.Properties.Ring (+-*-ring p-2)
+open import N.NF2-Sym p-2 p-prime
+open LM2
+
+
+open import Zp.ModularArithmetic
+open import N.Lemmas-2Qupit-Sym p-2 p-prime
+open import N.Lemmas-2Qupit-Sym3 p-2 p-prime
+open import N.NF2-Sym p-2 p-prime
+--open Lemmas-2Q 2
+
+open import N.NF1 p-2 p-prime
+open import N.Ex-Sym p-2 p-prime
+open import N.Ex-Sym1 p-2 p-prime
+open import N.Ex-Sym2 p-2 p-prime
+open import N.Ex-Sym3 p-2 p-prime
+open import N.Ex-Sym4 p-2 p-prime
+open import N.Ex-Sym5 p-2 p-prime hiding (module L0)
+open import N.Ex-Sym2n p-2 p-prime
+open import N.Ex-Sym3n p-2 p-prime
+
+open import N.Lemma-Comm-n p-2 p-prime 0
+open import N.Completeness1-Sym p-2 p-prime renaming (module Completeness to Cp1)
+open Lemmas0a
+open Lemmas0a1
+open Lemmas0b
+open Lemmas0c
+open Lemmas-Sym
+open Duality
+
+open import N.Completeness1-Sym p-2 p-prime renaming (module Completeness to CP1) using ()
+open import N.Coset2-Update-Sym p-2 p-prime renaming (module Completeness to CP2) using ()
+open import N.Lemmas4-Sym p-2 p-prime
+open import N.Lemmas-3Q p-2 p-prime
+open import N.Pushing.DH p-2 p-prime
+open import N.Duality p-2 p-prime
+open import N.BR2.Calculations p-2 p-prime
+open import N.BR2.One.A p-2 p-prime
+
+
+open PB ((₂₊ n) QRel,_===_)
+open PP ((₂₊ n) QRel,_===_)
+open SR word-setoid
+open Pattern-Assoc renaming (special-assoc to sa)
+open Lemmas0 n
+module L01 = Lemmas0 (₁₊ n)
+open Lemmas-2Q n
+open Sym0-Rewriting (₁₊ n)
+open Symplectic-GroupLike
+open Basis-Change _ ((₂₊ n) QRel,_===_) grouplike
+
+aux-CZ⁻¹-H-CZ^k : ∀ k -> CZ^ (- ₁) • H • CZ^ k ≈ H • S^ k ↑ • S^ (- k) • CX^ (- ₁) • S^ k
+aux-CZ⁻¹-H-CZ^k k = bbc (H ^ 5) ε claim
+  where
+  claim : H ^ 5 • (CZ^ (- ₁) • H • CZ^ k) • ε ≈ H ^ 5 • (H • S^ k ↑ • S^ (- k) • CX^ (- ₁) • S^ k) • ε
+  claim = begin
+    H ^ 5 • (CZ^ (- ₁) • H • CZ^ k) • ε ≈⟨ cong refl right-unit ⟩
+    H ^ 5 • (CZ^ (- ₁) • H • CZ^ k) ≈⟨ sa (□ ^ 5 • □ ^ 3) (□ ^ 3 • (□ ^ 2 • □) • □ ^ 2) auto ⟩
+    H ^ 3 • (H ^ 2 • CZ^ (- ₁)) • H • CZ^ k ≈⟨ cright cleft lemma-semi-CZ-HH↓' ⟩
+    H ^ 3 • (CZ • H ^ 2) • H • CZ^ k ≈⟨ cright sa (□ ^ 3 • □ ^ 2) (□ ^ 2 • □ ^ 2 • □) auto ⟩
+    H ^ 3 • (CZ • H) • H ^ 2 • CZ^ k ≈⟨ cright cright lemma-semi-HH↓-CZ^k' k ⟩
+    H ^ 3 • (CZ • H) • CZ^ (- k) • H ^ 2 ≈⟨ sa (□ • □ ^ 2 • □ ^ 2) ((□ ^ 3 • □) • □) auto ⟩
+    (CX • CZ^ (- k)) • H ^ 2 ≈⟨ cleft lemma-semi-CXCZ^-alt (- k) ⟩
+    (S^ (- k) • CX • S^ (- - k) • S^ (- - k) ↑) • H ^ 2 ≈⟨ cleft cright (cright refl' (Eq.cong (\ xx -> S^ xx • S^ xx ↑) (-‿involutive k))) ⟩
+    (S^ (- k) • CX • S^ k • S^ k ↑) • H ^ 2 ≈⟨ cleft cright cright lemma-comm-Sᵏ-w↑ (toℕ k) (S^ k) ⟩
+    (S^ (- k) • CX • S^ k ↑ • S^ k) • H ^ 2 ≈⟨ cleft sa (□ ^ 4) (□ • □ ^ 2 • □) auto ⟩
+    (S^ (- k) • (CX • S^ k ↑) • S^ k) • H ^ 2 ≈⟨ cleft cright cleft aux-comm-CX-S^k↑ k ⟩
+    (S^ (- k) • (S^ k ↑ • CX) • S^ k) • H ^ 2 ≈⟨ cleft sym (sa (□ ^ 2 • □ ^ 2) (□ • □ ^ 2 • □) auto) ⟩
+    ((S^ (- k) • S^ k ↑) • (CX • S^ k)) • H ^ 2 ≈⟨ cleft cleft lemma-comm-Sᵏ-w↑ (toℕ (- k)) (S^ k) ⟩
+    ((S^ k ↑ • S^ (- k)) • (CX • S^ k)) • H ^ 2 ≈⟨ sa (□ ^ 3 • □) (□ ^ 4) auto ⟩
+    (S^ k ↑ • S^ (- k)) • CX • S^ k • H ^ 2 ≈⟨ cright cright word-comm (toℕ k) 1 (sym (trans assoc (axiom comm-HHS))) ⟩
+    (S^ k ↑ • S^ (- k)) • CX • H ^ 2 • S^ k ≈⟨ sa (□ ^ 4) (□ • □ ^ 2 • □) auto ⟩
+    (S^ k ↑ • S^ (- k)) • (CX • H ^ 2) • S^ k ≈⟨ cright cleft sym lemma-semi-HH↓-CX⁻¹ ⟩
+    (S^ k ↑ • S^ (- k)) • (H ^ 2 • CX^ (- ₁)) • S^ k ≈⟨ sa (□ ^ 2 • □ ^ 2 • □) (□ • □ ^ 2 • □ ^ 2) auto ⟩
+    S^ k ↑ • (S^ (- k) • H ^ 2) • CX^ (- ₁) • S^ k ≈⟨  cright cleft word-comm (toℕ (- k)) 1 (sym (trans assoc (axiom comm-HHS))) ⟩
+    S^ k ↑ • (H ^ 2 • S^ (- k)) • CX^ (- ₁) • S^ k ≈⟨ sa (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto ⟩
+    (S^ k ↑ • H ^ 2) • S^ (- k) • CX^ (- ₁) • S^ k ≈⟨ cleft sym (lemma-comm-Hᵏ-w↑ 2 (S^ k)) ⟩
+    (H ^ 2 • S^ k ↑) • S^ (- k) • CX^ (- ₁) • S^ k ≈⟨ assoc ⟩
+    H ^ 2 • S^ k ↑ • S^ (- k) • CX^ (- ₁) • S^ k ≈⟨ cleft rewrite-sym0 100 auto ⟩
+    H ^ 6 • S^ k ↑ • S^ (- k) • CX^ (- ₁) • S^ k ≈⟨ sa (□ ^ 6 • □) (□ ^ 5 • □ ^ 2) auto ⟩
+    H ^ 5 • (H • S^ k ↑ • S^ (- k) • CX^ (- ₁) • S^ k) ≈⟨ cright sym right-unit ⟩
+    H ^ 5 • (H • S^ k ↑ • S^ (- k) • CX^ (- ₁) • S^ k) • ε ∎

@@ -1,0 +1,331 @@
+{-# OPTIONS  --safe #-}
+open import Relation.Nullary.Decidable using (via-injection)
+open import Relation.Binary.PropositionalEquality as Eq renaming ([_] to [_]') using ( _≡_ ; inspect)
+open import Relation.Binary using (IsEquivalence ; Setoid ; Rel)
+
+open import Data.Unit using (⊤ ; tt)
+open import Data.Sum using ([_,_] ; _⊎_ ; inj₁ ; inj₂)
+open import Data.Sum.Properties using (inj₁-injective)
+open import Data.Product using (_,_ ; _×_ ; proj₁ ; proj₂ ; map ; ∃)
+open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW
+open import Data.List hiding ([_]) renaming(map to lmap)
+open import Data.List.Properties using (span-defn ; takeWhile++dropWhile)
+
+open import Function.Definitions using (Injective ; Surjective)
+open import Function using (id) renaming (_∘_ to _∘'_)
+open import Function.Bundles using (Injection)
+
+open import Relation.Nullary.Decidable
+import Relation.Binary.Reasoning.Setoid as SR
+import Function.Construct.Composition as FCC
+
+
+open import Word.Base
+open import Word.Properties
+open import Presentation.Reidemeister-Schreier
+
+import Presentation.Base as PB
+import Presentation.Properties as PP
+open PP using (NFProperty ; NFProperty')
+
+module Presentation.ListNF where
+
+-- Definition of monoids that have a normalizing function.
+record ListNF {A : Set} (Γ : WRel A) : Set where
+  open PP Γ
+  open PB Γ
+  open SR word-setoid
+  field
+    listnf : List A -> List A
+    lemma-listnf : (xs : List A) -> from-list xs ≈ from-list (listnf xs)
+
+
+  -- We can use the normalizing function to show equality of monoid
+  -- elements.
+  listnfeq : {w v : List A} -> listnf w ≡ listnf v -> from-list w ≈ from-list v
+  listnfeq {w} {v} hyp =
+    begin from-list w ≈⟨ lemma-listnf w ⟩
+       from-list (listnf w) ≈⟨ refl' (Eq.cong from-list hyp) ⟩
+       from-list (listnf v) ≈⟨ lemma-listnf v reversed ⟩
+       from-list v ∎
+
+
+  listnfeq' : {w v : Word A} -> listnf (to-list w) ≡ listnf (to-list v) -> w ≈ v
+  listnfeq' {w} {v} hyp =
+    begin w ≈⟨ lemma-from-to reversed ⟩
+      from-list (to-list w) ≈⟨ lemma-listnf (to-list w) ⟩
+       from-list (listnf (to-list w)) ≈⟨ refl' (Eq.cong from-list hyp) ⟩
+       from-list (listnf (to-list v)) ≈⟨ lemma-listnf (to-list v) reversed ⟩
+       from-list (to-list v) ≈⟨ lemma-from-to ⟩
+       v ∎
+
+-- Expose ListNF. Also, using this special notation makes ListNF an
+-- instance record. Such technicalities are used to make the code look
+-- nicer.
+open ListNF {{...}} public
+
+open import Data.Bool
+open import Data.Nat
+open import Data.Product
+open import Relation.Unary
+
+
+mynf' : ∀ {A} {Γ : WRel A} {ℓ} {P : Pred A ℓ} -> (p : Decidable P) -> ℕ -> List A -> List A
+mynf' {A} {Γ} {ℓ} {P} p zero xs = xs
+mynf' {A} {Γ} {ℓ} {P} p (suc n) [] = []
+mynf' {A} {Γ} {ℓ} {P} p (suc n) (x ∷ xs) with does (p x)
+... | false = x ∷ mynf' {A} {Γ} {ℓ} {P} p n xs
+... | true with span p (x ∷ xs)
+... | (l , r) = l ++ mynf' {A} {Γ} {ℓ} {P} p n r
+
+lemma-mynf' : ∀ {A} {Γ : WRel A} {ℓ} {P : Pred A ℓ} -> let open PP Γ in let open PB Γ in
+  (p : Decidable P) -> (n : ℕ) -> (xs : List A) -> from-list xs ≈ from-list (mynf' {A} {Γ} {ℓ} {P} p n xs)
+lemma-mynf' {A} {Γ} {ℓ} {P} p zero xs = refl
+  where open PB Γ
+lemma-mynf' {A} {Γ} {ℓ} {P} p (suc n) [] = refl
+  where open PB Γ
+lemma-mynf' {A} {Γ} {ℓ} {P} p (suc n) (x ∷ xs) with does (p x)
+... | false = cright lemma-mynf' {A} {Γ} {ℓ} {P} p n xs
+  where
+    open PB Γ
+... | true with span p (x ∷ xs) | span-defn p (x ∷ xs)
+... | (l , r) | pr = d
+  where
+    open PB Γ
+    open PP Γ
+    open SR word-setoid
+    d :  [ x ]ʷ • from-list xs ≈ from-list ( l ++ mynf' {A} {Γ} {ℓ} {P} p n r)
+    d = begin
+      [ x ]ʷ • from-list xs ≈⟨ refl ⟩
+      from-list (x ∷ xs) ≈⟨ refl' (Eq.cong from-list (Eq.sym (takeWhile++dropWhile p (x ∷ xs)))) ⟩
+      from-list (takeWhile p (x ∷ xs) ++ dropWhile p (x ∷ xs)) ≈⟨ sym (refl' (Eq.cong from-list (Eq.cong₂ _++_ ( proj₁ (≡⇒≡×≡ pr)) (proj₂ (≡⇒≡×≡ pr))))) ⟩
+      from-list (l ++ r) ≈⟨ from-list-homo l r ⟩
+      from-list l • from-list r ≈⟨ cright lemma-mynf' {A} {Γ} {ℓ} {P} p n r ⟩
+      from-list l • from-list (mynf' {A} {Γ} {ℓ} {P} p n r) ≈⟨ cleft refl ⟩
+      from-list (l) • from-list (mynf' {A} {Γ} {ℓ} {P} p n r) ≈⟨ from-list-homo (l) (mynf' {A} {Γ} {ℓ} {P} p n r) reversed ⟩
+      from-list (l ++ mynf' {A} {Γ} {ℓ} {P} p n r) ∎
+
+open import Level
+open import Relation.Unary
+open import Relation.Nullary.Decidable
+open import Data.List.Relation.Unary.All
+
+wpred : ∀ {A} (P : Pred A 0ℓ) -> Pred (Word A) 0ℓ
+wpred {A} P [ x ]ʷ = P x
+wpred {A} P ε = ⊤
+wpred {A} P (w • w₁) = wpred P w × wpred P w₁
+
+extend-nfw : ∀ {A B} {Γ : WRel A} {Δ : WRel B} {P : Pred A 0ℓ} -> let open PB Γ in let open PP Γ in
+  (f : B -> Word A)
+  (finv : ∃[ x ] (wpred P x) -> Word B)
+  (f-wd-ax : ∀ {w v} -> Δ w v -> ((f *) w) ≈ ((f *) v))
+  (lem-finv : ∀ (wp : ∃[ x ] (wpred P x)) -> ((f *) ( (finv wp)) ≈ (wp .proj₁)))
+  -> (p : Decidable P) -> ListNF Δ -> ListNF Γ
+extend-nfw {A} {B} {Γ} {Δ} {P} f finv f-wd-ax lem-finv p record { listnf = nf ; lemma-listnf = lemma-nf } = record { listnf = mynf 200 ; lemma-listnf = lemma-mynf 200 }
+  where
+    open PB Γ
+    open PB Δ renaming (_≈_ to _≈₀_ ; sym to sym₀) using ()
+    open PP Δ renaming (to-list to to-list₀ ; from-list to from-list₀ ; word-setoid to ws₀ ; lemma-from-to to lemma-from-to₀) using ()
+    open PP Γ
+
+    import Presentation.Reidemeister-Schreier as RS
+    module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
+
+    -- Span a list according to a predicate p.
+    myspan : List A -> List A × List A
+    myspan xs = takeWhile p xs , dropWhile p xs
+
+    -- Lemma: put spanned lists together get the original list.
+    lemma-span : ∀ (xs : List A) -> let sp = span p xs in wpred P (from-list (proj₁ sp))
+    lemma-span [] = tt
+    lemma-span (h ∷ t) with (p h)
+    ... | yes pr = pr , lemma-span t
+    ... | no pr = tt
+    
+    mynf : ℕ -> List A -> List A
+    mynf zero xs = xs
+    mynf (suc n) [] = []
+    mynf (suc n) (x ∷ xs) with does (p x)
+    ... | false = x ∷ mynf n xs
+    ... | true = let (l , r) = span p (x ∷ xs) in
+      to-list (((f *)) ( (from-list₀ ∘' nf ∘' to-list₀) (finv (from-list l , lemma-span (x ∷ xs))))) ++ mynf n r
+
+    by-sub-nf₀ : ∀ {w v} -> w ≈₀ v -> (f *) w ≈ (f *) v
+    by-sub-nf₀ {w} {v} eq = RS.Star-Congruence.lemma-f*-cong Δ Γ f f-wd-ax eq 
+
+    lemma-nf₀ : ∀ {w} -> (from-list₀ ∘' nf ∘' to-list₀) w ≈₀ w
+    lemma-nf₀ {w} = begin
+     from-list₀ (nf (to-list₀ w)) ≈⟨ sym₀ (lemma-nf (to-list w)) ⟩
+     from-list₀ ((to-list₀ w)) ≈⟨ lemma-from-to₀ ⟩
+     w ∎
+     where open SR ws₀
+
+    lemma-mynf : (n : ℕ) -> (xs : List A) -> from-list xs ≈ from-list (mynf n xs)
+    lemma-mynf zero xs = refl
+    lemma-mynf (suc n) [] = refl
+    lemma-mynf (suc n) (x ∷ xs) with does (p x)
+    ... | false = cright lemma-mynf n xs
+    ... | true = let (l , r) = span p (x ∷ xs) in let pr = span-defn p (x ∷ xs) in begin
+          [ x ]ʷ • from-list xs ≈⟨ refl ⟩
+          from-list (x ∷ xs) ≈⟨ refl' (Eq.cong from-list (Eq.sym (takeWhile++dropWhile p (x ∷ xs)))) ⟩
+          from-list (takeWhile p (x ∷ xs) ++ dropWhile p (x ∷ xs)) ≈⟨ sym (refl' (Eq.cong from-list (Eq.cong₂ _++_ ( proj₁ (≡⇒≡×≡ pr)) (proj₂ (≡⇒≡×≡ pr))))) ⟩
+          from-list (l ++ r) ≈⟨ from-list-homo l r ⟩
+          from-list l • from-list r ≈⟨ cright lemma-mynf n r ⟩
+          from-list l • from-list (mynf n r) ≈⟨ sym (cleft  (lem-finv (from-list (span p (x ∷ xs) .proj₁) , lemma-span (x ∷ xs)))) ⟩
+           ((((f *)) ( (finv (from-list l , lemma-span (x ∷ xs)))))) • from-list (mynf n r) ≈⟨ sym (cleft  by-sub-nf₀ (lemma-nf₀{(finv (from-list l , lemma-span (x ∷ xs)))})) ⟩
+           ((((f *)) ((from-list₀ ∘' nf ∘' to-list₀) (finv (from-list l , lemma-span (x ∷ xs)))))) • from-list (mynf n r) ≈⟨  (cleft sym lemma-from-to) ⟩
+
+          from-list (to-list (((f *)) ( (from-list₀ ∘' nf ∘' to-list₀) (finv (from-list l , lemma-span (x ∷ xs)))))) • from-list (mynf n r) ≈⟨ from-list-homo (to-list (((f *)) ( (from-list₀ ∘' nf ∘' to-list₀)  (finv (from-list l , lemma-span (x ∷ xs)))))) (mynf n r) reversed ⟩
+          from-list ((to-list (((f *)) ( (from-list₀ ∘' nf ∘' to-list₀)  (finv (from-list l , lemma-span (x ∷ xs)))))) ++ mynf n r) ∎
+          where open SR word-setoid
+
+
+
+
+extend-nf' : ∀ {A B} {Γ : WRel A} {Δ : WRel B} {P : Pred A 0ℓ} -> let open PB Γ in let open PP Γ in
+  (f : B -> Word A)
+  (finv : ∃[ x ] (All P x) -> List B)
+  (f-wd : ∀ {w v} -> Δ w v -> ((f *) w) ≈ ((f *) v))
+  (lem-finv : ∀ (wp : ∃[ x ] (All P x)) -> ((f *) (from-list (finv wp)) ≡ from-list (wp .proj₁)))
+  -> (p : Decidable P) -> ListNF Δ -> ListNF Γ
+extend-nf' {A} {B} {Γ} {Δ} {P} f finv f-wd lem-finv p record { listnf = nf ; lemma-listnf = lemma-nf } = record { listnf = mynf 2000 ; lemma-listnf = lemma-mynf 2000 }
+  where
+    open PB Γ
+    open PB Δ renaming (_≈_ to _≈₀_) using ()
+    open PP Γ
+    open SR word-setoid
+
+    import Presentation.Reidemeister-Schreier as RS
+    module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
+
+    -- Span a list according to a predicate p.
+    myspan : List A -> List A × List A
+    myspan xs = takeWhile p xs , dropWhile p xs
+
+    -- Lemma: put spanned lists together get the original list.
+    lemma-span : ∀ (xs : List A) -> let sp = span p xs in All P (proj₁ sp)
+    lemma-span [] = []
+    lemma-span (h ∷ t) with (p h)
+    ... | yes pr = pr ∷ lemma-span t
+    ... | no pr = []
+    
+    mynf : ℕ -> List A -> List A
+    mynf zero xs = xs
+    mynf (suc n) [] = []
+    mynf (suc n) (x ∷ xs) with does (p x)
+    ... | false = x ∷ mynf n xs
+    ... | true = let (l , r) = span p (x ∷ xs) in
+      to-list (((f *)) (from-list (finv (l , lemma-span (x ∷ xs))))) ++ mynf n r
+
+    by-sub-nf₀ : ∀ {w v} -> w ≈₀ v -> (f *) w ≈ (f *) v
+    by-sub-nf₀ {w} {v} eq = RS.Star-Congruence.lemma-f*-cong Δ Γ f f-wd eq 
+
+
+    lemma-mynf : (n : ℕ) -> (xs : List A) -> from-list xs ≈ from-list (mynf n xs)
+    lemma-mynf zero xs = refl
+    lemma-mynf (suc n) [] = refl
+    lemma-mynf (suc n) (x ∷ xs) with does (p x)
+    ... | false = cright lemma-mynf n xs
+    ... | true = let (l , r) = span p (x ∷ xs) in let pr = span-defn p (x ∷ xs) in begin
+          [ x ]ʷ • from-list xs ≈⟨ refl ⟩
+          from-list (x ∷ xs) ≈⟨ refl' (Eq.cong from-list (Eq.sym (takeWhile++dropWhile p (x ∷ xs)))) ⟩
+          from-list (takeWhile p (x ∷ xs) ++ dropWhile p (x ∷ xs)) ≈⟨ sym (refl' (Eq.cong from-list (Eq.cong₂ _++_ ( proj₁ (≡⇒≡×≡ pr)) (proj₂ (≡⇒≡×≡ pr))))) ⟩
+          from-list (l ++ r) ≈⟨ from-list-homo l r ⟩
+          from-list l • from-list r ≈⟨ cright lemma-mynf n r ⟩
+          from-list l • from-list (mynf n r) ≈⟨ sym (cleft refl' (lem-finv (span p (x ∷ xs) .proj₁ , lemma-span (x ∷ xs)))) ⟩
+           ((((f *)) (from-list (finv (l , lemma-span (x ∷ xs)))))) • from-list (mynf n r) ≈⟨ sym (cleft lemma-from-to) ⟩
+          from-list (to-list (((f *)) (from-list (finv (l , lemma-span (x ∷ xs)))))) • from-list (mynf n r) ≈⟨ from-list-homo (to-list (((f *)) (from-list (finv (l , lemma-span (x ∷ xs)))))) (mynf n r) reversed ⟩
+          from-list ((to-list (((f *)) (from-list (finv (l , lemma-span (x ∷ xs)))))) ++ mynf n r) ∎
+
+
+-- The function extend-nf p nf repeatedly applies nf to the whole list
+-- while skipping some part of the list that is indicated by p.
+extend-nf : ∀ {A} {Γ : WRel A} {ℓ} {P : Pred A ℓ} -> (p : Decidable P) -> ListNF Γ -> ListNF Γ
+extend-nf {A} {Γ} p record { listnf = nf ; lemma-listnf = lemma-nf } = record { listnf = mynf 2000 ; lemma-listnf = lemma-mynf 2000 }
+  where
+    open PB Γ
+    open PP Γ
+    open SR word-setoid
+    
+    -- Span a list according to a predicate p.
+    myspan : List A -> List A × List A
+    myspan xs = takeWhile p xs , dropWhile p xs
+
+    -- -- Lemma: put spanned lists together get the original list.
+    -- lemma-span : ∀ {A : Set} -> (p : A -> Bool) -> (xs : List A) -> let sp = span p xs in xs ≡ proj₁ sp ++ proj₂ sp
+    -- lemma-span p [] = Eq.refl
+    -- lemma-span p (x ∷ xs) with p x
+    -- ... | false = Eq.refl
+    -- ... | true with span p xs | lemma-span p xs
+    -- ... | x₁ , x₂ | ihp rewrite ihp = Eq.refl
+
+    mynf : ℕ -> List A -> List A
+    mynf zero xs = xs
+    mynf (suc n) [] = []
+    mynf (suc n) (x ∷ xs) with does (p x)
+    ... | false = x ∷ mynf n xs
+    ... | true with span p (x ∷ xs)
+    ... | (l , r) = nf l ++ mynf n r
+
+    lemma-mynf : (n : ℕ) -> (xs : List A) -> from-list xs ≈ from-list (mynf n xs)
+    lemma-mynf zero xs = refl
+    lemma-mynf (suc n) [] = refl
+    lemma-mynf (suc n) (x ∷ xs) with does (p x)
+    ... | false = cright lemma-mynf n xs
+    ... | true with span p (x ∷ xs) | span-defn p (x ∷ xs)
+    ... | (l , r) | pr = d
+      where
+        d :  [ x ]ʷ • from-list xs ≈ from-list (nf l ++ mynf n r)
+        d = begin
+          [ x ]ʷ • from-list xs ≈⟨ refl ⟩
+          from-list (x ∷ xs) ≈⟨ refl' (Eq.cong from-list (Eq.sym (takeWhile++dropWhile p (x ∷ xs)))) ⟩
+          from-list (takeWhile p (x ∷ xs) ++ dropWhile p (x ∷ xs)) ≈⟨ sym (refl' (Eq.cong from-list (Eq.cong₂ _++_ ( proj₁ (≡⇒≡×≡ pr)) (proj₂ (≡⇒≡×≡ pr))))) ⟩
+          from-list (l ++ r) ≈⟨ from-list-homo l r ⟩
+          from-list l • from-list r ≈⟨ cright lemma-mynf n r ⟩
+          from-list l • from-list (mynf n r) ≈⟨ cleft lemma-nf l ⟩
+          from-list (nf l) • from-list (mynf n r) ≈⟨ from-list-homo (nf l) (mynf n r) reversed ⟩
+          from-list (nf l ++ mynf n r) ∎
+
+
+infixl 4 _∘_
+
+-- Composition of two normalizing functions.
+_∘_ : ∀ {A} {Γ : WRel A} -> ListNF Γ -> ListNF Γ -> ListNF Γ
+_∘_ {A} {Γ} record { listnf = listnf₁ ; lemma-listnf = lemma-listnf₁ } record { listnf = listnf ; lemma-listnf = lemma-listnf } = record { listnf = mynf ; lemma-listnf = lemma-mynf }
+  where
+    open PB Γ
+    open PP Γ
+  
+    mynf : List A -> List A
+    mynf xs = listnf₁ (listnf xs)
+
+    lemma-mynf : (xs : List A) -> from-list xs ≈ from-list (mynf xs)
+    lemma-mynf xs = trans (lemma-listnf xs) (lemma-listnf₁ (listnf xs))
+
+rep : ∀ {A} {Γ : WRel A} -> ℕ -> ListNF Γ -> ListNF Γ
+rep zero nf = nf
+rep (suc n) nf = nf ∘ rep n nf
+
+
+module Translation where 
+
+  listf-of-f : ∀ {A} {Γ : WRel A} (f : Word A -> Word A) -> List A -> List A
+  listf-of-f {A} {Γ} f xs = to-list (f (from-list xs))
+    where
+    open PB Γ
+    open PP Γ
+
+  lemma-listf-of-f : ∀ {A} {Γ : WRel A} {f : Word A -> Word A} -> let open PB Γ in let open PP Γ in
+    (pf : ∀ (w : Word A) -> w ≈ f w) -> (xs : List A) -> from-list xs ≈ from-list (listf-of-f {A} {Γ} f xs)
+  lemma-listf-of-f {A} {Γ} {f = f} pf xs =
+    begin from-list xs
+      ≈⟨  pf (from-list xs) ⟩
+    (f (from-list xs))
+      ≈⟨  lemma-from-to  reversed ⟩
+    from-list (to-list (f (from-list xs)))
+      ≈⟨ refl' (Eq.cong from-list Eq.refl) reversed ⟩
+    from-list (listf-of-f {A} {Γ} f xs) ∎
+    where
+    open PB Γ
+    open PP Γ
+    open SR word-setoid

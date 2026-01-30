@@ -1,0 +1,835 @@
+-- This module implements 'rewrite-clifford', a complete decision
+-- procedure for equality of 2-qubit Clifford operators.
+--
+-- This is done in a bootstrapping way: we first prove a small number
+-- of lemmas, then use these to define a rewrite relation, then use
+-- the rewrite relation to prove more lemmas, then define a more
+-- powerful rewrite relation, and so on.
+
+open import Boolean
+open import Proposition
+open import Equality as Eq using (_==_; auto)
+open import Decidable
+open import Nat
+open import Maybe
+open import List
+
+open import Word
+open import Generator
+open import Word-Lemmas
+open import Word-Tactics
+
+module Clifford-Lemmas where
+
+-- ----------------------------------------------------------------------
+-- * Clifford equations
+
+module Clifford where
+
+  -- We consider the Clifford subset of the equational theory. This
+  -- has the advantage that we can dualize any proof (i.e., exchange
+  -- the roles of the 1st and 2nd qubits) without having to worry
+  -- about non-Clifford relations (such as rel-A, rel-B, and rel-C,
+  -- the duals of which will be proved much later).
+
+  open Monoid-Subtheories
+  open Clifford+T
+
+  infix 5 CRel
+
+  -- The Clifford relations. For convenience, we still take all of the
+  -- Clifford+T generators, but we consider only Clifford relations.
+  -- In other words, the T-generators will be considered as abstract,
+  -- satisfying no relations (except commutativity with scalars).
+  data CRel : Context Clifford+T.Generator where
+    -- Monoidal structure.
+    comm-W : ∀ g -> CRel (W • gen g === gen g • W)
+    comm-H0-H1 : CRel (H0 • H1 === H1 • H0)
+    comm-H0-S1 : CRel (H0 • S1 === S1 • H0)
+    comm-S0-H1 : CRel (S0 • H1 === H1 • S0)
+    comm-S0-S1 : CRel (S0 • S1 === S1 • S0)
+
+    -- Order of elements.
+    order-W : CRel (W ^ 8 === ε)
+    order-H0 : CRel (H0 ^ 2 === ε)
+    order-H1 : CRel (H1 ^ 2 === ε)
+    order-S0 : CRel (S0 ^ 4 === ε)
+    order-S1 : CRel (S1 ^ 4 === ε)
+    order-S0H0 : CRel ((S0 • H0) ^ 3 === W)
+    order-S1H1 : CRel ((S1 • H1) ^ 3 === W)
+    order-CZ : CRel (CZ ^ 2 === ε)
+
+    -- Remaining Clifford relations.
+    comm-S0-CZ : CRel (S0 • CZ === CZ • S0)
+    comm-S1-CZ : CRel (S1 • CZ === CZ • S1)
+    rel-X0-CZ : CRel (X0 • CZ === CZ • S1 • S1 • X0)
+    rel-X1-CZ : CRel (X1 • CZ === CZ • S0 • S0 • X1)
+    rel-CZ-H0-CZ : CRel (CZ • H0 • CZ === S0 • H0 • CZ • S0 • H0 • S0 • S1 • W⁻¹)
+    rel-CZ-H1-CZ : CRel (CZ • H1 • CZ === S1 • H1 • CZ • S1 • H1 • S1 • S0 • W⁻¹)
+
+  -- Inclusion of the Clifford relations in the Clifford+T relations.
+  inclusion-gen : ∀ {E} -> CRel E -> Rel ⊢ E
+  inclusion-gen (comm-W g) = axiom (comm-W g)
+  inclusion-gen comm-H0-H1 = axiom comm-H0-H1
+  inclusion-gen comm-H0-S1 = axiom comm-H0-S1
+  inclusion-gen comm-S0-H1 = axiom comm-S0-H1
+  inclusion-gen comm-S0-S1 = axiom comm-S0-S1
+  inclusion-gen order-W = axiom order-W
+  inclusion-gen order-H0 = axiom order-H0
+  inclusion-gen order-H1 = axiom order-H1
+  inclusion-gen order-S0 = axiom order-S0
+  inclusion-gen order-S1 = axiom order-S1
+  inclusion-gen order-S0H0 = axiom order-S0H0
+  inclusion-gen order-S1H1 = axiom order-S1H1
+  inclusion-gen order-CZ = axiom order-CZ
+  inclusion-gen comm-S0-CZ = axiom comm-S0-CZ
+  inclusion-gen comm-S1-CZ = axiom comm-S1-CZ
+  inclusion-gen rel-X0-CZ = axiom rel-X0-CZ
+  inclusion-gen rel-X1-CZ = axiom rel-X1-CZ
+  inclusion-gen rel-CZ-H0-CZ = axiom rel-CZ-H0-CZ
+  inclusion-gen rel-CZ-H1-CZ = axiom rel-CZ-H1-CZ
+
+  inclusion : CRel ⊆ Rel
+  inclusion = lemma-⊆ inclusion-gen
+
+-- ----------------------------------------------------------------------
+-- * Data required for applying word tactics to Clifford generators
+
+module Clifford-Data where
+
+  open Monoid-Equational
+  open Clifford
+  open Clifford+T
+
+  -- Commutativity.
+  comm : (x y : Clifford+T.Generator) -> Maybe (commutes CRel x y)
+  comm W-gen y = Just (axiom (comm-W y))
+  comm y W-gen = Just (axiom (comm-W y) reversed)
+  comm H0-gen H1-gen = Just (axiom comm-H0-H1)
+  comm H0-gen S1-gen = Just (axiom comm-H0-S1)
+  comm H1-gen H0-gen = Just (axiom comm-H0-H1 reversed)
+  comm H1-gen S0-gen = Just (axiom comm-S0-H1 reversed)
+  comm S0-gen H1-gen = Just (axiom comm-S0-H1)
+  comm S0-gen S1-gen = Just (axiom comm-S0-S1)
+  comm S0-gen CZ-gen = Just (axiom comm-S0-CZ)
+  comm S1-gen H0-gen = Just (axiom comm-H0-S1 reversed)
+  comm S1-gen S0-gen = Just (axiom comm-S0-S1 reversed)
+  comm S1-gen CZ-gen = Just (axiom comm-S1-CZ)
+  comm CZ-gen S0-gen = Just (axiom comm-S0-CZ reversed)
+  comm CZ-gen S1-gen = Just (axiom comm-S1-CZ reversed)
+  comm x y = Nothing
+
+  -- We number the generators for the purpose of ordering them.
+  ord : Clifford+T.Generator -> Nat
+  ord W-gen = 0
+  ord H0-gen = 1
+  ord H1-gen = 2
+  ord S0-gen = 3
+  ord S1-gen = 4
+  ord T0-gen = 5
+  ord T1-gen = 6
+  ord CZ-gen = 7
+
+  -- Ordering of generators.
+  less : Clifford+T.Generator -> Clifford+T.Generator -> Boolean
+  less x y with ord x <=? ord y
+  less x y | yes _ = true
+  less x y | no _ = false
+
+module Commuting-Clifford = Commuting Clifford+T.Generator Clifford.CRel Clifford-Data.comm Clifford-Data.less
+
+-- ----------------------------------------------------------------------
+-- * Duality
+
+module Clifford-Duality where
+
+  -- Here, we provide a proof principle for duality (an equation is
+  -- provable iff its dual is provable).
+
+  open Monoid-Equational
+  open Clifford
+  open Clifford+T
+
+  -- Each generator has a dual, obtained by swapping the two qubits.
+  dual-gen : Clifford+T.Generator -> Clifford+T.Generator
+  dual-gen W-gen = W-gen
+  dual-gen H0-gen = H1-gen
+  dual-gen H1-gen = H0-gen
+  dual-gen S0-gen = S1-gen
+  dual-gen S1-gen = S0-gen
+  dual-gen T0-gen = T1-gen
+  dual-gen T1-gen = T0-gen
+  dual-gen CZ-gen = CZ-gen
+
+  -- Compute the dual of a word.
+  dual : Word Clifford+T.Generator -> Word Clifford+T.Generator
+  dual (gen x) = gen (dual-gen x)
+  dual ε = ε
+  dual (w • u) = dual w • dual u
+
+  -- Lemma: duality is an involution.
+  lemma-double-dual : ∀ w -> w == dual (dual w)
+  lemma-double-dual (gen W-gen) = Eq.refl
+  lemma-double-dual (gen H0-gen) = Eq.refl
+  lemma-double-dual (gen H1-gen) = Eq.refl
+  lemma-double-dual (gen S0-gen) = Eq.refl
+  lemma-double-dual (gen S1-gen) = Eq.refl
+  lemma-double-dual (gen T0-gen) = Eq.refl
+  lemma-double-dual (gen T1-gen) = Eq.refl
+  lemma-double-dual (gen CZ-gen) = Eq.refl
+  lemma-double-dual ε = Eq.refl
+  lemma-double-dual (w • v) = Eq.cong _•_ (lemma-double-dual w) (lemma-double-dual v)
+
+  -- Dualize a proof. Duality is useful early on. However, we will not
+  -- prove the duals of axioms rel-A, rel-B, and rel-C until much
+  -- later. Therefore, we work only with Clifford relations for the
+  -- time being.
+  lemma-dual : ∀ {w u} -> CRel ⊢ w === u -> CRel ⊢ dual w === dual u
+  lemma-dual (axiom (comm-W g)) = axiom (comm-W (dual-gen g))
+  lemma-dual (axiom comm-H0-H1) = axiom comm-H0-H1 reversed
+  lemma-dual (axiom comm-H0-S1) = axiom comm-S0-H1 reversed
+  lemma-dual (axiom comm-S0-H1) = axiom comm-H0-S1 reversed
+  lemma-dual (axiom comm-S0-S1) = axiom comm-S0-S1 reversed
+  lemma-dual (axiom order-W) = axiom order-W
+  lemma-dual (axiom order-H0) = axiom order-H1
+  lemma-dual (axiom order-H1) = axiom order-H0
+  lemma-dual (axiom order-S0) = axiom order-S1
+  lemma-dual (axiom order-S1) = axiom order-S0
+  lemma-dual (axiom order-S0H0) = axiom order-S1H1
+  lemma-dual (axiom order-S1H1) = axiom order-S0H0
+  lemma-dual (axiom order-CZ) = axiom order-CZ
+  lemma-dual (axiom comm-S0-CZ) = axiom comm-S1-CZ
+  lemma-dual (axiom comm-S1-CZ) = axiom comm-S0-CZ
+  lemma-dual (axiom rel-X0-CZ) = axiom rel-X1-CZ
+  lemma-dual (axiom rel-X1-CZ) = axiom rel-X0-CZ
+  lemma-dual (axiom rel-CZ-H0-CZ) = axiom rel-CZ-H1-CZ
+  lemma-dual (axiom rel-CZ-H1-CZ) = axiom rel-CZ-H0-CZ
+  lemma-dual refl = refl
+  lemma-dual (symm hyp) = symm (lemma-dual hyp)
+  lemma-dual (trans hyp hyp₁) = trans (lemma-dual hyp) (lemma-dual hyp₁)
+  lemma-dual (cong hyp hyp₁) = cong (lemma-dual hyp) (lemma-dual hyp₁)
+  lemma-dual assoc = assoc
+  lemma-dual left-unit = left-unit
+  lemma-dual right-unit = right-unit
+
+  -- A proof principle for duality.
+  by-duality : ∀ {w u} -> CRel ⊢ w === u -> CRel ⊢ dual w === dual u
+  by-duality = lemma-dual
+
+-- ----------------------------------------------------------------------
+-- * Lemmas
+
+module Clifford-Powers where
+
+  -- This module provides a rewrite system for reducing powers of
+  -- Clifford operators (for example, S⁴ → I). It also commutes
+  -- generators on different qubits (for example, H1 H0 → H0 H1).
+  -- Finally, it moves scalars to the end of the word. While this is
+  -- not yet a very powerful rewrite system, it is a useful
+  -- bootstrapping step.
+
+  open Monoid-Equational
+  open Rewriting
+  open InContext
+  open Clifford
+  open Associative
+  open Clifford+T
+
+  -- ----------------------------------------------------------------------
+  -- * Lemmas
+
+  -- The following lemmas are needed to justify the rewrite steps.
+
+  -- General commutativity for W.
+  lemma-comm-W : ∀ {g} -> CRel ⊢ W • g === g • W
+  lemma-comm-W {gen x} = axiom (Clifford.comm-W x)
+  lemma-comm-W {ε} = general-assoc auto
+  lemma-comm-W {g • h} =
+     equational W • (g • h)
+             by assoc reversed
+         equals (W • g) • h
+             by left lemma-comm-W
+         equals (g • W) • h
+             by assoc
+         equals g • (W • h)
+             by right lemma-comm-W
+         equals g • (h • W)
+             by assoc reversed
+         equals (g • h) • W
+
+  -- General commutativity for W ^ n.
+  lemma-comm-W-power : ∀ n {g} -> CRel ⊢ W ^ n • g === g • W ^ n
+  lemma-comm-W-power zero {g} = trans left-unit (right-unit reversed)
+  lemma-comm-W-power (succ zero) {g} = lemma-comm-W
+  lemma-comm-W-power (succ (succ n)) {g} =
+     equational (W • W ^ succ n) • g
+             by assoc
+         equals W • (W ^ succ n • g)
+             by right lemma-comm-W-power (succ n)
+         equals W • (g • W ^ succ n)
+             by assoc reversed
+         equals (W • g) • W ^ succ n
+             by left lemma-comm-W
+         equals (g • W) • W ^ succ n
+             by assoc
+         equals g • (W • W ^ succ n)
+
+  -- ----------------------------------------------------------------------
+  -- * Rewrite rules for monoidal structure and order of generators
+
+  step-order : Step-Function Clifford+T.Generator CRel
+
+  -- Order of generators.
+  step-order (S0-gen :: S0-gen :: S0-gen :: S0-gen :: xs) = Just (xs , at-head (axiom Clifford.order-S0))
+  step-order (H0-gen :: H0-gen :: xs) = Just (xs , at-head (axiom order-H0))
+  step-order (S1-gen :: S1-gen :: S1-gen :: S1-gen :: xs) = Just (xs , at-head (axiom Clifford.order-S1))
+  step-order (H1-gen :: H1-gen :: xs) = Just (xs , at-head (axiom order-H1))
+  step-order (CZ-gen :: CZ-gen :: xs) = Just (xs , at-head (axiom order-CZ))
+
+  -- Commuting rules for unary gates.
+  step-order (H1-gen :: H0-gen :: t) = Just (H0-gen :: H1-gen :: t , at-head (axiom comm-H0-H1 reversed))
+  step-order (H1-gen :: S0-gen :: t) = Just (S0-gen :: H1-gen :: t , at-head (axiom comm-S0-H1 reversed))
+  step-order (S1-gen :: H0-gen :: t) = Just (H0-gen :: S1-gen :: t , at-head (axiom comm-H0-S1 reversed))
+  step-order (S1-gen :: S0-gen :: t) = Just (S0-gen :: S1-gen :: t , at-head (axiom comm-S0-S1 reversed))
+  
+  step-order (W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: xs) = Just (xs , at-head (axiom order-W))
+  step-order (W-gen :: nil) = Nothing
+  step-order (W-gen :: W-gen :: t) = Nothing
+  step-order (W-gen :: xs) = Just (xs ++ (W-gen :: nil) , claim)
+    where
+      claim =
+        equational W • word-of-list xs
+                by lemma-comm-W
+            equals word-of-list xs • W
+                by general-assoc auto
+            equals word-of-list xs • W • ε
+                by lemma-append xs (W-gen :: nil)
+            equals word-of-list (xs ++ W-gen :: nil)
+   
+  -- Catch-all
+  step-order _ = Nothing
+
+  -- From this rewrite relation, we extract a tactic 'general-powers'.
+  open Rewriting.Step (step-cong step-order) renaming (general-rewrite to general-powers) public
+
+module Clifford-Rewriting1 where
+
+  -- This module provides a complete rewrite system for 1-qubit
+  -- Clifford operators. It is specialized toward relations on qubit 0
+  -- (but can also be applied to qubit 1 via duality).
+
+  open Monoid-Equational
+  open Commuting-Clifford
+  open Rewriting
+  open InContext
+  open Clifford
+  open Clifford-Duality
+  open Associative
+  open Clifford-Powers
+  open Clifford+T
+
+  -- ----------------------------------------------------------------------
+  -- * Lemmas
+
+  -- The following lemmas are needed to justify the rewrite steps.
+
+  lemma-S0-H0-S0-H0 : CRel ⊢ S0 • H0 • S0 • H0 === H0 • S0 • S0 • S0 • W
+  lemma-S0-H0-S0-H0 =
+      equational S0 • H0 • S0 • H0
+              by general-powers 10 auto
+          equals (S0 • H0) ^ 3 • (H0 • S0 • S0 • S0)
+              by left axiom order-S0H0
+          equals W • (H0 • S0 • S0 • S0)
+              by general-comm auto
+          equals H0 • S0 • S0 • S0 • W
+
+  lemma-H0-S0-H0-S0 : CRel ⊢ H0 • S0 • H0 • S0 === S0 • S0 • S0 • H0 • W
+  lemma-H0-S0-H0-S0 =
+      equational H0 • S0 • H0 • S0
+              by general-powers 10 auto
+                 equals S0⁻¹ • (S0 • H0) ^ 3 • H0
+              by right left axiom order-S0H0              
+          equals S0⁻¹ • W • H0
+              by general-comm auto
+          equals S0 • S0 • S0 • H0 • W
+
+  lemma-H0-S0-S0-S0-H0 : CRel ⊢ H0 • S0 • S0 • S0 • H0 === S0 • H0 • S0 • W ^ 7
+  lemma-H0-S0-S0-S0-H0 =
+      equational H0 • S0 • S0 • S0 • H0
+              by general-powers 10 auto
+          equals H0 • (S0 • S0 • S0 • H0 • W) • W⁻¹
+              by right left lemma-H0-S0-H0-S0 reversed
+          equals H0 • (H0 • S0 • H0 • S0) • W⁻¹
+              by general-powers 10 auto
+          equals S0 • H0 • S0 • W ^ 7
+
+  lemma-S0-H0-S0-S0-H0-S0 : CRel ⊢ S0 • H0 • S0 • S0 • H0 • S0 === H0 • S0 • S0 • H0 • W ^ 2
+  lemma-S0-H0-S0-S0-H0-S0 =
+      equational S0 • H0 • S0 • S0 • H0 • S0
+              by general-powers 10 auto
+          equals ((S0 • H0 • S0 • W ^ 7) • (S0 • H0 • S0 • W ^ 7)) • W ^ 2
+              by left cong lemma-H0-S0-S0-S0-H0 lemma-H0-S0-S0-S0-H0 reversed
+          equals ((H0 • S0 • S0 • S0 • H0) • (H0 • S0 • S0 • S0 • H0)) • W ^ 2
+              by general-powers 10 auto
+          equals H0 • S0 • S0 • H0 • W ^ 2
+
+  lemma-H0-S0-S0-H0-S0-S0 : CRel ⊢ H0 • S0 • S0 • H0 • S0 • S0 === S0 • S0 • H0 • S0 • S0 • H0 • W ^ 4
+  lemma-H0-S0-S0-H0-S0-S0 =
+      equational H0 • S0 • S0 • H0 • S0 • S0
+              by general-powers 10 auto
+          equals (H0 • S0) • (S0 • H0 • S0 • W ^ 7) • (S0 • W)
+              by right left lemma-H0-S0-S0-S0-H0 reversed
+          equals (H0 • S0) • (H0 • S0 • S0 • S0 • H0) • (S0 • W)
+              by general-assoc auto
+          equals (H0 • S0 • H0 • S0) • (S0 • S0 • H0 • S0 • W)
+              by left lemma-H0-S0-H0-S0
+          equals (S0 • S0 • S0 • H0 • W) • (S0 • S0 • H0 • S0 • W)
+              by general-comm auto
+          equals (S0 • S0) • (S0 • H0 • S0 • S0 • H0 • S0) • W ^ 2
+              by right left lemma-S0-H0-S0-S0-H0-S0
+          equals (S0 • S0) • (H0 • S0 • S0 • H0 • W ^ 2) • W ^ 2
+              by general-comm auto
+          equals S0 • S0 • H0 • S0 • S0 • H0 • W ^ 4
+
+  lemma-S0-S0-S0-H0-S0-S0-H0 : CRel ⊢ S0 • S0 • S0 • H0 • S0 • S0 • H0 === H0 • S0 • S0 • H0 • S0 • W ^ 6
+  lemma-S0-S0-S0-H0-S0-S0-H0 =
+      equational S0 • S0 • S0 • H0 • S0 • S0 • H0
+              by general-powers 10 auto
+          equals (S0 • S0 • S0 • H0 • W) • (S0 • S0 • H0 • W • W ^ 6)
+              by left lemma-H0-S0-H0-S0 reversed
+          equals (H0 • S0 • H0 • S0) • (S0 • S0 • H0 • W • W ^ 6)
+              by general-assoc auto
+          equals (H0 • S0 • H0) • (S0 • S0 • S0 • H0 • W) • W ^ 6
+              by right left lemma-H0-S0-H0-S0 reversed
+          equals (H0 • S0 • H0) • (H0 • S0 • H0 • S0) • W ^ 6
+              by general-powers 10 auto
+          equals H0 • S0 • S0 • H0 • S0 • W ^ 6
+
+  lemma-S0-S0-S0-H0-S0-S0-S0 : CRel ⊢ S0 • S0 • S0 • H0 • S0 • S0 • S0 === H0 • S0 • H0 • W ^ 7
+  lemma-S0-S0-S0-H0-S0-S0-S0 =
+      equational S0 • S0 • S0 • H0 • S0 • S0 • S0
+              by general-powers 10 auto
+          equals (S0 • S0 • S0) • (H0 • S0 • S0 • S0 • W) • W ^ 7
+              by right left lemma-S0-H0-S0-H0 reversed
+          equals (S0 • S0 • S0) • (S0 • H0 • S0 • H0) • W ^ 7
+              by general-powers 10 auto
+          equals H0 • S0 • H0 • W ^ 7
+
+  -- ----------------------------------------------------------------------
+  -- * Rewrite rules for 1-qubit Clifford relations
+  
+  step-clifford1 : Step-Function Clifford+T.Generator CRel
+
+  -- Rules for unary gates.
+  step-clifford1 (H0-gen :: H0-gen :: t) = Just (t , at-head (axiom order-H0))
+  step-clifford1 (S0-gen :: S0-gen :: S0-gen :: S0-gen :: t) = Just (t , at-head (axiom order-S0))
+  step-clifford1 (S0-gen :: H0-gen :: S0-gen :: H0-gen :: t) = Just (H0-gen :: S0-gen :: S0-gen :: S0-gen :: W-gen :: t , at-head lemma-S0-H0-S0-H0)
+  step-clifford1 (H0-gen :: S0-gen :: H0-gen :: S0-gen :: t) = Just (S0-gen :: S0-gen :: S0-gen :: H0-gen :: W-gen :: t , at-head lemma-H0-S0-H0-S0)
+  step-clifford1 (H0-gen :: S0-gen :: S0-gen :: S0-gen :: H0-gen :: t) = Just (S0-gen :: H0-gen :: S0-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: t , at-head lemma-H0-S0-S0-S0-H0)
+  step-clifford1 (S0-gen :: H0-gen :: S0-gen :: S0-gen :: H0-gen :: S0-gen :: t) = Just (H0-gen :: S0-gen :: S0-gen :: H0-gen :: W-gen :: W-gen :: t , at-head lemma-S0-H0-S0-S0-H0-S0)
+  step-clifford1 (H0-gen :: S0-gen :: S0-gen :: H0-gen :: S0-gen :: S0-gen :: t) = Just (S0-gen :: S0-gen :: H0-gen :: S0-gen :: S0-gen :: H0-gen :: W-gen :: W-gen :: W-gen :: W-gen :: t , at-head lemma-H0-S0-S0-H0-S0-S0)
+  step-clifford1 (S0-gen :: S0-gen :: S0-gen :: H0-gen :: S0-gen :: S0-gen :: H0-gen :: t) = Just (H0-gen :: S0-gen :: S0-gen :: H0-gen :: S0-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: t , at-head lemma-S0-S0-S0-H0-S0-S0-H0)
+  step-clifford1 (S0-gen :: S0-gen :: S0-gen :: H0-gen :: S0-gen :: S0-gen :: S0-gen :: t) = Just (H0-gen :: S0-gen :: H0-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: t , at-head lemma-S0-S0-S0-H0-S0-S0-S0)
+
+  step-clifford1 (H1-gen :: H1-gen :: t) = Just (t , at-head (axiom order-H1))
+  step-clifford1 (S1-gen :: S1-gen :: S1-gen :: S1-gen :: t) = Just (t , at-head (axiom order-S1))
+  step-clifford1 (S1-gen :: H1-gen :: S1-gen :: H1-gen :: t) = Just (H1-gen :: S1-gen :: S1-gen :: S1-gen :: W-gen :: t , at-head (by-duality lemma-S0-H0-S0-H0))
+  step-clifford1 (H1-gen :: S1-gen :: H1-gen :: S1-gen :: t) = Just (S1-gen :: S1-gen :: S1-gen :: H1-gen :: W-gen :: t , at-head (by-duality lemma-H0-S0-H0-S0))
+  step-clifford1 (H1-gen :: S1-gen :: S1-gen :: S1-gen :: H1-gen :: t) = Just (S1-gen :: H1-gen :: S1-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: t , at-head (by-duality lemma-H0-S0-S0-S0-H0))
+  step-clifford1 (S1-gen :: H1-gen :: S1-gen :: S1-gen :: H1-gen :: S1-gen :: t) = Just (H1-gen :: S1-gen :: S1-gen :: H1-gen :: W-gen :: W-gen :: t , at-head (by-duality lemma-S0-H0-S0-S0-H0-S0))
+  step-clifford1 (H1-gen :: S1-gen :: S1-gen :: H1-gen :: S1-gen :: S1-gen :: t) = Just (S1-gen :: S1-gen :: H1-gen :: S1-gen :: S1-gen :: H1-gen :: W-gen :: W-gen :: W-gen :: W-gen :: t , at-head (by-duality lemma-H0-S0-S0-H0-S0-S0))
+  step-clifford1 (S1-gen :: S1-gen :: S1-gen :: H1-gen :: S1-gen :: S1-gen :: H1-gen :: t) = Just (H1-gen :: S1-gen :: S1-gen :: H1-gen :: S1-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: t , at-head (by-duality lemma-S0-S0-S0-H0-S0-S0-H0))
+  step-clifford1 (S1-gen :: S1-gen :: S1-gen :: H1-gen :: S1-gen :: S1-gen :: S1-gen :: t) = Just (H1-gen :: S1-gen :: H1-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: t , at-head (by-duality lemma-S0-S0-S0-H0-S0-S0-S0))
+
+  -- Catch-all
+  step-clifford1 _ = Nothing
+
+  -- From this rewrite relation, we extract a tactic 'rewrite-clifford1'.
+  open Rewriting.Step (step-cong step-order then step-cong step-clifford1) renaming (general-rewrite to rewrite-clifford1) public
+
+module Clifford-Rewriting where
+
+  -- This module provides a complete rewrite system for 2-qubit
+  -- Clifford operators.
+
+  open Monoid-Equational
+  open Associative
+  open Commuting-Clifford
+  open Rewriting
+  open InContext
+  open Clifford
+  open Clifford-Duality
+  open Clifford+T
+  open Clifford-Powers
+  open Clifford-Rewriting1
+
+  -- ----------------------------------------------------------------------
+  -- * More lemmas
+  
+  -- The following lemmas are needed to justify the rewrite steps.
+
+  lemma-S0-S0-H0-CZ : CRel ⊢ S0 • S0 • H0 • CZ === H0 • CZ • X0 • S1 • S1
+  lemma-S0-S0-H0-CZ =
+      equational S0 • S0 • H0 • CZ
+              by rewrite-clifford1 10 auto
+          equals H0 • (X0 • CZ)
+              by right axiom rel-X0-CZ
+          equals H0 • (CZ • S1 • S1 • X0)
+              by rewrite-clifford1 10 auto
+          equals H0 • CZ • X0 • S1 • S1
+
+  lemma-H0-S0-H0-CZ : CRel ⊢ H0 • S0 • H0 • CZ === S0 • H0 • CZ • S0 • X0 • S1 • S1 • W⁻¹
+  lemma-H0-S0-H0-CZ =
+      equational H0 • S0 • H0 • CZ
+              by rewrite-clifford1 10 auto
+          equals S0 • S0 • S0 • H0 • S0 • S0 • S0 • W • CZ
+              by general-comm auto
+          equals S0 • (S0 • S0 • H0 • CZ) • (S0 • S0 • S0 • W)
+              by right left lemma-S0-S0-H0-CZ
+          equals S0 • (H0 • CZ • X0 • S1 • S1) • (S0 • S0 • S0 • W)
+              by rewrite-clifford1 20 auto
+          equals S0 • H0 • CZ • S0 • X0 • S1 • S1 • W⁻¹
+
+  lemma-S0-H0-CZ-H0-H1-CZ : CRel ⊢ S0 • H0 • CZ • H0 • H1 • CZ === H0 • CZ • H0 • H1 • CZ • H1 • S1 • H1
+  lemma-S0-H0-CZ-H0-H1-CZ =
+      equational S0 • H0 • CZ • H0 • H1 • CZ
+              by general-powers 10 auto
+          equals (S0 • H0) • (CZ • H0 • CZ) • (CZ • H1 • CZ)
+              by right left axiom rel-CZ-H0-CZ
+          equals (S0 • H0) • (S0 • H0 • CZ • S0 • H0 • S0 • S1 • W⁻¹) • (CZ • H1 • CZ)
+              by rewrite-clifford1 10 auto
+          equals H0 • S0 • S0 • S0 • CZ • S0 • H0 • S0 • S1 • CZ • H1 • CZ
+              by general-comm auto
+          equals H0 • CZ • S0 • S0 • S0 • S0 • H0 • S0 • S1 • CZ • H1 • CZ
+              by rewrite-clifford1 10 auto
+          equals (H0 • CZ • H0 • S0 • S1) • (CZ • H1 • CZ)
+              by right axiom rel-CZ-H1-CZ
+          equals (H0 • CZ • H0 • S0 • S1) • (S1 • H1 • CZ • S1 • H1 • S1 • S0 • W⁻¹)
+              by general-assoc auto
+          equals (H0 • CZ • H0 • S0) • (S1 • S1 • H1 • CZ) • (S1 • H1 • S1 • S0 • W⁻¹)
+              by right left by-duality lemma-S0-S0-H0-CZ
+          equals (H0 • CZ • H0 • S0) • (H1 • CZ • X1 • S0 • S0) • (S1 • H1 • S1 • S0 • W⁻¹)
+              by general-comm auto
+          equals H0 • CZ • H0 • H1 • CZ • S0 •  X1 • S0 • S0 • S1 • H1 • S1 • S0 • W⁻¹
+              by rewrite-clifford1 30 auto
+          equals H0 • CZ • H0 • H1 • CZ • H1 • S1 • H1
+
+  lemma-H0-CZ-S0-H0-H1-CZ : CRel ⊢ H0 • CZ • S0 • H0 • H1 • CZ === CZ • S0 • H0 • H1 • CZ • H0 • S0 • S0 • H0 • S1 • S1 • S1 • H1 • S1
+  lemma-H0-CZ-S0-H0-H1-CZ =
+      equational H0 • CZ • S0 • H0 • H1 • CZ
+              by general-comm auto
+          equals H0 • S0 • CZ • H0 • H1 • CZ
+              by general-powers 10 auto
+          equals (H0 • S0) • (CZ • H0 • CZ) • (CZ • H1 • CZ)
+              by right left axiom rel-CZ-H0-CZ
+          equals (H0 • S0) • (S0 • H0 • CZ • S0 • H0 • S0 • S1 • W⁻¹) • (CZ • H1 • CZ)
+              by general-assoc auto
+          equals (X0 • CZ) • (S0 • H0 • S0 • S1 • W⁻¹ • CZ • H1 • CZ)
+              by left axiom rel-X0-CZ
+          equals (CZ • S1 • S1 • X0) • (S0 • H0 • S0 • S1 • W⁻¹ • CZ • H1 • CZ)
+              by rewrite-clifford1 30 auto
+          equals (CZ • H0 • S0 • H0 • S1 • S1 • S1) • (CZ • H1 • CZ)
+              by right axiom rel-CZ-H1-CZ
+          equals (CZ • H0 • S0 • H0 • S1 • S1 • S1) • (S1 • H1 • CZ • S1 • H1 • S1 • S0 • W⁻¹)
+              by general-powers 10 auto
+          equals (CZ • H1) • (H0 • S0 • H0 • CZ) • (S1 • H1 • S1 • S0 • W⁻¹)
+              by right left lemma-H0-S0-H0-CZ
+          equals (CZ • H1) • (S0 • H0 • CZ • S0 • X0 • S1 • S1 • W⁻¹) • (S1 • H1 • S1 • S0 • W⁻¹)
+              by rewrite-clifford1 20 auto
+          equals CZ • S0 • H0 • H1 • CZ • H0 • S0 • S0 • H0 • S1 • S1 • S1 • H1 • S1
+
+  lemma-H0-CZ-H0-H1-CZ-H0-H1-CZ : CRel ⊢ H0 • CZ • H0 • H1 • CZ • H0 • H1 • CZ === CZ • H0 • H1 • CZ • H0 • H1 • CZ • H1
+  lemma-H0-CZ-H0-H1-CZ-H0-H1-CZ =
+      equational H0 • CZ • H0 • H1 • CZ • H0 • H1 • CZ
+              by general-powers 10 auto
+          equals (H0 • CZ • H0 • H1) • (CZ • H0 • CZ) • (CZ • H1 • CZ)
+              by right left axiom rel-CZ-H0-CZ
+          equals (H0 • CZ • H0 • H1) • (S0 • H0 • CZ • S0 • H0 • S0 • S1 • W⁻¹) • (CZ • H1 • CZ)
+              by general-comm auto
+          equals (H0 • CZ • H1) • (H0 • S0 • H0 • CZ) • (S0 • H0 • S0 • S1 • W⁻¹ • CZ • H1 • CZ)
+              by right left lemma-H0-S0-H0-CZ
+          equals (H0 • CZ • H1) • (S0 • H0 • CZ • S0 • X0 • S1 • S1 • W⁻¹) • (S0 • H0 • S0 • S1 • W⁻¹ • CZ • H1 • CZ)
+              by general-comm auto
+          equals (H0 • CZ • S0 • H0 • H1 • CZ) • (S0 • X0 • S1 • S1 • W⁻¹ • S0 • H0 • S0 • S1 • W⁻¹ • CZ • H1 • CZ)
+              by left lemma-H0-CZ-S0-H0-H1-CZ
+          equals (CZ • S0 • H0 • H1 • CZ • H0 • S0 • S0 • H0 • S1 • S1 • S1 • H1 • S1) • (S0 • X0 • S1 • S1 • W⁻¹ • S0 • H0 • S0 • S1 • W⁻¹ • CZ • H1 • CZ)
+              by rewrite-clifford1 70 auto
+          equals CZ • S0 • H0 • H1 • CZ • H0 • S0 • S1 • S1 • S1 • H1 • CZ • H1 • CZ
+              by general-comm auto
+          equals (CZ • H1 • S1 • S1 • S1) • (S0 • H0 • CZ • H0 • H1 • CZ) • (S0 • H1 • CZ)
+              by right left lemma-S0-H0-CZ-H0-H1-CZ
+          equals (CZ • H1 • S1 • S1 • S1) • (H0 • CZ • H0 • H1 • CZ • H1 • S1 • H1) • (S0 • H1 • CZ)
+              by general-powers 10 auto
+          equals CZ • H1 • S1 • S1 • S1 • H0 • CZ • H0 • H1 • CZ • H1 • S1 • S0 • CZ
+              by general-comm auto
+          equals (CZ • H1 • S1 • S1 • S1 • H0 • CZ • H0 • H1) • (CZ • H1 • CZ) • (S0 • S1)
+              by right left axiom rel-CZ-H1-CZ
+          equals (CZ • H1 • S1 • S1 • S1 • H0 • CZ • H0 • H1) • (S1 • H1 • CZ • S1 • H1 • S1 • S0 • W⁻¹) • (S0 • S1)
+              by general-comm auto
+          equals CZ • H1 • H0 • CZ • H0 • S1 • S1 • S1 • H1 • S1 • H1 • S1 • CZ • H1 • S1 • S0 • W⁻¹ • S0 • S1
+              by rewrite-clifford1 20 auto
+          equals (CZ • H1 • H0 • CZ • H0) • (S1 • S1 • H1 • CZ) • (H1 • S1 • S0 • S0 • S1)
+              by right left by-duality lemma-S0-S0-H0-CZ
+          equals (CZ • H1 • H0 • CZ • H0) • (H1 • CZ • X1 • S0 • S0) • (H1 • S1 • S0 • S0 • S1)
+              by rewrite-clifford1 20 auto
+          equals CZ • H0 • H1 • CZ • H0 • H1 • CZ • H1
+
+  lemma-S0-H1-CZ : CRel ⊢ S0 • H1 • CZ === H1 • CZ • S0
+  lemma-S0-H1-CZ = general-comm auto
+
+  lemma-S0-S1-H1-CZ : CRel ⊢ S0 • S1 • H1 • CZ === S1 • H1 • CZ • S0
+  lemma-S0-S1-H1-CZ = general-comm auto
+
+  lemma-S1-S1-H1-CZ : CRel ⊢ S1 • S1 • H1 • CZ === H1 • CZ • S0 • S0 • X1
+  lemma-S1-S1-H1-CZ =
+      equational S1 • S1 • H1 • CZ
+              by by-duality lemma-S0-S0-H0-CZ
+          equals H1 • CZ • X1 • S0 • S0
+              by general-comm auto
+          equals H1 • CZ • S0 • S0 • X1
+
+  lemma-S0-S0-H0-H1-CZ : CRel ⊢ S0 • S0 • H0 • H1 • CZ === H0 • H1 • CZ • X0 • S1 • S1
+  lemma-S0-S0-H0-H1-CZ =
+      equational S0 • S0 • H0 • H1 • CZ
+              by general-comm auto
+          equals H1 • (S0 • S0 • H0 • CZ)
+              by right lemma-S0-S0-H0-CZ
+          equals H1 • (H0 • CZ • X0 • S1 • S1)
+              by general-comm auto
+          equals H0 • H1 • CZ • X0 • S1 • S1
+
+  lemma-S0-S0-H0-S1-H1-CZ : CRel ⊢ S0 • S0 • H0 • S1 • H1 • CZ === H0 • S1 • H1 • CZ • X0 • S1 • S1
+  lemma-S0-S0-H0-S1-H1-CZ =
+      equational S0 • S0 • H0 • S1 • H1 • CZ
+              by general-comm auto
+          equals (S1 • H1) • (S0 • S0 • H0 • CZ)
+              by right lemma-S0-S0-H0-CZ
+          equals (S1 • H1) • (H0 • CZ • X0 • S1 • S1)
+              by general-comm auto
+          equals H0 • S1 • H1 • CZ • X0 • S1 • S1
+
+  lemma-H1-S1-H1-CZ : CRel ⊢ H1 • S1 • H1 • CZ === S1 • H1 • CZ • S0 • S0 • S1 • X1 • W⁻¹
+  lemma-H1-S1-H1-CZ =
+      equational H1 • S1 • H1 • CZ
+              by by-duality lemma-H0-S0-H0-CZ
+          equals S1 • H1 • CZ • S1 • X1 • S0 • S0 • W⁻¹
+              by general-comm auto
+          equals S1 • H1 • CZ • S0 • S0 • S1 • X1 • W⁻¹
+
+  lemma-H0-S0-H0-H1-CZ : CRel ⊢ H0 • S0 • H0 • H1 • CZ === S0 • H0 • H1 • CZ • S0 • X0 • S1 • S1 • W⁻¹
+  lemma-H0-S0-H0-H1-CZ =
+      equational H0 • S0 • H0 • H1 • CZ
+              by general-comm auto
+          equals H1 • (H0 • S0 • H0 • CZ)
+              by right lemma-H0-S0-H0-CZ
+          equals H1 • (S0 • H0 • CZ • S0 • X0 • S1 • S1 • W⁻¹)
+              by general-comm auto
+          equals S0 • H0 • H1 • CZ • S0 • X0 • S1 • S1 • W⁻¹
+      
+  lemma-H0-S0-H0-S1-H1-CZ : CRel ⊢ H0 • S0 • H0 • S1 • H1 • CZ === S0 • H0 • S1 • H1 • CZ • S0 • X0 • S1 • S1 • W⁻¹
+  lemma-H0-S0-H0-S1-H1-CZ =
+      equational H0 • S0 • H0 • S1 • H1 • CZ
+              by general-comm auto
+          equals (S1 • H1) • (H0 • S0 • H0 • CZ)
+              by right lemma-H0-S0-H0-CZ
+          equals (S1 • H1) • (S0 • H0 • CZ • S0 • X0 • S1 • S1 • W⁻¹)
+              by general-comm auto
+          equals S0 • H0 • S1 • H1 • CZ • S0 • X0 • S1 • S1 • W⁻¹
+
+  lemma-S1-H1-CZ-H0-H1-CZ : CRel ⊢ S1 • H1 • CZ • H0 • H1 • CZ === H1 • CZ • H0 • H1 • CZ • H0 • S0 • H0
+  lemma-S1-H1-CZ-H0-H1-CZ =
+      equational S1 • H1 • CZ • H0 • H1 • CZ
+              by general-comm auto
+          equals S1 • H1 • CZ • H1 • H0 • CZ
+              by by-duality lemma-S0-H0-CZ-H0-H1-CZ
+          equals H1 • CZ • H1 • H0 • CZ • H0 • S0 • H0
+              by general-comm auto
+          equals H1 • CZ • H0 • H1 • CZ • H0 • S0 • H0
+  
+  lemma-S1-H1-CZ-S0-H0-H1-CZ : CRel ⊢ S1 • H1 • CZ • S0 • H0 • H1 • CZ === H1 • CZ • S0 • H0 • H1 • CZ • H0 • S0 • H0
+  lemma-S1-H1-CZ-S0-H0-H1-CZ =
+      equational S1 • H1 • CZ • S0 • H0 • H1 • CZ
+              by general-comm auto
+          equals S0 • (S1 • H1 • CZ • H1 • H0 • CZ)
+              by right by-duality lemma-S0-H0-CZ-H0-H1-CZ
+          equals S0 • (H1 • CZ • H1 • H0 • CZ • H0 • S0 • H0)
+              by general-comm auto
+          equals H1 • CZ • S0 • H0 • H1 • CZ • H0 • S0 • H0
+  
+  lemma-S0-H0-H1-CZ-H0-H1-CZ : CRel ⊢ S0 • H0 • H1 • CZ • H0 • H1 • CZ === H0 • H1 • CZ • H0 • H1 • CZ • H1 • S1 • H1
+  lemma-S0-H0-H1-CZ-H0-H1-CZ =
+      equational S0 • H0 • H1 • CZ • H0 • H1 • CZ
+              by general-comm auto
+          equals H1 • (S0 • H0 • CZ • H0 • H1 • CZ)
+              by right lemma-S0-H0-CZ-H0-H1-CZ
+          equals H1 • (H0 • CZ • H0 • H1 • CZ • H1 • S1 • H1)
+              by general-comm auto
+          equals H0 • H1 • CZ • H0 • H1 • CZ • H1 • S1 • H1
+
+  lemma-S0-H0-CZ-H0-S1-H1-CZ : CRel ⊢ S0 • H0 • CZ • H0 • S1 • H1 • CZ === H0 • CZ • H0 • S1 • H1 • CZ • H1 • S1 • H1
+  lemma-S0-H0-CZ-H0-S1-H1-CZ =
+      equational S0 • H0 • CZ • H0 • S1 • H1 • CZ
+              by general-comm auto
+          equals S1 • (S0 • H0 • CZ • H0 • H1 • CZ)
+              by right lemma-S0-H0-CZ-H0-H1-CZ
+          equals S1 • (H0 • CZ • H0 • H1 • CZ • H1 • S1 • H1)
+              by general-comm auto
+          equals H0 • CZ • H0 • S1 • H1 • CZ • H1 • S1 • H1
+  
+  lemma-H1-CZ-H0-S1-H1-CZ : CRel ⊢ H1 • CZ • H0 • S1 • H1 • CZ === CZ • H0 • S1 • H1 • CZ • S0 • S0 • S0 • H0 • S0 • H1 • S1 • S1 • H1
+  lemma-H1-CZ-H0-S1-H1-CZ =
+      equational H1 • CZ • H0 • S1 • H1 • CZ
+              by general-comm auto
+          equals H1 • CZ • S1 • H1 • H0 • CZ
+              by by-duality lemma-H0-CZ-S0-H0-H1-CZ
+          equals CZ • S1 • H1 • H0 • CZ • H1 • S1 • S1 • H1 • S0 • S0 • S0 • H0 • S0
+              by general-comm auto
+          equals CZ • H0 • S1 • H1 • CZ • S0 • S0 • S0 • H0 • S0 • H1 • S1 • S1 • H1
+
+  lemma-H1-CZ-S0-H0-S1-H1-CZ : CRel ⊢ H1 • CZ • S0 • H0 • S1 • H1 • CZ === CZ • S0 • H0 • S1 • H1 • CZ • S0 • S0 • S0 • H0 • S0 • H1 • S1 • S1 • H1
+  lemma-H1-CZ-S0-H0-S1-H1-CZ =
+      equational H1 • CZ • S0 • H0 • S1 • H1 • CZ
+              by general-comm auto
+          equals S0 • (H1 • CZ • S1 • H1 • H0 • CZ)
+              by right by-duality lemma-H0-CZ-S0-H0-H1-CZ
+          equals S0 • (CZ • S1 • H1 • H0 • CZ • H1 • S1 • S1 • H1 • S0 • S0 • S0 • H0 • S0)
+              by general-comm auto
+          equals CZ • S0 • H0 • S1 • H1 • CZ • S0 • S0 • S0 • H0 • S0 • H1 • S1 • S1 • H1
+
+  lemma-H0-H1-CZ-S0-H0-H1-CZ : CRel ⊢ H0 • H1 • CZ • S0 • H0 • H1 • CZ === H1 • CZ • S0 • H0 • H1 • CZ • H0 • S0 • S0 • H0 • S1 • S1 • S1 • H1 • S1
+  lemma-H0-H1-CZ-S0-H0-H1-CZ =
+      equational H0 • H1 • CZ • S0 • H0 • H1 • CZ
+              by general-comm auto
+          equals H1 • (H0 • CZ • S0 • H0 • H1 • CZ)
+              by right lemma-H0-CZ-S0-H0-H1-CZ
+          equals H1 • (CZ • S0 • H0 • H1 • CZ • H0 • S0 • S0 • H0 • S1 • S1 • S1 • H1 • S1)
+              by general-assoc auto
+          equals H1 • CZ • S0 • H0 • H1 • CZ • H0 • S0 • S0 • H0 • S1 • S1 • S1 • H1 • S1
+
+  lemma-H0-CZ-S0-H0-S1-H1-CZ : CRel ⊢ H0 • CZ • S0 • H0 • S1 • H1 • CZ === CZ • S0 • H0 • S1 • H1 • CZ • H0 • S0 • S0 • H0 • S1 • S1 • S1 • H1 • S1
+  lemma-H0-CZ-S0-H0-S1-H1-CZ =
+      equational H0 • CZ • S0 • H0 • S1 • H1 • CZ
+              by general-comm auto
+          equals S1 • (H0 • CZ • S0 • H0 • H1 • CZ)
+              by right lemma-H0-CZ-S0-H0-H1-CZ
+          equals S1 • (CZ • S0 • H0 • H1 • CZ • H0 • S0 • S0 • H0 • S1 • S1 • S1 • H1 • S1)
+              by general-comm auto
+          equals CZ • S0 • H0 • S1 • H1 • CZ • H0 • S0 • S0 • H0 • S1 • S1 • S1 • H1 • S1
+
+  lemma-CZ-S0-H0-CZ : CRel ⊢ CZ • S0 • H0 • CZ === S0 • S0 • H0 • CZ • S0 • H0 • S0 • S1 • W⁻¹
+  lemma-CZ-S0-H0-CZ =
+      equational CZ • S0 • H0 • CZ
+              by general-comm auto
+          equals S0 • (CZ • H0 • CZ)
+              by right axiom rel-CZ-H0-CZ
+          equals S0 • (S0 • H0 • CZ • S0 • H0 • S0 • S1 • W⁻¹)
+              by general-assoc auto
+          equals S0 • S0 • H0 • CZ • S0 • H0 • S0 • S1 • W⁻¹
+
+  lemma-CZ-H1-CZ : CRel ⊢ CZ • H1 • CZ === S1 • H1 • CZ • S0 • S1 • H1 • S1 • W⁻¹
+  lemma-CZ-H1-CZ =
+      equational CZ • H1 • CZ
+              by by-duality (axiom rel-CZ-H0-CZ)
+          equals S1 • H1 • CZ • S1 • H1 • S1 • S0 • W⁻¹
+              by general-comm auto
+          equals S1 • H1 • CZ • S0 • S1 • H1 • S1 • W⁻¹
+
+  lemma-CZ-S1-H1-CZ : CRel ⊢ CZ • S1 • H1 • CZ === S1 • S1 • H1 • CZ • S0 • S1 • H1 • S1 • W⁻¹
+  lemma-CZ-S1-H1-CZ =
+      equational CZ • S1 • H1 • CZ
+              by by-duality lemma-CZ-S0-H0-CZ
+          equals S1 • S1 • H1 • CZ • S1 • H1 • S1 • S0 • W⁻¹
+              by general-comm auto
+          equals S1 • S1 • H1 • CZ • S0 • S1 • H1 • S1 • W⁻¹
+
+  lemma-H1-CZ-H0-H1-CZ-H0-H1-CZ : CRel ⊢ H1 • CZ • H0 • H1 • CZ • H0 • H1 • CZ === CZ • H0 • H1 • CZ • H0 • H1 • CZ • H0
+  lemma-H1-CZ-H0-H1-CZ-H0-H1-CZ =
+      equational H1 • CZ • H0 • H1 • CZ • H0 • H1 • CZ
+              by general-comm auto
+          equals H1 • CZ • H1 • H0 • CZ • H1 • H0 • CZ
+              by by-duality (lemma-H0-CZ-H0-H1-CZ-H0-H1-CZ)
+          equals CZ • H1 • H0 • CZ • H1 • H0 • CZ • H0
+              by general-comm auto
+          equals CZ • H0 • H1 • CZ • H0 • H1 • CZ • H0
+
+  -- ----------------------------------------------------------------------
+  -- * Rewrite rules for 2-qubit Clifford relations
+  
+  step-clifford2 : Step-Function Clifford+T.Generator CRel
+
+  -- Rules for binary gates.
+  step-clifford2 (CZ-gen :: CZ-gen :: t) = Just (t , at-head (axiom order-CZ))
+  
+  step-clifford2 (S1-gen :: CZ-gen :: t) = Just (CZ-gen :: S1-gen :: t , at-head (axiom comm-S1-CZ))
+  step-clifford2 (S0-gen :: CZ-gen :: t) = Just (CZ-gen :: S0-gen :: t , at-head (axiom comm-S0-CZ))
+  step-clifford2 (S0-gen :: H1-gen :: CZ-gen :: t) = Just (H1-gen :: CZ-gen :: S0-gen :: t , at-head lemma-S0-H1-CZ)
+  step-clifford2 (S0-gen :: S1-gen :: H1-gen :: CZ-gen :: t) = Just (S1-gen :: H1-gen :: CZ-gen :: S0-gen :: t , at-head lemma-S0-S1-H1-CZ)
+  
+  step-clifford2 (S1-gen :: S1-gen :: H1-gen :: CZ-gen :: t) = Just (H1-gen :: CZ-gen :: S0-gen :: S0-gen :: H1-gen :: S1-gen :: S1-gen :: H1-gen :: t , at-head lemma-S1-S1-H1-CZ)
+  step-clifford2 (S0-gen :: S0-gen :: H0-gen :: CZ-gen :: t) = Just (H0-gen :: CZ-gen :: H0-gen :: S0-gen :: S0-gen :: H0-gen :: S1-gen :: S1-gen :: t , at-head lemma-S0-S0-H0-CZ)
+  step-clifford2 (S0-gen :: S0-gen :: H0-gen :: H1-gen :: CZ-gen :: t) = Just (H0-gen :: H1-gen :: CZ-gen :: H0-gen :: S0-gen :: S0-gen :: H0-gen :: S1-gen :: S1-gen :: t , at-head lemma-S0-S0-H0-H1-CZ)
+  step-clifford2 (S0-gen :: S0-gen :: H0-gen :: S1-gen :: H1-gen :: CZ-gen :: t) = Just (H0-gen :: S1-gen :: H1-gen :: CZ-gen :: H0-gen :: S0-gen :: S0-gen :: H0-gen :: S1-gen :: S1-gen :: t , at-head lemma-S0-S0-H0-S1-H1-CZ)
+
+  step-clifford2 (H1-gen :: S1-gen :: H1-gen :: CZ-gen :: t) = Just (S1-gen :: H1-gen :: CZ-gen :: S0-gen :: S0-gen :: S1-gen :: H1-gen :: S1-gen :: S1-gen :: H1-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: t , at-head lemma-H1-S1-H1-CZ)
+  step-clifford2 (H0-gen :: S0-gen :: H0-gen :: CZ-gen :: t) = Just (S0-gen :: H0-gen :: CZ-gen :: S0-gen :: H0-gen :: S0-gen :: S0-gen :: H0-gen :: S1-gen :: S1-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: t , at-head lemma-H0-S0-H0-CZ)
+  step-clifford2 (H0-gen :: S0-gen :: H0-gen :: H1-gen :: CZ-gen :: t) = Just (S0-gen :: H0-gen :: H1-gen :: CZ-gen :: S0-gen :: H0-gen :: S0-gen :: S0-gen :: H0-gen :: S1-gen :: S1-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: t , at-head lemma-H0-S0-H0-H1-CZ)
+  step-clifford2 (H0-gen :: S0-gen :: H0-gen :: S1-gen :: H1-gen :: CZ-gen :: t) = Just (S0-gen :: H0-gen :: S1-gen :: H1-gen :: CZ-gen :: S0-gen :: H0-gen :: S0-gen :: S0-gen :: H0-gen :: S1-gen :: S1-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: t , at-head lemma-H0-S0-H0-S1-H1-CZ)
+  
+  step-clifford2 (S1-gen :: H1-gen :: CZ-gen :: H0-gen :: H1-gen :: CZ-gen :: t) = Just (H1-gen :: CZ-gen :: H0-gen :: H1-gen :: CZ-gen :: H0-gen :: S0-gen :: H0-gen :: t , at-head lemma-S1-H1-CZ-H0-H1-CZ)
+  step-clifford2 (S1-gen :: H1-gen :: CZ-gen :: S0-gen :: H0-gen :: H1-gen :: CZ-gen :: t) = Just (H1-gen :: CZ-gen :: S0-gen :: H0-gen :: H1-gen :: CZ-gen :: H0-gen :: S0-gen :: H0-gen :: t , at-head lemma-S1-H1-CZ-S0-H0-H1-CZ)
+  step-clifford2 (S0-gen :: H0-gen :: CZ-gen :: H0-gen :: H1-gen :: CZ-gen :: t) = Just (H0-gen :: CZ-gen :: H0-gen :: H1-gen :: CZ-gen :: H1-gen :: S1-gen :: H1-gen :: t , at-head lemma-S0-H0-CZ-H0-H1-CZ)
+  step-clifford2 (S0-gen :: H0-gen :: H1-gen :: CZ-gen :: H0-gen :: H1-gen :: CZ-gen :: t) = Just (H0-gen :: H1-gen :: CZ-gen :: H0-gen :: H1-gen :: CZ-gen :: H1-gen :: S1-gen :: H1-gen :: t , at-head lemma-S0-H0-H1-CZ-H0-H1-CZ)
+  step-clifford2 (S0-gen :: H0-gen :: CZ-gen :: H0-gen :: S1-gen :: H1-gen :: CZ-gen :: t) = Just (H0-gen :: CZ-gen :: H0-gen :: S1-gen :: H1-gen :: CZ-gen :: H1-gen :: S1-gen :: H1-gen :: t , at-head lemma-S0-H0-CZ-H0-S1-H1-CZ)
+  
+  step-clifford2 (H1-gen :: CZ-gen :: H0-gen :: S1-gen :: H1-gen :: CZ-gen :: t) = Just (CZ-gen :: H0-gen :: S1-gen :: H1-gen :: CZ-gen :: S0-gen :: S0-gen :: S0-gen :: H0-gen :: S0-gen :: H1-gen :: S1-gen :: S1-gen :: H1-gen :: t , at-head lemma-H1-CZ-H0-S1-H1-CZ)
+  step-clifford2 (H1-gen :: CZ-gen :: S0-gen :: H0-gen :: S1-gen :: H1-gen :: CZ-gen :: t) = Just (CZ-gen :: S0-gen :: H0-gen :: S1-gen :: H1-gen :: CZ-gen :: S0-gen :: S0-gen :: S0-gen :: H0-gen :: S0-gen :: H1-gen :: S1-gen :: S1-gen :: H1-gen :: t , at-head lemma-H1-CZ-S0-H0-S1-H1-CZ)
+  step-clifford2 (H0-gen :: CZ-gen :: S0-gen :: H0-gen :: H1-gen :: CZ-gen :: t) = Just (CZ-gen :: S0-gen :: H0-gen :: H1-gen :: CZ-gen :: H0-gen :: S0-gen :: S0-gen :: H0-gen :: S1-gen :: S1-gen :: S1-gen :: H1-gen :: S1-gen :: t , at-head lemma-H0-CZ-S0-H0-H1-CZ)
+  step-clifford2 (H0-gen :: H1-gen :: CZ-gen :: S0-gen :: H0-gen :: H1-gen :: CZ-gen :: t) = Just (H1-gen :: CZ-gen :: S0-gen :: H0-gen :: H1-gen :: CZ-gen :: H0-gen :: S0-gen :: S0-gen :: H0-gen :: S1-gen :: S1-gen :: S1-gen :: H1-gen :: S1-gen :: t , at-head lemma-H0-H1-CZ-S0-H0-H1-CZ)
+  step-clifford2 (H0-gen :: CZ-gen :: S0-gen :: H0-gen :: S1-gen :: H1-gen :: CZ-gen :: t) = Just (CZ-gen :: S0-gen :: H0-gen :: S1-gen :: H1-gen :: CZ-gen :: H0-gen :: S0-gen :: S0-gen :: H0-gen :: S1-gen :: S1-gen :: S1-gen :: H1-gen :: S1-gen :: t , at-head lemma-H0-CZ-S0-H0-S1-H1-CZ)
+  
+  step-clifford2 (CZ-gen :: H0-gen :: CZ-gen :: t) = Just (S0-gen :: H0-gen :: CZ-gen :: S0-gen :: H0-gen :: S0-gen :: S1-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: t , at-head (axiom rel-CZ-H0-CZ))
+  step-clifford2 (CZ-gen :: S0-gen :: H0-gen :: CZ-gen :: t) = Just (S0-gen :: S0-gen :: H0-gen :: CZ-gen :: S0-gen :: H0-gen :: S0-gen :: S1-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: t , at-head lemma-CZ-S0-H0-CZ)
+  step-clifford2 (CZ-gen :: H1-gen :: CZ-gen :: t) = Just (S1-gen :: H1-gen :: CZ-gen :: S0-gen :: S1-gen :: H1-gen :: S1-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: t , at-head lemma-CZ-H1-CZ)
+  step-clifford2 (CZ-gen :: S1-gen :: H1-gen :: CZ-gen :: t) = Just (S1-gen :: S1-gen :: H1-gen :: CZ-gen :: S0-gen :: S1-gen :: H1-gen :: S1-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: W-gen :: t , at-head lemma-CZ-S1-H1-CZ)
+  
+  step-clifford2 (H1-gen :: CZ-gen :: H0-gen :: H1-gen :: CZ-gen :: H0-gen :: H1-gen :: CZ-gen :: t) = Just (CZ-gen :: H0-gen :: H1-gen :: CZ-gen :: H0-gen :: H1-gen :: CZ-gen :: H0-gen :: t , at-head lemma-H1-CZ-H0-H1-CZ-H0-H1-CZ)
+  step-clifford2 (H0-gen :: CZ-gen :: H0-gen :: H1-gen :: CZ-gen :: H0-gen :: H1-gen :: CZ-gen :: t) = Just (CZ-gen :: H0-gen :: H1-gen :: CZ-gen :: H0-gen :: H1-gen :: CZ-gen :: H1-gen :: t , at-head lemma-H0-CZ-H0-H1-CZ-H0-H1-CZ)
+
+  -- Catch-all
+  step-clifford2 _ = Nothing
+
+  -- From this rewrite relation, we extract a tactic 'rewrite-clifford-aux'.
+  open Rewriting.Step (step-cong step-order then step-cong step-clifford1 then step-cong step-clifford2) renaming (general-rewrite to rewrite-clifford-aux; multistep to clifford-multistep; lemma-multistep to lemma-clifford-multistep) public
+
+  -- Finally, we take the new tactic, which is about the Clifford
+  -- relations, and turn it into a tactic that works on Clifford+T
+  -- relations. It works by ignoring T-generators.
+  rewrite-clifford : (n : Nat) -> {w u : Word Generator} -> clifford-multistep n (list-of-word w) == clifford-multistep n (list-of-word u) -> Rel ⊢ w === u
+  rewrite-clifford n eq = inclusion (rewrite-clifford-aux n eq)
+
+  -- We also instantiate the "rewrite-in-context" tactic from the
+  -- Word-Tactics module to this rewrite system. Specifically,
+  -- clifford-tactic can be used to apply Clifford rewriting to a
+  -- subword inside a larger word, such as this:
+  --
+  -- property : Γ ⊢ X • Y • Z • A • B • W === X • Y • Z • C • D • E • W
+  -- property = clifford-tactic 3 2 100 auto
+  --
+  -- This applies 100 steps of Clifford rewriting to the subword A • B
+  -- of the left-hand side (starting at position 3 and having length 2),
+  -- and to the corresponding subword C • D • E of the right-hand
+  -- side, and checks whether a common normal form is reached.
+  clifford-tactic : ∀ {s t pre post s2 t2} -> (n m k : Nat) ->
+             let s' = list-of-word2 s
+                 t' = list-of-word2 t
+                 m' = m + length t' - length s'
+             in (mysplit n m s' , mysplit n m' t' , clifford-multistep k (list-of-word s2)) == 
+                ((pre , s2 , post) , (pre , t2 , post) , clifford-multistep k (list-of-word t2)) ->
+                Clifford+T.Rel ⊢ s === t
+  clifford-tactic = rewrite-in-context clifford-multistep lemma-clifford-multistep-inclusion
+    where
+      lemma-clifford-multistep-inclusion : (n : Nat) (xs : List Generator) -> Rel ⊢ word-of-list xs === word-of-list (clifford-multistep n xs)
+      lemma-clifford-multistep-inclusion n xs = Clifford.inclusion (lemma-clifford-multistep n xs)
+
+open Clifford-Rewriting using (rewrite-clifford) public
+

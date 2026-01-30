@@ -1,0 +1,1630 @@
+-- This module implements 'rewrite-clifford', a complete decision
+-- procedure for equality of 2-qubit Clifford operators.
+--
+-- This is done in a bootstrapping way: we first prove a small number
+-- of lemmas, then use these to define a rewrite relation, then use
+-- the rewrite relation to prove more lemmas, then define a more
+-- powerful rewrite relation, and so on.
+
+open import Level using (0ℓ)
+
+open import Relation.Binary using (Rel)
+open import Relation.Binary.Definitions using (DecidableEquality)
+open import Relation.Binary.Morphism.Definitions using (Homomorphic₂)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; inspect ; setoid ; module ≡-Reasoning) renaming ([_] to [_]')
+import Relation.Binary.Reasoning.Setoid as SR
+import Relation.Binary.PropositionalEquality as Eq
+open import Relation.Nullary.Decidable using (yes ; no)
+
+
+open import Function using (_∘_ ; id)
+open import Function.Definitions using (Injective)
+
+open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; map₁ ; ∃)
+open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
+open import Data.Nat hiding (_^_)
+open import Agda.Builtin.Nat using (_-_)
+import Data.Nat as Nat
+open import Data.Bool
+open import Data.List hiding ([_])
+
+open import Data.Maybe
+open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_])
+open import Data.Unit using (⊤ ; tt)
+open import Data.Empty using (⊥ ; ⊥-elim)
+
+open import Word.Base hiding (wfoldl)
+open import Word.Properties
+import Presentation.Base as PB
+import Presentation.Properties as PP
+open PP using (NFProperty ; NFProperty')
+import Presentation.CosetNF as CA
+import Presentation.Reidemeister-Schreier as RS
+module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
+
+open import Presentation.Construct.Base
+import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
+import Presentation.Construct.Properties.DirectProduct as DP
+import Presentation.Groups.Cyclic as Cyclic
+
+
+open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
+import Data.Nat.Properties as NP
+import Presentation.Groups.Clifford1 as C1
+
+
+module Presentation.Groups.Symplectic2-Lemmas where
+
+pattern auto = Eq.refl
+
+-- ----------------------------------------------------------------------
+-- * Symplectic equations
+
+module Symplectic where
+
+  -- We consider the Symplectic subset of the equational theory. This
+  -- has the advantage that we can dualize any proof (i.e., exchange
+  -- the roles of the 1st and 2nd qubits) without having to worry
+  -- about non-Symplectic relations (such as rel-A, rel-B, and rel-C,
+  -- the duals of which will be proved much later).
+
+  data Gen : Set where
+    H0-gen : Gen
+    S0-gen : Gen
+    H1-gen : Gen
+    S1-gen : Gen
+    CZ-gen : Gen
+
+  H0 : Word Gen
+  H0 = [ H0-gen ]ʷ
+
+  S0 : Word Gen
+  S0 = [ S0-gen ]ʷ
+
+  X0 : Word Gen
+  X0 = H0 • H0
+
+  H1 : Word Gen
+  H1 = [ H1-gen ]ʷ
+
+  S1 : Word Gen
+  S1 = [ S1-gen ]ʷ
+
+  S0⁻¹ : Word Gen
+  S0⁻¹ = S0
+
+  S1⁻¹ : Word Gen
+  S1⁻¹ = S1
+
+  X1 : Word Gen
+  X1 = H1 • H1
+
+  CZ : Word Gen
+  CZ = [ CZ-gen ]ʷ
+  
+  CX : Word Gen
+  CX = H1 • CZ • H1
+
+  XC : Word Gen
+  XC = H0 • CZ • H0
+
+  Ex : Word Gen
+  Ex = CX • XC • CX
+
+  Ex' : Word Gen
+  Ex' = XC • CX • XC
+
+  -- The Symplectic relations. For convenience, we still take all of the
+  -- Symplectic+T generators, but we consider only Symplectic relations.
+  -- In other words, the T-generators will be considered as abstract,
+  -- satisfying no relations (except commutativity with scalars).
+  infix 4 _===_
+  data _===_ : WRel Gen where
+    order-S0 : S0 ^ 2 === ε
+    order-H0 : H0 ^ 2 === ε
+    order-S0H0 : (S0 • H0) ^ 3 === ε
+    order-S1 : S1 ^ 2 === ε
+    order-H1 : H1 ^ 2 === ε
+    order-S1H1 : (S1 • H1) ^ 3 === ε
+    order-CZ : CZ ^ 2 === ε
+    
+    comm-H0H1 : H0 • H1 === H1 • H0
+    comm-H0S1 : H0 • S1 === S1 • H0
+    comm-S0H1 : S0 • H1 === H1 • S0
+    comm-S0S1 : S0 • S1 === S1 • S0
+
+    comm-S0-CZ : S0 • CZ === CZ • S0
+    comm-S1-CZ : S1 • CZ === CZ • S1
+
+    rel-CZ-H0-CZ : CZ • H0 • CZ === S0 • H0 • CZ • S0 • H0 • S0 • S1
+    rel-CZ-H1-CZ : CZ • H1 • CZ === S1 • H1 • CZ • S1 • H1 • S1 • S0
+
+
+-- ----------------------------------------------------------------------
+-- * Data required for applying word tactics to Symplectic generators
+
+module CommData where
+
+  open Symplectic
+  open PB _===_
+  
+  -- Commutativity.
+  comm~ : (x y : Gen) -> Maybe (([ x ]ʷ • [ y ]ʷ) ≈ ([ y ]ʷ • [ x ]ʷ))
+  comm~ H0-gen H1-gen = just (axiom comm-H0H1)
+  comm~ H0-gen S1-gen = just (axiom comm-H0S1)
+  comm~ S0-gen H1-gen = just (axiom comm-S0H1)
+  comm~ S0-gen S1-gen = just (axiom comm-S0S1)
+
+  comm~ H1-gen H0-gen = just (sym (axiom comm-H0H1))
+  comm~ H1-gen S0-gen = just (sym (axiom comm-S0H1))
+  comm~ S1-gen H0-gen = just (sym (axiom comm-H0S1))
+  comm~ S1-gen S0-gen = just (sym (axiom comm-S0S1))
+
+  comm~ S0-gen CZ-gen = just (axiom comm-S0-CZ)
+  comm~ S1-gen CZ-gen = just (axiom comm-S1-CZ)
+  comm~ CZ-gen S0-gen = just (sym (axiom comm-S0-CZ))
+  comm~ CZ-gen S1-gen = just (sym (axiom comm-S1-CZ))
+  comm~ _ _ = nothing
+
+
+  -- We number the generators for the purpose of ordering them.
+  ord : Gen -> ℕ
+  ord S0-gen = 0
+  ord S1-gen = 1
+  ord H0-gen = 2
+  ord H1-gen = 3
+  ord CZ-gen = 4
+
+  -- Ordering of generators.
+  les : Gen -> Gen -> Bool
+  les x y with ord x Nat.<? ord y
+  les x y | yes _ = true
+  les x y | no _ = false
+
+open import Presentation.Tactics hiding ([_])
+module Commuting-Symplectic = Commuting Symplectic._===_ CommData.comm~ CommData.les
+
+-- ----------------------------------------------------------------------
+-- * Duality
+
+module Symplectic-Duality where
+
+  -- Here, we provide a proof principle for duality (an equation is
+  -- provable iff its dual is provable).
+
+  open Symplectic
+  open PB Symplectic._===_
+  gen : Gen -> Word Gen
+  gen = [_]ʷ
+  
+  -- Each generator has a dual, obtained by swapping the two qubits.
+  dual-gen : Gen -> Gen
+  dual-gen H0-gen = H1-gen
+  dual-gen H1-gen = H0-gen
+  dual-gen S0-gen = S1-gen
+  dual-gen S1-gen = S0-gen
+  dual-gen CZ-gen = CZ-gen
+
+  -- Compute the dual of a word.
+  dual : Word Gen -> Word Gen
+  dual ([ x ]ʷ) = gen (dual-gen x)
+  dual ε = ε
+  dual (w • u) = dual w • dual u
+
+  -- Lemma: duality is an involution.
+  lemma-double-dual : ∀ w -> w ≡ dual (dual w)
+  lemma-double-dual ([ H0-gen ]ʷ) = Eq.refl
+  lemma-double-dual ([ H1-gen ]ʷ) = Eq.refl
+  lemma-double-dual ([ S0-gen ]ʷ) = Eq.refl
+  lemma-double-dual ([ S1-gen ]ʷ) = Eq.refl
+  lemma-double-dual ([ CZ-gen ]ʷ) = Eq.refl
+  lemma-double-dual ε = Eq.refl
+  lemma-double-dual (w • v) = Eq.cong₂ _•_ (lemma-double-dual w) (lemma-double-dual v)
+
+  -- Dualize a proof. Duality is useful early on. However, we will not
+  -- prove the duals of axioms rel-A, rel-B, and rel-C until much
+  -- later. Therefore, we work only with Symplectic relations for the
+  -- time being.
+  lemma-dual : ∀ {w u} -> w ≈ u -> dual w ≈ dual u
+  lemma-dual (axiom comm-H0H1) = axiom comm-H0H1 reversed
+  lemma-dual (axiom comm-H0S1) = axiom comm-S0H1 reversed
+  lemma-dual (axiom comm-S0H1) = axiom comm-H0S1 reversed
+  lemma-dual (axiom comm-S0S1) = axiom comm-S0S1 reversed
+  lemma-dual (axiom order-H0) = axiom order-H1
+  lemma-dual (axiom order-H1) = axiom order-H0
+  lemma-dual (axiom order-S0) = axiom order-S1
+  lemma-dual (axiom order-S1) = axiom order-S0
+  lemma-dual (axiom order-S0H0) = axiom order-S1H1
+  lemma-dual (axiom order-S1H1) = axiom order-S0H0
+  lemma-dual (axiom order-CZ) = axiom order-CZ
+  lemma-dual (axiom comm-S0-CZ) = axiom comm-S1-CZ
+  lemma-dual (axiom comm-S1-CZ) = axiom comm-S0-CZ
+  lemma-dual (axiom rel-CZ-H0-CZ) = axiom rel-CZ-H1-CZ
+  lemma-dual (axiom rel-CZ-H1-CZ) = axiom rel-CZ-H0-CZ
+  lemma-dual refl = refl
+  lemma-dual (sym hyp) = sym (lemma-dual hyp)
+  lemma-dual (trans hyp hyp₁) = trans (lemma-dual hyp) (lemma-dual hyp₁)
+  lemma-dual (cong hyp hyp₁) = cong (lemma-dual hyp) (lemma-dual hyp₁)
+  lemma-dual assoc = assoc
+  lemma-dual left-unit = left-unit
+  lemma-dual right-unit = right-unit
+
+  -- A proof principle for duality.
+  by-duality : ∀ {w u} -> w ≈ u -> dual w ≈ dual u
+  by-duality = lemma-dual
+
+-- ----------------------------------------------------------------------
+-- * Lemmas
+
+module Symplectic-Powers where
+
+  -- This module provides a rewrite system for reducing powers of
+  -- Symplectic operators (for example, S⁴ → I). It also commutes
+  -- generators on different qubits (for example, H1 H0 → H0 H1).
+  -- Finally, it moves scalars to the end of the word. While this is
+  -- not yet a very powerful rewrite system, it is a useful
+  -- bootstrapping step.
+
+  open Symplectic
+  open Rewriting
+  
+  open PB _===_ hiding (_===_)
+  open PP _===_
+
+
+  -- ----------------------------------------------------------------------
+  -- * Lemmas
+
+  -- The following lemmas are needed to justify the rewrite steps.
+
+  -- ----------------------------------------------------------------------
+  -- * Rewrite rules for monoidal structure and order of generators
+
+  step-order : Step-Function Gen _===_
+
+  -- Order of generators.
+  step-order (S0-gen ∷ S0-gen ∷ xs) = just (xs , at-head (axiom Symplectic.order-S0))
+  step-order (H0-gen ∷ H0-gen ∷ xs) = just (xs , at-head (axiom order-H0))
+  step-order (S1-gen ∷ S1-gen ∷ xs) = just (xs , at-head (axiom Symplectic.order-S1))
+  step-order (H1-gen ∷ H1-gen ∷ xs) = just (xs , at-head (axiom order-H1))
+  step-order (CZ-gen ∷ CZ-gen ∷ xs) = just (xs , at-head (axiom order-CZ))
+
+  -- Commuting rules for unary gates.
+  step-order (H1-gen ∷ H0-gen ∷ t) = just (H0-gen ∷ H1-gen ∷ t , at-head (axiom comm-H0H1 reversed))
+  step-order (H1-gen ∷ S0-gen ∷ t) = just (S0-gen ∷ H1-gen ∷ t , at-head (axiom comm-S0H1 reversed))
+  step-order (S1-gen ∷ H0-gen ∷ t) = just (H0-gen ∷ S1-gen ∷ t , at-head (axiom comm-H0S1 reversed))
+  step-order (S1-gen ∷ S0-gen ∷ t) = just (S0-gen ∷ S1-gen ∷ t , at-head (axiom comm-S0S1 reversed))
+
+  -- Catch-all
+  step-order _ = nothing
+
+  -- From this rewrite relation, we extract a tactic 'general-powers'.
+  open Rewriting.Step (step-cong step-order) renaming (general-rewrite to general-powers) public
+
+module Symplectic-Rewriting1 where
+
+  -- This module provides a complete rewrite system for 1-qubit
+  -- Symplectic operators. It is specialized toward relations on qubit 0
+  -- (but can also be applied to qubit 1 via duality).
+
+  open Commuting-Symplectic
+  open Rewriting
+  open Symplectic
+  open Symplectic-Duality
+  open Symplectic-Powers
+
+  open PB _===_ hiding (_===_)
+  open PP _===_
+  open SR word-setoid
+
+
+  -- ----------------------------------------------------------------------
+  -- * Lemmas
+
+  -- The following lemmas are needed to justify the rewrite steps.
+
+  lemma-S0-H0-S0-H0 : S0 • H0 • S0 • H0 ≈ H0 • S0
+  lemma-S0-H0-S0-H0 =
+      begin S0 • H0 • S0 • H0
+              ≈⟨ general-powers 10 auto ⟩
+          (S0 • H0) ^ 3 • (H0 • S0)
+              ≈⟨ cleft axiom order-S0H0 ⟩
+          ε • (H0 • S0)
+              ≈⟨ general-comm auto ⟩
+          H0 • S0 ∎
+
+  lemma-H0-S0-H0-S0 : H0 • S0 • H0 • S0 ≈ S0 • H0
+  lemma-H0-S0-H0-S0 =
+      begin H0 • S0 • H0 • S0
+              ≈⟨ general-powers 10 auto ⟩
+                 S0⁻¹ • (S0 • H0) ^ 3 • H0
+              ≈⟨ cright cleft axiom order-S0H0  ⟩
+              S0⁻¹ • ε • H0
+              ≈⟨ general-comm auto ⟩
+              S0 • H0 ∎
+
+  lemma-H0-S0-S0-S0-H0 : H0 • S0 • H0 ≈ S0 • H0 • S0
+  lemma-H0-S0-S0-S0-H0 =
+      begin H0 • S0 • H0
+              ≈⟨ general-powers 10 auto ⟩
+          H0 • (S0 • H0)
+              ≈⟨ cright lemma-H0-S0-H0-S0 reversed ⟩
+          H0 • (H0 • S0 • H0 • S0)
+              ≈⟨ general-powers 10 auto ⟩
+          S0 • H0 • S0 ∎
+
+{-
+  lemma-S0-H0-S0-S0-H0-S0 : S0 • H0 • H0 • S0 ≈ H0 • H0
+  lemma-S0-H0-S0-S0-H0-S0 =
+      begin S0 • H0 • H0 • S0
+              ≈⟨ general-powers 10 auto ⟩
+          ((S0 • H0 • S0) • (S0 • H0 • S0))
+              ≈⟨ cong lemma-H0-S0-S0-S0-H0 lemma-H0-S0-S0-S0-H0 reversed ⟩
+          ((H0 • S0 • H0) • (H0 • S0 • H0))
+              ≈⟨ general-powers 10 auto ⟩
+          H0 • H0 ∎
+
+  lemma-H0-S0-S0-H0-S0-S0 : H0 • H0 • S0 • S0 ≈ H0 • H0
+  lemma-H0-S0-S0-H0-S0-S0 =
+      begin H0 • H0 • S0 • S0
+              ≈⟨ general-powers 10 auto ⟩
+          (H0 • S0) • (S0 • H0 • S0) • (S0)
+              ≈⟨ cright cleft lemma-H0-S0-S0-S0-H0 reversed ⟩
+          (H0 • S0) • (H0 • S0 • H0) • (S0)
+              ≈⟨ by-assoc auto ⟩
+          (H0 • S0 • H0 • S0) • (H0 • S0)
+              ≈⟨ cleft lemma-H0-S0-H0-S0 ⟩
+          (S0 • H0) • (H0 • S0)
+              ≈⟨ general-comm auto ⟩
+          (S0 • S0) • (S0 • H0 • H0 • S0)
+              ≈⟨ cright lemma-S0-H0-S0-S0-H0-S0 ⟩
+          (S0 • S0) • (H0 • H0)
+              ≈⟨ general-comm auto ⟩
+          H0 • H0 ∎
+
+  lemma-S0-S0-S0-H0-S0-S0-H0 : S0 • H0 • H0 ≈ H0 • H0 • S0
+  lemma-S0-S0-S0-H0-S0-S0-H0 =
+      begin S0 • H0 • H0
+              ≈⟨ general-powers 10 auto ⟩
+          (S0 • H0) • (H0)
+              ≈⟨ cleft lemma-H0-S0-H0-S0 reversed ⟩
+          (H0 • S0 • H0 • S0) • (H0)
+              ≈⟨ by-assoc auto ⟩
+          (H0 • S0 • H0) • (S0 • H0)
+              ≈⟨ cright lemma-H0-S0-H0-S0 reversed ⟩
+          (H0 • S0 • H0) • (H0 • S0 • H0 • S0)
+              ≈⟨ general-powers 10 auto ⟩
+          H0 • H0 • S0 ∎
+-}
+  lemma-S0-S0-S0-H0-S0-S0-S0 : S0 • H0 • S0 ≈ H0 • S0 • H0
+  lemma-S0-S0-S0-H0-S0-S0-S0 =
+      begin S0 • H0 • S0
+              ≈⟨ general-powers 10 auto ⟩
+          (S0) • (H0 • S0)
+              ≈⟨ cright lemma-S0-H0-S0-H0 reversed ⟩
+          (S0) • (S0 • H0 • S0 • H0)
+              ≈⟨ general-powers 10 auto ⟩
+          H0 • S0 • H0 ∎
+
+  -- ----------------------------------------------------------------------
+  -- * Rewrite rules for 1-qubit Symplectic relations
+  
+  step-symplectic1 : Step-Function Gen _===_
+
+  -- Rules for unary gates.
+  step-symplectic1 (H0-gen ∷ H0-gen ∷ t) = just (t , at-head (axiom order-H0))
+  step-symplectic1 (S0-gen ∷ S0-gen ∷ t) = just (t , at-head (axiom order-S0))
+  step-symplectic1 (S0-gen ∷ H0-gen ∷ S0-gen ∷ H0-gen ∷ t) = just (H0-gen ∷ S0-gen ∷ t , at-head lemma-S0-H0-S0-H0)
+  step-symplectic1 (H0-gen ∷ S0-gen ∷ H0-gen ∷ S0-gen ∷ t) = just (S0-gen ∷ H0-gen ∷ t , at-head lemma-H0-S0-H0-S0)
+  step-symplectic1 (H0-gen ∷ S0-gen ∷ H0-gen ∷ t) = just (S0-gen ∷ H0-gen ∷ S0-gen ∷ t , at-head lemma-H0-S0-S0-S0-H0)
+--  step-symplectic1 (S0-gen ∷ S0-gen ∷ t) = just (t , at-head lemma-S0-H0-S0-S0-H0-S0)
+--  step-symplectic1 (S0-gen ∷ S0-gen ∷ t) = just (S0-gen ∷ S0-gen ∷ t , at-head lemma-H0-S0-S0-H0-S0-S0)
+--  step-symplectic1 (S0-gen ∷ t) = just (S0-gen ∷ t , at-head lemma-S0-S0-S0-H0-S0-S0-H0)
+--  step-symplectic1 (S0-gen ∷ H0-gen ∷ S0-gen ∷ t) = just (H0-gen ∷ S0-gen ∷ H0-gen ∷ t , at-head lemma-S0-S0-S0-H0-S0-S0-S0)
+
+  step-symplectic1 (H1-gen ∷ H1-gen ∷ t) = just (t , at-head (axiom order-H1))
+  step-symplectic1 (S1-gen ∷ S1-gen ∷ t) = just (t , at-head (axiom order-S1))
+  step-symplectic1 (S1-gen ∷ H1-gen ∷ S1-gen ∷ H1-gen ∷ t) = just (H1-gen ∷ S1-gen ∷ t , at-head (by-duality lemma-S0-H0-S0-H0))
+  step-symplectic1 (H1-gen ∷ S1-gen ∷ H1-gen ∷ S1-gen ∷ t) = just (S1-gen ∷ H1-gen ∷ t , at-head (by-duality lemma-H0-S0-H0-S0))
+  step-symplectic1 (H1-gen ∷ S1-gen ∷ H1-gen ∷ t) = just (S1-gen ∷ H1-gen ∷ S1-gen ∷ t , at-head (by-duality lemma-H0-S0-S0-S0-H0))
+--  step-symplectic1 (S1-gen ∷ S1-gen ∷ t) = just (t , at-head (by-duality lemma-S0-H0-S0-S0-H0-S0))
+--  step-symplectic1 (S1-gen ∷ S1-gen ∷ t) = just (S1-gen ∷ S1-gen ∷ t , at-head (by-duality lemma-H0-S0-S0-H0-S0-S0))
+--  step-symplectic1 (S1-gen ∷ t) = just (S1-gen ∷ t , at-head (by-duality lemma-S0-S0-S0-H0-S0-S0-H0))
+--  step-symplectic1 (S1-gen ∷ H1-gen ∷ S1-gen ∷ t) = just (H1-gen ∷ S1-gen ∷ H1-gen ∷ t , at-head (by-duality lemma-S0-S0-S0-H0-S0-S0-S0))
+
+  -- Catch-all
+  step-symplectic1 _ = nothing
+
+  -- From this rewrite relation, we extract a tactic 'rewrite-symplectic1'.
+  open Rewriting.Step (step-cong step-order then step-cong step-symplectic1) renaming (general-rewrite to rewrite-symplectic1) public
+
+module Symplectic-Rewriting where
+
+  -- This module provides a complete rewrite system for 2-qubit
+  -- Symplectic operators.
+
+  open Commuting-Symplectic
+  open Rewriting
+  open Symplectic
+  open Symplectic-Duality
+  open Symplectic-Powers
+  open Symplectic-Rewriting1
+
+  open PB _===_ hiding (_===_)
+  open PP _===_
+  open SR word-setoid
+
+
+  -- ----------------------------------------------------------------------
+  -- * More lemmas
+  
+  -- The following lemmas are needed to justify the rewrite steps.
+
+  lemma-H0-S0-H0-CZ : H0 • S0 • H0 • CZ ≈ S0 • H0 • CZ • S0
+  lemma-H0-S0-H0-CZ =
+      begin H0 • S0 • H0 • CZ
+              ≈⟨ rewrite-symplectic1 10 auto ⟩
+          S0 • H0 • S0 • CZ
+              ≈⟨ general-comm auto ⟩
+          S0 • H0 • CZ • S0
+              ≈⟨ cright cright refl ⟩
+          S0 • H0 • CZ • S0 ∎
+
+  lemma-S0-H0-CZ-H0-H1-CZ : S0 • H0 • CZ • H0 • H1 • CZ ≈ H0 • CZ • H0 • H1 • CZ • H1 • S1 • H1
+  lemma-S0-H0-CZ-H0-H1-CZ =
+      begin S0 • H0 • CZ • H0 • H1 • CZ
+              ≈⟨ general-powers 10 auto ⟩
+          (S0 • H0) • (CZ • H0 • CZ) • (CZ • H1 • CZ)
+              ≈⟨ cright cleft axiom rel-CZ-H0-CZ ⟩
+          (S0 • H0) • (S0 • H0 • CZ • S0 • H0 • S0 • S1) • (CZ • H1 • CZ)
+              ≈⟨ rewrite-symplectic1 10 auto ⟩
+          H0 • S0 • CZ • S0 • H0 • S0 • S1 • CZ • H1 • CZ
+              ≈⟨ general-comm auto ⟩
+          H0 • CZ • S0 ^ 2 • H0 • S0 • S1 • CZ • H1 • CZ
+              ≈⟨ rewrite-symplectic1 10 auto ⟩
+          (H0 • CZ • H0 • S0 • S1) • (CZ • H1 • CZ)
+              ≈⟨ cright axiom rel-CZ-H1-CZ ⟩
+          (H0 • CZ • H0 • S0 • S1) • (S1 • H1 • CZ • S1 • H1 • S1 • S0)
+              ≈⟨ rewrite-symplectic1 10 auto ⟩
+          (H0 • CZ • H0 • S0) • (H1 • CZ) • (S1 • H1 • S1 • S0)
+              ≈⟨ general-comm auto ⟩
+          H0 • CZ • H0 • H1 • CZ • S0 • S1 • H1 • S1 • S0
+              ≈⟨ rewrite-symplectic1 30 auto ⟩
+          H0 • CZ • H0 • H1 • CZ • H1 • S1 • H1 ∎
+
+  lemma-H0-CZ-S0-H0-H1-CZ : H0 • CZ • S0 • H0 • H1 • CZ ≈ CZ • S0 • H0 • H1 • CZ • S1 • H1 • S1
+  lemma-H0-CZ-S0-H0-H1-CZ =
+      begin H0 • CZ • S0 • H0 • H1 • CZ
+              ≈⟨ general-comm auto ⟩
+          H0 • S0 • CZ • H0 • H1 • CZ
+              ≈⟨ general-powers 10 auto ⟩
+          (H0 • S0) • (CZ • H0 • CZ) • (CZ • H1 • CZ)
+              ≈⟨ cright cleft axiom rel-CZ-H0-CZ ⟩
+          (H0 • S0) • (S0 • H0 • CZ • S0 • H0 • S0 • S1) • (CZ • H1 • CZ)
+              ≈⟨ rewrite-symplectic1 10 auto ⟩
+          (CZ • S0 • H0 • S0 • S1) • (CZ • H1 • CZ)
+              ≈⟨ rewrite-symplectic1 30 auto ⟩
+          (CZ • H0 • S0 • H0 • S1) • (CZ • H1 • CZ)
+              ≈⟨ cright axiom rel-CZ-H1-CZ ⟩
+          (CZ • H0 • S0 • H0 • S1) • (S1 • H1 • CZ • S1 • H1 • S1 • S0)
+              ≈⟨ general-powers 10 auto ⟩
+          (CZ • H1) • (H0 • S0 • H0 • CZ) • (S1 • H1 • S1 • S0)
+              ≈⟨ cright cleft lemma-H0-S0-H0-CZ ⟩
+          (CZ • H1) • (S0 • H0 • CZ • S0) • (S1 • H1 • S1 • S0)
+              ≈⟨ rewrite-symplectic1 20 auto ⟩
+          CZ • S0 • H0 • H1 • CZ • S1 • H1 • S1 ∎
+
+  lemma-H0-CZ-H0-H1-CZ-H0-H1-CZ : H0 • CZ • H0 • H1 • CZ • H0 • H1 • CZ ≈ CZ • H0 • H1 • CZ • H0 • H1 • CZ • H1
+  lemma-H0-CZ-H0-H1-CZ-H0-H1-CZ =
+      begin H0 • CZ • H0 • H1 • CZ • H0 • H1 • CZ
+              ≈⟨ general-powers 10 auto ⟩
+          (H0 • CZ • H0 • H1) • (CZ • H0 • CZ) • (CZ • H1 • CZ)
+              ≈⟨ cright cleft axiom rel-CZ-H0-CZ ⟩
+          (H0 • CZ • H0 • H1) • (S0 • H0 • CZ • S0 • H0 • S0 • S1) • (CZ • H1 • CZ)
+              ≈⟨ general-comm auto ⟩
+          (H0 • CZ • H1) • (H0 • S0 • H0 • CZ) • (S0 • H0 • S0 • S1 • CZ • H1 • CZ)
+              ≈⟨ cright cleft lemma-H0-S0-H0-CZ ⟩
+          (H0 • CZ • H1) • (S0 • H0 • CZ • S0) • (S0 • H0 • S0 • S1 • CZ • H1 • CZ)
+              ≈⟨ general-comm auto ⟩
+          (H0 • CZ • S0 • H0 • H1 • CZ) • (S0 • S0 • H0 • S0 • S1 • CZ • H1 • CZ)
+              ≈⟨ cleft lemma-H0-CZ-S0-H0-H1-CZ ⟩
+          (CZ • S0 • H0 • H1 • CZ • S1 • H1 • S1) • (S0 • S0 • H0 • S0 • S1 • CZ • H1 • CZ)
+              ≈⟨ rewrite-symplectic1 70 auto ⟩
+          CZ • S0 • H0 • H1 • CZ • H0 • S0 • S1 • H1 • CZ • H1 • CZ
+              ≈⟨ general-comm auto ⟩
+          (CZ • H1 • S1) • (S0 • H0 • CZ • H0 • H1 • CZ) • (S0 • H1 • CZ)
+              ≈⟨ cright cleft lemma-S0-H0-CZ-H0-H1-CZ ⟩
+          (CZ • H1 • S1) • (H0 • CZ • H0 • H1 • CZ • H1 • S1 • H1) • (S0 • H1 • CZ)
+              ≈⟨ general-powers 10 auto ⟩
+          CZ • H1 • S1 • H0 • CZ • H0 • H1 • CZ • H1 • S1 • S0 • CZ
+              ≈⟨ general-comm auto ⟩
+          (CZ • H1 • S1 • H0 • CZ • H0 • H1) • (CZ • H1 • CZ) • (S0 • S1)
+              ≈⟨ cright cleft axiom rel-CZ-H1-CZ ⟩
+          (CZ • H1 • S1 • H0 • CZ • H0 • H1) • (S1 • H1 • CZ • S1 • H1 • S1 • S0) • (S0 • S1)
+              ≈⟨ general-comm auto ⟩
+          CZ • H1 • H0 • CZ • H0 • S1 • H1 • S1 • H1 • CZ • S1 • H1 • S1 • S0 • S0 • S1
+              ≈⟨ general-powers 100 auto ⟩
+          CZ • H1 • H0 • CZ • H0 • S1 • H1 • S1 • H1 • CZ • S1 • H1
+              ≈⟨ rewrite-symplectic1 20 auto ⟩
+          CZ • H1 • H0 • CZ • H0 • H1 • S1 • CZ • S1 • H1
+              ≈⟨ general-comm auto ⟩
+          CZ • H1 • H0 • CZ • H0 • H1 • CZ • S1 • S1 • H1
+              ≈⟨ rewrite-symplectic1 20 auto ⟩
+          CZ • H0 • H1 • CZ • H0 • H1 • CZ • H1 ∎
+
+  lemma-S0-H1-CZ : S0 • H1 • CZ ≈ H1 • CZ • S0
+  lemma-S0-H1-CZ = general-comm auto
+
+  lemma-S0-S1-H1-CZ : S0 • S1 • H1 • CZ ≈ S1 • H1 • CZ • S0
+  lemma-S0-S1-H1-CZ = general-comm auto
+{-
+  lemma-S1-S1-H1-CZ : H1 • CZ ≈ H1 • CZ
+  lemma-S1-S1-H1-CZ =
+      begin H1 • CZ
+              ≈⟨ by-duality {!!} ⟩
+          H1 • CZ
+              ≈⟨ general-comm {!!} ⟩
+          H1 • CZ ∎
+
+  lemma-S0-S0-H0-H1-CZ : H0 • H1 • CZ ≈ H0 • H1 • CZ
+  lemma-S0-S0-H0-H1-CZ =
+      begin H0 • H1 • CZ
+              ≈⟨ general-comm auto ⟩
+          H1 • (H0 • CZ)
+              ≈⟨ cright {!!} ⟩
+          H1 • (H0 • CZ)
+              ≈⟨ general-comm auto ⟩
+          H0 • H1 • CZ ∎
+
+  lemma-S0-S0-H0-S1-H1-CZ : H0 • S1 • H1 • CZ ≈ H0 • S1 • H1 • CZ
+  lemma-S0-S0-H0-S1-H1-CZ =
+      begin H0 • S1 • H1 • CZ
+              ≈⟨ general-comm auto ⟩
+          (S1 • H1) • (H0 • CZ)
+              ≈⟨ cright {!!} ⟩
+          (S1 • H1) • (H0 • CZ)
+              ≈⟨ general-comm auto ⟩
+          H0 • S1 • H1 • CZ ∎
+-}
+  lemma-H1-S1-H1-CZ : H1 • S1 • H1 • CZ ≈ S1 • H1 • CZ • S1
+  lemma-H1-S1-H1-CZ =
+      begin H1 • S1 • H1 • CZ
+              ≈⟨ by-duality lemma-H0-S0-H0-CZ ⟩
+          S1 • H1 • CZ • S1 ∎
+
+  lemma-H0-S0-H0-H1-CZ : H0 • S0 • H0 • H1 • CZ ≈ S0 • H0 • H1 • CZ • S0
+  lemma-H0-S0-H0-H1-CZ =
+      begin H0 • S0 • H0 • H1 • CZ
+              ≈⟨ general-comm auto ⟩
+          H1 • (H0 • S0 • H0 • CZ)
+              ≈⟨ cright lemma-H0-S0-H0-CZ ⟩
+          H1 • (S0 • H0 • CZ • S0)
+              ≈⟨ general-comm auto ⟩
+          S0 • H0 • H1 • CZ • S0 ∎
+      
+  lemma-H0-S0-H0-S1-H1-CZ : H0 • S0 • H0 • S1 • H1 • CZ ≈ S0 • H0 • S1 • H1 • CZ • S0
+  lemma-H0-S0-H0-S1-H1-CZ =
+      begin H0 • S0 • H0 • S1 • H1 • CZ
+              ≈⟨ general-comm auto ⟩
+          (S1 • H1) • (H0 • S0 • H0 • CZ)
+              ≈⟨ cright lemma-H0-S0-H0-CZ ⟩
+          (S1 • H1) • (S0 • H0 • CZ • S0)
+              ≈⟨ general-comm auto ⟩
+          S0 • H0 • S1 • H1 • CZ • S0 ∎
+
+  lemma-S1-H1-CZ-H0-H1-CZ : S1 • H1 • CZ • H0 • H1 • CZ ≈ H1 • CZ • H0 • H1 • CZ • H0 • S0 • H0
+  lemma-S1-H1-CZ-H0-H1-CZ =
+      begin S1 • H1 • CZ • H0 • H1 • CZ
+              ≈⟨ general-comm auto ⟩
+          S1 • H1 • CZ • H1 • H0 • CZ
+              ≈⟨ by-duality lemma-S0-H0-CZ-H0-H1-CZ ⟩
+          H1 • CZ • H1 • H0 • CZ • H0 • S0 • H0
+              ≈⟨ general-comm auto ⟩
+          H1 • CZ • H0 • H1 • CZ • H0 • S0 • H0 ∎
+  
+  lemma-S1-H1-CZ-S0-H0-H1-CZ : S1 • H1 • CZ • S0 • H0 • H1 • CZ ≈ H1 • CZ • S0 • H0 • H1 • CZ • H0 • S0 • H0
+  lemma-S1-H1-CZ-S0-H0-H1-CZ =
+      begin S1 • H1 • CZ • S0 • H0 • H1 • CZ
+              ≈⟨ general-comm auto ⟩
+          S0 • (S1 • H1 • CZ • H1 • H0 • CZ)
+              ≈⟨ cright by-duality lemma-S0-H0-CZ-H0-H1-CZ ⟩
+          S0 • (H1 • CZ • H1 • H0 • CZ • H0 • S0 • H0)
+              ≈⟨ general-comm auto ⟩
+          H1 • CZ • S0 • H0 • H1 • CZ • H0 • S0 • H0 ∎
+  
+  lemma-S0-H0-H1-CZ-H0-H1-CZ : S0 • H0 • H1 • CZ • H0 • H1 • CZ ≈ H0 • H1 • CZ • H0 • H1 • CZ • H1 • S1 • H1
+  lemma-S0-H0-H1-CZ-H0-H1-CZ =
+      begin S0 • H0 • H1 • CZ • H0 • H1 • CZ
+              ≈⟨ general-comm auto ⟩
+          H1 • (S0 • H0 • CZ • H0 • H1 • CZ)
+              ≈⟨ cright lemma-S0-H0-CZ-H0-H1-CZ ⟩
+          H1 • (H0 • CZ • H0 • H1 • CZ • H1 • S1 • H1)
+              ≈⟨ general-comm auto ⟩
+          H0 • H1 • CZ • H0 • H1 • CZ • H1 • S1 • H1 ∎
+
+  lemma-S0-H0-CZ-H0-S1-H1-CZ : S0 • H0 • CZ • H0 • S1 • H1 • CZ ≈ H0 • CZ • H0 • S1 • H1 • CZ • H1 • S1 • H1
+  lemma-S0-H0-CZ-H0-S1-H1-CZ =
+      begin S0 • H0 • CZ • H0 • S1 • H1 • CZ
+              ≈⟨ general-comm auto ⟩
+          S1 • (S0 • H0 • CZ • H0 • H1 • CZ)
+              ≈⟨ cright lemma-S0-H0-CZ-H0-H1-CZ ⟩
+          S1 • (H0 • CZ • H0 • H1 • CZ • H1 • S1 • H1)
+              ≈⟨ general-comm auto ⟩
+          H0 • CZ • H0 • S1 • H1 • CZ • H1 • S1 • H1 ∎
+  
+  lemma-H1-CZ-H0-S1-H1-CZ : H1 • CZ • H0 • S1 • H1 • CZ ≈ CZ • H0 • S1 • H1 • CZ • S0 • H0 • S0
+  lemma-H1-CZ-H0-S1-H1-CZ =
+      begin H1 • CZ • H0 • S1 • H1 • CZ
+              ≈⟨ general-comm auto ⟩
+          H1 • CZ • S1 • H1 • H0 • CZ
+              ≈⟨ by-duality lemma-H0-CZ-S0-H0-H1-CZ ⟩
+          CZ • S1 • H1 • H0 • CZ • S0 • H0 • S0
+              ≈⟨ general-comm auto ⟩
+          CZ • H0 • S1 • H1 • CZ • S0 • H0 • S0 ∎
+
+  lemma-H1-CZ-S0-H0-S1-H1-CZ : H1 • CZ • S0 • H0 • S1 • H1 • CZ ≈ CZ • S0 • H0 • S1 • H1 • CZ • S0 • H0 • S0
+  lemma-H1-CZ-S0-H0-S1-H1-CZ =
+      begin H1 • CZ • S0 • H0 • S1 • H1 • CZ
+              ≈⟨ general-comm auto ⟩
+          S0 • (H1 • CZ • S1 • H1 • H0 • CZ)
+              ≈⟨ cright by-duality lemma-H0-CZ-S0-H0-H1-CZ ⟩
+          S0 • (CZ • S1 • H1 • H0 • CZ • S0 • H0 • S0)
+              ≈⟨ general-comm auto ⟩
+          CZ • S0 • H0 • S1 • H1 • CZ • S0 • H0 • S0 ∎
+
+  lemma-H0-H1-CZ-S0-H0-H1-CZ : H0 • H1 • CZ • S0 • H0 • H1 • CZ ≈ H1 • CZ • S0 • H0 • H1 • CZ • S1 • H1 • S1
+  lemma-H0-H1-CZ-S0-H0-H1-CZ =
+      begin H0 • H1 • CZ • S0 • H0 • H1 • CZ
+              ≈⟨ general-comm auto ⟩
+          H1 • (H0 • CZ • S0 • H0 • H1 • CZ)
+              ≈⟨ cright lemma-H0-CZ-S0-H0-H1-CZ ⟩
+          H1 • (CZ • S0 • H0 • H1 • CZ • S1 • H1 • S1)
+              ≈⟨ by-assoc auto ⟩
+          H1 • CZ • S0 • H0 • H1 • CZ • S1 • H1 • S1 ∎
+
+  lemma-H0-CZ-S0-H0-S1-H1-CZ : H0 • CZ • S0 • H0 • S1 • H1 • CZ ≈ CZ • S0 • H0 • S1 • H1 • CZ • S1 • H1 • S1
+  lemma-H0-CZ-S0-H0-S1-H1-CZ =
+      begin H0 • CZ • S0 • H0 • S1 • H1 • CZ
+              ≈⟨ general-comm auto ⟩
+          S1 • (H0 • CZ • S0 • H0 • H1 • CZ)
+              ≈⟨ cright lemma-H0-CZ-S0-H0-H1-CZ ⟩
+          S1 • (CZ • S0 • H0 • H1 • CZ • S1 • H1 • S1)
+              ≈⟨ general-comm auto ⟩
+          CZ • S0 • H0 • S1 • H1 • CZ • S1 • H1 • S1 ∎
+
+  lemma-CZ-S0-H0-CZ : CZ • S0 • H0 • CZ ≈ H0 • CZ • S0 • H0 • S0 • S1
+  lemma-CZ-S0-H0-CZ =
+      begin CZ • S0 • H0 • CZ
+              ≈⟨ general-comm auto ⟩
+          S0 • (CZ • H0 • CZ)
+              ≈⟨ cright axiom rel-CZ-H0-CZ ⟩
+          S0 • (S0 • H0 • CZ • S0 • H0 • S0 • S1)
+              ≈⟨ general-powers 20 auto ⟩
+          H0 • CZ • S0 • H0 • S0 • S1 ∎
+
+  lemma-CZ-H1-CZ : CZ • H1 • CZ ≈ S1 • H1 • CZ • S0 • S1 • H1 • S1
+  lemma-CZ-H1-CZ =
+      begin CZ • H1 • CZ
+              ≈⟨ by-duality (axiom rel-CZ-H0-CZ) ⟩
+          S1 • H1 • CZ • S1 • H1 • S1 • S0
+              ≈⟨ general-comm auto ⟩
+          S1 • H1 • CZ • S0 • S1 • H1 • S1 ∎
+
+  lemma-CZ-S1-H1-CZ : CZ • S1 • H1 • CZ ≈ H1 • CZ • S0 • S1 • H1 • S1
+  lemma-CZ-S1-H1-CZ =
+      begin CZ • S1 • H1 • CZ
+              ≈⟨ by-duality lemma-CZ-S0-H0-CZ ⟩
+          H1 • CZ • S1 • H1 • S1 • S0
+              ≈⟨ general-comm auto ⟩
+          H1 • CZ • S0 • S1 • H1 • S1 ∎
+
+  lemma-H1-CZ-H0-H1-CZ-H0-H1-CZ : H1 • CZ • H0 • H1 • CZ • H0 • H1 • CZ ≈ CZ • H0 • H1 • CZ • H0 • H1 • CZ • H0
+  lemma-H1-CZ-H0-H1-CZ-H0-H1-CZ =
+      begin H1 • CZ • H0 • H1 • CZ • H0 • H1 • CZ
+              ≈⟨ general-comm auto ⟩
+          H1 • CZ • H1 • H0 • CZ • H1 • H0 • CZ
+              ≈⟨ by-duality (lemma-H0-CZ-H0-H1-CZ-H0-H1-CZ) ⟩
+          CZ • H1 • H0 • CZ • H1 • H0 • CZ • H0
+              ≈⟨ general-comm auto ⟩
+          CZ • H0 • H1 • CZ • H0 • H1 • CZ • H0 ∎
+
+  -- ----------------------------------------------------------------------
+  -- * Rewrite rules for 2-qubit Symplectic relations
+  
+  step-symplectic2 : Step-Function Gen _===_
+
+  -- Rules for binary gates.
+  step-symplectic2 (CZ-gen ∷ CZ-gen ∷ t) = just (t , at-head (axiom order-CZ))
+  
+  step-symplectic2 (S1-gen ∷ CZ-gen ∷ t) = just (CZ-gen ∷ S1-gen ∷ t , at-head (axiom comm-S1-CZ))
+  step-symplectic2 (S0-gen ∷ CZ-gen ∷ t) = just (CZ-gen ∷ S0-gen ∷ t , at-head (axiom comm-S0-CZ))
+  step-symplectic2 (S0-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (H1-gen ∷ CZ-gen ∷ S0-gen ∷ t , at-head lemma-S0-H1-CZ)
+  step-symplectic2 (S0-gen ∷ S1-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (S1-gen ∷ H1-gen ∷ CZ-gen ∷ S0-gen ∷ t , at-head lemma-S0-S1-H1-CZ)
+  
+--  step-symplectic2 (H1-gen ∷ CZ-gen ∷ t) = just (H1-gen ∷ CZ-gen ∷  t , at-head lemma-S1-S1-H1-CZ)
+--  step-symplectic2 ( H0-gen ∷ CZ-gen ∷ t) = just (H0-gen ∷ CZ-gen ∷ t , at-head lemma-S0-S0-H0-CZ)
+--  step-symplectic2 ( H0-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (H0-gen ∷ H1-gen ∷ CZ-gen ∷ t , at-head lemma-S0-S0-H0-H1-CZ)
+--  step-symplectic2 ( H0-gen ∷ S1-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (H0-gen ∷ S1-gen ∷ H1-gen ∷ CZ-gen ∷ t , at-head lemma-S0-S0-H0-S1-H1-CZ)
+
+  step-symplectic2 (H1-gen ∷ S1-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (S1-gen ∷ H1-gen ∷ CZ-gen ∷  S1-gen ∷ t , at-head lemma-H1-S1-H1-CZ)
+  step-symplectic2 (H0-gen ∷ S0-gen ∷ H0-gen ∷ CZ-gen ∷ t) = just (S0-gen ∷ H0-gen ∷ CZ-gen ∷ S0-gen ∷ t , at-head lemma-H0-S0-H0-CZ)
+  step-symplectic2 (H0-gen ∷ S0-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (S0-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ S0-gen ∷ t , at-head lemma-H0-S0-H0-H1-CZ)
+  step-symplectic2 (H0-gen ∷ S0-gen ∷ H0-gen ∷ S1-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (S0-gen ∷ H0-gen ∷ S1-gen ∷ H1-gen ∷ CZ-gen ∷ S0-gen ∷ t , at-head lemma-H0-S0-H0-S1-H1-CZ)
+  
+  step-symplectic2 (S1-gen ∷ H1-gen ∷ CZ-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (H1-gen ∷ CZ-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ H0-gen ∷ S0-gen ∷ H0-gen ∷ t , at-head lemma-S1-H1-CZ-H0-H1-CZ)
+  step-symplectic2 (S1-gen ∷ H1-gen ∷ CZ-gen ∷ S0-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (H1-gen ∷ CZ-gen ∷ S0-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ H0-gen ∷ S0-gen ∷ H0-gen ∷ t , at-head lemma-S1-H1-CZ-S0-H0-H1-CZ)
+  step-symplectic2 (S0-gen ∷ H0-gen ∷ CZ-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (H0-gen ∷ CZ-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ H1-gen ∷ S1-gen ∷ H1-gen ∷ t , at-head lemma-S0-H0-CZ-H0-H1-CZ)
+  step-symplectic2 (S0-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (H0-gen ∷ H1-gen ∷ CZ-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ H1-gen ∷ S1-gen ∷ H1-gen ∷ t , at-head lemma-S0-H0-H1-CZ-H0-H1-CZ)
+  step-symplectic2 (S0-gen ∷ H0-gen ∷ CZ-gen ∷ H0-gen ∷ S1-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (H0-gen ∷ CZ-gen ∷ H0-gen ∷ S1-gen ∷ H1-gen ∷ CZ-gen ∷ H1-gen ∷ S1-gen ∷ H1-gen ∷ t , at-head lemma-S0-H0-CZ-H0-S1-H1-CZ)
+  
+  step-symplectic2 (H1-gen ∷ CZ-gen ∷ H0-gen ∷ S1-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (CZ-gen ∷ H0-gen ∷ S1-gen ∷ H1-gen ∷ CZ-gen ∷ S0-gen ∷ H0-gen ∷ S0-gen ∷ t , at-head lemma-H1-CZ-H0-S1-H1-CZ)
+  step-symplectic2 (H1-gen ∷ CZ-gen ∷ S0-gen ∷ H0-gen ∷ S1-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (CZ-gen ∷ S0-gen ∷ H0-gen ∷ S1-gen ∷ H1-gen ∷ CZ-gen ∷ S0-gen ∷ H0-gen ∷ S0-gen ∷ t , at-head lemma-H1-CZ-S0-H0-S1-H1-CZ)
+  step-symplectic2 (H0-gen ∷ CZ-gen ∷ S0-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (CZ-gen ∷ S0-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ S1-gen ∷ H1-gen ∷ S1-gen ∷ t , at-head lemma-H0-CZ-S0-H0-H1-CZ)
+  step-symplectic2 (H0-gen ∷ H1-gen ∷ CZ-gen ∷ S0-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (H1-gen ∷ CZ-gen ∷ S0-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ S1-gen ∷ H1-gen ∷ S1-gen ∷ t , at-head lemma-H0-H1-CZ-S0-H0-H1-CZ)
+  step-symplectic2 (H0-gen ∷ CZ-gen ∷ S0-gen ∷ H0-gen ∷ S1-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (CZ-gen ∷ S0-gen ∷ H0-gen ∷ S1-gen ∷ H1-gen ∷ CZ-gen ∷ S1-gen ∷ H1-gen ∷ S1-gen ∷ t , at-head lemma-H0-CZ-S0-H0-S1-H1-CZ)
+  
+  step-symplectic2 (CZ-gen ∷ H0-gen ∷ CZ-gen ∷ t) = just (S0-gen ∷ H0-gen ∷ CZ-gen ∷ S0-gen ∷ H0-gen ∷ S0-gen ∷ S1-gen ∷ t , at-head (axiom rel-CZ-H0-CZ))
+  step-symplectic2 (CZ-gen ∷ S0-gen ∷ H0-gen ∷ CZ-gen ∷ t) = just ( H0-gen ∷ CZ-gen ∷ S0-gen ∷ H0-gen ∷ S0-gen ∷ S1-gen ∷ t , at-head lemma-CZ-S0-H0-CZ)
+  step-symplectic2 (CZ-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (S1-gen ∷ H1-gen ∷ CZ-gen ∷ S0-gen ∷ S1-gen ∷ H1-gen ∷ S1-gen ∷ t , at-head lemma-CZ-H1-CZ)
+  step-symplectic2 (CZ-gen ∷ S1-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (H1-gen ∷ CZ-gen ∷ S0-gen ∷ S1-gen ∷ H1-gen ∷ S1-gen ∷ t , at-head lemma-CZ-S1-H1-CZ)
+  
+  step-symplectic2 (H1-gen ∷ CZ-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (CZ-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ H0-gen ∷ t , at-head lemma-H1-CZ-H0-H1-CZ-H0-H1-CZ)
+  step-symplectic2 (H0-gen ∷ CZ-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ t) = just (CZ-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ H0-gen ∷ H1-gen ∷ CZ-gen ∷ H1-gen ∷ t , at-head lemma-H0-CZ-H0-H1-CZ-H0-H1-CZ)
+
+  -- Catch-all
+  step-symplectic2 _ = nothing
+
+  -- From this rewrite relation, we extract a tactic 'rewrite-symplectic-aux'.
+  open Rewriting.Step (step-cong step-order then step-cong step-symplectic1 then step-cong step-symplectic2) renaming (general-rewrite to rewrite-symplectic-aux; multistep to symplectic-multistep; lemma-multistep to lemma-symplectic-multistep) public
+
+  -- Finally, we take the new tactic, which is about the Symplectic
+  -- relations, and turn it into a tactic that works on Symplectic+T
+  -- relations. It works ≈⟨ ignoring T-generators. ⟩
+
+  rewrite-symplectic : (n : ℕ) -> {w u : Word Gen} -> symplectic-multistep n (to-list w) ≡ symplectic-multistep n (to-list u) -> w ≈ u
+  rewrite-symplectic n eq = (rewrite-symplectic-aux n eq)
+
+
+  -- We also instantiate the "rewrite-in-context" tactic from the
+  -- Word-Tactics module to this rewrite system. Specifically,
+  -- symplectic-tactic can be used to apply Symplectic rewriting to a
+  -- subword inside a larger word, such as this:
+  --
+  -- property : X • Y • Z • A • B ≈ X • Y • Z • C • D • E
+  -- property = symplectic-tactic 3 2 100 auto
+  --
+  -- This applies 100 steps of Symplectic rewriting to the subword A • B
+  -- of the cleft-hand side (starting at position 3 and having length 2),
+  -- and to the corresponding subword C • D • E of the cright-hand
+  -- side, and checks whether a common normal form is reached.
+  symplectic-tactic : ∀ {s t pre post s2 t2} -> (n m k : ℕ) ->
+             let s' = to-list2 s
+                 t' = to-list2 t
+                 m' = m + length t' - length s'
+             in (mysplit n m s' , mysplit n m' t' , symplectic-multistep k (to-list s2)) ≡ 
+                ((pre , s2 , post) , (pre , t2 , post) , symplectic-multistep k (to-list t2)) ->
+                s ≈ t
+  symplectic-tactic = rewrite-in-context symplectic-multistep lemma-symplectic-multistep-inclusion
+    where
+      lemma-symplectic-multistep-inclusion : (n : ℕ) (xs : List Gen) ->  from-list xs ≈ from-list (symplectic-multistep n xs)
+      lemma-symplectic-multistep-inclusion n xs = (lemma-symplectic-multistep n xs)
+
+open Symplectic-Rewriting using (rewrite-symplectic) public
+
+module Ex where
+
+  data Gen : Set where
+    H0-gen : Gen
+    S0-gen : Gen
+    H1-gen : Gen
+    S1-gen : Gen
+    Ex-gen : Gen
+
+  H0 : Word Gen
+  H0 = [ H0-gen ]ʷ
+
+  S0 : Word Gen
+  S0 = [ S0-gen ]ʷ
+
+  Z0 : Word Gen
+  Z0 = S0 • S0
+
+  X0 : Word Gen
+  X0 = H0 • S0 • S0 • H0
+
+  H1 : Word Gen
+  H1 = [ H1-gen ]ʷ
+
+  S1 : Word Gen
+  S1 = [ S1-gen ]ʷ
+
+  Z1 : Word Gen
+  Z1 = S1 • S1
+
+  X1 : Word Gen
+  X1 = H1 • S1 • S1 • H1
+
+  Ex : Word Gen
+  Ex = [ Ex-gen ]ʷ
+
+  infix 4 _===_
+  data _===_ : WRel Gen where
+    order-S0 : S0 ^ 2 === ε
+    order-H0 : H0 ^ 2 === ε
+    order-S0H0 : (S0 • H0) ^ 3 === ε
+    order-S1 : S1 ^ 2 === ε
+    order-H1 : H1 ^ 2 === ε
+    order-S1H1 : (S1 • H1) ^ 3 === ε
+
+    comm-H0H1 : H0 • H1 === H1 • H0
+    comm-H0S1 : H0 • S1 === S1 • H0
+    comm-S0H1 : S0 • H1 === H1 • S0
+    comm-S0S1 : S0 • S1 === S1 • S0
+
+    order-Ex : Ex ^ 2 === ε
+    comm-H0Ex : H0 • Ex === Ex • H1
+    comm-S0Ex : S0 • Ex === Ex • S1
+
+
+  open C1 renaming (module Symplectic to Sym)
+  
+  GenM = Sym.Gen ⊎ Sym.Gen
+  infix 4 _===ₘ_
+  _===ₘ_ = (Sym._===_ ⸲ Sym._===_ ⸲ Γₓ)
+  
+  M-nfp' : NFProperty' _===ₘ_
+  M-nfp' = DP.NFP'.nfp' Sym._===_ Sym._===_ Sym.sym-nfp' Sym.sym-nfp'
+
+  open PB _===ₘ_ using () renaming (_≈_ to _≈₁_ ; _===_ to _===₁_)-- ; refl to refl₁ ; axiom to axiom₁ ; left-unit to left-unit₁)
+  open PP _===ₘ_ renaming (by-assoc to by-assoc₁ ; by-assoc-and to by-assoc-and₁) using ()
+
+  open PB _===_ using () renaming (_≈_ to _≈₂_ ; _===_ to _===₂_)
+  open PP _===_ using (by-assoc) renaming (word-setoid to ws₂)
+
+  open PB hiding (_===_)
+
+
+  lemma-comm-ExH1 : H1 • Ex ≈₂ Ex • H0
+  lemma-comm-ExH1 = begin
+    H1 • Ex ≈⟨ trans (sym left-unit) (_≈₂_.cong (_≈₂_.sym (_≈₂_.axiom order-Ex)) _≈₂_.refl) ⟩
+    Ex ^ 2 • H1 • Ex ≈⟨ by-assoc Eq.refl ⟩
+    Ex • (Ex • H1) • Ex ≈⟨ cong refl (_≈₂_.cong (_≈₂_.sym (_≈₂_.axiom comm-H0Ex)) _≈₂_.refl) ⟩
+    Ex • (H0 • Ex) • Ex ≈⟨ by-assoc Eq.refl ⟩
+    (Ex • H0) • Ex ^ 2 ≈⟨ trans (_≈₂_.cong _≈₂_.refl (_≈₂_.axiom order-Ex)) right-unit ⟩
+    Ex • H0 ∎
+    where open SR ws₂
+
+  lemma-comm-ExS1 : S1 • Ex ≈₂ Ex • S0
+  lemma-comm-ExS1 = begin
+    S1 • Ex ≈⟨ trans (sym left-unit) (_≈₂_.cong (_≈₂_.sym (_≈₂_.axiom order-Ex)) _≈₂_.refl) ⟩
+    Ex ^ 2 • S1 • Ex ≈⟨ by-assoc Eq.refl ⟩
+    Ex • (Ex • S1) • Ex ≈⟨ cong refl (_≈₂_.cong (_≈₂_.sym (_≈₂_.axiom comm-S0Ex)) _≈₂_.refl) ⟩
+    Ex • (S0 • Ex) • Ex ≈⟨ by-assoc Eq.refl ⟩
+    (Ex • S0) • Ex ^ 2 ≈⟨ trans (_≈₂_.cong _≈₂_.refl (_≈₂_.axiom order-Ex)) right-unit ⟩
+    Ex • S0 ∎
+    where open SR ws₂
+
+  open import Presentation.CosetNF
+
+  data C : Set where
+    cEx : C
+
+  pattern •ε = inj₂ tt
+  pattern •Ex = inj₁ cEx
+
+  I : C ⊎ ⊤
+  I = •ε
+  
+  f : GenM → Word Gen
+  f (inj₁ Sym.H-gen) = H0
+  f (inj₁ Sym.S-gen) = S0
+  f (inj₂ Sym.H-gen) = H1
+  f (inj₂ Sym.S-gen) = S1
+
+  h : C ⊎ ⊤ → Gen → Word GenM × (C ⊎ ⊤)
+  h •Ex H0-gen = [ Sym.H ]ᵣ , •Ex
+  h •Ex S0-gen = [ Sym.S ]ᵣ , •Ex
+  h •Ex H1-gen = [ Sym.H ]ₗ , •Ex
+  h •Ex S1-gen = [ Sym.S ]ₗ , •Ex
+  h •Ex Ex-gen = ε , •ε
+  h •ε H0-gen = [ Sym.H ]ₗ , •ε
+  h •ε S0-gen = [ Sym.S ]ₗ , •ε
+  h •ε H1-gen = [ Sym.H ]ᵣ , •ε
+  h •ε S1-gen = [ Sym.S ]ᵣ , •ε
+  h •ε Ex-gen = ε , •Ex
+
+  [_]ₒ : C → Word Gen
+  [ cEx ]ₒ = Ex
+
+  hcme : ∀ c m -> ∃ \ w -> ∃ \ c' -> ((h **) (inj₁ c) (f m)) ≡ (w , inj₁ c')
+  hcme cEx (inj₁ Sym.H-gen) = [ Sym.H ]ᵣ , cEx , Eq.refl
+  hcme cEx (inj₁ Sym.S-gen) = [ Sym.S ]ᵣ , cEx , Eq.refl
+  hcme cEx (inj₂ Sym.H-gen) = [ Sym.H ]ₗ , cEx , Eq.refl
+  hcme cEx (inj₂ Sym.S-gen) = [ Sym.S ]ₗ , cEx , Eq.refl
+  
+  htme : ∀ m -> ((h **) (inj₂ tt) (f m)) ≡ ([ m ]ʷ , inj₂ tt)
+  htme (inj₁ Sym.H-gen) = Eq.refl
+  htme (inj₁ Sym.S-gen) = Eq.refl
+  htme (inj₂ Sym.H-gen) = Eq.refl
+  htme (inj₂ Sym.S-gen) = Eq.refl
+
+  infix 4 _~_
+  _~_ = PW.Pointwise _≈₁_ (_≡_ {A = C ⊎ ⊤})
+
+  htme~ : ∀ (m : GenM) -> ([ m ]ʷ , I) ~ ((h **) I (f m))
+  htme~ (inj₁ Sym.H-gen) = refl , Eq.refl
+  htme~ (inj₁ Sym.S-gen) = refl , Eq.refl
+  htme~ (inj₂ Sym.H-gen) = refl , Eq.refl
+  htme~ (inj₂ Sym.S-gen) = refl , Eq.refl
+
+  [_]ₓ = f *
+
+  hcme~ : ∀ (c : C) (m : GenM) -> let (w' , c' , p) = hcme c m in [ c ]ₒ • f m ≈₂ [ w' ]ₓ • [ c' ]ₒ 
+  hcme~ cEx (inj₁ Sym.H-gen) = _≈₂_.sym lemma-comm-ExH1
+  hcme~ cEx (inj₁ Sym.S-gen) = _≈₂_.sym lemma-comm-ExS1
+  hcme~ cEx (inj₂ Sym.H-gen) = sym (axiom comm-H0Ex)
+  hcme~ cEx (inj₂ Sym.S-gen) = _≈₂_.sym (_≈₂_.axiom comm-S0Ex)
+  
+  h-wd-ax : ∀ (c : C ⊎ ⊤){u t : Word Gen} -> u ===₂ t -> ((h **) c u) ~ ((h **) c t)
+  h-wd-ax •Ex {u} {t} order-S0 = (by-assoc-and₁ (axiom (right Sym.order-S)) auto auto) , auto --axiom (right Sym.order-S) , Eq.refl
+  h-wd-ax •Ex {u} {t} order-H0 = axiom (right Sym.order-H) , Eq.refl
+  h-wd-ax •Ex {u} {t} order-S0H0 = axiom (right Sym.order-SH) , Eq.refl
+  h-wd-ax •Ex {u} {t} order-S1 = axiom (left Sym.order-S) , Eq.refl
+  h-wd-ax •Ex {u} {t} order-H1 = axiom (left Sym.order-H) , Eq.refl
+  h-wd-ax •Ex {u} {t} order-S1H1 = axiom (left Sym.order-SH) , Eq.refl
+  h-wd-ax •Ex {u} {t} order-Ex = left-unit , Eq.refl
+  h-wd-ax •Ex {u} {t} comm-H0Ex = trans right-unit (sym left-unit) , Eq.refl
+  h-wd-ax •Ex {u} {t} comm-S0Ex = trans right-unit (sym left-unit) , Eq.refl
+  h-wd-ax •ε {u} {t} order-S0 = axiom (left Sym.order-S) , Eq.refl
+  h-wd-ax •ε {u} {t} order-H0 = axiom (left Sym.order-H) , Eq.refl
+  h-wd-ax •ε {u} {t} order-S0H0 = axiom (left Sym.order-SH) , Eq.refl
+  h-wd-ax •ε {u} {t} order-S1 = axiom (right Sym.order-S) , Eq.refl
+  h-wd-ax •ε {u} {t} order-H1 = axiom (right Sym.order-H) , Eq.refl
+  h-wd-ax •ε {u} {t} order-S1H1 = axiom (right Sym.order-SH) , Eq.refl
+  h-wd-ax •ε {u} {t} order-Ex = left-unit , Eq.refl
+  h-wd-ax •ε {u} {t} comm-H0Ex = trans right-unit (sym left-unit) , Eq.refl
+  h-wd-ax •ε {u} {t} comm-S0Ex = trans right-unit (sym left-unit) , Eq.refl
+  h-wd-ax •Ex comm-H0H1 = sym (axiom (mid (comm Sym.H-gen Sym.H-gen))) , Eq.refl 
+  h-wd-ax •Ex comm-H0S1 = sym (axiom (mid (comm Sym.S-gen Sym.H-gen))) , Eq.refl 
+  h-wd-ax •Ex comm-S0H1 = sym (axiom (mid (comm Sym.H-gen Sym.S-gen))) , Eq.refl  
+  h-wd-ax •Ex comm-S0S1 = sym (axiom (mid (comm Sym.S-gen Sym.S-gen))) , Eq.refl  
+  h-wd-ax •ε comm-H0H1 = axiom (mid (comm Sym.H-gen Sym.H-gen)) , Eq.refl  
+  h-wd-ax •ε comm-H0S1 = axiom (mid (comm Sym.H-gen Sym.S-gen)) , Eq.refl  
+  h-wd-ax •ε comm-S0H1 = axiom (mid (comm Sym.S-gen Sym.H-gen)) , Eq.refl  
+  h-wd-ax •ε comm-S0S1 = axiom (mid (comm Sym.S-gen Sym.S-gen)) , Eq.refl
+
+
+  f-wd-ax : ∀ {w v} -> w ===₁ v -> (f *) w ≈₂ (f *) v
+  f-wd-ax {w} {v} (left Sym.order-S) = axiom order-S0
+  f-wd-ax {w} {v} (left Sym.order-H) = axiom order-H0
+  f-wd-ax {w} {v} (left Sym.order-SH) = axiom order-S0H0
+  f-wd-ax {w} {v} (right Sym.order-S) = axiom order-S1
+  f-wd-ax {w} {v} (right Sym.order-H) = axiom order-H1
+  f-wd-ax {w} {v} (right Sym.order-SH) = axiom order-S1H1
+  f-wd-ax {w} {v} (mid (comm Sym.H-gen Sym.H-gen)) = axiom comm-H0H1
+  f-wd-ax {w} {v} (mid (comm Sym.H-gen Sym.S-gen)) = axiom comm-H0S1
+  f-wd-ax {w} {v} (mid (comm Sym.S-gen Sym.H-gen)) = axiom comm-S0H1
+  f-wd-ax {w} {v} (mid (comm Sym.S-gen Sym.S-gen)) = axiom comm-S0S1
+
+  [_] : C ⊎ ⊤ -> Word Gen
+  [_] = [_,_] [_]ₒ (λ v → ε)
+
+  h=ract :  ∀ c y -> let (m' , c') = h c y in
+   ([ c ] • [ y ]ʷ) ≈₂ ([ m' ]ₓ • [ c' ])
+  h=ract •Ex H0-gen = sym lemma-comm-ExH1
+  h=ract •Ex S0-gen = sym lemma-comm-ExS1
+  h=ract •Ex H1-gen = sym (axiom comm-H0Ex)
+  h=ract •Ex S1-gen = sym (axiom comm-S0Ex)
+  h=ract •Ex Ex-gen = trans (axiom order-Ex) (sym right-unit)
+  h=ract •ε H0-gen = trans left-unit (sym right-unit)
+  h=ract •ε S0-gen = trans left-unit (sym right-unit)
+  h=ract •ε H1-gen = trans left-unit (sym right-unit)
+  h=ract •ε S1-gen = trans left-unit (sym right-unit)
+  h=ract •ε Ex-gen = refl
+
+  assump : CosetNF-CT-Assumptions-And-Theorems-Packed _===ₘ_ _===_
+  assump = record
+            { C = C
+            ; f = f
+            ; h = h
+            ; [_]ₒ = [_]ₒ
+            ; hcme = hcme
+            ; htme = htme
+            ; htme~ = htme~
+            ; hcme~ = hcme~
+            ; h-wd-ax = h-wd-ax
+            ; f-wd-ax = f-wd-ax
+            ; h=ract = h=ract
+            }
+
+  open CosetNF-CT-Assumptions-And-Theorems-Packed assump
+  
+  ExM-nfp' : NFProperty' _===_
+  ExM-nfp' = nfp' M-nfp'
+
+
+module Sym2 where
+
+  open Symplectic
+
+  GenM = Ex.Gen
+  infix 4 _===ₘ_
+  _===ₘ_ = Ex._===_
+  
+  ExM-nfp' = Ex.ExM-nfp'
+
+  open PB _===ₘ_ using () renaming (_≈_ to _≈₁_ ; _===_ to _===₁_)-- ; refl to refl₁ ; axiom to axiom₁ ; left-unit to left-unit₁)
+  open PP _===ₘ_ renaming (by-assoc to by-assoc₁ ; by-assoc-and to by-assoc-and₁ ; word-setoid to ws₁) using ()
+
+  
+  open PB _===_ using () renaming (_≈_ to _≈₂_ ; _===_ to _===₂_)
+  open PP _===_ using (by-assoc ; by-assoc-and) renaming (word-setoid to ws₂)
+
+  open PB hiding (_===_)
+
+  open import Data.Maybe
+  open import Data.Bool
+  import Data.Nat as Nat
+  
+  module Comm where
+
+    -- Commutativity.
+    comm~ : (x y : Gen) -> Maybe (([ x ]ʷ • [ y ]ʷ) ≈₂ ([ y ]ʷ • [ x ]ʷ))
+    comm~ H0-gen H1-gen = just (_≈₂_.axiom comm-H0H1)
+    comm~ H0-gen S1-gen = just (_≈₂_.axiom comm-H0S1)
+    comm~ S0-gen H1-gen = just (_≈₂_.axiom comm-S0H1)
+    comm~ S0-gen S1-gen = just (_≈₂_.axiom comm-S0S1)
+
+    comm~ H1-gen H0-gen = just (_≈₂_.sym (_≈₂_.axiom comm-H0H1))
+    comm~ H1-gen S0-gen = just (_≈₂_.sym (_≈₂_.axiom comm-S0H1))
+    comm~ S1-gen H0-gen = just (_≈₂_.sym (_≈₂_.axiom comm-H0S1))
+    comm~ S1-gen S0-gen = just (_≈₂_.sym (_≈₂_.axiom comm-S0S1))
+
+    comm~ S0-gen CZ-gen = just (_≈₂_.axiom comm-S0-CZ)
+    comm~ S1-gen CZ-gen = just (_≈₂_.axiom comm-S1-CZ)
+    comm~ CZ-gen S0-gen = just (_≈₂_.sym (_≈₂_.axiom comm-S0-CZ))
+    comm~ CZ-gen S1-gen = just (_≈₂_.sym (_≈₂_.axiom comm-S1-CZ))
+    comm~ _ _ = nothing
+
+
+    -- We number the generators for the purpose of ordering them.
+    ord : Gen -> ℕ
+    ord S0-gen = 0
+    ord S1-gen = 1
+    ord H0-gen = 2
+    ord H1-gen = 3
+    ord CZ-gen = 4
+
+    -- Ordering of generators.
+    les : Gen -> Gen -> Bool
+    les x y with ord x Nat.<? ord y
+    les x y | yes _ = true
+    les x y | no _ = false
+
+  open import Presentation.CosetNF
+
+  data C : Set where
+    cCZ : C
+    cCZH0 : C
+    cCZH0S0 : C
+    cCZH1 : C
+    cCZH1S1 : C
+    cCZH0H1 : C
+    cCZH0S0H1 : C
+    cCZH0H1S1 : C
+    cCZH0S0H1S1 : C
+
+  pattern •ε = inj₂ tt
+  pattern •CZ = inj₁ cCZ
+  pattern •CZH0 = inj₁ cCZH0
+  pattern •CZH0S0 = inj₁ cCZH0S0
+  pattern •CZH1 = inj₁ cCZH1
+  pattern •CZH1S1 = inj₁ cCZH1S1
+  pattern •CZH0H1 = inj₁ cCZH0H1
+  pattern •CZH0S0H1 = inj₁ cCZH0S0H1
+  pattern •CZH0H1S1 = inj₁ cCZH0H1S1
+  pattern •CZH0S0H1S1 = inj₁ cCZH0S0H1S1
+
+  I : C ⊎ ⊤
+  I = •ε
+  
+  f : GenM → Word Gen
+  f Ex.H0-gen = H0
+  f Ex.S0-gen = S0
+  f Ex.H1-gen = H1
+  f Ex.S1-gen = S1
+  f Ex.Ex-gen = Ex
+
+
+  h : C ⊎ ⊤ → Gen → Word GenM × (C ⊎ ⊤)
+  h •ε H0-gen = Ex.H0 , •ε
+  h •CZ H0-gen = ε , •CZH0
+  h •CZH0 H0-gen = ε , •CZ
+  h •CZH1 H0-gen = ε , •CZH0H1
+  h •CZH0S0 H0-gen = Ex.S0 , •CZH0S0
+  h •CZH0H1 H0-gen = ε , •CZH1
+  h •CZH1S1 H0-gen = ε , •CZH0H1S1
+  h •CZH0S0H1 H0-gen = Ex.S0 , •CZH0S0H1
+  h •CZH0H1S1 H0-gen = ε , •CZH1S1
+  h •CZH0S0H1S1 H0-gen = Ex.S0 , •CZH0S0H1S1
+  h •ε H1-gen = Ex.H1 , •ε
+  h •CZ H1-gen = ε , •CZH1
+  h •CZH0 H1-gen = ε , •CZH0H1
+  h •CZH1 H1-gen = ε , •CZ
+  h •CZH0S0 H1-gen = ε , •CZH0S0H1
+  h •CZH0H1 H1-gen = ε , •CZH0
+  h •CZH1S1 H1-gen = Ex.S1 , •CZH1S1
+  h •CZH0S0H1 H1-gen = ε , •CZH0S0
+  h •CZH0H1S1 H1-gen = Ex.S1 , •CZH0H1S1
+  h •CZH0S0H1S1 H1-gen = Ex.S1 , •CZH0S0H1S1
+  h •ε S0-gen = Ex.S0 , •ε
+  h •CZ S0-gen = Ex.S0 , •CZ
+  h •CZH0 S0-gen = ε , •CZH0S0
+  h •CZH1 S0-gen = Ex.S0 , •CZH1
+  h •CZH0S0 S0-gen = ε , •CZH0
+  h •CZH0H1 S0-gen = ε , •CZH0S0H1
+  h •CZH1S1 S0-gen = Ex.S0 , •CZH1S1
+  h •CZH0S0H1 S0-gen = ε , •CZH0H1
+  h •CZH0H1S1 S0-gen = ε , •CZH0S0H1S1
+  h •CZH0S0H1S1 S0-gen = ε , •CZH0H1S1
+  h •ε S1-gen = Ex.S1 , •ε
+  h •CZ S1-gen = Ex.S1 , •CZ
+  h •CZH0 S1-gen = Ex.S1 , •CZH0
+  h •CZH1 S1-gen = ε , •CZH1S1
+  h •CZH0S0 S1-gen = Ex.S1 , •CZH0S0
+  h •CZH0H1 S1-gen = ε , •CZH0H1S1
+  h •CZH1S1 S1-gen = ε , •CZH1
+  h •CZH0S0H1 S1-gen = ε , •CZH0S0H1S1
+  h •CZH0H1S1 S1-gen = ε , •CZH0H1
+  h •CZH0S0H1S1 S1-gen = ε , •CZH0S0H1
+  h •ε CZ-gen = ε , •CZ
+  h •CZ CZ-gen = ε , •ε
+  h •CZH0 CZ-gen = Ex.S1 • Ex.S0 • Ex.H0 • Ex.S0 , •CZH0S0
+  h •CZH1 CZ-gen = Ex.S1 • Ex.H1 • Ex.S1 • Ex.S0 , •CZH1S1
+  h •CZH0S0 CZ-gen = Ex.S1 • Ex.S0 • Ex.H0 • Ex.S0 , •CZH0
+  h •CZH0H1 CZ-gen = Ex.Ex • Ex.H1 • Ex.H0 , •CZH0H1
+  h •CZH1S1 CZ-gen = Ex.S1 • Ex.H1 • Ex.S1 • Ex.S0 , •CZH1
+  h •CZH0S0H1 CZ-gen = Ex.Ex • Ex.H1 • Ex.H0 , •CZH0S0H1
+  h •CZH0H1S1 CZ-gen = Ex.Ex • Ex.H1 • Ex.H0 , •CZH0H1S1
+  h •CZH0S0H1S1 CZ-gen = Ex.Ex • Ex.H1 • Ex.H0 , •CZH0S0H1S1
+
+
+  [_]ₒ : C → Word Gen
+  [ cCZ ]ₒ = CZ
+  [ cCZH0 ]ₒ = CZ • H0
+  [ cCZH0S0 ]ₒ = CZ • H0 • S0
+  [ cCZH1 ]ₒ = CZ • H1
+  [ cCZH1S1 ]ₒ = CZ • H1 • S1
+  [ cCZH0H1 ]ₒ = CZ • H0 • H1
+  [ cCZH0S0H1 ]ₒ = CZ • H0 • H1 • S0
+  [ cCZH0H1S1 ]ₒ = CZ • H0 • H1 • S1
+  [ cCZH0S0H1S1 ]ₒ = CZ • H0 • H1 • S0 • S1
+
+  infix 4 _~_
+  _~_ = PW.Pointwise _≈₁_ (_≡_ {A = C ⊎ ⊤})
+
+  [_]ₓ = f *
+
+
+  hcme : ∀ c m -> ∃ \ w -> ∃ \ c' -> ((h **) (inj₁ c) (f m)) ≡ (w , inj₁ c')
+  hcme cCZ Ex.H0-gen = ε , cCZH0 , auto
+  hcme cCZ Ex.S0-gen = Ex.S0 , cCZ , auto
+  hcme cCZ Ex.H1-gen = ε , cCZH1 , auto
+  hcme cCZ Ex.S1-gen = Ex.S1 , cCZ , auto
+  hcme cCZ Ex.Ex-gen = (h **) •CZ CX .proj₁ •
+                        (h **) ((h **) •CZ CX .proj₂) (XC • CX) .proj₁
+                        , cCZ , auto
+  hcme cCZH0 Ex.H0-gen = ε , cCZ , auto
+  hcme cCZH0 Ex.S0-gen = ε , cCZH0S0 , auto
+  hcme cCZH0 Ex.H1-gen = ε , cCZH0H1 , auto
+  hcme cCZH0 Ex.S1-gen = Ex.S1 , cCZH0 , auto
+  hcme cCZH0 Ex.Ex-gen = (h **) •CZH0 CX .proj₁ •
+                          (h **) ((h **) •CZH0 CX .proj₂) (XC • CX) .proj₁
+                          , cCZH1 , auto
+  hcme cCZH0S0 Ex.H0-gen = Ex.S0 , cCZH0S0 , auto
+  hcme cCZH0S0 Ex.S0-gen = ε , cCZH0 , auto
+  hcme cCZH0S0 Ex.H1-gen = ε , cCZH0S0H1 , auto
+  hcme cCZH0S0 Ex.S1-gen = Ex.S1 , cCZH0S0 , auto
+  hcme cCZH0S0 Ex.Ex-gen = (h **) •CZH0S0 CX .proj₁ •
+                            (h **) ((h **) •CZH0S0 CX .proj₂) (XC • CX) .proj₁
+                            , cCZH1S1 , auto
+  hcme cCZH1 Ex.H0-gen = ε , cCZH0H1 , auto
+  hcme cCZH1 Ex.S0-gen = Ex.S0 , cCZH1 , auto
+  hcme cCZH1 Ex.H1-gen = ε , cCZ , auto
+  hcme cCZH1 Ex.S1-gen = ε , cCZH1S1 , auto
+  hcme cCZH1 Ex.Ex-gen = (h **) •CZH1 CX .proj₁ •
+                          (h **) ((h **) •CZH1 CX .proj₂) (XC • CX) .proj₁
+                          , cCZH0 , auto
+  hcme cCZH1S1 Ex.H0-gen = ε , cCZH0H1S1 , auto
+  hcme cCZH1S1 Ex.S0-gen = Ex.S0 , cCZH1S1 , auto
+  hcme cCZH1S1 Ex.H1-gen = Ex.S1 , cCZH1S1 , auto
+  hcme cCZH1S1 Ex.S1-gen = ε , cCZH1 , auto
+  hcme cCZH1S1 Ex.Ex-gen = (h **) •CZH1S1 CX .proj₁ •
+                            (h **) ((h **) •CZH1S1 CX .proj₂) (XC • CX) .proj₁
+                            , cCZH0S0 , auto
+  hcme cCZH0H1 Ex.H0-gen = ε , cCZH1 , auto
+  hcme cCZH0H1 Ex.S0-gen = ε , cCZH0S0H1 , auto
+  hcme cCZH0H1 Ex.H1-gen = ε , cCZH0 , auto
+  hcme cCZH0H1 Ex.S1-gen = ε , cCZH0H1S1 , auto
+  hcme cCZH0H1 Ex.Ex-gen = (h **) •CZH0H1 CX .proj₁ •
+                            (h **) ((h **) •CZH0H1 CX .proj₂) (XC • CX) .proj₁
+                            , cCZH0H1 , auto
+  hcme cCZH0S0H1 Ex.H0-gen = Ex.S0 , cCZH0S0H1 , auto
+  hcme cCZH0S0H1 Ex.S0-gen = ε , cCZH0H1 , auto
+  hcme cCZH0S0H1 Ex.H1-gen = ε , cCZH0S0 , auto
+  hcme cCZH0S0H1 Ex.S1-gen = ε , cCZH0S0H1S1 , auto
+  hcme cCZH0S0H1 Ex.Ex-gen = (h **) •CZH0S0H1 CX .proj₁ •
+                              (h **) ((h **) •CZH0S0H1 CX .proj₂) (XC • CX) .proj₁
+                              , cCZH0H1S1 , auto
+  hcme cCZH0H1S1 Ex.H0-gen = ε , cCZH1S1 , auto
+  hcme cCZH0H1S1 Ex.S0-gen = ε , cCZH0S0H1S1 , auto
+  hcme cCZH0H1S1 Ex.H1-gen = Ex.S1 , cCZH0H1S1 , auto
+  hcme cCZH0H1S1 Ex.S1-gen = ε , cCZH0H1 , auto
+  hcme cCZH0H1S1 Ex.Ex-gen = (h **) •CZH0H1S1 CX .proj₁ •
+                              (h **) ((h **) •CZH0H1S1 CX .proj₂) (XC • CX) .proj₁
+                              , cCZH0S0H1 , auto
+  hcme cCZH0S0H1S1 Ex.H0-gen = Ex.S0 , cCZH0S0H1S1 , auto
+  hcme cCZH0S0H1S1 Ex.S0-gen = ε , cCZH0H1S1 , auto
+  hcme cCZH0S0H1S1 Ex.H1-gen = Ex.S1 , cCZH0S0H1S1 , auto
+  hcme cCZH0S0H1S1 Ex.S1-gen = ε , cCZH0S0H1 , auto
+  hcme cCZH0S0H1S1 Ex.Ex-gen = (h **) •CZH0S0H1S1 CX .proj₁ •
+                                (h **) ((h **) •CZH0S0H1S1 CX .proj₂) (XC • CX) .proj₁
+                                , cCZH0S0H1S1 , auto
+
+
+
+  open  NFProperty' ExM-nfp' renaming (by-equal-nf to by-ex-nf)
+
+  htme~ : ∀ (m : GenM) -> ([ m ]ʷ , I) ~ ((h **) I (f m))
+  htme~ Ex.H0-gen = refl , Eq.refl
+  htme~ Ex.S0-gen = by-ex-nf auto , auto
+  htme~ Ex.H1-gen = refl , Eq.refl
+  htme~ Ex.S1-gen = by-ex-nf auto , auto
+  htme~ Ex.Ex-gen = by-ex-nf auto , Eq.refl
+
+
+  hcme~ : ∀ (c : C) (m : GenM) -> let (w' , c' , p) = hcme c m in [ c ]ₒ • f m ≈₂ [ w' ]ₓ • [ c' ]ₒ 
+  hcme~ cCZ Ex.H0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZ Ex.S0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZ Ex.H1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZ Ex.S1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZ Ex.Ex-gen = rewrite-symplectic 200 Eq.refl
+  hcme~ cCZH0 Ex.H0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0 Ex.S0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0 Ex.H1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0 Ex.S1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0 Ex.Ex-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0S0 Ex.H0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0S0 Ex.S0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0S0 Ex.H1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0S0 Ex.S1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0S0 Ex.Ex-gen = rewrite-symplectic 200 Eq.refl
+  hcme~ cCZH1 Ex.H0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH1 Ex.S0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH1 Ex.H1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH1 Ex.S1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH1 Ex.Ex-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH1S1 Ex.H0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH1S1 Ex.S0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH1S1 Ex.H1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH1S1 Ex.S1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH1S1 Ex.Ex-gen = rewrite-symplectic 400 Eq.refl
+  hcme~ cCZH0H1 Ex.H0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0H1 Ex.S0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0H1 Ex.H1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0H1 Ex.S1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0H1 Ex.Ex-gen = rewrite-symplectic 200 Eq.refl
+  hcme~ cCZH0S0H1 Ex.H0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0S0H1 Ex.S0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0S0H1 Ex.H1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0S0H1 Ex.S1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0S0H1 Ex.Ex-gen = rewrite-symplectic 200 Eq.refl
+  hcme~ cCZH0H1S1 Ex.H0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0H1S1 Ex.S0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0H1S1 Ex.H1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0H1S1 Ex.S1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0H1S1 Ex.Ex-gen = rewrite-symplectic 400 Eq.refl
+  hcme~ cCZH0S0H1S1 Ex.H0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0S0H1S1 Ex.S0-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0S0H1S1 Ex.H1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0S0H1S1 Ex.S1-gen = rewrite-symplectic 100 Eq.refl
+  hcme~ cCZH0S0H1S1 Ex.Ex-gen = rewrite-symplectic 400 Eq.refl
+
+  open NFProperty' ExM-nfp'
+  
+  h-wd-ax : ∀ (c : C ⊎ ⊤){u t : Word Gen} -> u ===₂ t -> ((h **) c u) ~ ((h **) c t)
+  h-wd-ax •CZ {u} {t} order-S0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0 {u} {t} order-S0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0 {u} {t} order-S0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1 {u} {t} order-S0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1S1 {u} {t} order-S0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1 {u} {t} order-S0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1 {u} {t} order-S0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1S1 {u} {t} order-S0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1S1 {u} {t} order-S0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZ {u} {t} order-H0 = left-unit , Eq.refl
+  h-wd-ax •CZH0 {u} {t} order-H0 = left-unit , Eq.refl
+  h-wd-ax •CZH0S0 {u} {t} order-H0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1 {u} {t} order-H0 = left-unit , Eq.refl
+  h-wd-ax •CZH1S1 {u} {t} order-H0 = left-unit , Eq.refl
+  h-wd-ax •CZH0H1 {u} {t} order-H0 = left-unit , Eq.refl
+  h-wd-ax •CZH0S0H1 {u} {t} order-H0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1S1 {u} {t} order-H0 = left-unit , Eq.refl
+  h-wd-ax •CZH0S0H1S1 {u} {t} order-H0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZ {u} {t} order-S0H0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0 {u} {t} order-S0H0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0 {u} {t} order-S0H0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1 {u} {t} order-S0H0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1S1 {u} {t} order-S0H0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1 {u} {t} order-S0H0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1 {u} {t} order-S0H0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1S1 {u} {t} order-S0H0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1S1 {u} {t} order-S0H0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZ {u} {t} order-S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0 {u} {t} order-S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0 {u} {t} order-S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1 {u} {t} order-S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1S1 {u} {t} order-S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1 {u} {t} order-S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1 {u} {t} order-S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1S1 {u} {t} order-S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1S1 {u} {t} order-S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZ {u} {t} order-H1 = left-unit , Eq.refl
+  h-wd-ax •CZH0 {u} {t} order-H1 = left-unit , Eq.refl
+  h-wd-ax •CZH0S0 {u} {t} order-H1 = left-unit , Eq.refl
+  h-wd-ax •CZH1 {u} {t} order-H1 = left-unit , Eq.refl
+  h-wd-ax •CZH1S1 {u} {t} order-H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1 {u} {t} order-H1 = left-unit , Eq.refl
+  h-wd-ax •CZH0S0H1 {u} {t} order-H1 = left-unit , Eq.refl
+  h-wd-ax •CZH0H1S1 {u} {t} order-H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1S1 {u} {t} order-H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZ {u} {t} order-S1H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0 {u} {t} order-S1H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0 {u} {t} order-S1H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1 {u} {t} order-S1H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1S1 {u} {t} order-S1H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1 {u} {t} order-S1H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1 {u} {t} order-S1H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1S1 {u} {t} order-S1H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1S1 {u} {t} order-S1H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZ {u} {t} comm-H0H1 = refl , Eq.refl
+  h-wd-ax •CZH0 {u} {t} comm-H0H1 = refl , Eq.refl
+  h-wd-ax •CZH0S0 {u} {t} comm-H0H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1 {u} {t} comm-H0H1 = refl , Eq.refl
+  h-wd-ax •CZH1S1 {u} {t} comm-H0H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1 {u} {t} comm-H0H1 = refl , Eq.refl
+  h-wd-ax •CZH0S0H1 {u} {t} comm-H0H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1S1 {u} {t} comm-H0H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1S1 {u} {t} comm-H0H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZ {u} {t} comm-H0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0 {u} {t} comm-H0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0 {u} {t} comm-H0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1 {u} {t} comm-H0S1 = refl , Eq.refl
+  h-wd-ax •CZH1S1 {u} {t} comm-H0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1 {u} {t} comm-H0S1 = refl , Eq.refl
+  h-wd-ax •CZH0S0H1 {u} {t} comm-H0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1S1 {u} {t} comm-H0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1S1 {u} {t} comm-H0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZ {u} {t} comm-S0H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0 {u} {t} comm-S0H1 = refl , Eq.refl
+  h-wd-ax •CZH0S0 {u} {t} comm-S0H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1 {u} {t} comm-S0H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1S1 {u} {t} comm-S0H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1 {u} {t} comm-S0H1 = refl , Eq.refl
+  h-wd-ax •CZH0S0H1 {u} {t} comm-S0H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1S1 {u} {t} comm-S0H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1S1 {u} {t} comm-S0H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZ {u} {t} comm-S0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0 {u} {t} comm-S0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0 {u} {t} comm-S0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1 {u} {t} comm-S0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1S1 {u} {t} comm-S0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1 {u} {t} comm-S0S1 = refl , Eq.refl
+  h-wd-ax •CZH0S0H1 {u} {t} comm-S0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1S1 {u} {t} comm-S0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1S1 {u} {t} comm-S0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZ {u} {t} order-CZ = left-unit , Eq.refl
+  h-wd-ax •CZH0 {u} {t} order-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0 {u} {t} order-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1 {u} {t} order-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1S1 {u} {t} order-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1 {u} {t} order-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1 {u} {t} order-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1S1 {u} {t} order-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1S1 {u} {t} order-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZ {u} {t} comm-S0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0 {u} {t} comm-S0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0 {u} {t} comm-S0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1 {u} {t} comm-S0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1S1 {u} {t} comm-S0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1 {u} {t} comm-S0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1 {u} {t} comm-S0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1S1 {u} {t} comm-S0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1S1 {u} {t} comm-S0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZ {u} {t} comm-S1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0 {u} {t} comm-S1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0 {u} {t} comm-S1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1 {u} {t} comm-S1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1S1 {u} {t} comm-S1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1 {u} {t} comm-S1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1 {u} {t} comm-S1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1S1 {u} {t} comm-S1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1S1 {u} {t} comm-S1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZ {u} {t} rel-CZ-H0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0 {u} {t} rel-CZ-H0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0 {u} {t} rel-CZ-H0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1 {u} {t} rel-CZ-H0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1S1 {u} {t} rel-CZ-H0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1 {u} {t} rel-CZ-H0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1 {u} {t} rel-CZ-H0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1S1 {u} {t} rel-CZ-H0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1S1 {u} {t} rel-CZ-H0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZ {u} {t} rel-CZ-H1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0 {u} {t} rel-CZ-H1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0 {u} {t} rel-CZ-H1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1 {u} {t} rel-CZ-H1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH1S1 {u} {t} rel-CZ-H1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1 {u} {t} rel-CZ-H1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1 {u} {t} rel-CZ-H1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0H1S1 {u} {t} rel-CZ-H1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •CZH0S0H1S1 {u} {t} rel-CZ-H1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •ε {u} {t} order-S0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •ε {u} {t} order-H0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •ε {u} {t} order-S0H0 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •ε {u} {t} order-S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •ε {u} {t} order-H1 = axiom Ex.order-H1 , Eq.refl
+  h-wd-ax •ε {u} {t} order-S1H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •ε {u} {t} comm-H0H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •ε {u} {t} comm-H0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •ε {u} {t} comm-S0H1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •ε {u} {t} comm-S0S1 = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •ε {u} {t} order-CZ = left-unit , Eq.refl
+  h-wd-ax •ε {u} {t} comm-S0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •ε {u} {t} comm-S1-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •ε {u} {t} rel-CZ-H0-CZ = by-equal-nf Eq.refl , Eq.refl
+  h-wd-ax •ε {u} {t} rel-CZ-H1-CZ = by-equal-nf Eq.refl , Eq.refl
+
+  lemma-order-CX : CX ^ 2 ≈₂ ε
+  lemma-order-CX = begin
+    CX ^ 2 ≈⟨ by-assoc Eq.refl ⟩
+    (H1 • CZ) • (H1 • H1) • CZ • H1 ≈⟨ cong refl (cong (axiom order-H1) refl) ⟩
+    (H1 • CZ) • ε • CZ • H1 ≈⟨ by-assoc Eq.refl ⟩
+    H1 • CZ ^ 2 • H1 ≈⟨ cong refl (cong (axiom order-CZ) refl) ⟩
+    H1 • ε • H1 ≈⟨ trans (cong refl left-unit)
+                    (axiom order-H1) ⟩
+    ε ∎
+    where open SR ws₂
+
+  lemma-order-XC : XC ^ 2 ≈₂ ε
+  lemma-order-XC = begin
+    XC ^ 2 ≈⟨ by-assoc Eq.refl ⟩
+    (H0 • CZ) • (H0 • H0) • CZ • H0 ≈⟨ cong refl (cong (axiom order-H0) refl) ⟩
+    (H0 • CZ) • ε • CZ • H0 ≈⟨ by-assoc Eq.refl ⟩
+    H0 • CZ ^ 2 • H0 ≈⟨ cong refl (cong (axiom order-CZ) refl) ⟩
+    H0 • ε • H0 ≈⟨ trans (cong refl left-unit)
+                    (axiom order-H0) ⟩
+    ε ∎
+    where open SR ws₂
+
+  lemma-order-Ex : Ex ^ 2 ≈₂ ε
+  lemma-order-Ex = begin
+    Ex ^ 2 ≈⟨ by-assoc Eq.refl ⟩
+    (CX • XC) • (CX • CX) • XC • CX ≈⟨ cong refl (_≈₂_.cong lemma-order-CX _≈₂_.refl) ⟩
+    (CX • XC) • ε • XC • CX ≈⟨ by-assoc Eq.refl ⟩
+    CX • XC ^ 2 • CX ≈⟨ cong refl (_≈₂_.cong lemma-order-XC _≈₂_.refl) ⟩
+    CX • ε • CX ≈⟨ by-assoc Eq.refl ⟩
+    CX • CX ≈⟨ lemma-order-CX ⟩
+    ε ∎
+    where open SR ws₂
+
+  lemma-order-H0Ex : H0 • Ex ≈₂ Ex • H1
+  lemma-order-H0Ex = begin
+    H0 • Ex ≈⟨ rewrite-symplectic 100 Eq.refl ⟩
+    Ex • H1 ∎
+    where open SR ws₂
+
+  f-wd-ax : ∀ {w v} -> w ===₁ v -> (f *) w ≈₂ (f *) v
+  f-wd-ax {w} {v} Ex.order-S0 = axiom order-S0
+  f-wd-ax {w} {v} Ex.order-H0 = axiom order-H0
+  f-wd-ax {w} {v} Ex.order-S0H0 = axiom order-S0H0
+  f-wd-ax {w} {v} Ex.order-S1 = axiom order-S1
+  f-wd-ax {w} {v} Ex.order-H1 = axiom order-H1
+  f-wd-ax {w} {v} Ex.order-S1H1 = axiom order-S1H1
+  f-wd-ax {w} {v} Ex.comm-H0H1 = axiom comm-H0H1
+  f-wd-ax {w} {v} Ex.comm-H0S1 = axiom comm-H0S1
+  f-wd-ax {w} {v} Ex.comm-S0H1 = axiom comm-S0H1
+  f-wd-ax {w} {v} Ex.comm-S0S1 = axiom comm-S0S1
+  f-wd-ax {w} {v} Ex.order-Ex = lemma-order-Ex
+  f-wd-ax {w} {v} Ex.comm-H0Ex = lemma-order-H0Ex
+  f-wd-ax {w} {v} Ex.comm-S0Ex = rewrite-symplectic 100 Eq.refl
+
+  [_] : C ⊎ ⊤ -> Word Gen
+  [_] = [_,_] [_]ₒ (λ v → ε)
+
+  open SR ws₂
+  open import Presentation.Tactics hiding ([_])
+  open Commuting  _===_ Comm.comm~ Comm.les
+  
+  h=ract :  ∀ c y -> let (m' , c') = h c y in
+   ([ c ] • [ y ]ʷ) ≈₂ ([ m' ]ₓ • [ c' ])
+  h=ract •CZ H0-gen = _≈₂_.sym _≈₂_.left-unit
+  h=ract •CZH0 H0-gen = trans (trans assoc (trans (cong refl (axiom order-H0)) _≈₂_.right-unit)) (sym left-unit)
+  h=ract •CZH0S0 H0-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH1 H0-gen = trans assoc (trans (cong refl (sym (axiom comm-H0H1))) (_≈₂_.sym _≈₂_.left-unit))
+  h=ract •CZH1S1 H0-gen = general-comm Eq.refl
+  h=ract •CZH0H1 H0-gen = begin
+    (CZ • H0 • H1) • H0 ≈⟨ general-comm Eq.refl ⟩
+    CZ • (H0 • H0) • H1 ≈⟨ _≈₂_.cong _≈₂_.refl (_≈₂_.cong (_≈₂_.axiom order-H0) _≈₂_.refl) ⟩
+    CZ • ε • H1 ≈⟨ _≈₂_.trans (_≈₂_.cong _≈₂_.refl _≈₂_.left-unit)
+                    (_≈₂_.sym _≈₂_.left-unit) ⟩
+    ε • CZ • H1 ∎
+  h=ract •CZH0S0H1 H0-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0H1S1 H0-gen =  begin
+    (CZ • H0 • H1 • S1) • H0 ≈⟨ general-comm Eq.refl ⟩
+    CZ • H0 ^ 2 • H1 • S1 ≈⟨ _≈₂_.cong _≈₂_.refl (_≈₂_.cong (_≈₂_.axiom order-H0) _≈₂_.refl) ⟩
+    CZ • ε • H1 • S1 ≈⟨ by-assoc Eq.refl ⟩
+    ε • CZ • H1 • S1 ∎
+  h=ract •CZH0S0H1S1 H0-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZ S0-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0 S0-gen = by-assoc Eq.refl
+  h=ract •CZH0S0 S0-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH1 S0-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH1S1 S0-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0H1 S0-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0S0H1 S0-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0H1S1 S0-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0S0H1S1 S0-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZ H1-gen = _≈₂_.sym _≈₂_.left-unit
+  h=ract •CZH0 H1-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0S0 H1-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH1 H1-gen = trans (trans assoc (trans (cong refl (axiom order-H1)) _≈₂_.right-unit)) (sym left-unit)
+  h=ract •CZH1S1 H1-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0H1 H1-gen = begin
+    (CZ • H0 • H1) • H1 ≈⟨ _≈₂_.trans (_≈₂_.cong (_≈₂_.sym _≈₂_.assoc) _≈₂_.refl) _≈₂_.assoc ⟩
+    (CZ • H0) • H1 • H1 ≈⟨ _≈₂_.cong _≈₂_.refl (_≈₂_.axiom order-H1) ⟩
+    (CZ • H0) • ε ≈⟨ _≈₂_.trans _≈₂_.right-unit (_≈₂_.sym _≈₂_.left-unit) ⟩
+    ε • CZ • H0 ∎
+  h=ract •CZH0S0H1 H1-gen = begin
+    (CZ • H0 • H1 • S0) • H1 ≈⟨ rewrite-symplectic 100 Eq.refl ⟩
+    (CZ • H0) • (H1 • H1) • S0 ≈⟨ _≈₂_.cong _≈₂_.refl (_≈₂_.cong (_≈₂_.axiom order-H1) _≈₂_.refl) ⟩
+    (CZ • H0) • ε • S0 ≈⟨ by-assoc Eq.refl ⟩
+    ε • CZ • H0 • S0 ∎
+  h=ract •CZH0H1S1 H1-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0S0H1S1 H1-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZ S1-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0 S1-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0S0 S1-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH1 S1-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH1S1 S1-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0H1 S1-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0S0H1 S1-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0H1S1 S1-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0S0H1S1 S1-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZ CZ-gen = _≈₂_.trans (_≈₂_.axiom order-CZ) (_≈₂_.sym _≈₂_.right-unit)
+  h=ract •CZH0 CZ-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0S0 CZ-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH1 CZ-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH1S1 CZ-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0H1 CZ-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0S0H1 CZ-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0H1S1 CZ-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •CZH0S0H1S1 CZ-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •ε H0-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •ε S0-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •ε H1-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •ε S1-gen = rewrite-symplectic 100 Eq.refl
+  h=ract •ε CZ-gen = rewrite-symplectic 100 Eq.refl
+
+  module MyCAD = CA.Data _===ₘ_ _===_ (C ⊎ ⊤) •ε f h [_]
+  module MyNFP' = MyCAD.Assumptions-And-Theorems htme~ h-wd-ax f-wd-ax _≈₂_.refl h=ract
+  
+  Sym2-nfp' : NFProperty' _===_
+  Sym2-nfp' = MyNFP'.nfp' ExM-nfp'
+
+  -- open NFProperty' Sym2-nfp' renaming (nf to nfSym2)
+  -- t : {!nfSym2 (S1 • CX)!}
+  -- t = {!!}
+
+
+
+

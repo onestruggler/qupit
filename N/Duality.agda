@@ -1,0 +1,229 @@
+{-# OPTIONS  --safe #-}
+--{-# OPTIONS --termination-depth=2 #-}
+open import Level using (0ℓ)
+
+open import Relation.Binary using (Rel)
+open import Relation.Binary.Definitions using (DecidableEquality)
+open import Relation.Binary.Morphism.Definitions using (Homomorphic₂)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; _≢_ ; inspect ; setoid ; module ≡-Reasoning ; _≗_) renaming ([_] to [_]')
+import Relation.Binary.Reasoning.Setoid as SR
+import Relation.Binary.PropositionalEquality as Eq
+open import Relation.Nullary.Decidable using (yes ; no)
+
+
+open import Function using (_∘_ ; id)
+open import Function.Definitions using (Injective)
+
+open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; map₁ ; ∃ ; Σ ; Σ-syntax)
+open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
+open import Data.Nat hiding (_^_ ; _+_ ; _*_)
+open import Agda.Builtin.Nat using (_-_)
+import Data.Nat as Nat
+open import Data.Bool hiding (_<_ ; _≤_)
+open import Data.List hiding ([_] ; _++_ ; last ; head ; tail ; _∷ʳ_)
+open import Data.Vec hiding ([_])
+import Data.Vec as Vec
+open import Data.Fin hiding (_+_ ; _-_)
+
+open import Data.Maybe
+open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_] ; [_,_]′)
+open import Data.Unit using (⊤ ; tt)
+open import Data.Empty using (⊥ ; ⊥-elim)
+
+open import Word.Base as WB hiding (wfoldl ; _*)
+open import Word.Properties
+import Presentation.Base as PB
+import Presentation.Properties as PP
+open PP using (NFProperty ; NFProperty')
+import Presentation.CosetNF as CA
+import Presentation.Reidemeister-Schreier as RS
+module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
+
+open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
+import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
+import Presentation.Construct.Properties.DirectProduct as DP
+import Presentation.Groups.Cyclic as Cyclic
+
+
+open import Data.Fin using (Fin ; toℕ ; suc ; zero ; fromℕ)
+open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
+import Data.Nat.Properties as NP
+open import Presentation.GroupLike
+open import Presentation.Tactics hiding ([_])
+open import Data.Nat.Primality
+
+
+
+module N.Duality (p-2 : ℕ) (p-prime : Prime (2+ p-2))  where
+
+pattern auto = Eq.refl
+
+pattern ₀ = zero
+pattern ₁ = suc ₀
+pattern ₂ = suc ₁
+pattern ₃ = suc ₂
+pattern ₄ = 4
+pattern ₅ = 5
+pattern ₆ = 6
+pattern ₇ = 7
+pattern ₈ = 8
+pattern ₉ = 9
+pattern ₁₀ = 10
+pattern ₁₁ = 11
+pattern ₁₂ = 12
+pattern ₁₃ = 13
+pattern ₁₄ = 14
+pattern ₁₅ = 15
+
+pattern ₁₊ ⱼ = suc ⱼ
+pattern ₂₊ ⱼ = suc (suc ⱼ)
+pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
+
+
+open import Zp.ModularArithmetic
+open PrimeModulus p-2 p-prime
+open import N.Symplectic p-2 p-prime
+open import N.Lemmas-2Qupit-Sym p-2 p-prime
+open import N.NF2-Sym p-2 p-prime
+open import N.Cosets p-2 p-prime
+open Lemmas-2Q 0
+open Symplectic
+open import N.NF1-Sym p-2 p-prime
+open import N.Ex-Sym p-2 p-prime
+open import N.Ex-Sym1 p-2 p-prime
+open import N.Ex-Sym2 p-2 p-prime
+open import N.Ex-Sym3 p-2 p-prime
+
+open import N.Lemma-Comm p-2 p-prime 0
+open import N.Lemma-Postfix p-2 p-prime
+open Lemmas0a
+open Lemmas0a1
+open Lemmas0b
+open Lemmas0c
+module L0 = Lemmas0 0
+
+open LM2
+open import N.Completeness1-Sym p-2 p-prime renaming (module Completeness to CP1) using ()
+
+private
+  n : ℕ
+  n = 0
+
+open Symplectic
+open Symplectic-GroupLike
+
+open import Data.Nat.DivMod
+open import Data.Fin.Properties
+open Duality
+open import Algebra.Properties.Ring (+-*-ring p-2)
+
+aux-dual-M : ∀ m -> dual (M m) ≡ M m ↑ 
+aux-dual-M m@x' = begin
+  dual (M m) ≡⟨ auto ⟩
+  dual (S^ x • H • S^ x⁻¹ • H • S^ x • H) ≡⟨ Eq.cong₂ (\ xx yy -> xx • dual H • yy • dual (H • S^ x • H)) (aux-dual-S^k (toℕ (m .proj₁))) (aux-dual-S^k (toℕ x⁻¹)) ⟩
+  S^ x ↑ • H ↑ • S^ x⁻¹ ↑ • dual (H • S^ x • H) ≡⟨ Eq.cong (\ xx -> S^ x ↑ • H ↑ • S^ x⁻¹ ↑ • dual H • xx • dual H) (aux-dual-S^k (toℕ x)) ⟩
+  S^ x ↑ • H ↑ • S^ x⁻¹ ↑ • (H ↑ • S^ x ↑ • H ↑) ≡⟨ auto ⟩
+  M m ↑ ∎
+  where
+  open ≡-Reasoning
+  x = x' .proj₁
+  x⁻¹ = ((x' ⁻¹) .proj₁ )  
+
+
+aux-dual-C : ∀ c -> dual ⟦ c ⟧ₕₛ ≡ ⟦ c ⟧ₕₛ ↑ 
+aux-dual-C c@ε = begin
+  dual ⟦ c ⟧ₕₛ ≡⟨ auto ⟩
+  ⟦ c ⟧ₕₛ ↑ ∎
+  where
+  open ≡-Reasoning
+aux-dual-C c@(HS^ k) = begin
+  dual ⟦ c ⟧ₕₛ ≡⟨ Eq.cong (\ xx -> dual H • xx) (aux-dual-S^k (toℕ k)) ⟩
+  ⟦ c ⟧ₕₛ ↑ ∎
+  where
+  open ≡-Reasoning
+
+aux-dual-MC : ∀ mc -> dual ⟦ mc ⟧ₘ₊ ≡ ⟦ mc ⟧ₘ₊ ↑ 
+aux-dual-MC mc@(m , c) = begin
+  dual ⟦ mc ⟧ₘ₊ ≡⟨ Eq.cong₂ _•_ (aux-dual-M m) (aux-dual-C c) ⟩
+  ⟦ mc ⟧ₘ₊ ↑ ∎
+  where
+  open ≡-Reasoning
+
+aux-dual-M↑ : ∀ m -> dual (⟦ m ⟧ₘ ↑) ≡ ⟦ m ⟧ₘ
+aux-dual-M↑ m = begin
+  dual (⟦ m ⟧ₘ ↑) ≡⟨ Eq.cong dual (Eq.sym (aux-dual-M m)) ⟩
+  dual (dual ⟦ m ⟧ₘ) ≡⟨ Eq.sym (lemma-double-dual ⟦ m ⟧ₘ) ⟩
+  ⟦ m ⟧ₘ ∎
+  where
+  open ≡-Reasoning
+
+aux-dual-MC↑ : ∀ mc -> dual (⟦ mc ⟧ₘ₊ ↑) ≡ ⟦ mc ⟧ₘ₊
+aux-dual-MC↑ mc = begin
+  dual (⟦ mc ⟧ₘ₊ ↑) ≡⟨ Eq.cong dual (Eq.sym (aux-dual-MC mc)) ⟩
+  dual (dual ⟦ mc ⟧ₘ₊) ≡⟨ Eq.sym (lemma-double-dual ⟦ mc ⟧ₘ₊) ⟩
+  ⟦ mc ⟧ₘ₊ ∎
+  where
+  open ≡-Reasoning
+
+
+aux-dual-SMC : ∀ smc -> dual ⟦ smc ⟧₁ ≡ ⟦ smc ⟧₁ ↑ 
+aux-dual-SMC smc@(s , m , c) = begin
+  dual ⟦ smc ⟧₁ ≡⟨ Eq.cong₂ _•_ (aux-dual-S^k (toℕ s)) (aux-dual-MC (m , c)) ⟩
+  ⟦ smc ⟧₁ ↑ ∎
+  where
+  open ≡-Reasoning
+
+
+aux-dual-SMC↑ : ∀ smc -> dual (⟦ smc ⟧₁ ↑) ≡ ⟦ smc ⟧₁
+aux-dual-SMC↑ smc = begin
+  dual (⟦ smc ⟧₁ ↑) ≡⟨ Eq.cong dual (Eq.sym (aux-dual-SMC smc)) ⟩
+  dual (dual ⟦ smc ⟧₁) ≡⟨ Eq.sym (lemma-double-dual ⟦ smc ⟧₁) ⟩
+  ⟦ smc ⟧₁ ∎
+  where
+  open ≡-Reasoning
+
+
+open PB ((₂₊ n) QRel,_===_)
+open PP ((₂₊ n) QRel,_===_)
+open SR word-setoid
+open Pattern-Assoc
+open Lemmas0 (₁₊ n)
+open Commuting-Symplectic n
+open Sym0-Rewriting (₁₊ n)
+open Basis-Change _ ((₂₊ n) QRel,_===_) grouplike
+open import N.Ex-Rewriting p-2 p-prime
+open Rewriting-Ex n
+
+lemma-Ex-dual-gen : ∀ g -> [ dual-gen g ]ʷ ≈ Ex • [ g ]ʷ • Ex
+lemma-Ex-dual-gen H-gen = rewrite-ex 100 auto
+lemma-Ex-dual-gen S-gen = rewrite-ex 100 auto
+lemma-Ex-dual-gen CZ-gen = rewrite-ex 100 auto
+--lemma-Ex-dual-gen EX-gen = rewrite-ex 100 auto
+lemma-Ex-dual-gen (H-gen ↥) = rewrite-ex 100 auto
+lemma-Ex-dual-gen (S-gen ↥) = rewrite-ex 100 auto
+
+
+lemma-Ex-dual : ∀ w -> dual w ≈ Ex • w • Ex
+lemma-Ex-dual [ x ]ʷ = lemma-Ex-dual-gen x
+lemma-Ex-dual ε = rewrite-ex 100 auto
+lemma-Ex-dual (w • w₁) = begin
+  dual (w • w₁) ≈⟨ cong (lemma-Ex-dual w) (lemma-Ex-dual w₁) ⟩
+  (Ex • w • Ex) • Ex • w₁ • Ex ≈⟨ special-assoc (□ ^ 3 • □ ^ 3) (□ ^ 2 • □ ^ 2 • □ ^ 2) auto ⟩
+  (Ex • w) • (Ex • Ex) • w₁ • Ex ≈⟨ cright cleft rewrite-ex 100 auto ⟩
+  (Ex • w) • ε • w₁ • Ex ≈⟨ cright left-unit ⟩
+  (Ex • w) • w₁ • Ex ≈⟨ sym (trans (by-assoc auto) assoc) ⟩
+  Ex • (w • w₁) • Ex ∎
+
+lemma-Ex-dual' : ∀ w -> Ex • dual w • Ex ≈ w
+lemma-Ex-dual' w = bbc Ex Ex aux
+  where
+  aux : Ex • (Ex • dual w • Ex) • Ex ≈ Ex • w • Ex
+  aux = begin
+    Ex • (Ex • dual w • Ex) • Ex ≈⟨ special-assoc (□ • □ ^ 3 • □) (□ ^ 2 • □ • □ ^ 2) auto ⟩
+    (Ex • Ex) • dual w • (Ex • Ex) ≈⟨ cong lemma-order-Ex (cright lemma-order-Ex) ⟩
+    ε • dual w • ε ≈⟨ trans left-unit right-unit ⟩
+    dual w ≈⟨ lemma-Ex-dual w ⟩
+    Ex • w • Ex ∎
+
+aux-dual-Ex : dual Ex ≈ Ex
+aux-dual-Ex = general-comm auto

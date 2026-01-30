@@ -1,0 +1,1802 @@
+--{-# OPTIONS --guardedness #-}
+
+open import Level using (0ℓ)
+
+open import Relation.Binary using (Rel)
+open import Relation.Binary.Definitions using (DecidableEquality)
+open import Relation.Binary.Morphism.Definitions using (Homomorphic₂)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; inspect ; setoid ; module ≡-Reasoning) renaming ([_] to [_]')
+import Relation.Binary.Reasoning.Setoid as SR
+import Relation.Binary.PropositionalEquality as Eq
+open import Relation.Nullary.Decidable using (yes ; no)
+
+
+open import Function using (_∘_ ; id)
+open import Function.Definitions using (Injective)
+
+open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; map₁ ; ∃)
+open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
+open import Data.Nat using (ℕ ; zero ; suc)
+import Data.Nat as Nat
+open import Data.Fin
+open import Data.Fin.Induction
+open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_])
+open import Data.Unit using (⊤ ; tt)
+open import Data.Empty using (⊥ ; ⊥-elim)
+
+open import Word.Base hiding (wfoldl)
+open import Word.Properties
+import Presentation.Base as PB
+import Presentation.Properties as PP
+open PP using (NFProperty ; NFProperty')
+import Presentation.CosetNF as CA
+import Presentation.Reidemeister-Schreier as RS
+module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
+
+open import Presentation.Construct.Base
+import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
+import Presentation.Construct.Properties.DirectProduct as DP
+import Presentation.Groups.Cyclic as Cyclic
+
+
+open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
+import Data.Nat.Properties as NP
+
+
+module Presentation.Groups.Clifford1 where
+
+module CliffordWithScalar where
+
+  data Gen : Set where
+    H-gen : Gen
+    S-gen : Gen
+    ω-gen : Gen
+
+  H : Word Gen
+  H = [ H-gen ]ʷ
+
+  S : Word Gen
+  S = [ S-gen ]ʷ
+
+  Z : Word Gen
+  Z = S • S
+
+  ω : Word Gen
+  ω = [ ω-gen ]ʷ
+
+  X : Word Gen
+  X = H • S • S • H
+
+  infix 4 _===_
+  data _===_ : WRel Gen where
+    order-ω : ω ^ 8 === ε
+    order-S : S ^ 4 === ε
+    order-H : H ^ 2 === ε
+    order-SH : (S • H) ^ 3 === ω
+    comm : ∀ {gen} -> ω • [ gen ]ʷ === [ gen ]ʷ • ω
+
+module Clifford where
+
+  data Gen : Set where
+    H-gen : Gen
+    S-gen : Gen
+
+  H : Word Gen
+  H = [ H-gen ]ʷ
+
+  S : Word Gen
+  S = [ S-gen ]ʷ
+
+  Z : Word Gen
+  Z = S • S
+
+  X : Word Gen
+  X = H • S • S • H
+
+  infix 4 _===_
+  data _===_ : WRel Gen where
+    order-S : S ^ 4 === ε
+    order-H : H ^ 2 === ε
+    order-SH : (S • H) ^ 3 === ε
+
+  open PB _===_ hiding (_===_)
+  open PP _===_
+  open SR word-setoid
+  
+  lemma-XX : X ^ 2 ≈ ε
+  lemma-XX = begin
+    X ^ 2 ≈⟨ refl ⟩
+    (H • S • S • H) ^ 2 ≈⟨ by-assoc Eq.refl ⟩
+    (H • S • S) • H ^ 2 • S ^ 2 • H ≈⟨ cong refl (cong (axiom order-H) refl) ⟩
+    (H • S • S) • ε • S ^ 2 • H ≈⟨ by-assoc Eq.refl ⟩
+    H • S ^ 4 • H ≈⟨ cong refl (cong (axiom order-S) refl) ⟩
+    H • ε • H ≈⟨ trans (cong refl left-unit) (axiom order-H) ⟩
+    ε ∎
+
+  lemma-SHSHS=H : (S • H) ^ 2 • S ≈ H
+  lemma-SHSHS=H = begin
+    (S • H) ^ 2 • S ≈⟨ cong refl (sym
+                                   (trans (cong refl (axiom order-H))
+                                    right-unit)) ⟩
+    (S • H) ^ 2 • S • H ^ 2 ≈⟨ by-assoc Eq.refl ⟩
+    (S • H) ^ 3 • H ≈⟨ trans (cong (axiom order-SH) refl)
+                        left-unit ⟩
+    H ∎
+
+  lemma-HSH=SHS : H • S • H ≈ S ^ 3 • H • S ^ 3
+  lemma-HSH=SHS = begin
+    H • S • H ≈⟨ sym right-unit ⟩
+    (H • S • H) • ε ≈⟨ sym (cong refl (axiom order-S)) ⟩
+    (H • S • H) • S ^ 4 ≈⟨ trans (sym left-unit) (cong (sym (axiom order-S)) refl) ⟩
+    S ^ 4 • (H • S • H) • S ^ 4 ≈⟨ by-assoc Eq.refl ⟩
+    (S ^ 3  • (S • H) ^ 2 • S) • S ^ 3 ≈⟨ cong (cong refl lemma-SHSHS=H) refl ⟩
+    (S ^ 3 • H) • S ^ 3 ≈⟨ assoc ⟩
+    S ^ 3 • H • S ^ 3 ∎
+
+
+  lemma-HS : H • S ≈ S ^ 3 • H • S ^ 3 • H
+  lemma-HS = begin
+    H • S ≈⟨ trans (sym right-unit) (sym (cong refl (axiom order-H))) ⟩
+    (H • S) • H • H ≈⟨ by-assoc Eq.refl ⟩
+    (H • S • H) • H ≈⟨ cong refl (trans (sym left-unit) (sym (cong (axiom order-S) refl))) ⟩
+    (H • S • H) • S ^ 4 • H ≈⟨ by-assoc Eq.refl ⟩
+    H • (S • H • S) • S ^ 3 • H ≈⟨ cong refl (cong refl (trans (sym left-unit) (cong (sym (axiom order-H)) refl))) ⟩
+    H • (S • H • S) • H ^ 2 • S ^ 3 • H ≈⟨ trans (sym left-unit) (sym (cong (axiom order-S) refl)) ⟩
+    S ^ 4 • H • (S • H • S) • H ^ 2 • S ^ 3 • H ≈⟨ by-assoc Eq.refl ⟩
+    (S ^ 3 • (S • H) ^ 3) • H • S ^ 3 • H ≈⟨ cong (cong refl (axiom order-SH)) refl ⟩
+    (S ^ 3 • ε) • H • S ^ 3 • H ≈⟨ cong right-unit refl ⟩
+    S ^ 3 • H • S ^ 3 • H ∎
+
+  lemma-HS' : H • S ≈ S ^ 3 • X • H • S • H
+  lemma-HS' = begin
+    H • S ≈⟨ lemma-HS ⟩
+    S ^ 3 • H • S ^ 3 • H ≈⟨ by-assoc Eq.refl ⟩
+    (S ^ 3 • H • S ^ 2) • S • H ≈⟨ cong refl (trans (sym left-unit) (cong (sym (axiom order-H)) refl)) ⟩
+    (S ^ 3 • H • S ^ 2) • (H • H) • S • H ≈⟨ by-assoc Eq.refl ⟩
+    (S ^ 3) • (H • S • S • H) • H • S • H ≈⟨ cong refl (cong (sym (refl)) refl) ⟩
+    (S ^ 3) • X • H • S • H ≈⟨ by-assoc Eq.refl ⟩
+    S ^ 3 • X • H • S • H ∎
+
+  lemma-HSS : (H • S) • S ≈ X • H
+  lemma-HSS = begin
+    (H • S) • S ≈⟨ cong refl (trans (sym right-unit) (cong refl (sym (axiom order-H)))) ⟩
+    (H • S) • S • H • H ≈⟨ by-assoc Eq.refl ⟩
+    (H • S • S • H) • H ≈⟨ cong (sym (refl)) refl ⟩
+    X • H ∎
+
+  lemma-HSH : (H • S • H) • H ≈ (S ^ 3 • X) • H • S • H
+  lemma-HSH = begin
+    (H • S • H) • H ≈⟨ by-assoc Eq.refl ⟩
+    H • S • H • H ≈⟨ cong refl (trans (cong refl (axiom order-H)) right-unit) ⟩
+    H • S ≈⟨ lemma-HS' ⟩
+    S ^ 3 • X • H • S • H ≈⟨ by-assoc Eq.refl ⟩
+    (S ^ 3 • X) • H • S • H ∎
+
+  lemma-HSH' : (H • S) • H ≈ (S ^ 3 • X) • H • S
+  lemma-HSH' = begin
+    (H • S) • H ≈⟨ cong lemma-HS' refl ⟩
+    (S ^ 3 • X • H • S • H) • H ≈⟨ by-assoc Eq.refl ⟩
+    (S ^ 3 • X • H • S) • H • H ≈⟨ trans (cong refl (axiom order-H)) right-unit ⟩
+    (S ^ 3 • X • H • S) ≈⟨ by-assoc Eq.refl ⟩
+    (S ^ 3 • X) • H • S ∎
+
+  lemma-HSX : (H • S) • X ≈ (S ^ 2 • X) • H • S
+  lemma-HSX = begin
+    (H • S) • X ≈⟨ cong lemma-HS' refl ⟩
+    (S ^ 3 • X • H • S • H) • X ≈⟨ cong refl (refl) ⟩
+    (S ^ 3 • X • H • S • H) • (H • S • S • H) ≈⟨ by-assoc Eq.refl ⟩
+    (S ^ 3 • X • H • S) • (H • H) • (S • S • H) ≈⟨ cong refl (trans (cong (axiom order-H) refl) left-unit) ⟩
+    (S ^ 3 • X • H • S) • (S • S • H) ≈⟨ cong (cong refl (cong refl (cong (refl) refl))) refl ⟩
+    (S ^ 3 • (H • S • S • H) • H • S) • (S • S • H) ≈⟨ by-assoc Eq.refl ⟩
+    (S ^ 3 • H • S • S) • (H • H) • S • (S • S • H) ≈⟨ cong refl (trans (cong (axiom order-H) refl) left-unit) ⟩
+    (S ^ 3 • H • S • S) • S • (S • S • H) ≈⟨ by-assoc Eq.refl ⟩
+    (S ^ 3 • H • S) • (S • S • S • S) • H ≈⟨ cong refl (trans (cong (axiom order-S) refl) left-unit) ⟩
+    (S ^ 3 • H • S) • H ≈⟨ by-assoc Eq.refl ⟩
+    (S ^ 3) • (H • S) • H ≈⟨ cong refl lemma-HSH' ⟩
+    (S ^ 3) • (S ^ 3 • X) • H • S ≈⟨ by-assoc Eq.refl ⟩
+    (S ^ 3) • S ^ 3 • X • H • S ≈⟨ by-assoc Eq.refl ⟩
+    S ^ 2 • S ^ 4 • X • H • S ≈⟨ cong refl (cong (axiom order-S) refl) ⟩
+    S ^ 2 • ε • X • H • S ≈⟨ cong refl left-unit ⟩
+    S ^ 2 • X • H • S ≈⟨ by-assoc Eq.refl ⟩
+    (S ^ 2 • X) • H • S ∎
+
+  lemma-HX : H • X ≈ (S • S) • H
+  lemma-HX = begin
+    H • H • S • S • H ≈⟨ by-assoc Eq.refl ⟩
+    (H • H) • S • S • H ≈⟨ trans (cong (axiom order-H) refl) left-unit ⟩
+    S • S • H ≈⟨ sym assoc ⟩
+    (S • S) • H ∎
+
+  lemma-SHS : S • H • S ≈ H • S ^ 3 • H
+  lemma-SHS = begin
+    S • H • S ≈⟨ cong refl lemma-HS ⟩
+    S • S ^ 3 • H • S ^ 3 • H ≈⟨ sym assoc ⟩
+    S ^ 4 • H • S ^ 3 • H ≈⟨ cong (axiom order-S) refl ⟩
+    ε • H • S ^ 3 • H ≈⟨ left-unit ⟩
+    H • S ^ 3 • H ∎
+
+  
+  lemma-XS : X • S ≈ S • Z • X
+  lemma-XS = begin
+    X • S ≈⟨ by-assoc Eq.refl ⟩
+    (H • S) • (S • H • S) ≈⟨ cong refl lemma-SHS ⟩
+    (H • S) • H • S ^ 3 • H ≈⟨ by-assoc Eq.refl ⟩
+    (H • S • H) • S ^ 3 • H ≈⟨ cong lemma-HSH=SHS refl ⟩
+    (S ^ 3 • H • S ^ 3) • S ^ 3 • H ≈⟨ by-assoc Eq.refl ⟩
+    (S • Z • H) • S ^ 4 • S ^ 2 • H ≈⟨ cong refl (cong (axiom order-S) refl) ⟩
+    (S • Z • H) • ε • S ^ 2 • H ≈⟨ by-assoc Eq.refl ⟩
+    S • Z • X ∎
+
+  lemma-XZ : X • Z ≈ Z • X
+  lemma-XZ = begin
+    X • Z ≈⟨ by-assoc Eq.refl ⟩
+    (X • S) • S ≈⟨ cong lemma-XS refl ⟩
+    (S • Z • X) • S ≈⟨ trans (cong (sym assoc) refl) assoc ⟩
+    (S • Z) • X • S ≈⟨ cong refl lemma-XS ⟩
+    (S • Z) • S • Z • X ≈⟨ by-assoc Eq.refl ⟩
+    S ^ 4 • Z • X ≈⟨ cong (axiom order-S) refl ⟩
+    ε • Z • X ≈⟨ left-unit ⟩
+    Z • X ∎
+
+  lemma-XS^2 : (X • S) ^ 2 ≈ ε
+  lemma-XS^2 = begin
+    (X • S) ^ 2 ≈⟨ cong refl lemma-XS ⟩
+    (X • S) • S • Z • X ≈⟨ by-assoc Eq.refl ⟩
+    X • S ^ 4 • X ≈⟨ trans (cong refl (cong (axiom order-S) refl)) (cong refl left-unit) ⟩
+    X • X ≈⟨ lemma-XX ⟩
+    ε ∎
+
+  lemma-XSH^3 : ((X • S) • H) ^ 3 ≈ ε
+  lemma-XSH^3 = begin
+    ((X • S) • H) • ((X • S) • H) • ((X • S) • H) ≈⟨ by-assoc Eq.refl ⟩
+    (X • S) • H ^ 2 • ((S ^ 2 • H • S)) • H ^ 2 • ((S ^ 2 • H • S) • H) ≈⟨ cong refl (cong (axiom order-H) (cong refl (cong (axiom order-H) refl))) ⟩
+    (X • S) • ε • ((S ^ 2 • H • S)) • ε • ((S ^ 2 • H • S) • H) ≈⟨ by-assoc Eq.refl ⟩
+    X • (S ^ 3 • H • S ^ 3 • H) • S • H ≈⟨ cong refl (cong (sym lemma-HS) refl) ⟩
+    X • (H • S) • S • H ≈⟨ by-assoc Eq.refl ⟩
+    X • X ≈⟨ lemma-XX ⟩
+    ε ∎
+
+  lemma-XSX : (X • S) • X ≈ X • Z • X • S
+  lemma-XSX = begin
+    (X • S) • X ≈⟨ cong lemma-XS refl ⟩
+    (S • Z • X) • X ≈⟨ trans (cong (sym assoc) refl) assoc ⟩
+    (S • Z) • X • X ≈⟨ cong refl lemma-XX ⟩
+    (S • Z) • ε ≈⟨ by-assoc Eq.refl ⟩
+    Z • ε • S ≈⟨ cong refl (cong (sym lemma-XX) refl) ⟩
+    Z • X ^ 2 • S ≈⟨ by-assoc Eq.refl ⟩
+    (Z • X) • X • S ≈⟨ cong (sym lemma-XZ) refl ⟩
+    (X • Z) • X • S ≈⟨ assoc ⟩
+    X • Z • X • S ∎
+
+  lemma-ZXS : Z • X • S ≈ (X • S) • Z
+  lemma-ZXS = begin
+    Z • X • S ≈⟨ sym assoc ⟩
+    (Z • X) • S ≈⟨ cong (sym lemma-XZ) refl ⟩
+    (X • Z) • S ≈⟨ by-assoc Eq.refl ⟩
+    (X • S) • Z ∎
+
+
+  
+module Symplectic where
+
+  data GenM : Set where
+    S-gen : GenM
+
+  M = GenM
+  
+  Sₘ : Word GenM
+  Sₘ = [ S-gen ]ʷ
+
+  infix 4 _===ₘ_
+  data _===ₘ_ : WRel GenM where
+    order-S : Sₘ ^ 2 ===ₘ ε
+
+  open PB hiding (_===_)
+
+  open PB _===ₘ_ using () renaming (_≈_ to _≈₁_ ; _===_ to _===₁_)-- ; refl to refl₁ ; axiom to axiom₁ ; left-unit to left-unit₁)
+  open PP _===ₘ_ renaming (by-assoc to by-assoc₁ ; by-assoc-and to by-assoc-and₁) using ()
+
+  open import Data.Bool
+  open import Data.Bool.Properties
+  
+  NF = Bool
+  
+  nf : Word GenM -> NF
+  nf [ S-gen ]ʷ = true
+  nf ε = false
+  nf (x • x₁) = (nf x) xor (nf x₁)
+
+  nf-cong : {w v : Word GenM} → w ≈₁ v → nf w ≡ nf v
+  nf-cong {w} {v} PB.refl = Eq.refl
+  nf-cong {w} {v} (PB.sym eq) = Eq.sym (nf-cong eq)
+  nf-cong {w} {v} (PB.trans eq eq₁) = Eq.trans (nf-cong eq) (nf-cong eq₁)
+  nf-cong {w} {v} (PB.cong eq eq₁) rewrite nf-cong eq | nf-cong eq₁ = Eq.refl
+  nf-cong {w} {v} (PB.assoc {w₁} {v₁} {u}) rewrite xor-assoc (nf w₁) (nf v₁) (nf u) = Eq.refl
+  nf-cong {w} {v} PB.left-unit = Eq.refl
+  nf-cong {w} {v} PB.right-unit rewrite xor-identityʳ (nf v) = Eq.refl
+  nf-cong {w} {v} (PB.axiom order-S) = Eq.refl
+
+  inv-nf : NF → Word GenM
+  inv-nf true = Sₘ
+  inv-nf false = ε
+
+  inv-nf-homo : ∀ a b -> inv-nf (a xor b) ≈₁ inv-nf a • inv-nf b
+  inv-nf-homo false b = _≈₁_.sym _≈₁_.left-unit
+  inv-nf-homo true false = _≈₁_.sym _≈₁_.right-unit
+  inv-nf-homo true true = _≈₁_.sym (_≈₁_.axiom order-S)
+  
+  =id : {w : Word GenM} → inv-nf (nf w) ≈₁ w
+  =id {[ S-gen ]ʷ} = _≈₁_.refl
+  =id {ε} = _≈₁_.refl
+  =id {w • w₁} = trans (inv-nf-homo (nf w) (nf w₁)) (cong =id =id)
+  
+  nfpₘ : NFProperty' _===ₘ_
+  nfpₘ = record
+          { NF = NF ; nf = nf ; nf-cong = nf-cong ; inv-nf = inv-nf ; inv-nf∘nf=id = =id }
+
+
+  data Gen : Set where
+    H-gen : Gen
+    S-gen : Gen
+
+  H : Word Gen
+  H = [ H-gen ]ʷ
+
+  S : Word Gen
+  S = [ S-gen ]ʷ
+
+  X : Word Gen
+  X = H • S • S • H
+
+  infix 4 _===_
+  data _===_ : WRel Gen where
+    order-S : S ^ 2 === ε
+    order-H : H ^ 2 === ε
+    order-SH : (S • H) ^ 3 === ε
+
+  
+  open PB _===_ using () renaming (_≈_ to _≈₂_ ; _===_ to _===₂_)
+  open PP _===_ using (by-assoc) renaming (word-setoid to ws₂)
+
+  open import Presentation.CosetNF
+
+  data C : Set where
+    cH : C
+    cHS : C
+
+  pattern •ε = inj₂ tt
+  pattern •H = inj₁ cH
+  pattern •HS = inj₁ cHS
+
+  I : C ⊎ ⊤
+  I = •ε
+  
+  f : GenM → Word Gen
+  f S-gen = S
+
+  h : C ⊎ ⊤ → Gen → Word GenM × (C ⊎ ⊤)
+  h •H H-gen = ε , •ε
+  h •HS H-gen = Sₘ , •HS
+  h •H S-gen = ε , •HS
+  h •HS S-gen = ε , •H
+  h •ε H-gen = ε , •H
+  h •ε S-gen = Sₘ , •ε
+
+  [_]ₒ : C → Word Gen
+  [ cH ]ₒ = H
+  [ cHS ]ₒ = H • S
+
+
+  hcme : ∀ c m -> ∃ \ w -> ∃ \ c' -> ((h **) (inj₁ c) (f m)) ≡ (w , inj₁ c')
+  hcme cH S-gen = ε , cHS , Eq.refl
+  hcme cHS S-gen = ε , cH , Eq.refl
+  
+  htme : ∀ m -> ((h **) (inj₂ tt) (f m)) ≡ ([ m ]ʷ , inj₂ tt)
+  htme S-gen = Eq.refl
+
+  infix 4 _~_
+  _~_ = PW.Pointwise _≈₁_ (_≡_ {A = C ⊎ ⊤})
+
+  htme~ : ∀ (m : M) -> ([ m ]ʷ , I) ~ ((h **) I (f m))
+  htme~ S-gen = refl , Eq.refl
+
+  [_]ₓ = f *
+
+  hcme~ : ∀ (c : C) (m : M) -> let (w' , c' , p) = hcme c m in [ c ]ₒ • f m ≈₂ [ w' ]ₓ • [ c' ]ₒ 
+  hcme~ cH S-gen = _≈₂_.sym _≈₂_.left-unit
+  hcme~ cHS S-gen = trans assoc (trans (_≈₂_.trans (_≈₂_.cong _≈₂_.refl (_≈₂_.axiom order-S))
+                                         _≈₂_.right-unit) (sym left-unit))
+  
+  h-wd-ax : ∀ (c : C ⊎ ⊤){u t : Word Gen} -> u ===₂ t -> ((h **) c u) ~ ((h **) c t)
+  h-wd-ax •H {u} {t} order-S = left-unit , Eq.refl
+  h-wd-ax •HS {u} {t} order-S = left-unit , Eq.refl
+  h-wd-ax •H {u} {t} order-H = left-unit , Eq.refl
+  h-wd-ax •HS {u} {t} order-H = axiom order-S , Eq.refl
+  h-wd-ax •H {u} {t} order-SH = by-assoc-and₁ (axiom order-S) Eq.refl Eq.refl , Eq.refl
+  h-wd-ax •HS {u} {t} order-SH = by-assoc-and₁ (axiom order-S) Eq.refl Eq.refl , Eq.refl
+  h-wd-ax •ε {u} {t} order-S = axiom order-S , Eq.refl
+  h-wd-ax •ε {u} {t} order-H = left-unit , Eq.refl
+  h-wd-ax •ε {u} {t} order-SH = by-assoc-and₁ (axiom order-S) Eq.refl Eq.refl , Eq.refl
+  
+  f-wd-ax : ∀ {w v} -> w ===₁ v -> (f *) w ≈₂ (f *) v
+  f-wd-ax {w} {v} order-S = axiom order-S
+
+  [_] : C ⊎ ⊤ -> Word Gen
+  [_] = [_,_] [_]ₒ (λ v → ε)
+
+  h=ract :  ∀ c y -> let (m' , c') = h c y in
+   ([ c ] • [ y ]ʷ) ≈₂ ([ m' ]ₓ • [ c' ])
+  h=ract •H H-gen = trans (axiom order-H) (sym right-unit)
+  h=ract •HS H-gen = lemma-HSH=SHS
+    where
+    lemma-SHSHS=H : (S • H) ^ 2 • S ≈₂ H
+    lemma-SHSHS=H = begin
+      (S • H) ^ 2 • S ≈⟨ cong refl (_≈₂_.sym
+                                     (_≈₂_.trans (_≈₂_.cong _≈₂_.refl (_≈₂_.axiom order-H))
+                                      _≈₂_.right-unit)) ⟩
+      (S • H) ^ 2 • S • H ^ 2 ≈⟨ by-assoc Eq.refl ⟩
+      (S • H) ^ 3 • H ≈⟨ _≈₂_.trans (_≈₂_.cong (_≈₂_.axiom order-SH) _≈₂_.refl)
+                          _≈₂_.left-unit ⟩
+      H ∎
+      where open SR ws₂
+    lemma-HSH=SHS : (H • S) • H ≈₂ S • H • S
+    lemma-HSH=SHS = begin
+      (H • S) • H ≈⟨ _≈₂_.cong _≈₂_.refl (_≈₂_.sym _≈₂_.right-unit) ⟩
+      (H • S) • H • ε ≈⟨ cong refl (_≈₂_.cong _≈₂_.refl (_≈₂_.sym (_≈₂_.axiom order-S))) ⟩
+      (H • S) • H • S ^ 2 ≈⟨ trans (sym left-unit) (_≈₂_.cong (_≈₂_.sym (_≈₂_.axiom order-S)) _≈₂_.refl) ⟩
+      S ^ 2 • (H • S) • H • S ^ 2 ≈⟨ by-assoc Eq.refl ⟩
+      (S  • (S • H) ^ 2 • S) • S ≈⟨ cong (cong refl lemma-SHSHS=H) refl ⟩
+      (S  • H) • S ≈⟨ _≈₂_.assoc ⟩
+      S • H • S ∎
+      where open SR ws₂
+
+
+  h=ract •H S-gen = _≈₂_.sym _≈₂_.left-unit
+  h=ract •HS S-gen = trans assoc (trans (_≈₂_.trans (_≈₂_.cong _≈₂_.refl (_≈₂_.axiom order-S))
+                                         _≈₂_.right-unit) (sym left-unit))
+  h=ract •ε H-gen = refl
+  h=ract •ε S-gen = trans left-unit (sym right-unit)
+
+  assump : CosetNF-CT-Assumptions-And-Theorems-Packed _===ₘ_ _===_
+  assump = record
+            { C = C
+            ; f = f
+            ; h = h
+            ; [_]ₒ = [_]ₒ
+            ; hcme = hcme
+            ; htme = htme
+            ; htme~ = htme~
+            ; hcme~ = hcme~
+            ; h-wd-ax = h-wd-ax
+            ; f-wd-ax = f-wd-ax
+            ; h=ract = h=ract
+            }
+
+  open CosetNF-CT-Assumptions-And-Theorems-Packed assump
+  
+  sym-nfp' : NFProperty' _===_
+  sym-nfp' = nfp' nfpₘ
+
+module ℤ₂² where
+
+  open import Data.Sum
+  open import Data.Unit
+
+  rel-ℤ₂ = Cyclic.rel 2
+
+  Gen = Cyclic.X ⊎ Cyclic.X
+
+  rel-ℤ₂² = (rel-ℤ₂ ⸲ rel-ℤ₂ ⸲ Γₓ)
+  infix 4 _===_
+  _===_ = rel-ℤ₂²
+
+  pattern Z-gen = inj₂ tt
+  pattern X-gen = inj₁ tt
+
+  X : Word Gen
+  X = [ X-gen ]ʷ
+
+  Z : Word Gen
+  Z = [ Z-gen ]ʷ
+
+  nfp' : NFProperty' _===_
+  nfp' = DP.NFP'.nfp' rel-ℤ₂ rel-ℤ₂ (Cyclic.nfp' 2) (Cyclic.nfp' 2)
+
+module Semidirect where
+
+  open import Presentation.Construct.Base
+
+  conj : Symplectic.Gen -> ℤ₂².Gen -> Word ℤ₂².Gen
+  conj Symplectic.H-gen ℤ₂².X-gen = ℤ₂².Z
+  conj Symplectic.H-gen ℤ₂².Z-gen = ℤ₂².X
+  conj Symplectic.S-gen ℤ₂².X-gen = ℤ₂².X • ℤ₂².Z
+  conj s w = [ w ]ʷ
+
+  Gen = ℤ₂².Gen ⊎ Symplectic.Gen
+  sdp = (ℤ₂².rel-ℤ₂² ⸲ Symplectic._===_ ⸲ Γⱼ' conj)
+
+  H : Word Gen
+  H = [ Symplectic.H ]ᵣ
+  
+  S : Word Gen
+  S = [ Symplectic.S ]ᵣ
+
+  X' : Word Gen
+  X' = [ ℤ₂².X ]ₗ
+
+  open PB Symplectic._===_ renaming (_===_ to _===₂_ ; _≈_ to _≈₂_) using ()
+  open PP Symplectic._===_ renaming (•-ε-monoid to m₂ ; word-setoid to ws₂) using ()
+  
+  open PB ℤ₂²._===_ renaming (_===_ to _===₁_ ; _≈_ to _≈₁_) using ()
+  open PP ℤ₂²._===_ renaming (•-ε-monoid to m₁ ; word-setoid to ws₁ ; by-assoc-and to by-assoc-and₁ ; by-assoc to by-assoc₁) using ()
+
+
+  module SDP2A = SDP2 ℤ₂²._===_ Symplectic._===_ conj
+
+  open PB ℤ₂²._===_
+  open ℤ₂²
+
+  hyph : ∀ {c d} n -> c ===₂ d -> (conj ʰ') c n ≈₁ (conj ʰ') d n
+  hyph {c} {d} [ X-gen ]ʷ Symplectic.order-S = trans (trans assoc (cong refl (axiom (right Cyclic.order)))) right-unit
+  hyph {c} {d} [ Z-gen ]ʷ Symplectic.order-S = refl
+  hyph {c} {d} [ X-gen ]ʷ Symplectic.order-H = refl
+  hyph {c} {d} [ Z-gen ]ʷ Symplectic.order-H = refl
+  hyph {c} {d} [ X-gen ]ʷ Symplectic.order-SH = begin
+    Z • X • Z ≈⟨ cong refl (axiom (mid (comm tt tt))) ⟩
+    Z • Z • X ≈⟨ trans (sym assoc) (cong (axiom (right Cyclic.order)) refl) ⟩
+    ε • X ≈⟨ left-unit ⟩
+    X ∎
+    where open SR ws₁
+  hyph {c} {d} [ Z-gen ]ʷ Symplectic.order-SH = begin
+    (X • Z) • Z • X • Z ≈⟨ by-assoc₁ Eq.refl ⟩
+    X • (Z • Z) • X • Z ≈⟨ cong refl (cong (axiom (right Cyclic.order)) refl) ⟩
+    X • ε • X • Z ≈⟨ by-assoc₁ Eq.refl ⟩
+    X ^ 2 • Z ≈⟨ trans (cong (axiom (left Cyclic.order)) refl) left-unit ⟩
+    Z ∎
+    where open SR ws₁
+  hyph {c} {d} ε Symplectic.order-S = refl
+  hyph {c} {d} ε Symplectic.order-H = refl
+  hyph {c} {d} ε Symplectic.order-SH = refl
+  hyph {c} {d} (n • n₁) s@Symplectic.order-S = cong (hyph n s) (hyph n₁ s)
+  hyph {c} {d} (n • n₁) s@Symplectic.order-H = cong (hyph n s) (hyph n₁ s)
+  hyph {c} {d} (n • n₁) s@Symplectic.order-SH = cong (hyph n s) (hyph n₁ s)
+
+  hypn : ∀ c {w v} -> w ===₁ v -> (conj ⁿ') c w ≈₁ (conj ⁿ') c v
+  hypn Symplectic.H-gen {w} {v} (left Cyclic.order) = axiom (right Cyclic.order)
+  hypn Symplectic.H-gen {w} {v} (right Cyclic.order) = axiom (left Cyclic.order)
+  hypn Symplectic.H-gen {w} {v} (mid (comm tt tt)) = sym (axiom (mid (comm tt tt)))
+  hypn Symplectic.S-gen {w} {v} (left Cyclic.order) = begin
+    (X • Z) • X • Z ≈⟨ cong (axiom (mid (comm tt tt))) refl ⟩
+    (Z • X) • X • Z ≈⟨ by-assoc₁ Eq.refl ⟩
+    Z • X ^ 2 • Z ≈⟨ cong refl (cong (axiom (left Cyclic.order)) refl) ⟩
+    Z • ε • Z ≈⟨ cong refl left-unit ⟩
+    Z ^ 2 ≈⟨ axiom (right Cyclic.order) ⟩
+    ε ∎
+      where open SR ws₁
+  hypn Symplectic.S-gen {w} {v} (right Cyclic.order) = axiom (right Cyclic.order)
+  hypn Symplectic.S-gen {w} {v} (mid (comm tt tt)) = begin
+    (X • Z) • Z ≈⟨ cong (axiom (mid (comm tt tt))) refl ⟩
+    (Z • X) • Z ≈⟨ assoc ⟩
+    Z • X • Z ∎
+    where open SR ws₁
+
+  sdp-nfp' : NFProperty' sdp
+  sdp-nfp' = SDP2.NFP'.nfp' ℤ₂²._===_ Symplectic._===_ conj hyph hypn ℤ₂².nfp' Symplectic.sym-nfp'
+
+module Iso where
+
+  Gen = Semidirect.Gen
+  ssdp = Semidirect.sdp
+
+  ssdp-nfp' : NFProperty' ssdp
+  ssdp-nfp' = Semidirect.sdp-nfp'
+
+  open PB ssdp renaming (_===_ to _===₂_ ; _≈_ to _≈₂_) using ()
+  open PP ssdp renaming (•-ε-monoid to m₂ ; word-setoid to ws₂)
+  
+  open PB Clifford._===_ renaming (_===_ to _===₁_ ; _≈_ to _≈₁_) using ()
+  open PP Clifford._===_ renaming (•-ε-monoid to m₁ ; word-setoid to ws₁ ; by-assoc to by-assoc₁ ;  by-assoc-and to by-assoc-and₁)
+
+  open PB hiding (_===_)
+
+  open import Algebra.Bundles using (Monoid ; Group)
+  open import Algebra.Morphism.Structures using (module MonoidMorphisms ; module GroupMorphisms)
+  open import Presentation.Morphism
+
+  X : Word Gen
+  X = Semidirect.X'
+
+  H : Word Gen
+  H = Semidirect.H
+
+  S' : Word Gen
+  S' = Semidirect.S
+
+  f : Clifford.Gen -> Word Gen
+  f Clifford.H-gen = H
+  f Clifford.S-gen = X • S'
+
+  g : Gen -> Word Clifford.Gen
+  g ((inj₁ (inj₁ tt))) = Clifford.X
+  g ((inj₁ (inj₂ tt))) = Clifford.Z
+  g ((inj₂ Symplectic.H-gen)) = Clifford.H
+  g ((inj₂ Symplectic.S-gen)) = Clifford.X • Clifford.S
+
+  open PP.NFProperty' ssdp-nfp'
+  
+  f-well-defined : ∀ {w v} -> w ===₁ v -> (f *) w ≈₂ (f *) v
+  f-well-defined {w} {v} Clifford.order-S = nf-injective Eq.refl
+  f-well-defined {w} {v} Clifford.order-H = nf-injective Eq.refl
+  f-well-defined {w} {v} Clifford.order-SH = nf-injective Eq.refl
+
+  g-well-defined : ∀ {w v} -> w ===₂ v -> (g *) w ≈₁ (g *) v
+  g-well-defined {w} {v} (left (left Cyclic.order)) = Clifford.lemma-XX
+  g-well-defined {w} {v} (left (right Cyclic.order)) = trans assoc (axiom Clifford.order-S)
+  g-well-defined {w} {v} (left (mid (comm tt tt))) = Clifford.lemma-XZ
+  g-well-defined {w} {v} (right Symplectic.order-S) = Clifford.lemma-XS^2  
+  g-well-defined {w} {v} (right Symplectic.order-H) = axiom Clifford.order-H
+  g-well-defined {w} {v} (right Symplectic.order-SH) = Clifford.lemma-XSH^3
+  g-well-defined {w} {v} (mid (comm (inj₁ tt) Symplectic.H-gen)) = trans (trans (by-assoc₁ Eq.refl) (cong (axiom Clifford.order-H) refl)) left-unit
+  g-well-defined {w} {v} (mid (comm (inj₁ tt) Symplectic.S-gen)) = by-assoc-and₁ Clifford.lemma-XSX Eq.refl Eq.refl
+  g-well-defined {w} {v} (mid (comm (inj₂ tt) Symplectic.H-gen)) = sym (trans (trans (by-assoc₁ Eq.refl) (cong refl (axiom Clifford.order-H))) right-unit)
+  g-well-defined {w} {v} (mid (comm (inj₂ tt) Symplectic.S-gen)) = sym (by-assoc-and₁ Clifford.lemma-ZXS Eq.refl Eq.refl)
+
+  f-left-inv-gen : ∀ x -> [ x ]ʷ ≈₂ (f *) (g x)
+  f-left-inv-gen (inj₁ (inj₁ tt)) = nf-injective Eq.refl
+  f-left-inv-gen (inj₁ (inj₂ tt)) = nf-injective Eq.refl
+  f-left-inv-gen (inj₂ Symplectic.H-gen) = nf-injective Eq.refl
+  f-left-inv-gen (inj₂ Symplectic.S-gen) = nf-injective Eq.refl
+
+  g-left-inv-gen : ∀ x -> [ x ]ʷ ≈₁ (g *) (f x)
+  g-left-inv-gen Clifford.H-gen = refl
+  g-left-inv-gen Clifford.S-gen = begin
+    Clifford.S ≈⟨ sym left-unit ⟩
+    ε • Clifford.S ≈⟨ cong (sym Clifford.lemma-XX) refl ⟩
+    (Clifford.X • Clifford.X) • Clifford.S ≈⟨ assoc ⟩
+    Clifford.X • Clifford.X • Clifford.S ∎
+    where open SR ws₁
+
+  open MonoidMorphisms 
+
+  Theorem-Clifford-iso-ℤ₂²⋊Sym : IsMonoidIsomorphism (Monoid.rawMonoid m₁) (Monoid.rawMonoid m₂) (f *)
+  Theorem-Clifford-iso-ℤ₂²⋊Sym = StarIsomorphism.isMonoidIsomorphism Clifford._===_ ssdp f g f-well-defined  f-left-inv-gen g-well-defined  g-left-inv-gen
+
+  clifford-nfp' : PP.NFProperty' Clifford._===_
+  clifford-nfp' = iso-nfp' ssdp-nfp' (f *) Theorem-Clifford-iso-ℤ₂²⋊Sym
+
+  open GroupMorphisms
+  open import Presentation.GroupLike
+
+  clifford-group-like : Grouplike Clifford._===_
+  clifford-group-like Clifford.H-gen = Clifford.H , _≈₁_.axiom Clifford.order-H
+  clifford-group-like Clifford.S-gen = (Clifford.S • Clifford.S) • Clifford.S ,
+                                        _≈₁_.trans _≈₁_.assoc
+                                        (_≈₁_.trans _≈₁_.assoc (_≈₁_.axiom Clifford.order-S))
+
+  sdp-group-like : Grouplike ssdp
+  sdp-group-like (inj₁ (inj₁ tt)) = wmap inj₁ (wmap inj₁ (Cyclic.T ^' 1)) ,
+                                     axiom (left (left Cyclic.order))
+  sdp-group-like (inj₁ (inj₂ tt)) = wmap inj₁ (wmap inj₂ (Cyclic.T ^' 1)) ,
+                                     axiom (left (right Cyclic.order))
+  sdp-group-like (inj₂ Symplectic.H-gen) = wmap inj₂ Symplectic.H , axiom (right Symplectic.order-H)
+  sdp-group-like (inj₂ Symplectic.S-gen) = wmap inj₂ Symplectic.S , axiom (right Symplectic.order-S)
+
+  module CliffordGroup = Group-Lemmas Clifford.Gen Clifford._===_ clifford-group-like
+  module SdpGroup = Group-Lemmas Semidirect.Gen ssdp sdp-group-like
+  open GroupMorphs Clifford._===_ ssdp clifford-group-like sdp-group-like
+  
+  Theorem-Clifford-group-iso-ℤ₂²⋊Sym : IsGroupIsomorphism (Group.rawGroup CliffordGroup.•-ε-group) (Group.rawGroup SdpGroup.•-ε-group) (f *)
+  Theorem-Clifford-group-iso-ℤ₂²⋊Sym = StarGroupIsomorphism.isGroupIsomorphism f g f-well-defined f-left-inv-gen g-well-defined  g-left-inv-gen
+
+  -- This theorem says 1 qubit Clifford mod scalars is isomorphic to
+  -- ℤ₂² ⋊ Sp(2,2). The presentations are:
+
+  -- Clifford:
+  --   order-S : S ^ 4 === ε
+  --   order-H : H ^ 2 === ε
+  --   order-SH : (S • H) ^ 3 === ε
+
+  -- Semidirect product:
+  --   ℤ₂²:
+  --     order-X 
+  --     order-Z 
+  --     comm-Z-X
+      
+  --   Sp(2,2): 
+  --     order-S : S ^ 2 === ε
+  --     order-H : H ^ 2 === ε
+  --     order-SH : (S • H) ^ 3 === ε
+      
+  --   conjugation:
+  --     conj-H-X 
+  --     conj-H-Z 
+  --     conj-S-X 
+  --     conj-S-Z 
+
+  -- NOTE: S in Sp(2,2) is XS in Clifford.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{-
+
+  
+module Weyl where
+
+  data Gen : Set where
+    X-gen : Gen
+    Z-gen : Gen
+    ω-gen : Gen
+    
+  X : Word Gen
+  X = [ X-gen ]ʷ
+
+  Z : Word Gen
+  Z = [ Z-gen ]ʷ
+
+  ω : Word Gen
+  ω = [ ω-gen ]ʷ
+
+  infix 4 _===_
+  data _===_ : WRel Gen where
+    order-ω : ω ^ 8 === ε
+    order-X : X ^ 2 === ε
+    order-Z : Z ^ 2 === ε
+    comm-ZX : X • Z === Z • X • ω ^ 4
+    comm : ∀ g -> ω • [ g ]ʷ === [ g ]ʷ • ω
+
+  open PB _===_ hiding (_===_)
+  open PP _===_
+  
+  lemma-comm1 : ∀ k g -> [ g ]ʷ • ω ^ k ≈ ω ^ k • [ g ]ʷ
+  lemma-comm1 zero g = _≈_.trans _≈_.right-unit (_≈_.sym _≈_.left-unit)
+  lemma-comm1 (suc zero) g = sym (axiom (comm g))
+  lemma-comm1 (suc (suc k)) g = begin
+    [ g ]ʷ • ω ^ suc (suc k) ≈⟨ sym assoc ⟩
+    ([ g ]ʷ • ω) • ω ^ suc k ≈⟨ cong (sym (axiom (comm g))) refl ⟩
+    (ω • [ g ]ʷ) • ω ^ suc k ≈⟨ assoc ⟩
+    ω • [ g ]ʷ • ω ^ suc k ≈⟨ cong refl (lemma-comm1 (suc k) g) ⟩
+    ω • ω ^ suc k • [ g ]ʷ ≈⟨ sym assoc ⟩
+    ω ^ suc (suc k) • [ g ]ʷ ∎
+      where open SR word-setoid
+
+  lemma-comm : ∀ k w -> w • ω ^ k ≈ ω ^ k • w
+  lemma-comm k [ x ]ʷ = lemma-comm1 k x
+  lemma-comm k ε = trans left-unit (sym right-unit)
+  lemma-comm k (w • w₁) = begin
+    (w • w₁) • ω ^ k ≈⟨ assoc ⟩
+    w • w₁ • ω ^ k ≈⟨ cong refl (lemma-comm k w₁) ⟩
+    w • ω ^ k • w₁ ≈⟨ sym assoc ⟩
+    (w • ω ^ k) • w₁ ≈⟨ cong (lemma-comm k w) refl ⟩
+    (ω ^ k • w) • w₁ ≈⟨ assoc ⟩
+    ω ^ k • w • w₁ ∎
+      where open SR word-setoid
+
+  open import Data.Vec
+  open import elementary-number-theory
+  import univalent-combinatorics.standard-finite-types as U
+  open import foundation-core.coproduct-types
+  open import foundation.unit-type
+  
+  --n8 = (succ-ℕ (succ-ℕ (succ-ℕ (succ-ℕ (succ-ℕ (succ-ℕ (succ-ℕ (succ-ℕ zero-ℕ))))))))
+  n2 = (succ-ℕ (succ-ℕ zero-ℕ))
+  n1 = (succ-ℕ zero-ℕ)
+  NF = ℤ-Mod n8 × Vec (ℤ-Mod n2) 2
+
+  ₀' : ℤ-Mod n2
+  ₀' = inl (inr star)
+
+  ₁' : ℤ-Mod n2
+  ₁' = (inr star)
+
+  ₇ : ℤ-Mod n8
+  ₇ = inr star
+
+  ₆ : ℤ-Mod n8
+  ₆ = inl (inr star)
+
+  ₅ : ℤ-Mod n8
+  ₅ = inl (inl (inr star))
+
+  ₄ : ℤ-Mod n8
+  ₄ = inl (inl (inl (inr star)))
+
+  ₃ : ℤ-Mod n8
+  ₃ = inl (inl (inl (inl (inr star))))
+
+  ₂ : ℤ-Mod n8
+  ₂ = inl (inl (inl (inl (inl (inr star)))))
+
+  ₁ : ℤ-Mod n8
+  ₁ = inl (inl (inl (inl (inl (inl (inr star))))))
+
+  ₀ : ℤ-Mod n8
+  ₀ = inl (inl (inl (inl (inl (inl (inl (inr star)))))))
+
+  infixr 6 _+₂_ _+₈_
+  infixr 7 _*₂_ _*₈_
+
+  _+₂_ = add-ℤ-Mod n2
+  _+₈_ = add-ℤ-Mod n8
+  _*₂_ = mul-ℤ-Mod n2
+  _*₈_ = mul-ℤ-Mod n8
+
+  emb : ℤ-Mod n2 -> ℤ-Mod n8
+  emb (inl (inr x)) = ₀
+  emb (inr x) = ₄
+
+  open import foundation-core.identity-types
+  open import Data.Product.Relation.Binary.Pointwise.NonDependent using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
+  
+  aux : ∀ {l} {A : Set l} {a b : A} -> a ＝ b -> a ≡ b
+  aux {l} {A} {a} {b} refl = Eq.refl
+
+  emb-+-homo : ∀ a b -> emb (add-ℤ-Mod n2 a b) ≡ add-ℤ-Mod n8 (emb a) (emb b)
+  emb-+-homo (inl (inr star)) (inl (inr star)) = Eq.refl
+  emb-+-homo (inl (inr star)) (inr star) = Eq.refl
+  emb-+-homo (inr star) (inl (inr star)) = Eq.refl
+  emb-+-homo (inr star) (inr star) = Eq.refl
+
+  emb-distrʳ : ∀ a b c -> emb ((a +₂ b) *₂ c) ≡ emb (a *₂ c) +₈ emb (b *₂ c)
+  emb-distrʳ a b c rewrite aux (right-distributive-mul-add-ℤ-Mod n2 a b c) = emb-+-homo (a *₂ c) (b *₂ c)
+
+  emb-distrˡ : ∀ c a b -> emb (c *₂ (a +₂ b) ) ≡ emb (c *₂ a) +₈ emb (c *₂ b)
+  emb-distrˡ c a b rewrite aux (left-distributive-mul-add-ℤ-Mod n2 c a b) = emb-+-homo (c *₂ a) (c *₂ b)
+
+  nf : Word Gen -> NF
+  nf [ X-gen ]ʷ = ₀ , (₁' ∷ ₀' ∷ [])
+  nf [ Z-gen ]ʷ = ₀ , (₀' ∷ ₁' ∷ [])
+  nf [ ω-gen ]ʷ = ₁ , (₀' ∷ ₀' ∷ [])
+  nf ε = ₀ , (₀' ∷ ₀' ∷ [])
+  nf (x • x₁) with nf x | nf x₁
+  ... | (k , (a ∷ b ∷ [])) | (l , (c ∷ d ∷ [])) = add-ℤ-Mod n8 bc (add-ℤ-Mod n8 k l) , (add-ℤ-Mod n2 a c) ∷ ((add-ℤ-Mod n2 b d) ∷ [])
+    where
+    bc = emb (mul-ℤ-Mod n2 b c)
+
+
+  nf-cong : {w v : Word Gen} → w ≈ v → nf w ≡ nf v
+  nf-cong {w} {v} PB.refl = Eq.refl
+  nf-cong {w} {v} (PB.sym eq) = Eq.sym (nf-cong eq)
+  nf-cong {w} {v} (PB.trans eq eq₁) = Eq.trans (nf-cong eq) (nf-cong eq₁)
+  nf-cong {w} {v} (PB.cong eq eq₁) rewrite (nf-cong eq) | (nf-cong eq₁) = Eq.refl
+  nf-cong {w} {v} (PB.assoc {w = w₁} {v₁} {u}) with nf w₁ | nf v₁ | nf u
+  ... | (k , (a ∷ b ∷ [])) | (l , (c ∷ d ∷ [])) | (m , (e ∷ f ∷ []))
+    rewrite
+      aux (associative-add-ℤ-Mod n2 a c e) |
+      aux (associative-add-ℤ-Mod n2 b d f) |
+      aux (associative-add-ℤ-Mod n2 b d f)
+      = ≡×≡⇒≡ (claim , Eq.refl)
+    where
+    k+l = add-ℤ-Mod n8 k l
+    l+m = add-ℤ-Mod n8 l m
+    b+d = add-ℤ-Mod n2 b d
+    c+e = add-ℤ-Mod n2 c e
+    de = emb (mul-ℤ-Mod n2 d e)
+    bc = emb (mul-ℤ-Mod n2 b c)
+    be = emb (mul-ℤ-Mod n2 b e)
+    [b+d]e = emb (mul-ℤ-Mod n2 b+d e)
+    b[c+e] = emb (mul-ℤ-Mod n2 b c+e)
+
+
+    open import Relation.Binary.PropositionalEquality
+    
+    claim : [b+d]e +₈ (( bc +₈ k+l) +₈ m) ≡ b[c+e] +₈ (k +₈ ( de +₈ l+m)) 
+    claim = begin
+      [b+d]e +₈ (( bc +₈ k+l) +₈ m) ≡⟨ {!!} ⟩
+      (be +₈ de) +₈ ((bc +₈ k+l) +₈ m) ≡⟨ {!!} ⟩
+      (bc +₈ be) +₈ (k +₈ (de +₈ l+m)) ≡⟨ {!!} ⟩
+      b[c+e] +₈ (k +₈ ( de +₈ l+m)) ∎
+      where open ≡-Reasoning
+      
+  nf-cong {w} {v} PB.left-unit with nf v
+  ... | (k , a ∷ b ∷ []) rewrite aux (left-unit-law-add-ℤ-Mod n2 a) | aux (left-unit-law-add-ℤ-Mod n2 b) | aux (left-zero-law-mul-Fin n1 b)   | aux (left-unit-law-add-ℤ-Mod n8 k) | aux (left-unit-law-add-ℤ-Mod n8 k) = Eq.refl
+  nf-cong {w} {v} PB.right-unit with nf v
+  ... | (k , a ∷ b ∷ []) rewrite aux (right-unit-law-add-ℤ-Mod n2 a) | aux (right-unit-law-add-ℤ-Mod n2 b) | aux (right-zero-law-mul-Fin n1 b)   | aux (right-unit-law-add-ℤ-Mod n8 k) | aux (left-unit-law-add-ℤ-Mod n8 k) = Eq.refl
+  nf-cong {w} {v} (PB.axiom order-ω) = Eq.refl
+  nf-cong {w} {v} (PB.axiom order-X) = Eq.refl
+  nf-cong {w} {v} (PB.axiom order-Z) = Eq.refl
+  nf-cong {w} {v} (PB.axiom comm-ZX) = Eq.refl
+  nf-cong {w} {v} (PB.axiom (comm X-gen)) = Eq.refl
+  nf-cong {w} {v} (PB.axiom (comm Z-gen)) = Eq.refl
+  nf-cong {w} {v} (PB.axiom (comm ω-gen)) = Eq.refl
+
+  nfp : NFProperty'
+  nfp = record
+         { NF = NF ; nf = nf ; nf-cong = {!!} ; inv-nf = λ z → ε ; inv-nf∘nf=id = {!!} }
+
+
+module ℤ₂² where
+
+  open import Data.Bool
+  open import Data.Bool.Properties
+  open import Data.Vec
+  
+  pattern ⁰ = false
+  pattern ¹ = true
+
+  ℤ₂² = Vec Bool 2
+  
+  data Gen : Set where
+    X-gen : Gen
+    Z-gen : Gen
+    
+  X : Word Gen
+  X = [ X-gen ]ʷ
+
+  Z : Word Gen
+  Z = [ Z-gen ]ʷ
+
+  infix 4 _===_
+  data _===_ : WRel Gen where
+    order-X : X ^ 2 === ε
+    order-Z : Z ^ 2 === ε
+    comm-ZX : X • Z === Z • X
+
+  open PB _===_ hiding (_===_)
+  open PP _===_
+
+  NF = Vec Bool 2
+
+  infixr 6 _+₂_
+  _+₂_ : NF -> NF -> NF
+  (a ∷ b ∷ []) +₂ (c ∷ d ∷ []) = (a xor c) ∷ (b xor d) ∷ []
+  
+  nf : Word Gen -> NF
+  nf [ X-gen ]ʷ = ¹ ∷ ⁰ ∷ []
+  nf [ Z-gen ]ʷ = ⁰ ∷ ¹ ∷ []
+  nf ε = ⁰ ∷ ⁰ ∷ []
+  nf (x • x₁) = nf x +₂ nf x₁
+
+  nf-cong : {w v : Word Gen} → w ≈ v → nf w ≡ nf v
+  nf-cong {w} {v} PB.refl = Eq.refl
+  nf-cong {w} {v} (PB.sym eq) = Eq.sym (nf-cong eq)
+  nf-cong {w} {v} (PB.trans eq eq₁) = Eq.trans (nf-cong eq) (nf-cong eq₁)
+  nf-cong {w} {v} (PB.cong eq eq₁) rewrite nf-cong eq | nf-cong eq₁ = Eq.refl
+  nf-cong {w} {v} (PB.assoc {w₁} {v₁} {u}) with nf w₁ | nf v₁ | nf u
+  ... | (a ∷ b ∷ []) | (c ∷ d ∷ []) | (e ∷ f ∷ []) rewrite xor-assoc a c e | xor-assoc b d f = Eq.refl
+  nf-cong {w} {v} PB.left-unit with nf v
+  ... | (a ∷ b ∷ []) = Eq.refl
+  nf-cong {w} {v} PB.right-unit with nf v
+  ... | (a ∷ b ∷ []) rewrite xor-identityʳ a | xor-identityʳ b = Eq.refl
+  nf-cong {w} {v} (PB.axiom order-X) = Eq.refl
+  nf-cong {w} {v} (PB.axiom order-Z) = Eq.refl
+  nf-cong {w} {v} (PB.axiom comm-ZX) = Eq.refl
+
+  to-ℕ : Bool -> ℕ
+  to-ℕ true = 1
+  to-ℕ false = 0
+
+  aux-comm : ∀ w v -> w • v ≈ v • w
+  aux-comm [ X-gen ]ʷ [ X-gen ]ʷ = refl
+  aux-comm [ X-gen ]ʷ [ Z-gen ]ʷ = axiom comm-ZX
+  aux-comm [ X-gen ]ʷ ε = trans right-unit (sym left-unit)
+  aux-comm [ Z-gen ]ʷ [ X-gen ]ʷ = sym (axiom comm-ZX)
+  aux-comm [ Z-gen ]ʷ [ Z-gen ]ʷ = refl
+  aux-comm [ Z-gen ]ʷ ε = trans right-unit (sym left-unit)
+  aux-comm w (v • v₁) = begin
+    w • v • v₁ ≈⟨ sym assoc ⟩
+    (w • v) • v₁ ≈⟨ cong (aux-comm w v) refl ⟩
+    (v • w) • v₁ ≈⟨ assoc ⟩
+    v • w • v₁ ≈⟨ cong refl (aux-comm w v₁) ⟩
+    v • v₁ • w ≈⟨ sym assoc ⟩
+    (v • v₁) • w ∎
+    where open SR word-setoid
+  aux-comm ε v = trans left-unit (sym right-unit)
+  aux-comm (w • w₁) v = begin
+    (w • w₁) • v ≈⟨ assoc ⟩
+    w • w₁ • v ≈⟨ cong refl (aux-comm w₁ v) ⟩
+    w • v • w₁ ≈⟨ sym assoc ⟩
+    (w • v) • w₁ ≈⟨ cong (aux-comm w v) refl ⟩
+    (v • w) • w₁ ≈⟨ assoc ⟩
+    v • w • w₁ ∎
+    where open SR word-setoid
+
+  aux-ww : ∀ w -> w • w ≈ ε
+  aux-ww [ X-gen ]ʷ = axiom order-X
+  aux-ww [ Z-gen ]ʷ = axiom order-Z
+  aux-ww ε = left-unit
+  aux-ww (w • w₁) = trans claim left-unit
+    where
+    open SR word-setoid
+    claim : (w • w₁) • w • w₁ ≈ ε • ε
+    claim = begin
+      (w • w₁) • w • w₁ ≈⟨ trans assoc (sym (cong refl assoc)) ⟩
+      w • (w₁ • w) • w₁ ≈⟨ cong refl (cong (aux-comm w₁ w) refl) ⟩
+      w • (w • w₁) • w₁ ≈⟨ sym (trans assoc (sym (cong refl assoc))) ⟩
+      (w • w) • w₁ • w₁ ≈⟨ cong (aux-ww w) (aux-ww w₁) ⟩
+      ε • ε ∎
+  
+  aux : ∀ b c w -> w ^ to-ℕ (b xor c) ≈ w ^ to-ℕ b • w ^ to-ℕ c
+  aux ⁰ c w = sym left-unit
+  aux ¹ ⁰ w = sym right-unit
+  aux ¹ ¹ w = sym (aux-ww (w ^ to-ℕ ¹))
+  
+  inv-nf : NF -> Word Gen
+  inv-nf (x ∷ x₁ ∷ []) = X ^ to-ℕ x • Z ^ to-ℕ x₁
+
+  inv-nf-homo : ∀ {w v} -> inv-nf (w +₂ v) ≈ inv-nf w • inv-nf v
+  inv-nf-homo {a ∷ b ∷ []} {c ∷ d ∷ []} = begin
+    X ^ to-ℕ (a xor c) • Z ^ to-ℕ (b xor d) ≈⟨ cong (aux a c X) (aux b d Z) ⟩
+    (X ^ to-ℕ a • X ^ to-ℕ c) • (Z ^ to-ℕ b • Z ^ to-ℕ d) ≈⟨ trans assoc (sym (cong refl assoc)) ⟩
+    X ^ to-ℕ a • (X ^ to-ℕ c • Z ^ to-ℕ b) • Z ^ to-ℕ d ≈⟨ cong refl (cong (aux-comm (X ^ to-ℕ c) (Z ^ to-ℕ b)) refl) ⟩
+    X ^ to-ℕ a • (Z ^ to-ℕ b • X ^ to-ℕ c) • Z ^ to-ℕ d ≈⟨ sym (trans assoc (sym (cong refl assoc))) ⟩
+    (X ^ to-ℕ a • Z ^ to-ℕ b) • X ^ to-ℕ c • Z ^ to-ℕ d ∎
+    where open SR word-setoid
+
+  inv-nf∘nf=id : {w : Word Gen} → inv-nf (nf w) ≈ w
+  inv-nf∘nf=id {[ X-gen ]ʷ} = right-unit
+  inv-nf∘nf=id {[ Z-gen ]ʷ} = left-unit
+  inv-nf∘nf=id {ε} = left-unit
+  inv-nf∘nf=id {w • w₁} with inv-nf∘nf=id {w} | inv-nf∘nf=id {w₁}
+  ... | ih | ih₁ rewrite nf-cong ih | nf-cong ih₁ = trans (inv-nf-homo {nf w} {nf w₁}) (cong ih ih₁)
+  
+  nfp : NFProperty'
+  nfp = record
+         { NF = NF ; nf = nf ; nf-cong = nf-cong ; inv-nf = inv-nf ; inv-nf∘nf=id = inv-nf∘nf=id }
+
+module Semidirect where
+
+  open import Presentation.Construct.Base
+
+  conj : Symplectic.Gen -> ℤ₂².Gen -> Word ℤ₂².Gen
+  conj Symplectic.H-gen ℤ₂².X-gen = ℤ₂².Z
+  conj Symplectic.H-gen ℤ₂².Z-gen = ℤ₂².X
+  conj Symplectic.S-gen ℤ₂².X-gen = ℤ₂².X • ℤ₂².Z
+  conj s w = [ w ]ʷ
+
+  sdp = (ℤ₂²._===_ ⸲ Symplectic._===_ ⸲ Γⱼ' conj)
+
+  open PB Symplectic._===_ renaming (_===_ to _===₂_ ; _≈_ to _≈₂_) using ()
+  open PP Symplectic._===_ renaming (•-ε-monoid to m₂ ; word-setoid to ws₂) using ()
+  
+  open PB ℤ₂²._===_ renaming (_===_ to _===₁_ ; _≈_ to _≈₁_) using ()
+  open PP ℤ₂²._===_ renaming (•-ε-monoid to m₁ ; word-setoid to ws₁)
+
+
+  module SDP2A = SDP2 ℤ₂²._===_ Symplectic._===_ conj
+
+  open PB ℤ₂²._===_
+  open ℤ₂²
+
+  hyph : ∀ {c d} n -> c ===₂ d -> (conj ʰ') c n ≈₁ (conj ʰ') d n
+  hyph {c} {d} [ X-gen ]ʷ Symplectic.order-S = trans (trans assoc (cong refl (axiom order-Z))) right-unit
+  hyph {c} {d} [ Z-gen ]ʷ Symplectic.order-S = refl
+  hyph {c} {d} [ X-gen ]ʷ Symplectic.order-H = refl
+  hyph {c} {d} [ Z-gen ]ʷ Symplectic.order-H = refl
+  hyph {c} {d} [ X-gen ]ʷ Symplectic.order-SH = begin
+    Z • X • Z ≈⟨ cong refl (axiom comm-ZX) ⟩
+    Z • Z • X ≈⟨ trans (sym assoc) (cong (axiom order-Z) refl) ⟩
+    ε • X ≈⟨ left-unit ⟩
+    X ∎
+    where open SR ws₁
+  hyph {c} {d} [ Z-gen ]ʷ Symplectic.order-SH = begin
+    (X • Z) • Z • X • Z ≈⟨ by-assoc Eq.refl ⟩
+    X • (Z • Z) • X • Z ≈⟨ cong refl (cong (axiom order-Z) refl) ⟩
+    X • ε • X • Z ≈⟨ by-assoc Eq.refl ⟩
+    X ^ 2 • Z ≈⟨ trans (cong (axiom order-X) refl) left-unit ⟩
+    Z ∎
+    where open SR ws₁
+  hyph {c} {d} ε Symplectic.order-S = refl
+  hyph {c} {d} ε Symplectic.order-H = refl
+  hyph {c} {d} ε Symplectic.order-SH = refl
+  hyph {c} {d} (n • n₁) s@Symplectic.order-S = cong (hyph n s) (hyph n₁ s)
+  hyph {c} {d} (n • n₁) s@Symplectic.order-H = cong (hyph n s) (hyph n₁ s)
+  hyph {c} {d} (n • n₁) s@Symplectic.order-SH = cong (hyph n s) (hyph n₁ s)
+
+  hypn : ∀ c {w v} -> w ===₁ v -> (conj ⁿ') c w ≈₁ (conj ⁿ') c v
+  hypn Symplectic.H-gen {w} {v} order-X = axiom order-Z
+  hypn Symplectic.H-gen {w} {v} order-Z = axiom order-X
+  hypn Symplectic.H-gen {w} {v} comm-ZX = sym (axiom comm-ZX)
+  hypn Symplectic.S-gen {w} {v} order-X = begin
+    (X • Z) • X • Z ≈⟨ cong (axiom comm-ZX) refl ⟩
+    (Z • X) • X • Z ≈⟨ by-assoc Eq.refl ⟩
+    Z • X ^ 2 • Z ≈⟨ cong refl (cong (axiom order-X) refl) ⟩
+    Z • ε • Z ≈⟨ trans (cong refl left-unit) (axiom order-Z) ⟩
+    ε ∎
+    where open SR ws₁
+  hypn Symplectic.S-gen {w} {v} order-Z = axiom order-Z
+  hypn Symplectic.S-gen {w} {v} comm-ZX = trans (cong (axiom comm-ZX) refl) assoc
+
+module Semidirect' where
+
+  open import Presentation.Construct.Base
+
+  conj : Symplectic.Gen -> Weyl.Gen -> Word Weyl.Gen
+  conj Symplectic.H-gen Weyl.X-gen = Weyl.Z
+  conj Symplectic.H-gen Weyl.Z-gen = Weyl.X
+  conj Symplectic.S-gen Weyl.X-gen = Weyl.ω ^ 2 • Weyl.Z • Weyl.X
+  conj Symplectic.S-gen Weyl.Z-gen = Weyl.ω ^ 4 • Weyl.Z
+  conj s w = [ w ]ʷ
+
+  sdp = (Weyl._===_ ⸲ Symplectic._===_ ⸲ Γⱼ' conj)
+
+  open PB Symplectic._===_ renaming (_===_ to _===₂_ ; _≈_ to _≈₂_) using ()
+  open PP Symplectic._===_ renaming (•-ε-monoid to m₂ ; word-setoid to ws₂) using ()
+  
+  open PB Weyl._===_ renaming (_===_ to _===₁_ ; _≈_ to _≈₁_) using ()
+  open PP Weyl._===_ renaming (•-ε-monoid to m₁ ; word-setoid to ws₁)
+
+
+  module SDP2A = SDP2 Weyl._===_ Symplectic._===_ conj
+
+  open PB Weyl._===_
+  open Weyl
+
+  hyph : ∀ {c d} n -> c ===₂ d -> (conj ʰ') c n ≈₁ (conj ʰ') d n
+  hyph {c} {d} [ Weyl.X-gen ]ʷ Symplectic.order-S = begin
+    (conj ʰ') (Symplectic.S ^ 2) [ X-gen ]ʷ ≈⟨ by-assoc Eq.refl ⟩
+    ω ^ 6 • (Z • ω ^ 2) • Z • X ≈⟨ cong refl (cong (lemma-comm 2 Z) refl) ⟩
+    ω ^ 6 • (ω ^ 2 • Z) • Z • X ≈⟨ by-assoc Eq.refl ⟩
+    ω ^ 8 • Z ^ 2 • X ≈⟨ cong (axiom order-ω) (cong (axiom order-Z) refl) ⟩
+    ε • ε • X ≈⟨ trans left-unit left-unit ⟩
+    X ∎
+    where open SR ws₁
+  hyph {c} {d} [ Weyl.Z-gen ]ʷ Symplectic.order-S = begin
+    (conj ʰ') (Symplectic.S ^ 2) [ Z-gen ]ʷ ≈⟨ by-assoc Eq.refl ⟩
+    ω ^ 8 • Z ≈⟨ cong (axiom order-ω) refl ⟩
+    ε • Z ≈⟨ left-unit ⟩
+    Z ∎
+    where open SR ws₁
+  hyph {c} {d} [ Weyl.ω-gen ]ʷ Symplectic.order-S = _≈₁_.refl
+  hyph {c} {d} ε Symplectic.order-S = _≈₁_.refl
+  hyph {c} {d} (n • n₁) Symplectic.order-S = _≈₁_.cong (hyph n Symplectic.order-S) (hyph n₁ Symplectic.order-S)
+  hyph {c} {d} [ Weyl.X-gen ]ʷ Symplectic.order-H = _≈₁_.refl
+  hyph {c} {d} [ Weyl.Z-gen ]ʷ Symplectic.order-H = _≈₁_.refl
+  hyph {c} {d} [ Weyl.ω-gen ]ʷ Symplectic.order-H = _≈₁_.refl
+  hyph {c} {d} ε Symplectic.order-H = _≈₁_.refl
+  hyph {c} {d} (n • n₁) Symplectic.order-H = _≈₁_.cong (hyph n Symplectic.order-H) (hyph n₁ Symplectic.order-H)
+  hyph {c} {d} [ Weyl.X-gen ]ʷ Symplectic.order-SH = begin
+    (conj ʰ') ((Symplectic.S • Symplectic.H) ^ 3) [ X-gen ]ʷ ≈⟨ by-assoc Eq.refl ⟩
+    ω ^ 8 • (Z • X) • ω ^ 4 • Z ≈⟨ cong (axiom order-ω) (cong refl (sym (lemma-comm 4 Z))) ⟩
+    ε • (Z • X) • Z • ω ^ 4 ≈⟨ by-assoc Eq.refl ⟩
+    Z • (X • Z) • ω ^ 4 ≈⟨ cong refl (cong (axiom comm-ZX) refl) ⟩
+    Z • (Z • X • ω ^ 4) • ω ^ 4 ≈⟨ by-assoc Eq.refl ⟩
+    Z ^ 2 • X • ω ^ 8 ≈⟨ cong (axiom order-Z) (cong refl (axiom order-ω)) ⟩
+    ε • X • ε ≈⟨ trans left-unit right-unit ⟩
+    X ∎
+    where open SR ws₁
+  hyph {c} {d} [ Weyl.Z-gen ]ʷ Symplectic.order-SH = begin
+    (conj ʰ') ((Symplectic.S • Symplectic.H) ^ 3) [ Z-gen ]ʷ ≈⟨ by-assoc Eq.refl ⟩
+    (ω ^ 6 • Z) • (X • ω ^ 4) • Z • ω ^ 6 • Z • X ≈⟨ cong refl (cong (lemma-comm 4 X) refl) ⟩
+    (ω ^ 6 • Z) • (ω ^ 4 • X) • Z • ω ^ 6 • Z • X ≈⟨ by-assoc Eq.refl ⟩
+    (ω ^ 6 • Z • ω ^ 4) • (X • Z) • ω ^ 6 • Z • X ≈⟨ cong refl (cong (axiom comm-ZX) refl) ⟩
+    (ω ^ 6 • Z • ω ^ 4) • (Z • X • ω ^ 4) • ω ^ 6 • Z • X ≈⟨ by-assoc Eq.refl ⟩
+    (ω ^ 6 • Z • ω ^ 4) • ((Z • X) • ω ^ 10) • Z • X ≈⟨ cong refl (cong (lemma-comm 10 (Z • X)) refl) ⟩
+    (ω ^ 6 • Z • ω ^ 4) • (ω ^ 10 • (Z • X)) • Z • X ≈⟨ by-assoc Eq.refl ⟩
+    (ω ^ 6 • Z • ω ^ 14 • Z) • (X • Z) • X ≈⟨ cong refl (cong (axiom comm-ZX) refl) ⟩
+    (ω ^ 6 • Z • ω ^ 14 • Z) • (Z • X • ω ^ 4) • X ≈⟨ by-assoc Eq.refl ⟩
+    (ω ^ 6 • Z • ω ^ 14) • (Z ^ 2 • X) • ω ^ 4 • X ≈⟨ cong refl (cong (cong (axiom order-Z) refl) (sym (lemma-comm 4 X))) ⟩
+    (ω ^ 6 • Z • ω ^ 14) • (ε • X) • X • ω ^ 4 ≈⟨ by-assoc Eq.refl ⟩
+    (ω ^ 6 • Z • ω ^ 14) • X ^ 2 • ω ^ 4 ≈⟨ cong refl (cong (axiom order-X) refl) ⟩
+    (ω ^ 6 • Z • ω ^ 14) • ε • ω ^ 4 ≈⟨ by-assoc Eq.refl ⟩
+    (ω ^ 6 • Z) • (ω ^ 8) ^ 2 • ω ^ 2 ≈⟨ cong (sym (lemma-comm 6 Z)) (cong (cong (axiom order-ω) (axiom order-ω)) refl) ⟩
+    (Z • ω ^ 6) • ε ^ 2 • ω ^ 2 ≈⟨ by-assoc Eq.refl ⟩
+    Z • ω ^ 8 ≈⟨ trans (cong refl (axiom order-ω)) right-unit ⟩
+    Z ∎
+    where open SR ws₁
+  hyph {c} {d} [ Weyl.ω-gen ]ʷ Symplectic.order-SH = _≈₁_.refl
+  hyph {c} {d} ε Symplectic.order-SH = _≈₁_.refl
+  hyph {c} {d} (n • n₁) Symplectic.order-SH = _≈₁_.cong (hyph n Symplectic.order-SH) (hyph n₁ Symplectic.order-SH)
+
+  hypn : ∀ c {w v} -> w ===₁ v -> (conj ⁿ') c w ≈₁ (conj ⁿ') c v
+  hypn Symplectic.H-gen {w} {v} order-ω = by-assoc-and (axiom order-ω) Eq.refl Eq.refl
+  hypn Symplectic.H-gen {w} {v} order-X = axiom order-Z
+  hypn Symplectic.H-gen {w} {v} order-Z = axiom order-X
+  hypn Symplectic.H-gen {w} {v} comm-ZX = begin
+    Z • X ≈⟨ by-assoc Eq.refl ⟩
+    Z • X • ε ≈⟨ cong refl (cong refl (sym (axiom order-ω))) ⟩
+    Z • X • ω ^ 8 ≈⟨ by-assoc Eq.refl ⟩
+    (Z • X • ω ^ 4) • ω ^ 4 ≈⟨ sym (cong (axiom comm-ZX) refl) ⟩
+    (X • Z) • ω ^ 4 ≈⟨ assoc ⟩
+    X • Z • ω ^ 4 ∎
+    where open SR ws₁
+  hypn Symplectic.H-gen {w} {v} (comm X-gen) = axiom (comm Z-gen)
+  hypn Symplectic.H-gen {w} {v} (comm Z-gen) = axiom (comm X-gen)
+  hypn Symplectic.H-gen {w} {v} (comm ω-gen) = refl
+  hypn Symplectic.S-gen {w} {v} order-ω = axiom order-ω
+  hypn Symplectic.S-gen {w} {v} order-X = begin
+    ((ω • ω) • Z • X) • (ω • ω) • Z • X ≈⟨ by-assoc Eq.refl ⟩
+    (ω • ω • Z) • (X • (ω • ω)) • Z • X ≈⟨ cong refl (cong (lemma-comm 2 X) refl) ⟩
+    (ω • ω • Z) • ((ω • ω) • X) • Z • X ≈⟨ by-assoc Eq.refl ⟩
+    (ω • ω • Z • ω • ω) • (X • Z) • X ≈⟨ cong refl (cong (axiom comm-ZX) refl) ⟩
+    (ω • ω • Z • ω • ω) • (Z • X • ω ^ 4) • X ≈⟨ cong refl (cong (cong refl (lemma-comm 4 X)) refl) ⟩
+    (ω • ω • Z • ω • ω) • (Z • ω ^ 4 • X) • X ≈⟨ by-assoc Eq.refl ⟩
+    (ω • ω • Z) • (ω ^ 2 • Z) • ω ^ 4 • X • X ≈⟨ cong refl (cong (sym (lemma-comm 2 Z)) (cong refl (axiom order-X))) ⟩
+    (ω • ω • Z) • (Z • ω ^ 2) • ω ^ 4 • ε ≈⟨ by-assoc Eq.refl ⟩
+    (ω • ω) • Z ^ 2 • ω ^ 6 ≈⟨ cong refl (cong (axiom order-Z) refl) ⟩
+    (ω • ω) • ε • ω ^ 6 ≈⟨ by-assoc Eq.refl ⟩
+    ω ^ 8 ≈⟨ axiom order-ω ⟩
+    ε ∎
+    where open SR ws₁
+  hypn Symplectic.S-gen {w} {v} order-Z = begin
+    (ω  ^ 4 • Z) • ω ^ 4 • Z ≈⟨ cong refl (sym (lemma-comm 4 Z)) ⟩
+    (ω  ^ 4 • Z) • Z • ω ^ 4 ≈⟨ by-assoc Eq.refl ⟩
+    ω  ^ 4 • Z ^ 2 • ω ^ 4 ≈⟨ cong refl (cong (axiom order-Z) refl) ⟩
+    ω  ^ 4 • ε • ω ^ 4 ≈⟨ by-assoc Eq.refl ⟩
+    ω  ^ 8 ≈⟨ axiom order-ω ⟩
+    ε ∎
+    where open SR ws₁
+  hypn Symplectic.S-gen {w} {v} comm-ZX = begin
+    (ω ^ 2 • Z • X) • ω ^ 4 • Z ≈⟨ by-assoc Eq.refl ⟩
+    ω ^ 2 • (Z • X • ω ^ 4) • Z ≈⟨ cong refl (cong (sym (axiom comm-ZX)) refl) ⟩
+    ω ^ 2 • (X • Z) • Z ≈⟨ by-assoc Eq.refl ⟩
+    ω ^ 2 • X • Z • Z ≈⟨ cong refl (cong refl (axiom order-Z)) ⟩
+    ω ^ 2 • X • ε ≈⟨ by-assoc Eq.refl ⟩
+    ε • ω ^ 2 • X ≈⟨ sym (cong (axiom order-ω) refl) ⟩
+    ω ^ 8 • ω ^ 2 • X ≈⟨ by-assoc Eq.refl ⟩
+    ω ^ 6 • ε • ω ^ 4 • X ≈⟨ cong refl (cong refl (sym (lemma-comm 4 X))) ⟩
+    ω ^ 6 • ε • X • ω ^ 4 ≈⟨ cong refl (cong (sym (axiom order-Z)) refl) ⟩
+    ω ^ 6 • Z ^ 2 • X • ω ^ 4 ≈⟨ by-assoc Eq.refl ⟩
+    ω ^ 4 • (ω ^ 2 • Z) • Z • X • ω ^ 4 ≈⟨ cong refl (cong (sym (lemma-comm 2 Z)) refl) ⟩
+    ω ^ 4 • (Z • ω ^ 2) • Z • X • ω ^ 4 ≈⟨ by-assoc Eq.refl ⟩
+    (ω ^ 4 • Z) • (ω ^ 2 • Z • X) • ω ^ 4 ∎
+    where open SR ws₁
+  hypn Symplectic.S-gen {w} {v} (comm g) = sym (lemma-comm 1 ((conj ⁿ') Symplectic.S-gen [ g ]ʷ))
+
+module Semidirect2 where
+
+  open import Presentation.Construct.Base
+
+  conj : Symplectic.Gen -> Weyl.Gen -> Word Weyl.Gen
+  conj Symplectic.H-gen Weyl.X-gen = Weyl.Z
+  conj Symplectic.H-gen Weyl.Z-gen = Weyl.Z
+  conj Symplectic.S-gen Weyl.X-gen = Weyl.X • Weyl.Z • Weyl.ω ^ 2
+  conj s w = [ w ]ʷ
+
+  sdp = (Weyl._===_ ⸲ Symplectic._===_ ⸲ Γⱼ' conj)
+
+  open PB sdp renaming (_===_ to _===₂_ ; _≈_ to _≈₂_) using ()
+  open PP sdp renaming (•-ε-monoid to m₂ ; word-setoid to ws₂)
+  
+  open PB Clifford._===_ renaming (_===_ to _===₁_ ; _≈_ to _≈₁_) using ()
+  open PP Clifford._===_ renaming (•-ε-monoid to m₁ ; word-setoid to ws₁)
+
+
+
+  open import Algebra.Bundles using (Monoid)
+  open import Algebra.Morphism.Structures using (module MonoidMorphisms)
+  open import Presentation.Morphism
+
+  f : Clifford.Gen -> Word (Weyl.Gen ⊎ Symplectic.Gen)
+  f Clifford.H-gen = [ Symplectic.H ]ᵣ
+  f Clifford.S-gen = [ Weyl.ω ^ 5 • Weyl.X ]ₗ • [ Symplectic.S ]ᵣ
+  f Clifford.ω-gen = [ Weyl.ω ]ₗ
+
+  g : Weyl.Gen ⊎ Symplectic.Gen -> Word Clifford.Gen
+  g (_⊎_.inj₁ Weyl.X-gen) = Clifford.X
+  g (_⊎_.inj₁ Weyl.Z-gen) = Clifford.Z
+  g (_⊎_.inj₁ Weyl.ω-gen) = Clifford.ω
+  g (_⊎_.inj₂ Symplectic.H-gen) = Clifford.H
+  g (_⊎_.inj₂ Symplectic.S-gen) = Clifford.ω ^ 3 • Clifford.X • Clifford.S
+
+  f-well-defined : ∀ {w v} -> w ===₁ v -> (f *) w ≈₂ (f *) v
+  f-well-defined {w} {v} Clifford.order-ω = _≈₂_.axiom (left Weyl.order-ω)
+  f-well-defined {w} {v} Clifford.order-S = begin
+    (f *) (Clifford.S • Clifford.S • Clifford.S • Clifford.S) ≈⟨ {!!} ⟩
+    (f *) ε ∎
+    where open SR ws₂
+  f-well-defined {w} {v} Clifford.order-H = _≈₂_.axiom (right Symplectic.order-H)
+  f-well-defined {w} {v} Clifford.order-SH = {!!}
+  f-well-defined {w} {v} (Clifford.comm {Clifford.H-gen}) = _≈₂_.sym (_≈₂_.axiom (mid (comm Weyl.ω-gen Symplectic.H-gen)))
+  f-well-defined {w} {v} (Clifford.comm {Clifford.S-gen}) = {!!}
+  f-well-defined {w} {v} (Clifford.comm {Clifford.ω-gen}) = _≈₂_.refl
+
+  g-well-defined : ∀ {w v} -> w ===₂ v -> (g *) w ≈₁ (g *) v
+
+  f-left-inv-gen : ∀ x -> [ x ]ʷ ≈₂ (f *) (g x)
+
+  g-left-inv-gen : ∀ x -> [ x ]ʷ ≈₁ (g *) (f x)
+
+  open MonoidMorphisms 
+
+  Theorem-Clifford-iso-Weyl⋊Sym : IsMonoidIsomorphism (Monoid.rawMonoid m₁) (Monoid.rawMonoid m₂) (f *)
+  Theorem-Clifford-iso-Weyl⋊Sym = StarIsomorphism.isMonoidIsomorphism Clifford._===_ sdp f g f-well-defined  f-left-inv-gen g-well-defined  g-left-inv-gen
+
+
+
+module M0 where
+  Pω : WRel Cyclic.X
+  Pω = Cyclic.rel 8
+
+  PS : WRel Cyclic.X
+  PS = Cyclic.rel 4
+
+  nfp : NFProperty (Pω ⊕ PS)
+  nfp = DNF.NFP.nfp (Cyclic.nfp 8) (Cyclic.nfp 4)
+    where
+    module DNF = DP Pω PS
+
+  nfp' : NFProperty' (Pω ⊕ PS)
+  nfp' = DNF.NFP'.nfp' (Cyclic.nfp' 8) (Cyclic.nfp' 4)
+    where
+    module DNF = DP Pω PS
+
+  open PB (Pω ⊕ PS) renaming (Alphabet to M0 ; _===_ to _===₀_) using ()
+
+  ω : Word M0
+  ω = [ inj₁ tt ]ʷ
+
+  S : Word M0
+  S = [ inj₂ tt ]ʷ
+
+
+module M where
+  data Gen : Set where
+    X-gen : Gen
+    S-gen : Gen
+    ω-gen : Gen
+
+  X : Word Gen
+  X = [ X-gen ]ʷ
+
+  S : Word Gen
+  S = [ S-gen ]ʷ
+
+  ω : Word Gen
+  ω = [ ω-gen ]ʷ
+
+  infix 4 _===_
+  data _===_ : WRel Gen where
+    order-ω : ω ^ 8 === ε
+    order-S : S ^ 4 === ε
+    order-X : X ^ 2 === ε
+    order-SX : (S • X) ^ 2 === ω ^ 2
+    comm : ∀ {gen} -> ω • [ gen ]ʷ === [ gen ]ʷ • ω
+
+  data C : Set where
+    X-cr : C
+    ε-cr : C
+
+  open M0 using (Pω ; PS)
+  open PB (Pω ⊕ PS) renaming (Alphabet to M0 ; _===_ to _===₀_ ; _≈_ to _≈₀_) using ()
+  open NFProperty M0.nfp using (by-equal-nf)
+
+  open PB _===_ renaming (Alphabet to M) using (_≈_)
+
+  open _≈_
+
+  f : M0 -> Word M
+  f (inj₁ tt) = ω
+  f (inj₂ tt) = S
+
+  h : C -> M -> Word M0 × C
+  h X-cr X-gen = ε , ε-cr
+  h X-cr S-gen = (M0.ω ^ 2 • M0.S ^ 3) , X-cr
+  h X-cr ω-gen = M0.ω , X-cr
+  h ε-cr X-gen = ε , X-cr
+  h ε-cr S-gen = M0.S , ε-cr
+  h ε-cr ω-gen = M0.ω , ε-cr
+
+  infix 4 _~_
+  _~_ = Pointwise _≈₀_ (_≡_ {A = C})
+
+  h=⁻¹f-gen : ∀ x -> ([ x ]ʷ , ε-cr) ~ ((h **) ε-cr (f x)) 
+  h=⁻¹f-gen (inj₁ tt) = _≈₀_.refl , Eq.refl
+  h=⁻¹f-gen (inj₂ tt) = _≈₀_.refl , Eq.refl
+
+  h-wd-ax : ∀ c {u t} -> u === t -> (h **) c u ~ (h **) c t
+  h-wd-ax X-cr {u} {t} order-ω = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax X-cr {u} {t} order-S = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax X-cr {u} {t} order-X = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax X-cr {u} {t} order-SX = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax X-cr {u} {t} (comm {X-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax X-cr {u} {t} (comm {S-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax X-cr {u} {t} (comm {ω-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax ε-cr {u} {t} order-ω = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax ε-cr {u} {t} order-X = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax ε-cr {u} {t} order-S = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax ε-cr {u} {t} order-SX = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax ε-cr {u} {t} (comm {X-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax ε-cr {u} {t} (comm {S-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax ε-cr {u} {t} (comm {ω-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+
+  open PP _===_
+
+  f-wd-ax : ∀ {w v} -> w ===₀ v -> (f *) w ≈ (f *) v
+  f-wd-ax {w} {v} (left Cyclic.order) = _≈_.trans (by-assoc Eq.refl) (_≈_.axiom order-ω) 
+  f-wd-ax {w} {v} (right Cyclic.order) = _≈_.trans _≈_.assoc (_≈_.trans _≈_.assoc (_≈_.axiom order-S))
+  f-wd-ax {w} {v} (mid (comm tt tt)) = _≈_.axiom comm
+
+  [_] : C -> Word M
+  [ X-cr ] = X
+  [ ε-cr ] = ε
+
+  lemma-ω : ∀ w -> w • ω ≈ ω • w
+  lemma-ω [ x ]ʷ = sym (axiom comm)
+  lemma-ω ε = trans left-unit (sym right-unit)
+  lemma-ω (w • v) = trans assoc (trans (cong refl (lemma-ω v)) (trans (sym assoc) (trans (cong (lemma-ω w) refl) assoc)))
+
+  lemma-ω^n : ∀ n w -> w • ω ^ n ≈ ω ^ n • w
+  lemma-ω^n zero w = trans right-unit (sym left-unit)
+  lemma-ω^n (suc n@zero) w = begin
+    w • ω ^ suc n ≈⟨ sym right-unit ⟩
+    (w • ω) • ω ^ n ≈⟨ cong (lemma-ω w) refl ⟩
+    (ω • w) • ω ^ n ≈⟨ assoc ⟩
+    ω • w • ω ^ n ≈⟨ cong refl (lemma-ω^n n w) ⟩
+    ω • ω ^ n • w ≈⟨ cong refl left-unit ⟩
+    ω ^ suc n • w ∎
+    where
+    open SR word-setoid
+
+  lemma-ω^n (suc n@(suc n')) w = begin
+    w • ω ^ suc n ≈⟨ sym assoc ⟩
+    (w • ω) • ω ^ n ≈⟨ cong (lemma-ω w) refl ⟩
+    (ω • w) • ω ^ n ≈⟨ assoc ⟩
+    ω • w • ω ^ n ≈⟨ cong refl (lemma-ω^n n w) ⟩
+    ω • ω ^ n • w ≈⟨ sym assoc ⟩
+    (ω • ω ^ n) • w ≈⟨ refl ⟩
+    ω ^ suc n • w ∎
+    where
+    open SR word-setoid
+
+
+  lemma-XS : X • S ≈ (ω ^ 2 • S ^ 3) • X
+  lemma-XS = begin
+    X • S ≈⟨ trans (sym right-unit) (sym (cong refl (axiom order-X))) ⟩
+   (X • S) • (X • X) ≈⟨ trans (sym left-unit) (sym (cong (axiom order-S) refl)) ⟩
+   (S ^ 4) • (X • S) • (X • X) ≈⟨ by-assoc Eq.refl ⟩
+   (S ^ 3) • (S • X) ^ 2  • X ≈⟨ cong refl (cong (axiom order-SX) refl) ⟩ 
+   (S ^ 3) • ω ^ 2 • X ≈⟨ sym assoc ⟩
+   (S ^ 3 • ω ^ 2) • X ≈⟨ cong (lemma-ω^n 2 (S ^ 3)) refl ⟩
+   (ω ^ 2 • S ^ 3) • X ∎
+    where
+    open SR word-setoid
+
+  h-hyp : ∀ c b -> [ c ] • [ b ]ʷ ≈ (f *) (h c b .proj₁) • [ h c b .proj₂ ]
+  h-hyp X-cr X-gen = _≈_.trans (axiom order-X) (_≈_.sym _≈_.left-unit)
+  h-hyp X-cr S-gen = lemma-XS
+  h-hyp X-cr ω-gen = sym (axiom comm)
+  h-hyp ε-cr X-gen = refl
+  h-hyp ε-cr S-gen = trans left-unit (sym right-unit)
+  h-hyp ε-cr ω-gen = trans left-unit (sym right-unit)
+
+  module ca = CA.Data (Pω ⊕ PS) _===_ C ε-cr f h [_]
+  module aat = ca.Assumptions-And-Theorems h=⁻¹f-gen h-wd-ax f-wd-ax _≈_.refl h-hyp
+  open aat using (nfp ; nfp') public
+
+module MA where
+  data Gen : Set where
+    H-gen : Gen
+    X-gen : Gen
+    S-gen : Gen
+    ω-gen : Gen
+
+  H : Word Gen
+  H = [ H-gen ]ʷ
+
+  S : Word Gen
+  S = [ S-gen ]ʷ
+
+  ω : Word Gen
+  ω = [ ω-gen ]ʷ
+
+  X : Word Gen
+  X = [ X-gen ]ʷ
+
+  infix 4 _===_
+  data _===_ : WRel Gen where
+    order-ω : ω ^ 8 === ε
+    order-S : S ^ 4 === ε
+    order-H : H ^ 2 === ε
+    order-SH : (S • H) ^ 3 === ω
+    def-X : X === H • S • S • H
+    comm : ∀ {gen} -> ω • [ gen ]ʷ === [ gen ]ʷ • ω
+
+
+  open PB (M._===_) renaming (Alphabet to M ; _===_ to _===₀_ ; _≈_ to _≈₀_) using ()
+  open NFProperty (M.nfp M0.nfp) using (by-equal-nf)
+  open PB _===_ renaming (Alphabet to MA) using (_≈_)
+
+  open _≈_
+
+  f : M -> Word MA
+  f M.X-gen = X
+  f M.S-gen = S
+  f M.ω-gen = ω
+
+  data C : Set where
+    HS-cr : C
+    H-cr : C
+
+  CT = C ⊎ ⊤
+
+  I : CT
+  I = inj₂ tt
+
+  h : CT -> MA -> Word M × CT
+  h (inj₁ HS-cr) H-gen = M.ω • M.S ^ 3 • M.X , (inj₁ HS-cr)
+  h (inj₁ HS-cr) S-gen = M.X , (inj₁ H-cr)
+  h (inj₁ HS-cr) ω-gen = M.ω , (inj₁ HS-cr)
+  h (inj₁ H-cr) H-gen = ε , (inj₂ tt)
+  h (inj₁ H-cr) S-gen = ε , (inj₁ HS-cr)
+  h (inj₁ H-cr) ω-gen = M.ω , (inj₁ H-cr)
+  h (inj₂ tt) H-gen = ε , (inj₁ H-cr)
+  h (inj₂ tt) S-gen = M.S , (inj₂ tt)
+  h (inj₂ tt) ω-gen = M.ω , (inj₂ tt)
+  h (inj₁ HS-cr) X-gen = M.ω ^ 2 • M.S ^ 2 • M.X , inj₁ HS-cr
+  h (inj₁ H-cr) X-gen = (M.S • M.S) , inj₁ H-cr
+  h (inj₂ tt) X-gen = M.X , (inj₂ tt)
+
+  infix 4 _~_
+  _~_ = Pointwise _≈₀_ (_≡_ {A = CT})
+
+  h=⁻¹f-gen : ∀ x -> ([ x ]ʷ , I) ~ ((h **) I (f x)) 
+  h=⁻¹f-gen M.X-gen = (by-equal-nf Eq.refl) , Eq.refl
+  h=⁻¹f-gen M.S-gen = (by-equal-nf Eq.refl) , Eq.refl
+  h=⁻¹f-gen M.ω-gen = (by-equal-nf Eq.refl) , Eq.refl
+
+  h-wd-ax : ∀ c {u t} -> u === t -> (h **) c u ~ (h **) c t
+  h-wd-ax (inj₁ HS-cr) {u} {t} order-ω = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ HS-cr) {u} {t} order-S = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ HS-cr) {u} {t} order-H = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ HS-cr) {u} {t} order-SH = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ HS-cr) {u} {t} (comm {H-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ HS-cr) {u} {t} (comm {S-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ HS-cr) {u} {t} (comm {ω-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ HS-cr) {u} {t} (comm {X-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ H-cr) {u} {t} order-ω = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ H-cr) {u} {t} order-S = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ H-cr) {u} {t} order-H = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ H-cr) {u} {t} order-SH = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ H-cr) {u} {t} (comm {H-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ H-cr) {u} {t} (comm {S-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ H-cr) {u} {t} (comm {ω-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ H-cr) {u} {t} (comm {X-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₂ tt) {u} {t} order-ω = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₂ tt) {u} {t} order-S = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₂ tt) {u} {t} order-H = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₂ tt) {u} {t} order-SH = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₂ tt) {u} {t} (comm {H-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₂ tt) {u} {t} (comm {S-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₂ tt) {u} {t} (comm {ω-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₂ tt) {u} {t} (comm {X-gen}) = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ HS-cr) {u} {t} def-X = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₁ H-cr) {u} {t} def-X = (by-equal-nf Eq.refl) , Eq.refl
+  h-wd-ax (inj₂ tt) {u} {t} def-X = (by-equal-nf Eq.refl) , Eq.refl
+  
+  open PP _===_
+
+  lemma-ω : ∀ w -> w • ω ≈ ω • w
+  lemma-ω [ x ]ʷ = sym (axiom comm)
+  lemma-ω ε = trans left-unit (sym right-unit)
+  lemma-ω (w • v) = trans assoc (trans (cong refl (lemma-ω v)) (trans (sym assoc) (trans (cong (lemma-ω w) refl) assoc)))
+
+  lemma-ω^n : ∀ n w -> w • ω ^ n ≈ ω ^ n • w
+  lemma-ω^n zero w = trans right-unit (sym left-unit)
+  lemma-ω^n (suc n@zero) w = begin
+    w • ω ^ suc n ≈⟨ sym right-unit ⟩
+    (w • ω) • ω ^ n ≈⟨ cong (lemma-ω w) refl ⟩
+    (ω • w) • ω ^ n ≈⟨ assoc ⟩
+    ω • w • ω ^ n ≈⟨ cong refl (lemma-ω^n n w) ⟩
+    ω • ω ^ n • w ≈⟨ cong refl left-unit ⟩
+    ω ^ suc n • w ∎
+    where
+    open SR word-setoid
+
+  lemma-ω^n (suc n@(suc n')) w = begin
+    w • ω ^ suc n ≈⟨ sym assoc ⟩
+    (w • ω) • ω ^ n ≈⟨ cong (lemma-ω w) refl ⟩
+    (ω • w) • ω ^ n ≈⟨ assoc ⟩
+    ω • w • ω ^ n ≈⟨ cong refl (lemma-ω^n n w) ⟩
+    ω • ω ^ n • w ≈⟨ sym assoc ⟩
+    (ω • ω ^ n) • w ≈⟨ refl ⟩
+    ω ^ suc n • w ∎
+    where
+    open SR word-setoid
+
+
+  lemma-X^2 : X ^ 2 ≈ ε
+  lemma-X^2 = begin
+    X ^ 2 ≈⟨ cong (axiom def-X) (axiom def-X) ⟩
+    (H • S • S • H) ^ 2 ≈⟨ by-assoc Eq.refl ⟩
+    (H • S • S) • (H • H) • S • S • H ≈⟨ cong refl (cong (axiom order-H) refl) ⟩
+    (H • S • S) • ε • S • S • H ≈⟨ cong refl left-unit ⟩
+    (H • S • S) • S • S • H ≈⟨ by-assoc Eq.refl ⟩
+    H • (S • S • S • S) • H ≈⟨ cong refl (cong (axiom order-S) refl) ⟩
+    H • ε • H ≈⟨ cong refl left-unit ⟩
+    H • H ≈⟨ axiom order-H ⟩
+    ε ∎
+    where
+    open SR word-setoid
+
+  lemma-SX^2 : (S • X) ^ 2 ≈ ω ^ 2
+  lemma-SX^2 = begin
+    (S • X) ^ 2 ≈⟨ cong (cong refl (axiom def-X)) (cong refl (axiom def-X)) ⟩
+    (S • (H • S • S • H)) ^ 2 ≈⟨ by-assoc Eq.refl ⟩
+    (S • H • S) • (S • H • S • H • S) • S • H ≈⟨ cong refl (cong refl (trans (sym left-unit) (cong (sym (axiom order-H)) refl))) ⟩
+    (S • H • S) • (S • H • S • H • S) • (H • H) • S • H ≈⟨ by-assoc Eq.refl ⟩
+    (S • H • S) • (S • H) ^ 3 • H • S • H ≈⟨ cong refl (cong (axiom order-SH) refl) ⟩
+    (S • H • S) • ω • H • S • H ≈⟨ cong refl (sym (lemma-ω (H • S • H))) ⟩
+    (S • H • S) • (H • S • H) • ω ≈⟨ by-assoc Eq.refl ⟩
+    (S • H) ^ 3 • ω ≈⟨ cong (axiom order-SH) refl ⟩
+    ω ^ 2 ∎
+    where
+    open SR word-setoid
+
+  f-wd-ax : ∀ {w v} -> w ===₀ v -> (f *) w ≈ (f *) v
+  f-wd-ax {w} {v} M.order-ω = axiom order-ω
+  f-wd-ax {w} {v} M.order-S = axiom order-S
+  f-wd-ax {w} {v} M.order-X = lemma-X^2
+  f-wd-ax {w} {v} M.order-SX = lemma-SX^2
+  f-wd-ax {w} {v} (M.comm {M.X-gen}) = sym (lemma-ω X)
+  f-wd-ax {w} {v} (M.comm {M.S-gen}) = axiom comm
+  f-wd-ax {w} {v} (M.comm {M.ω-gen}) = refl
+
+  [_]ₒ : C -> Word MA
+  [ HS-cr ]ₒ = H • S
+  [ H-cr ]ₒ = H
+
+  [_] : C ⊎ ⊤ -> Word MA
+  [_] = [_,_] [_]ₒ (λ v → ε)
+
+  lemma-HS : H • S ≈ ω • S ^ 3 • H • S ^ 3 • H
+  lemma-HS = begin
+    H • S ≈⟨ trans (sym right-unit) (sym (cong refl (axiom order-H))) ⟩
+    (H • S) • H • H ≈⟨ by-assoc Eq.refl ⟩
+    (H • S • H) • H ≈⟨ cong refl (trans (sym left-unit) (sym (cong (axiom order-S) refl))) ⟩
+    (H • S • H) • S ^ 4 • H ≈⟨ by-assoc Eq.refl ⟩
+    H • (S • H • S) • S ^ 3 • H ≈⟨ cong refl (cong refl (trans (sym left-unit) (cong (sym (axiom order-H)) refl))) ⟩
+    H • (S • H • S) • H ^ 2 • S ^ 3 • H ≈⟨ trans (sym left-unit) (sym (cong (axiom order-S) refl)) ⟩
+    S ^ 4 • H • (S • H • S) • H ^ 2 • S ^ 3 • H ≈⟨ by-assoc Eq.refl ⟩
+    (S ^ 3 • (S • H) ^ 3) • H • S ^ 3 • H ≈⟨ cong (cong refl (axiom order-SH)) refl ⟩
+    (S ^ 3 • ω) • H • S ^ 3 • H ≈⟨ cong (lemma-ω (S ^ 3)) refl ⟩
+    (ω • S ^ 3) • H • S ^ 3 • H ≈⟨ assoc ⟩
+    ω • S ^ 3 • H • S ^ 3 • H ∎
+    where
+    open SR word-setoid
+
+  lemma-HS' : H • S ≈ ω • S ^ 3 • X • H • S • H
+  lemma-HS' = begin
+    H • S ≈⟨ lemma-HS ⟩
+    ω • S ^ 3 • H • S ^ 3 • H ≈⟨ by-assoc Eq.refl ⟩
+    (ω • S ^ 3 • H • S ^ 2) • S • H ≈⟨ cong refl (trans (sym left-unit) (cong (sym (axiom order-H)) refl)) ⟩
+    (ω • S ^ 3 • H • S ^ 2) • (H • H) • S • H ≈⟨ by-assoc Eq.refl ⟩
+    (ω • S ^ 3) • (H • S • S • H) • H • S • H ≈⟨ cong refl (cong (sym (axiom def-X)) refl) ⟩
+    (ω • S ^ 3) • X • H • S • H ≈⟨ by-assoc Eq.refl ⟩
+    ω • S ^ 3 • X • H • S • H ∎
+    where
+    open SR word-setoid
+
+  lemma-HSS : (H • S) • S ≈ X • H
+  lemma-HSS = begin
+    (H • S) • S ≈⟨ cong refl (trans (sym right-unit) (cong refl (sym (axiom order-H)))) ⟩
+    (H • S) • S • H • H ≈⟨ by-assoc Eq.refl ⟩
+    (H • S • S • H) • H ≈⟨ cong (sym (axiom def-X)) refl ⟩
+    X • H ∎
+    where
+    open SR word-setoid
+
+  lemma-HSH : (H • S • H) • H ≈ (ω • S ^ 3 • X) • H • S • H
+  lemma-HSH = begin
+    (H • S • H) • H ≈⟨ by-assoc Eq.refl ⟩
+    H • S • H • H ≈⟨ cong refl (trans (cong refl (axiom order-H)) right-unit) ⟩
+    H • S ≈⟨ lemma-HS' ⟩
+    ω • S ^ 3 • X • H • S • H ≈⟨ by-assoc Eq.refl ⟩
+    (ω • S ^ 3 • X) • H • S • H ∎
+    where
+    open SR word-setoid
+
+  lemma-HSH' : (H • S) • H ≈ (ω • S ^ 3 • X) • H • S
+  lemma-HSH' = begin
+    (H • S) • H ≈⟨ cong lemma-HS' refl ⟩
+    (ω • S ^ 3 • X • H • S • H) • H ≈⟨ by-assoc Eq.refl ⟩
+    (ω • S ^ 3 • X • H • S) • H • H ≈⟨ trans (cong refl (axiom order-H)) right-unit ⟩
+    (ω • S ^ 3 • X • H • S) ≈⟨ by-assoc Eq.refl ⟩
+    (ω • S ^ 3 • X) • H • S ∎
+    where
+    open SR word-setoid
+
+  lemma-HSX : (H • S) • X ≈ (ω ^ 2 • S ^ 2 • X) • H • S
+  lemma-HSX = begin
+    (H • S) • X ≈⟨ cong lemma-HS' refl ⟩
+    (ω • S ^ 3 • X • H • S • H) • X ≈⟨ cong refl (axiom def-X) ⟩
+    (ω • S ^ 3 • X • H • S • H) • (H • S • S • H) ≈⟨ by-assoc Eq.refl ⟩
+    (ω • S ^ 3 • X • H • S) • (H • H) • (S • S • H) ≈⟨ cong refl (trans (cong (axiom order-H) refl) left-unit) ⟩
+    (ω • S ^ 3 • X • H • S) • (S • S • H) ≈⟨ cong (cong refl (cong refl (cong (axiom def-X) refl))) refl ⟩
+    (ω • S ^ 3 • (H • S • S • H) • H • S) • (S • S • H) ≈⟨ by-assoc Eq.refl ⟩
+    (ω • S ^ 3 • H • S • S) • (H • H) • S • (S • S • H) ≈⟨ cong refl (trans (cong (axiom order-H) refl) left-unit) ⟩
+    (ω • S ^ 3 • H • S • S) • S • (S • S • H) ≈⟨ by-assoc Eq.refl ⟩
+    (ω • S ^ 3 • H • S) • (S • S • S • S) • H ≈⟨ cong refl (trans (cong (axiom order-S) refl) left-unit) ⟩
+    (ω • S ^ 3 • H • S) • H ≈⟨ by-assoc Eq.refl ⟩
+    (ω • S ^ 3) • (H • S) • H ≈⟨ cong refl lemma-HSH' ⟩
+    (ω • S ^ 3) • (ω • S ^ 3 • X) • H • S ≈⟨ by-assoc Eq.refl ⟩
+    ω • (S ^ 3 • ω) • S ^ 3 • X • H • S ≈⟨ cong refl (cong (lemma-ω (S ^ 3)) refl) ⟩
+    ω • (ω • S ^ 3) • S ^ 3 • X • H • S ≈⟨ by-assoc Eq.refl ⟩
+    ω ^ 2 • S ^ 2 • S ^ 4 • X • H • S ≈⟨ cong refl (cong refl (trans (cong (axiom order-S) refl) left-unit)) ⟩
+    ω ^ 2 • S ^ 2 • X • H • S ≈⟨ by-assoc Eq.refl ⟩
+    (ω ^ 2 • S ^ 2 • X) • H • S ∎
+    where
+    open SR word-setoid
+
+  lemma-HX : H • X ≈ (S • S) • H
+  lemma-HX = begin
+    H • X ≈⟨ cong refl (axiom def-X) ⟩
+    H • H • S • S • H ≈⟨ by-assoc Eq.refl ⟩
+    (H • H) • S • S • H ≈⟨ trans (cong (axiom order-H) refl) left-unit ⟩
+    S • S • H ≈⟨ sym assoc ⟩
+    (S • S) • H ∎
+    where
+    open SR word-setoid
+
+  h-hyp : ∀ c b -> [ c ] • [ b ]ʷ ≈ (f *) (h c b .proj₁) • [ h c b .proj₂ ]
+  h-hyp (inj₁ HS-cr) H-gen = lemma-HSH'
+  h-hyp (inj₁ HS-cr) S-gen = lemma-HSS
+  h-hyp (inj₁ HS-cr) ω-gen = lemma-ω [ inj₁ HS-cr ]
+  h-hyp (inj₁ H-cr) H-gen = trans (axiom order-H) (sym right-unit)
+  h-hyp (inj₁ H-cr) S-gen = sym left-unit
+  h-hyp (inj₁ H-cr) ω-gen = sym (axiom comm)
+  h-hyp (inj₂ tt) H-gen = refl
+  h-hyp (inj₂ tt) S-gen = trans left-unit (sym right-unit)
+  h-hyp (inj₂ tt) ω-gen = trans left-unit (sym right-unit)
+  h-hyp (inj₁ HS-cr) X-gen = lemma-HSX
+  h-hyp (inj₁ H-cr) X-gen = lemma-HX
+  h-hyp (inj₂ tt) X-gen = trans left-unit (sym right-unit)
+
+  module ca = CA.Data (M._===_) _===_ CT (inj₂ tt) f h [_]
+  module aat = ca.Assumptions-And-Theorems h=⁻¹f-gen h-wd-ax f-wd-ax _≈_.refl h-hyp
+  open aat using (nfp ; nfp') public
+  
+  open PP.NFProperty (nfp (M.nfp M0.nfp)) renaming (by-equal-nf to by-nf) using ()
+
+  hcme : ∀ c m -> ∃ \ w -> ∃ \ c' -> ((h **) (inj₁ c) (f m)) ≡ (w , inj₁ c')
+  hcme HS-cr M.X-gen = M.ω ^ 2 • M.S ^ 2 • M.X , HS-cr , Eq.refl
+  hcme HS-cr M.S-gen = M.X , H-cr , Eq.refl
+  hcme HS-cr M.ω-gen = M.ω , HS-cr , Eq.refl
+  hcme H-cr M.X-gen = M.S • M.S , H-cr , Eq.refl
+  hcme H-cr M.S-gen = ε , HS-cr , Eq.refl
+  hcme H-cr M.ω-gen = M.ω , H-cr , Eq.refl
+  
+  htme : ∀ m -> ((h **) (inj₂ tt) (f m)) ≡ ([ m ]ʷ , inj₂ tt)
+  htme M.X-gen = Eq.refl
+  htme M.S-gen = Eq.refl
+  htme M.ω-gen = Eq.refl
+
+  htme~ : ∀ (m : M) -> ([ m ]ʷ , I) ~ ((h **) I (f m))
+  htme~ M.X-gen = _≈₀_.refl , Eq.refl
+  htme~ M.S-gen = _≈₀_.refl , Eq.refl
+  htme~ M.ω-gen = _≈₀_.refl , Eq.refl
+
+  [_]ₓ = f *
+
+  hcme~ : ∀ (c : C) (m : M) -> let (w' , c' , p) = hcme c m in ([ c ]ₒ • f m) ≈ ([ w' ]ₓ • [ c' ]ₒ)
+  hcme~ HS-cr M.X-gen = by-nf Eq.refl
+  hcme~ HS-cr M.S-gen = by-nf Eq.refl
+  hcme~ HS-cr M.ω-gen = by-nf Eq.refl
+  hcme~ H-cr M.X-gen = by-nf Eq.refl
+  hcme~ H-cr M.S-gen = by-nf Eq.refl
+  hcme~ H-cr M.ω-gen = by-nf Eq.refl
+
+  open import Presentation.Construct.Properties.Amalgamation
+
+  ca' : CA.CosetNF-CT-Assumptions-And-Theorems-Packed M._===_ _===_
+  ca' = record
+          { C = C
+          ; f = f
+          ; h = h
+          ; [_]ₒ = [_]ₒ
+          ; hcme = hcme
+          ; htme = htme
+          ; htme~ = htme~
+          ; hcme~ = hcme~
+          ; h-wd-ax = h-wd-ax
+          ; f-wd-ax = f-wd-ax
+          ; h=ract = h-hyp
+          }
+
+-}

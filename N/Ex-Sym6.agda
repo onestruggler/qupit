@@ -1,0 +1,300 @@
+{-# OPTIONS  --safe #-}
+--{-# OPTIONS --termination-depth=2 #-}
+open import Level using (0ℓ)
+
+open import Relation.Binary using (Rel)
+open import Relation.Binary.Definitions using (DecidableEquality)
+open import Relation.Binary.Morphism.Definitions using (Homomorphic₂)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; _≢_ ; inspect ; setoid ; module ≡-Reasoning ; _≗_) renaming ([_] to [_]')
+import Relation.Binary.Reasoning.Setoid as SR
+import Relation.Binary.PropositionalEquality as Eq
+open import Relation.Nullary.Decidable using (yes ; no)
+
+
+open import Function using (_∘_ ; id)
+open import Function.Definitions using (Injective)
+
+open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; map₁ ; ∃ ; Σ ; Σ-syntax)
+open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
+open import Data.Nat hiding (_^_ ; _+_ ; _*_)
+open import Agda.Builtin.Nat using (_-_)
+import Data.Nat as Nat
+open import Data.Bool hiding (_<_ ; _≤_)
+open import Data.List hiding ([_] ; _++_ ; last ; head ; tail ; _∷ʳ_)
+open import Data.Vec hiding ([_])
+import Data.Vec as Vec
+open import Data.Fin hiding (_+_ ; _-_)
+
+open import Data.Maybe
+open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_] ; [_,_]′)
+open import Data.Unit using (⊤ ; tt)
+open import Data.Empty using (⊥ ; ⊥-elim)
+
+open import Word.Base as WB hiding (wfoldl ; _*)
+open import Word.Properties
+import Presentation.Base as PB
+import Presentation.Properties as PP
+open PP using (NFProperty ; NFProperty')
+import Presentation.CosetNF as CA
+import Presentation.Reidemeister-Schreier as RS
+module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
+
+open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
+import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
+import Presentation.Construct.Properties.DirectProduct as DP
+import Presentation.Groups.Cyclic as Cyclic
+
+
+open import Data.Fin using (Fin ; toℕ ; suc ; zero ; fromℕ)
+open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
+import Data.Nat.Properties as NP
+open import Presentation.GroupLike
+open import Presentation.Tactics hiding ([_])
+open import Data.Nat.Primality
+
+
+
+module N.Ex-Sym6 (p-2 : ℕ) (p-prime : Prime (2+ p-2))  where
+
+pattern auto = Eq.refl
+
+pattern ₀ = zero
+pattern ₁ = suc ₀
+pattern ₂ = suc ₁
+pattern ₃ = suc ₂
+pattern ₄ = 4
+pattern ₅ = 5
+pattern ₆ = 6
+pattern ₇ = 7
+pattern ₈ = 8
+pattern ₉ = 9
+pattern ₁₀ = 10
+pattern ₁₁ = 11
+pattern ₁₂ = 12
+pattern ₁₃ = 13
+pattern ₁₄ = 14
+pattern ₁₅ = 15
+
+pattern ₁₊ ⱼ = suc ⱼ
+pattern ₂₊ ⱼ = suc (suc ⱼ)
+pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
+
+
+open import Zp.ModularArithmetic
+open PrimeModulus p-2 p-prime
+open import N.Symplectic p-2 p-prime
+open import N.Lemmas-2Qupit-Sym p-2 p-prime
+open import N.NF2-Sym p-2 p-prime
+open Lemmas-2Q 0
+open Symplectic
+open import N.NF1-Sym p-2 p-prime
+
+open import N.Ex-Sym p-2 p-prime
+open import N.Ex-Sym1 p-2 p-prime
+open import N.Ex-Sym2 p-2 p-prime
+open import N.Ex-Sym3 p-2 p-prime
+open import N.Ex-Sym4 p-2 p-prime
+open import N.Ex-Rewriting p-2 p-prime
+open Rewriting-Ex
+
+open import N.Lemma-Comm p-2 p-prime 0
+open import N.Lemma-Postfix p-2 p-prime
+open import N.Duality p-2 p-prime hiding (module L0)
+open Lemmas0a
+open Lemmas0a1
+open Lemmas0b
+open Lemmas0c
+
+open LM2
+open import N.Completeness1-Sym p-2 p-prime renaming (module Completeness to CP1) using ()
+
+private
+  variable
+    n : ℕ
+
+open Symplectic
+open Symplectic-GroupLike
+
+open import Data.Nat.DivMod
+open import Data.Fin.Properties
+open Duality
+
+
+
+
+
+
+
+open import Algebra.Properties.Ring (+-*-ring p-2)
+open PB (₂ QRel,_===_)
+open PP (₂ QRel,_===_)
+open SR word-setoid
+open Pattern-Assoc
+open Lemmas0 1
+open Commuting-Symplectic 0
+open Sym0-Rewriting 1
+open Basis-Change _ ((₂₊ 0) QRel,_===_) grouplike
+import N.Duality p-2 p-prime as ND
+
+
+
+-- open import N.Proofs.P1 p-2 p-prime
+-- open import N.Proofs.P2 p-2 p-prime
+open import N.Lemmas-2Qupit-Sym p-2 p-prime as TQ
+
+open Duality
+open Lemmas0 1
+module L0 = Lemmas0 0
+
+
+lemma-CX^aS^k''' : ∀ (a-1 : ℕ) (k* : ℤ* ₚ) ->
+  let
+    k : ℤ ₚ
+    k = k* .proj₁
+    -k : ℤ ₚ
+    -k = - k
+    k⁻¹ : ℤ ₚ
+    k⁻¹ = ((k* ⁻¹) .proj₁)
+    -k⁻¹ : ℤ ₚ
+    -k⁻¹ = - k⁻¹
+    a : ℕ
+    a = ₁₊ a-1
+    ka = toℕ k Nat.* a
+    -ka = p-1 Nat.* ka
+  in
+
+  S ^ ka • (S ^ ka) ↑ • CZ ^ -ka • CX ^ a ≈ CX ^ a • S^ k
+
+lemma-CX^aS^k''' a-1@0 k* = begin
+  S ^ ka • (S ^ ka) ↑ • CZ ^ -ka • CX ^ a ≈⟨ cong (refl' (Eq.cong (S ^_) (NP.*-identityʳ (toℕ (k* .proj₁))))) (cong (refl' (Eq.cong (\ xx -> (S ^ xx) ↑) (NP.*-identityʳ (toℕ (k* .proj₁))))) (cleft (aux))) ⟩
+  S^ k • S^ k ↑ • CZ^ -k • CX ≈⟨ lemma-CXS^k k ⟩
+  CX • S^ k ≈⟨ refl ⟩
+  CX ^ a • S^ k ∎ -- checked for 7, 11, and 13 in haskell
+  where
+    k : ℤ ₚ
+    k = k* .proj₁
+    k' : ℕ
+    k' = toℕ k
+    -k : ℤ ₚ
+    -k = - k
+    k⁻¹ : ℤ ₚ
+    k⁻¹ = ((k* ⁻¹) .proj₁)
+    -k⁻¹ : ℤ ₚ
+    -k⁻¹ = - k⁻¹
+    a : ℕ
+    a = ₁₊ a-1
+    ka : ℕ
+    ka = toℕ k Nat.* a
+    -ka : ℕ
+    -ka = p-1 Nat.* ka
+    aux : CZ ^ -ka ≈ CZ^ -k
+    aux = begin
+      CZ ^ -ka ≈⟨ refl' (Eq.cong (CZ ^_) (Eq.cong (p-1 Nat.*_) (NP.*-identityʳ (toℕ (k* .proj₁))))) ⟩
+      CZ ^ (p-1 Nat.* toℕ k) ≈⟨ lemma-CZ^k-% (p-1 Nat.* toℕ k) ⟩
+      CZ ^ ((p-1 Nat.* toℕ k) Nat.% p) ≈⟨ refl' (Eq.cong (CZ ^_) (Eq.sym (toℕ-fromℕ< (m%n<n (p-1 Nat.* toℕ k) p)))) ⟩
+      CZ ^ toℕ (fromℕ< (m%n<n (p-1 Nat.* toℕ k) p)) ≈⟨ refl' (Eq.cong (\ xx -> CZ ^ toℕ (fromℕ< (m%n<n (xx Nat.* toℕ k) p))) (Eq.sym lemma-toℕ-ₚ₋₁)) ⟩
+      CZ ^ toℕ (fromℕ< (m%n<n (toℕ (ₚ₋₁) Nat.* toℕ k) p)) ≈⟨ refl' (Eq.cong (\ xx -> CZ ^ toℕ (fromℕ< (m%n<n (toℕ xx Nat.* toℕ k) p))) p-1=-1ₚ) ⟩
+      CZ ^ toℕ (fromℕ< (m%n<n (toℕ (- 1ₚ) Nat.* toℕ k) p)) ≈⟨ refl ⟩
+      CZ^ (- ₁ * k) ≈⟨ refl' (Eq.cong CZ^ (-1*x≈-x k)) ⟩
+      CZ^ -k ∎
+      
+
+
+
+lemma-CX^aS^k''' a-1@(₁₊ a-2) k* = begin
+  S ^ ka • (S ^ ka) ↑ • CZ ^ -ka • CX ^ a ≈⟨ {!!} ⟩
+  (S ^ k[a-1] • (S ^ k[a-1]) ↑ • CZ ^ -k[a-1]) • (S ^ k[a-1]) ↑ • S ↑ ^ (k[a-1] Nat.* 2) • CZ ^ -k[a-1] • CX • CX ^ a-1 ≈⟨ {!!} ⟩
+  (S ^ k[a-1] • (S ^ k[a-1]) ↑ • CZ ^ -k[a-1]) • (S ^ k[a-1]) ↑ • S ↑ ^ (k[a-1] Nat.* 2) • (CZ ^ -k[a-1] • CX) • CX ^ a-1 ≈⟨ (cright cright cright (cleft sym (lemma-semi-CXCZ^k-ℕ' -k[a-1]))) ⟩
+  (S ^ k[a-1] • (S ^ k[a-1]) ↑ • CZ ^ -k[a-1]) • (S ^ k[a-1]) ↑ • S ↑ ^ (k[a-1] Nat.* 2) • (S ↑ ^ (-k[a-1] Nat.* 2) • CX • CZ ^ -k[a-1]) • CX ^ a-1 ≈⟨ (cright cright  special-assoc (□ • □ ^ 3 • □) (□ ^ 2 • □ ^ 2 • □) auto) ⟩
+  (S ^ k[a-1] • (S ^ k[a-1]) ↑ • CZ ^ -k[a-1]) • (S ^ k[a-1]) ↑ • (S ↑ ^ (k[a-1] Nat.* 2) • S ↑ ^ (-k[a-1] Nat.* 2)) • (CX • CZ ^ -k[a-1]) • CX ^ a-1 ≈⟨ (cright cright cleft aux) ⟩
+  (S ^ k[a-1] • (S ^ k[a-1]) ↑ • CZ ^ -k[a-1]) • (S ^ k[a-1]) ↑ • ε • (CX • CZ ^ -k[a-1]) • CX ^ a-1 ≈⟨ (cright cright left-unit) ⟩
+  (S ^ k[a-1] • (S ^ k[a-1]) ↑ • CZ ^ -k[a-1]) • (S ^ k[a-1]) ↑ • (CX • CZ ^ -k[a-1]) • CX ^ a-1 ≈⟨ (cright  special-assoc (□ • □ ^ 2 • □) (□ ^ 2 • □ ^ 2) auto) ⟩
+  (S ^ k[a-1] • (S ^ k[a-1]) ↑ • CZ ^ -k[a-1]) • ((S ^ k[a-1]) ↑ • CX) • CZ ^ -k[a-1] • CX ^ a-1 ≈⟨ (cright cleft sym (aux-comm-CX-S^k↑-ℕ  k[a-1])) ⟩
+  (S ^ k[a-1] • (S ^ k[a-1]) ↑ • CZ ^ -k[a-1]) • (CX • (S ^ k[a-1]) ↑) • CZ ^ -k[a-1] • CX ^ a-1 ≈⟨ special-assoc (□ ^ 3 • □ ^ 2 • □ ^ 2) (□ ^ 4 • □ ^ 3) auto ⟩
+  (S ^ k[a-1] • (S ^ k[a-1]) ↑ • CZ ^ -k[a-1] • CX) • (S ^ k[a-1]) ↑ • CZ ^ -k[a-1] • CX ^ a-1 ≈⟨ (cleft lemma-CXS^k-ℕ k[a-1]) ⟩
+  (CX • S ^ k[a-1]) • (S ^ k[a-1]) ↑ • CZ ^ -k[a-1] • CX ^ a-1 ≈⟨ assoc ⟩
+  CX • S ^ k[a-1] • (S ^ k[a-1]) ↑ • CZ ^ -k[a-1] • CX ^ a-1 ≈⟨ (cright (lemma-CX^aS^k''' a-2 k*)) ⟩
+  CX • CX ^ a-1 • S^ k ≈⟨ sym assoc ⟩
+  CX ^ a • S^ k ∎
+  where
+    k : ℤ ₚ
+    k = k* .proj₁
+    -k : ℤ ₚ
+    -k = - k
+    k⁻¹ : ℤ ₚ
+    k⁻¹ = ((k* ⁻¹) .proj₁)
+    -k⁻¹ : ℤ ₚ
+    -k⁻¹ = - k⁻¹
+    a : ℕ
+    a = ₁₊ a-1
+    ka : ℕ
+    ka = toℕ k Nat.* a
+    -ka : ℕ
+    -ka = p-1 Nat.* ka
+    k[a-1] : ℕ
+    k[a-1] = toℕ k Nat.* a-1
+    -k[a-1] : ℕ
+    -k[a-1] = p-1 Nat.* k[a-1]
+    nnk[a-1] : ℕ
+    nnk[a-1] = p-1 Nat.* -k[a-1]
+    aux0 : S ↑ ^ (k[a-1] Nat.+ -k[a-1]) ≈ ε
+    aux0 = begin
+      S ↑ ^ (k[a-1] Nat.+ -k[a-1]) ≈⟨ refl' (Eq.cong ((S ↑) ^_) (Eq.cong (\ xx -> xx Nat.+ -k[a-1]) (Eq.sym (NP.*-identityˡ k[a-1])))) ⟩
+      S ↑ ^ (1 Nat.* k[a-1] Nat.+ -k[a-1]) ≈⟨ refl' (Eq.cong ((S ↑) ^_) (Eq.sym (NP.*-distribʳ-+ k[a-1] 1 p-1))) ⟩
+      S ↑ ^ ((1 Nat.+ p-1) Nat.* k[a-1]) ≈⟨ sym (lemma-^^ (S ↑) p k[a-1]) ⟩
+      (S ↑ ^ p) ^ k[a-1] ≈⟨ lemma-^-cong ((S ↑ ^ p)) ((S ^ p) ↑) k[a-1] (refl' (aux-↑ S p)) ⟩
+      (S ^ p) ↑ ^ k[a-1] ≈⟨ lemma-^-cong ((S ^ p) ↑) (ε ↑) k[a-1] (axiom (cong↑ order-S)) ⟩
+      ε ↑ ^ k[a-1] ≈⟨ lemma-ε^k=ε k[a-1] ⟩
+      ε ∎
+    aux : S ↑ ^ (k[a-1] Nat.* 2) • S ↑ ^ (-k[a-1] Nat.* 2) ≈ ε
+    aux = begin
+      S ↑ ^ (k[a-1] Nat.* 2) • S ↑ ^ (-k[a-1] Nat.* 2) ≈⟨ sym (lemma-^-+ (S ↑) (k[a-1] Nat.* 2) (-k[a-1] Nat.* 2)) ⟩
+      S ↑ ^ (k[a-1] Nat.* 2 Nat.+ -k[a-1] Nat.* 2) ≈⟨ refl' (Eq.cong ((S ↑) ^_) (Eq.sym (NP.*-distribʳ-+ 2 k[a-1] -k[a-1]))) ⟩
+      S ↑ ^ ((k[a-1] Nat.+ -k[a-1]) Nat.* 2) ≈⟨ sym (lemma-^^ (S ↑) (k[a-1] Nat.+ -k[a-1]) 2) ⟩
+      (S ↑ ^ (k[a-1] Nat.+ -k[a-1])) ^ 2 ≈⟨ cong aux0 aux0 ⟩
+      ε ^ 2 ≈⟨ left-unit ⟩
+      ε ∎
+
+
+
+lemma-CX^aS^k' : ∀ (a* k* : ℤ* ₚ) ->
+  let
+    k : ℤ ₚ
+    k = k* .proj₁
+    -k : ℤ ₚ
+    -k = - k
+    k⁻¹ : ℤ ₚ
+    k⁻¹ = ((k* ⁻¹) .proj₁)
+    -k⁻¹ : ℤ ₚ
+    -k⁻¹ = - k⁻¹
+    a : ℤ ₚ
+    a = a* .proj₁
+    ka = k * a
+    -ka = - ka
+  in
+
+  S^ ka • S^ ka ↑ • CZ^ -ka • CX^ a ≈ CX^ a • S^ k
+
+lemma-CX^aS^k' a*@(a@₀ , nza) k* with nza auto
+... | ()
+lemma-CX^aS^k' a*@(a@(₁₊ a-1) , nza) k* = begin
+  S^ ka • S^ ka ↑ • CZ^ -ka • CX^ a ≈⟨ {!!} ⟩
+  (CX • CX ^ toℕ a-1) • S^ k ≈⟨ refl ⟩
+  (CX • CX ^ toℕ a-1) • S^ k ≈⟨ (cleft aux-ww^k CX (toℕ a-1)) ⟩
+  CX^ a • S^ k ∎
+  where
+    k : ℤ ₚ
+    k = k* .proj₁
+    -k : ℤ ₚ
+    -k = - k
+    k⁻¹ : ℤ ₚ
+    k⁻¹ = ((k* ⁻¹) .proj₁)
+    -k⁻¹ : ℤ ₚ
+    -k⁻¹ = - k⁻¹
+    ka : ℤ ₚ
+    ka = k * a
+    -ka : ℤ ₚ
+    -ka = - ka
+
+
+
