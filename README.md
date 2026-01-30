@@ -3,4 +3,4 @@ This is the Agda code accompanying the paper "A Complete and Natural Rule Set fo
 
 ## Tested with Agda 2.8 and Agda stdlib 2.3.
 
-## For furthure info see [documentation](doc/Readme.pdf).
+## For further info see [documentation](doc/Readme.pdf).
