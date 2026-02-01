@@ -151,7 +151,7 @@ open Rewriting-Swap 2
 open Rewriting-Swap0 2
 open Symplectic-GroupLike
 open Basis-Change _ (3 QRel,_===_) grouplike
-open import N.EX-Rewriting p-2 p-prime
+open import N.XEX-Rewriting p-2 p-prime
 open Rewriting-EX 2
 open Homo 2
 open import Data.List

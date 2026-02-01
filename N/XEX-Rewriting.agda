@@ -54,7 +54,7 @@ open import Data.Nat.Primality
 
 
 
-module N.EX-Rewriting (p-2 : ℕ) (p-prime : Prime (2+ p-2)) where
+module N.XEX-Rewriting (p-2 : ℕ) (p-prime : Prime (2+ p-2)) where
 
 pattern auto = Eq.refl
 
@@ -299,7 +299,7 @@ module Symplectic-EX where
   lemma-cong↑ {n} w v PB.right-unit = PB.right-unit
   lemma-cong↑ {n} w v (PB.axiom x) = PB.axiom (cong↑ x)
 
-module EX-Rewriting where
+module XEX-Rewriting where
 
   -- This module provides a complete rewrite system for 1-qubit
   -- EX operators. It is specialized toward relations on qubit 0
@@ -360,7 +360,7 @@ module Rewriting-EX (m : ℕ) where
   open Symplectic
   module L0 = Lemmas0 0
   open Rewriting
-  open EX-Rewriting
+  open XEX-Rewriting
   open Rewriting.Step (step-cong (step-EX {m})) renaming (general-rewrite to rewrite-EX ; multistep to multi-ex-step) public
 
 module Homo (m : ℕ) where

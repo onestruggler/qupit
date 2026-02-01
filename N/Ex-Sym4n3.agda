@@ -135,7 +135,7 @@ open Basis-Change _ ((₃₊ n) QRel,_===_) grouplike
 import N.Duality p-2 p-prime as ND
 open Rewriting-Powers (₂₊ n)
 open Rewriting-Swap (₂₊ n)
-open import N.EX-Rewriting p-2 p-prime
+open import N.XEX-Rewriting p-2 p-prime
 open Rewriting-EX (₂₊ n)
 open Homo (₃₊ n)
 
