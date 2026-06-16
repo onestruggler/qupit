@@ -462,12 +462,10 @@ module PrimeModulus (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
 
   open import Data.Nat using (NonZero)
 
-  instance
-    nztoℕ : ∀ {y : ℤ (₁₊ n)} → {neq0 : y ≢ ₀} -> NonZero (toℕ y)
-    nztoℕ {n} {₀} {neq0} with neq0 refl
-    ... | ()
-    nztoℕ {n} {₁₊ y} {neq0} = record { nonZero = Data.Unit.Base.tt }
-  {-# OVERLAPS nztoℕ #-}
+  nztoℕ : ∀ {y : ℤ (₁₊ n)} → {neq0 : y ≢ ₀} -> NonZero (toℕ y)
+  nztoℕ {n} {₀} {neq0} with neq0 refl
+  ... | ()
+  nztoℕ {n} {₁₊ y} {neq0} = record { nonZero = Data.Unit.Base.tt }
 
   -- *-cancelˡ-nonZero : AlmostLeftCancellative (_≡_ {A = ℤ ₚ}) 0 _*_
   -- *-cancelˡ-nonZero x y z xnz eq with coprime-Bézout (prime⇒coprime p-prime {{nztoℕ {y = x} {neq0 = xnz}}} (toℕ<n x) )
