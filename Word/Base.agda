@@ -131,6 +131,9 @@ WRel X = Rel (Word X) 0ℓ
 -- Extend a function from generators to words.
 _* : (X -> Word Y) -> (Word X -> Word Y)
 _* g = wconcat ∘ wmap g
+-- _* g ε = ε
+-- _* g [ x ]ʷ = g x
+-- _* g (x • y) = (g *) x • (g *) y
 
 -- a version of word foldl.
 _** : (C -> Y -> Word X × C) -> (C -> Word Y -> Word X × C)

@@ -42,6 +42,12 @@ wconcat-wmap {f} ε = Eq.refl
 wconcat-wmap {f} (ws • ws₁) = Eq.cong₂ _•_ (wconcat-wmap ws) (wconcat-wmap ws₁)
 
 
+lemma-f*-w^n : {f : A -> Word B} -> {w : Word A} -> (n : ℕ) -> (f *) (w ^ n) ≡ (f *) w ^ n
+lemma-f*-w^n {f} {w} zero = Eq.refl
+lemma-f*-w^n {f} {w} (suc zero) = Eq.refl
+lemma-f*-w^n {f} {w} (suc (suc n)) = Eq.cong₂ _•_ Eq.refl (lemma-f*-w^n (suc n))
+
+
 open import Relation.Binary.Definitions using (DecidableEquality)
 open import Relation.Nullary using (yes ; no)
 

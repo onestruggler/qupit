@@ -1,5 +1,6 @@
-{-# OPTIONS --safe #-}
-{-# OPTIONS --prop #-}
+{-# OPTIONS --allow-unsolved-metas #-}
+-- {-# OPTIONS --safe #-}
+-- {-# OPTIONS --prop #-}
 {-# OPTIONS --termination-depth=20 #-}
 
 open import Level using (0ℓ)
@@ -87,7 +88,11 @@ open Primitive-Root-Modp' g* g-gen
 module Symplectic-Simplified where
 
 open import N.Symplectic p-2 p-prime as NSym
-open Symplectic hiding (_QRel,_===_ ; M ; M₁)
+open Symplectic hiding (_QRel,_===_ ; M ; M₁) public
+
+1/2 = ((₂ , λ ()) ⁻¹) .proj₁
+
+-1/2 = - ((₂ , λ ()) ⁻¹) .proj₁
 
 module Clifford-Relations where
 
@@ -103,7 +108,6 @@ module Clifford-Relations where
   X⁻¹ : ∀ {n} -> Word (Gen (₁₊ n))
   X⁻¹ = X ^ p-1
 
-  1/2 = ((₂ , λ ()) ⁻¹) .proj₁
 
   Z^ : ℤ ₚ ->  ∀ {n} -> Word (Gen (₁₊ n))
   Z^ k = Z ^ toℕ k
@@ -147,6 +151,7 @@ module Clifford-Relations where
     semi-M𝑠 :           ∀ {n} → (₁₊ n) QRel,  Mg • 𝑠 === 𝑠^ (g * g) • Mg
     order-SH :          ∀ {n} → (₁₊ n) QRel,  (S • H) ^ 3 === ε
     comm-HHSHHS :       ∀ {n} → (₁₊ n) QRel,  H • H • S • H • H • S === S • H • H • S • H • H
+    comm-X-Z :          ∀ {n} → (₁₊ n) QRel,  X • Z === Z • X
 
     semi-M↑CZ :         ∀ {n} → (₂₊ n) QRel,  Mg ↑ • CZ === CZ^ g • Mg ↑
     semi-M↓CZ :         ∀ {n} → (₂₊ n) QRel,  Mg ↓ • CZ === CZ^ g • Mg ↓
@@ -339,6 +344,7 @@ module Lemmas-Clifford where
     open SR word-setoid
 
 
+
   lemma-comm-Hᵏ-w↑ : ∀ {n} k w → let open PB ((₂₊ n) QRel,_===_) in
     
     H ^ k • w ↑ ≈ w ↑ • H ^ k
@@ -360,6 +366,53 @@ module Lemmas-Clifford where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
+
+
+  lemma-comm-Z-w↑ : ∀ {n} w → let open PB ((₂₊ n) QRel,_===_) in
+    
+    Z • w ↑ ≈ w ↑ • Z
+    
+  lemma-comm-Z-w↑ {n} w = begin
+    (H • H • S • H • H • S⁻¹) • w ↑ ≈⟨ by-assoc auto ⟩
+    (H • H • S • H • H) • S⁻¹ • w ↑ ≈⟨ (cright lemma-comm-Sᵏ-w↑ p-1 w) ⟩
+    (H • H • S • H • H) • w ↑ • S⁻¹ ≈⟨ by-assoc auto ⟩
+    (H • H • S) • (H ^ 2 • w ↑) • S⁻¹ ≈⟨ (cright cleft lemma-comm-Hᵏ-w↑ 2 w) ⟩
+    (H • H • S) • (w ↑ • H ^ 2) • S⁻¹ ≈⟨ special-assoc (□ ^ 3 • □ ^ 2 • □) (□ ^ 2 • □ ^ 2 • □ ^ 2) auto ⟩
+    H ^ 2 • (S • w ↑) • H ^ 2 • S⁻¹ ≈⟨ (cright cleft lemma-comm-Sᵏ-w↑ 1 w) ⟩
+    H ^ 2 • (w ↑ • S) • H ^ 2 • S⁻¹ ≈⟨ trans (by-assoc auto) assoc ⟩
+    (H ^ 2 • w ↑) • S • H ^ 2 • S⁻¹ ≈⟨ (cleft lemma-comm-Hᵏ-w↑ 2 w) ⟩
+    (w ↑ • H ^ 2) • S • H ^ 2 • S⁻¹ ≈⟨ special-assoc (□ ^ 3 • □ • □ ^ 2 • □) (□ • □ ^ 6 ) auto ⟩
+    w ↑ • Z ∎
+    where
+    open PB ((₂₊ n) QRel,_===_)
+    open PP ((₂₊ n) QRel,_===_)
+    open SR word-setoid
+    open Pattern-Assoc
+
+
+  lemma-comm-X-w↑ : ∀ {n} w → let open PB ((₂₊ n) QRel,_===_) in
+    
+    X • w ↑ ≈ w ↑ • X
+    
+  lemma-comm-X-w↑ {n} w = begin
+    (H • S • H • H • S⁻¹ • H) • w ↑ ≈⟨ special-assoc (□ ^ 6 • □) (□ ^ 5 • □ ^ 2) auto ⟩
+    (H • S • H • H • S⁻¹) • H • w ↑ ≈⟨ (cright lemma-comm-Hᵏ-w↑ 1 w) ⟩
+    (H • S • H • H • S⁻¹) • w ↑ • H ≈⟨ special-assoc (□ ^ 5 • □ ^ 2) (□ ^ 4 • □ ^ 2 • □) auto ⟩
+    (H • S • H • H) • (S⁻¹ • w ↑) • H ≈⟨ (cright cleft lemma-comm-Sᵏ-w↑ p-1 w) ⟩
+    (H • S • H • H) • (w ↑ • S⁻¹) • H ≈⟨ special-assoc (□ ^ 4 • □ ^ 2 • □) (□ ^ 2 • (□ ^ 2 • □) • □ ^ 2) auto ⟩
+    (H • S) • (H ^ 2 • w ↑) • S⁻¹ • H ≈⟨ (cright cleft lemma-comm-Hᵏ-w↑ 2 w) ⟩
+    (H • S) • (w ↑ • H ^ 2) • S⁻¹ • H ≈⟨ special-assoc (□ ^ 2 • □ ^ 2 • □ ^ 2) (□ • □ ^ 2 • □ • □ ^ 2) auto ⟩
+    H • (S • w ↑) • H ^ 2 • S⁻¹ • H ≈⟨ (cright cleft lemma-comm-Sᵏ-w↑ 1 w) ⟩
+    H • (w ↑ • S) • H ^ 2 • S⁻¹ • H ≈⟨ trans (by-assoc auto) assoc ⟩
+    (H • w ↑) • S • H ^ 2 • S⁻¹ • H ≈⟨ (cleft lemma-comm-Hᵏ-w↑ 1 w) ⟩
+    (w ↑ • H) • S • H ^ 2 • S⁻¹ • H ≈⟨ special-assoc (□ ^ 2 • □ • □ ^ 2 • □ ^ 2) (□ • □ ^ 6) auto ⟩
+    w ↑ • X ∎
+    where
+    open PB ((₂₊ n) QRel,_===_)
+    open PP ((₂₊ n) QRel,_===_)
+    open SR word-setoid
+    open Pattern-Assoc
+
 
 
   lemma-comm-CZ-w↑ : ∀ {n} w → let open PB ((₃₊ n) QRel,_===_) in
@@ -518,7 +571,7 @@ module Lemmas1 (n : ℕ) where
     Mg ^ p-1 ≡⟨ Eq.cong (Mg ^_) (Eq.sym (toℕ-fromℕ< (NP.n<1+n p-1))) ⟩
     Mg^ (fromℕ< (NP.n<1+n p-1)) ≈⟨ axiom (M-power (₂₊ (fromℕ< _))) ⟩
     M (g^ p-1') ≡⟨ aux-M≡M (g^ p-1') ((g ^′ p-1 , lemma-g^′k≠0 p-1)) (Eq.cong (g ^′_) (toℕ-fromℕ< (NP.n<1+n p-1))) ⟩
-    M (g ^′ p-1 , lemma-g^′k≠0 p-1) ≡⟨ aux-M≡M ((g ^′ p-1 , lemma-g^′k≠0 p-1)) (1ₚ , λ ()) Zp.Fermats-little-theorem' ⟩
+    M (g ^′ p-1 , lemma-g^′k≠0 p-1) ≡⟨ aux-M≡M ((g ^′ p-1 , lemma-g^′k≠0 p-1)) (1ₚ , λ ()) Fermat's-little-theorem' ⟩
     M (1ₚ , λ ()) ≈⟨ sym (axiom (M-power ₀)) ⟩
     ε ∎
     where
@@ -952,17 +1005,17 @@ module Rewriting-Sim where
     open Lemmas1 n
     open Lemmas-Clifford
 
-  step-sym0 {n} ((S-gen) ∷ (H-gen) ∷ (S-gen) ∷ (H-gen) ∷ (S-gen) ∷ (H-gen) ∷ xs) = just (xs , at-head (PB.axiom order-SH))
-    where
-    open Lemmas1 n
-  step-sym0 {₁₊ n} ((S-gen ↥) ∷ (H-gen ↥) ∷ (S-gen ↥) ∷ (H-gen ↥) ∷ (S-gen ↥) ∷ (H-gen ↥) ∷ xs) = just (xs , at-head (lemma-cong↑ _ _ (PB.axiom order-SH)))
-    where
-    open Lemmas1 n
-    open Lemmas-Clifford
-  step-sym0 {₂₊ n} ((S-gen ↥ ↥) ∷ (H-gen ↥ ↥) ∷ (S-gen ↥ ↥) ∷ (H-gen ↥ ↥) ∷ (S-gen ↥ ↥) ∷ (H-gen ↥ ↥) ∷ xs) = just (xs , at-head (lemma-cong↑ _ _ (lemma-cong↑ _ _ (PB.axiom order-SH))))
-    where
-    open Lemmas1 n
-    open Lemmas-Clifford
+  -- step-sym0 {n} ((S-gen) ∷ (H-gen) ∷ (S-gen) ∷ (H-gen) ∷ (S-gen) ∷ (H-gen) ∷ xs) = just (xs , at-head (PB.axiom order-SH))
+  --   where
+  --   open Lemmas1 n
+  -- step-sym0 {₁₊ n} ((S-gen ↥) ∷ (H-gen ↥) ∷ (S-gen ↥) ∷ (H-gen ↥) ∷ (S-gen ↥) ∷ (H-gen ↥) ∷ xs) = just (xs , at-head (lemma-cong↑ _ _ (PB.axiom order-SH)))
+  --   where
+  --   open Lemmas1 n
+  --   open Lemmas-Clifford
+  -- step-sym0 {₂₊ n} ((S-gen ↥ ↥) ∷ (H-gen ↥ ↥) ∷ (S-gen ↥ ↥) ∷ (H-gen ↥ ↥) ∷ (S-gen ↥ ↥) ∷ (H-gen ↥ ↥) ∷ xs) = just (xs , at-head (lemma-cong↑ _ _ (lemma-cong↑ _ _ (PB.axiom order-SH))))
+  --   where
+  --   open Lemmas1 n
+  --   open Lemmas-Clifford
 
   -- Commuting of generators.
   step-sym0 ((S-gen) ∷ (CZ-gen) ∷ xs) = just ((CZ-gen) ∷ (S-gen) ∷ xs , at-head (PB.sym (PB.axiom comm-CZ-S↓)))
@@ -1235,12 +1288,14 @@ module Lemmas1b (n : ℕ) where
     X • Z ^ l • S ^ l ≈⟨ sym assoc ⟩
     (X • Z ^ l) • S ^ l ∎
 
+{-
   conj-S^l-X^k : ∀ l k -> S ^ l • X ^ k ≈ X ^ k • (Z ^ l • S ^ l) ^ k
   conj-S^l-X^k l k = begin
     S ^ l • X ^ k ≈⟨ lemma-Induction (conj-S^l-X' l) k ⟩
-    (X • Z ^ l) ^ k • S ^ l ≈⟨ {!!} ⟩
+    (X • Z ^ l) ^ k • S ^ l ≈⟨ refl ⟩
     (X • Z ^ l) ^ k • S ^ l ≈⟨ {!!} ⟩
     X ^ k • (Z ^ l • S ^ l) ^ k ∎  
+-}
 
   aux-X⁻¹ : X⁻¹ ≈ H • S⁻¹ • H • H • S • H
   aux-X⁻¹ = begin
@@ -1259,11 +1314,11 @@ module Lemmas1b (n : ℕ) where
     where
     open Sim-Rewriting n
 
+{-
+
   lemma-order-S⁻¹H' : (S⁻¹ • H) ^ 3 ≈ HH
   lemma-order-S⁻¹H' = begin
     (S⁻¹ • H) ^ 3 ≈⟨ {!!} ⟩
-
-
 
 
 
@@ -1287,21 +1342,33 @@ module Lemmas1b (n : ℕ) where
     
   lemma-order-S⁻¹H  : (S⁻¹ • H) ^ 6 ≈ ε
   lemma-order-S⁻¹H  = begin
-    (S⁻¹ • H) ^ 6 ≈⟨ {!!} ⟩
-    S⁻¹ • H • S⁻¹ • H • S⁻¹ • H • S⁻¹ • H • S⁻¹ • H • S⁻¹ • H ≈⟨ {!!} ⟩
-    (S • S ^ p-3 • S) • H • (S • S ^ p-3 • S) • H • (S • S ^ p-3 • S) • H • (S • S ^ p-3 • S) • H • (S • S ^ p-3 • S) • H • (S • S ^ p-3 • S) • H ≈⟨ {!!} ⟩
-    (S • S ^ p-3) • (S • H • S) • S ^ p-3 • (S • H • S) • S ^ p-3 • (S • H • S) • S ^ p-3 • (S • H • S) • S ^ p-3 • (S • H • S) • S ^ p-3 • S • H ≈⟨ {!!} ⟩
-    (S • S ^ p-3) • (H ^ 3 • S ^ p-1 • H ^ 3) • S ^ p-3 • (H ^ 3 • S ^ p-1 • H ^ 3) • S ^ p-3 • (H ^ 3 • S ^ p-1 • H ^ 3) • S ^ p-3 • (H ^ 3 • S ^ p-1 • H ^ 3) • S ^ p-3 • (H ^ 3 • S ^ p-1 • H ^ 3)   • S ^ p-3 • S • H ≈⟨ {!!} ⟩
+    (S⁻¹ • H) ^ 6 ≈⟨ special-assoc ((□ • □) ^ 6) (□ ^ 12) auto ⟩
+    S⁻¹ • H • S⁻¹ • H • S⁻¹ • H • S⁻¹ • H • S⁻¹ • H • S⁻¹ • H ≈⟨ cong eq1 (cright (cong eq1 (cright (cong eq1 (cright (cong eq1 (cright (cong eq1 (cright (cong eq1 refl))))))))))  ⟩
+    (S • S ^ p-3 • S) • H • (S • S ^ p-3 • S) • H • (S • S ^ p-3 • S) • H • (S • S ^ p-3 • S) • H • (S • S ^ p-3 • S) • H • (S • S ^ p-3 • S) • H ≈⟨ special-assoc ((□ ^ 3) • □ • (□ ^ 3) • □ • (□ ^ 3) • □ • (□ ^ 3) • □ • (□ ^ 3) • □ • (□ ^ 3) • □) ((□ ^ 2) • (□ ^ 3) • □ • (□ ^ 3) • □ • (□ ^ 3) • □ • (□ ^ 3) • □ • (□ ^ 3) • □ • □ • □) auto ⟩
+    (S • S ^ p-3) • (S • H • S) • S ^ p-3 • (S • H • S) • S ^ p-3 • (S • H • S) • S ^ p-3 • (S • H • S) • S ^ p-3 • (S • H • S) • S ^ p-3 • S • H ≈⟨ cright (cong eq2 (cright (cong eq2 (cright (cong eq2 (cright (cong eq2 (cright (cleft eq2))))))))) ⟩
+    (S • S ^ p-3) • (H ^ 3 • S ^ p-1 • H ^ 3) • S ^ p-3 • (H ^ 3 • S ^ p-1 • H ^ 3) • S ^ p-3 • (H ^ 3 • S ^ p-1 • H ^ 3) • S ^ p-3 • (H ^ 3 • S ^ p-1 • H ^ 3) • S ^ p-3 • (H ^ 3 • S ^ p-1 • H ^ 3) • S ^ p-3 • S • H ≈⟨ {!!} ⟩
     ε ∎
     where
     open Sim-Rewriting n
+    eq1 : S⁻¹ ≈ S • S ^ p-3 • S
+    eq1 = cright (trans (lemma-^-+ S 1 p-3) (word-comm 1 p-3 refl))
+    eq2 : S • H • S ≈ H ^ 3 • S⁻¹ • H ^ 3
+    eq2 = begin
+      S • H • S ≈⟨ sym right-unit ⟩
+      (S • H • S) • ε ≈⟨ cright (sym lemma-order-H) ⟩
+      (S • H • S) • H ^ 4 ≈⟨ by-assoc auto ⟩
+      (S • H • S • H) • H ^ 3 ≈⟨ cleft lemma-SHSH ⟩
+      (H ^ 3 • S⁻¹) • H ^ 3 ≈⟨ assoc ⟩
+      H ^ 3 • S⁻¹ • H ^ 3 ∎
+
+
 
   aux-XZX⁻¹Z⁻¹ : X • Z • X⁻¹ • Z⁻¹ ≈ ε
   aux-XZX⁻¹Z⁻¹ = begin
     (H • S • H • H • S⁻¹ • H) • (H • H • S • H • H • S⁻¹) • (H • S • H • H • S⁻¹ • H) ^ p-1 • (H • H • S • H • H • S⁻¹) ^ p-1 ≈⟨ (cright cright cong aux-X⁻¹ aux-Z⁻¹) ⟩
-    (H • S • H • H • S⁻¹ • H) • (H • H • S • H • H • S⁻¹) • (H • S⁻¹ • H • H • S • H) • (H • H • S⁻¹ • H • H • S) ≈⟨ {!!} ⟩
-    (H • S • H • H • S⁻¹ • H) • (H • H • S • H • H • S⁻¹) • (H • S⁻¹ • H • H • S • H) • (S • H • H • S⁻¹ • H • H) ≈⟨ {!!} ⟩
-    (H • S • H • H • S⁻¹ • H) • (H • H • S • H • H • S⁻¹) • (H • S⁻¹ • H) • (H • S • H • S • H) • H • S⁻¹ • H • H ≈⟨ {!!} ⟩
+    (H • S • H • H • S⁻¹ • H) • (H • H • S • H • H • S⁻¹) • (H • S⁻¹ • H • H • S • H) • (H • H • S⁻¹ • H • H • S) ≈⟨ cright cright cright (trans (special-assoc (□ ^ 6) (□ ^ 5 • □) auto) (sym (lemma-comm-SHHS^kHH (p-1)))) ⟩
+    (H • S • H • H • S⁻¹ • H) • (H • H • S • H • H • S⁻¹) • (H • S⁻¹ • H • H • S • H) • (S • H • H • S⁻¹ • H • H) ≈⟨ cright cright (special-assoc ((□ ^ 6) • (□ ^ 6)) ((□ ^ 3) • (□ ^ 5) • (□ ^ 4)) auto) ⟩
+    (H • S • H • H • S⁻¹ • H) • (H • H • S • H • H • S⁻¹) • (H • S⁻¹ • H) • (H • S • H • S • H) • H • S⁻¹ • H • H ≈⟨ cright cright cright cleft lemma-HSHSH ⟩
     (H • S • H • H • S⁻¹ • H) • (H • H • S • H • H • S⁻¹) • (H • S⁻¹ • H) • (S⁻¹) • H • S⁻¹ • H • H ≈⟨ {!!} ⟩
     ε ∎
     where
@@ -1327,16 +1394,23 @@ module Lemmas1b (n : ℕ) where
   lemma-comm-XZ = begin
     (H • S • H • H • S⁻¹ • H) • H • H • S • H • H • S⁻¹ ≈⟨ aux-XZ ⟩
     H ^ 3 • S⁻¹ • H • S⁻¹ • H • S⁻¹ ≈⟨ {!!} ⟩
-    (H • H • S • H • H • S⁻¹) • (H • S • H • H • S⁻¹ • H) ≈⟨ {!!} ⟩
+    (H • H • S • H • H • S⁻¹) • (H • S • H • H • S⁻¹ • H) ≈⟨ by-assoc auto ⟩
 
     Z • X ∎
     where
     open Sim-Rewriting n
 
+
+  conj-S^l-X^k : ∀ l k -> S ^ l • X ^ k ≈ X ^ k • (Z ^ l) ^ k • S ^ l
+  conj-S^l-X^k l k = begin
+    S ^ l • X ^ k ≈⟨ lemma-Induction (conj-S^l-X' l) k ⟩
+    (X • Z ^ l) ^ k • S ^ l ≈⟨ trans (cleft (lemma-^-• X (Z ^ l) k (word-comm 1 l lemma-comm-XZ))) assoc ⟩
+    X ^ k • (Z ^ l) ^ k • S ^ l ∎
+
   lemma-XS : X • S ≈ (S • Z ^ p-1) • X
   lemma-XS = begin
     X • S ≈⟨ bbc ε Z claim ⟩
-    S • X • Z ^ p-1 ≈⟨ {!!} ⟩
+    S • X • Z ^ p-1 ≈⟨ trans (cright (word-comm 1 p-1 lemma-comm-XZ)) (sym assoc) ⟩
     (S • Z ^ p-1) • X ∎
     where
     open Basis-Change _ ((₁₊ n) QRel,_===_) grouplike
@@ -1364,12 +1438,20 @@ module Lemmas1b (n : ℕ) where
 
     ε ∎
 
-
+{-
   lemma-order-SH : (S • H) ^ 3 ≈ ε
   lemma-order-SH = begin
-    (S • H) ^ 3 ≈⟨ by-assoc auto ⟩
-    S • H • S • H • S • H ≈⟨ (cright (cright cong {!!} refl)) ⟩
-    S^ x • H • S^ x⁻¹ • H • S^ x • H ≈⟨ {!!} ⟩
+    (S • H) ^ 3 ≈⟨ {!!} ⟩
+
+
+    (S • H) • (X^ 1/2 • S) • H • (X^ 1/2 • S) • (H • X^ 1/2) ≈⟨ {!!} ⟩
+    (S • H) • (X^ 1/2 • S) • H • (X^ 1/2 • S) • (H • X^ 1/2) ≈⟨ special-assoc (□ ^ 2 • □ ^ 2 • □ • □ ^ 2 • □ ^ 2) (□ • □ ^ 2 • □ • □ ^ 2 • □ • □ ^ 2) auto ⟩
+    S • (H • X^ 1/2) • S • (H • X^ 1/2) • S • (H • X^ 1/2) ≈⟨ (cright cong (conj-H-X^k (toℕ 1/2)) (cright cong (conj-H-X^k (toℕ 1/2)) (cright  (conj-H-X^k (toℕ 1/2))))) ⟩
+    S • (Z^ 1/2 • H) • S • (Z^ 1/2 • H) • S • (Z^ 1/2 • H) ≈⟨ special-assoc (□ • □ ^ 2 • □ • □ ^ 2 • □ • □ ^ 2) (□ ^ 2 • □ • □ ^ 2 • □ • □ ^ 2 • □) auto  ⟩
+    (S • Z^ 1/2) • H • (S • Z^ 1/2) • H • (S • Z^ 1/2) • H ≈⟨ refl ⟩
+    𝑠 • H • 𝑠^ ₁ • H • 𝑠 • H ≡⟨ Eq.cong (\ z -> 𝑠 • H • 𝑠^ z • H • 𝑠 • H) (Eq.sym inv-₁) ⟩
+    𝑠 • H • 𝑠^ x⁻¹ • H • 𝑠 • H ≡⟨ auto ⟩
+    𝑠^ x • H • 𝑠^ x⁻¹ • H • 𝑠^ x • H ≡⟨ auto ⟩
     M₁ ≈⟨ lemma-M1 ⟩
     ε ∎
     where
@@ -1384,7 +1466,7 @@ module Lemmas1b (n : ℕ) where
     --   S^ ₁ ≡⟨ Eq.cong S^ (Eq.sym aux₁⁻¹') ⟩
     --   S^ x⁻¹ ∎
 
-{-
+
 {-
 
 
@@ -2009,7 +2091,7 @@ module Clifford-Lemmas1 (n : ℕ) where
   lemma-order-HH : HH ^ 2 ≈ ε
   lemma-order-HH = begin
     (H ^ 2) ^ 2 ≈⟨ assoc ⟩
-    (H ^ 4) ≈⟨ axiom {!!} ⟩
+    (H ^ 4) ≈⟨ lemma-order-H ⟩
     ε ∎
 
 
@@ -2421,3 +2503,4 @@ module Iso where
 -}
 
 
+-}

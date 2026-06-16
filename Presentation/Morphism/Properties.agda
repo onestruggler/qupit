@@ -12,6 +12,8 @@ open import Function.Definitions using (Injective ; Surjective)
 open import Algebra.Bundles using (Monoid ; Group)
 open import Algebra.Bundles.Raw using (RawGroup)
 
+open import Data.Nat using (ℕ ; suc ; zero)
+
 open import Word.Base
 open import Word.Properties
 import Presentation.Base as PB
@@ -60,3 +62,5 @@ iso-nf
 
 iso-nf' : Bijection ws₁ ws₂ -> PP.NFProperty' Γ -> PP.NFProperty' Δ
 iso-nf' bi gp = iso-nf (PBi.Bijection⇒Inverse bi) gp
+
+
