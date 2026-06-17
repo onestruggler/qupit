@@ -1,0 +1,748 @@
+{-# OPTIONS --safe #-}
+{-# OPTIONS --termination-depth=20 #-}
+
+open import Level using (0ℓ)
+
+open import Relation.Binary using (Rel)
+open import Relation.Binary.Definitions using (DecidableEquality)
+open import Relation.Binary.Morphism.Definitions using (Homomorphic₂)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; inspect ; setoid ; module ≡-Reasoning ; _≢_) renaming ([_] to [_]')
+import Relation.Binary.Reasoning.Setoid as SR
+import Relation.Binary.PropositionalEquality as Eq
+open import Relation.Nullary.Decidable using (yes ; no)
+
+
+open import Function using (_∘_ ; id)
+open import Function.Definitions using (Injective)
+
+open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; map₁ ; ∃)
+open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
+open import Data.Nat hiding (_^_ ; _+_ ; _*_ ; _%_ ; _/_)
+open import Data.Nat.DivMod
+open import Agda.Builtin.Nat using ()
+import Data.Nat as Nat
+open import Data.Fin hiding (_+_ ; _-_)
+open import Data.Bool
+open import Data.List hiding ([_])
+
+
+open import Data.Maybe
+open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_])
+open import Data.Unit using (⊤ ; tt)
+open import Data.Empty using (⊥ ; ⊥-elim)
+
+open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
+open import Word.Properties
+import Presentation.Base as PB
+import Presentation.Properties as PP
+open PP using (NFProperty ; NFProperty')
+import Presentation.CosetNF as CA
+import Presentation.Reidemeister-Schreier as RS
+module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
+open import Presentation.Tactics
+
+open import Presentation.Construct.Base hiding (_*_)
+import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
+import Presentation.Construct.Properties.DirectProduct as DP
+import Presentation.Groups.Cyclic as Cyclic
+
+
+open import Data.Fin.Properties as FP using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
+import Data.Nat.Properties as NP
+open import Presentation.GroupLike
+open import Data.Nat.Primality
+open import Data.Nat.Coprimality hiding (sym)
+open import Data.Nat.GCD
+open Bézout
+open import Data.Empty
+open import Algebra.Properties.Group
+open import Zp.ModularArithmetic
+open import Zp.Fermats-little-theorem
+
+module N.Clifford.Clifford-Lemmas
+  (p-3 : ℕ)
+  (let p-2 = suc p-3)
+  (p-prime : Prime (suc (suc p-2)))
+  (let open PrimeModulus' p-2 p-prime)
+  (g*@(g , g≠0) : ℤ* ₚ)
+  (g-gen : ∀ ((x , _) : ℤ* ₚ) -> ∃ \ (k : ℤ ₚ-₁) -> x ≡ g ^′ toℕ k )
+  where
+
+
+pattern auto = Eq.refl
+pattern ₀ = zero
+pattern ₁ = suc ₀
+pattern ₂ = suc ₁
+pattern ₃ = suc ₂
+pattern ₄ = suc ₃
+
+pattern ₁₊ n = suc n
+pattern ₂₊ n = suc (suc n)
+pattern ₃₊ n = suc (₂₊ n)
+pattern ₄₊ n = suc (₃₊ n)
+
+open Primitive-Root-Modp' g* g-gen
+
+module Symplectic-Simplified where
+
+open import N.Symplectic p-2 p-prime as NSym
+open import N.Clifford.Clifford-Mod-Scalar p-3 p-prime g* g-gen
+-- open Symplectic hiding (_QRel,_===_)
+
+open Clifford-Relations
+
+open Lemmas-Clifford
+open Clifford-GroupLike
+
+module CL = Lemmas1
+module CLb = Lemmas1b
+
+lemma-comm-𝑠-w↑ : ∀ {n} w -> let open PB ((suc (suc n)) QRel,_===_) in
+  𝑠 • w ↑ ≈ w ↑ • 𝑠
+lemma-comm-𝑠-w↑ {n} w = begin
+  𝑠 • w ↑ ≡⟨ auto ⟩
+  (S • Z ^ toℕ 1/2) • w ↑ ≈⟨ assoc ⟩
+  S • (Z ^ toℕ 1/2 • w ↑) ≈⟨ cong refl (word-comm (toℕ 1/2) 1 (lemma-comm-Z-w↑ w)) ⟩
+  S • (w ↑ • Z ^ toℕ 1/2) ≈⟨ sym assoc ⟩
+  (S • w ↑) • Z ^ toℕ 1/2 ≈⟨ cong (lemma-comm-S-w↑ w) refl ⟩
+  (w ↑ • S) • Z ^ toℕ 1/2 ≈⟨ assoc ⟩
+  w ↑ • (S • Z ^ toℕ 1/2) ≡⟨ auto ⟩
+  w ↑ • 𝑠 ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+
+lemma-conj-𝑠-X : ∀ {n} -> let open PB ((suc n) QRel,_===_) in
+  𝑠 • X ≈ (X • Z) • 𝑠
+lemma-conj-𝑠-X {n} = begin
+  𝑠 • X ≡⟨ auto ⟩
+  (S • Z ^ toℕ 1/2) • X ≈⟨ assoc ⟩
+  S • (Z ^ toℕ 1/2 • X) ≈⟨ cong refl (sym (word-comm 1 (toℕ 1/2) (_≈_.axiom _QRel,_===_.comm-X-Z))) ⟩
+  S • (X • Z ^ toℕ 1/2) ≈⟨ sym assoc ⟩
+  (S • X) • Z ^ toℕ 1/2 ≈⟨ cong (CLb.conj-S-X n) refl ⟩
+  ((X • Z) • S) • Z ^ toℕ 1/2 ≈⟨ assoc ⟩
+  (X • Z) • (S • Z ^ toℕ 1/2) ≡⟨ auto ⟩
+  (X • Z) • 𝑠 ∎
+  where
+  open PB ((suc n) QRel,_===_)
+  open PP ((suc n) QRel,_===_)
+  open SR word-setoid
+
+lemma-S^p-1•S : ∀ {n} -> let open PB ((suc n) QRel,_===_) in
+  S ^ p-1 • S ≈ ε
+lemma-S^p-1•S {n} = begin
+  S ^ p-1 • S ≡⟨ auto ⟩
+  S ^ p-1 • S ^ 1 ≈⟨ sym (lemma-^-+ S p-1 1) ⟩
+  S ^ (p-1 Nat.+ 1) ≡⟨ Eq.cong (S ^_) (NP.+-comm p-1 1) ⟩
+  S ^ (1 Nat.+ p-1) ≡⟨ auto ⟩
+  S ^ p ≈⟨ axiom _QRel,_===_.order-S ⟩
+  ε ∎
+  where
+  open PB ((suc n) QRel,_===_)
+  open PP ((suc n) QRel,_===_)
+  open SR word-setoid
+
+lemma-S•S^p-1 : ∀ {n} -> let open PB ((suc n) QRel,_===_) in
+  S • S ^ p-1 ≈ ε
+lemma-S•S^p-1 {n} = begin
+  S • S ^ p-1 ≡⟨ auto ⟩
+  S ^ 1 • S ^ p-1 ≈⟨ sym (lemma-^-+ S 1 p-1) ⟩
+  S ^ (1 Nat.+ p-1) ≡⟨ auto ⟩
+  S ^ p ≈⟨ axiom _QRel,_===_.order-S ⟩
+  ε ∎
+  where
+  open PB ((suc n) QRel,_===_)
+  open PP ((suc n) QRel,_===_)
+  open SR word-setoid
+
+lemma-comm-S-Z : ∀ {n} -> let open PB ((suc n) QRel,_===_) in
+  Z • S ≈ S • Z
+lemma-comm-S-Z {n} = trans lhs (sym rhs)
+  where
+  open PB ((suc n) QRel,_===_)
+  open PP ((suc n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+  lhs : Z • S ≈ H • H • S • H • H
+  lhs = begin
+    Z • S ≡⟨ auto ⟩
+    (H • H • S • H • H • S ^ p-1) • S ≈⟨ special-assoc ((□ • □ • □ • □ • □ • □) • □) (□ • □ • □ • □ • □ • □ • □) auto ⟩
+    H • H • S • H • H • (S ^ p-1 • S) ≈⟨ cong refl (cong refl (cong refl (cong refl (cong refl lemma-S^p-1•S)))) ⟩
+    H • H • S • H • H • ε ≈⟨ cong refl (cong refl (cong refl (cong refl right-unit))) ⟩
+    H • H • S • H • H ∎
+
+  rhs : S • Z ≈ H • H • S • H • H
+  rhs = begin
+    S • Z ≡⟨ auto ⟩
+    S • (H • H • S • H • H • S ^ p-1) ≈⟨ special-assoc (□ • □ • □ • □ • □ • □ • □) ((□ • □ • □ • □ • □ • □) • □) auto ⟩
+    (S • H • H • S • H • H) • S ^ p-1 ≈⟨ cong (sym (axiom _QRel,_===_.comm-HHSHHS)) refl ⟩
+    (H • H • S • H • H • S) • S ^ p-1 ≈⟨ special-assoc ((□ • □ • □ • □ • □ • □) • □) (□ • □ • □ • □ • □ • □ • □) auto ⟩
+    H • H • S • H • H • (S • S ^ p-1) ≈⟨ cong refl (cong refl (cong refl (cong refl (cong refl lemma-S•S^p-1)))) ⟩
+    H • H • S • H • H • ε ≈⟨ cong refl (cong refl (cong refl (cong refl right-unit))) ⟩
+    H • H • S • H • H ∎
+
+lemma-comm-𝑠-Z : ∀ {n} -> let open PB ((suc n) QRel,_===_) in
+  𝑠 • Z ≈ Z • 𝑠
+lemma-comm-𝑠-Z {n} = begin
+  𝑠 • Z ≡⟨ auto ⟩
+  (S • Z ^ toℕ 1/2) • Z ≈⟨ assoc ⟩
+  S • (Z ^ toℕ 1/2 • Z) ≈⟨ cong refl (lemma-comm-wᵃwᵇ Z (toℕ 1/2) 1) ⟩
+  S • (Z ^ 1 • Z ^ toℕ 1/2) ≡⟨ auto ⟩
+  S • (Z • Z ^ toℕ 1/2) ≈⟨ sym assoc ⟩
+  (S • Z) • Z ^ toℕ 1/2 ≈⟨ cong (sym lemma-comm-S-Z) refl ⟩
+  (Z • S) • Z ^ toℕ 1/2 ≈⟨ assoc ⟩
+  Z • (S • Z ^ toℕ 1/2) ≡⟨ auto ⟩
+  Z • 𝑠 ∎
+  where
+  open PB ((suc n) QRel,_===_)
+  open PP ((suc n) QRel,_===_)
+  open SR word-setoid
+
+lemma-CZ^k-% : ∀ {n} k -> let open PB ((suc (suc n)) QRel,_===_) in
+  CZ ^ k ≈ CZ ^ (k Nat.% p)
+lemma-CZ^k-% {n} k = begin
+  CZ ^ k ≡⟨ Eq.cong (CZ ^_) (m≡m%n+[m/n]*n k p) ⟩
+  CZ ^ (k Nat.% p Nat.+ k Nat./ p Nat.* p) ≈⟨ lemma-^-+ CZ (k Nat.% p) (k Nat./ p Nat.* p) ⟩
+  CZ ^ (k Nat.% p) • CZ ^ (k Nat./ p Nat.* p) ≈⟨ cright refl' (Eq.cong (CZ ^_) (NP.*-comm (k Nat./ p) p)) ⟩
+  CZ ^ (k Nat.% p) • CZ ^ (p Nat.* (k Nat./ p)) ≈⟨ sym (cright lemma-^^ CZ p (k Nat./ p)) ⟩
+  CZ ^ (k Nat.% p) • (CZ ^ p) ^ (k Nat./ p) ≈⟨ cright lemma-^-cong (CZ ^ p) ε (k Nat./ p) (_≈_.axiom _QRel,_===_.order-CZ) ⟩
+  CZ ^ (k Nat.% p) • ε ^ (k Nat./ p) ≈⟨ cright lemma-ε^k=ε (k Nat./ p) ⟩
+  CZ ^ (k Nat.% p) • ε ≈⟨ right-unit ⟩
+  CZ ^ (k % p) ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+  open import Data.Nat.DivMod using (m≡m%n+[m/n]*n)
+
+lemma-Mg-CZ^k : ∀ {n} k -> let open PB ((suc (suc n)) QRel,_===_) in
+  M g* • CZ ^ k ≈ CZ ^ (k Nat.* toℕ g) • M g*
+lemma-Mg-CZ^k {n} k@0 = trans right-unit (sym left-unit)
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+lemma-Mg-CZ^k {n} k@1 = begin
+  M g* • CZ ^ k ≈⟨ refl ⟩
+  M g* • CZ ≈⟨ _≈_.axiom _QRel,_===_.semi-M↓CZ ⟩
+  CZ^ g • M g* ≈⟨ refl ⟩
+  CZ ^ toℕ g • M g* ≈⟨ cleft refl' (Eq.cong (CZ ^_) (Eq.sym (NP.*-identityˡ (toℕ g)))) ⟩
+  CZ ^ (k Nat.* toℕ g) • M g* ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+lemma-Mg-CZ^k {n} k@(suc (suc k')) = begin
+  M g* • CZ ^ k ≈⟨ refl ⟩
+  M g* • CZ • CZ ^ (suc k') ≈⟨ sym assoc ⟩
+  (M g* • CZ) • CZ ^ (suc k') ≈⟨ cleft lemma-Mg-CZ^k 1 ⟩
+  (CZ ^ (1 Nat.* toℕ g) • M g*) • CZ ^ (suc k') ≈⟨ assoc ⟩
+  CZ ^ (1 Nat.* toℕ g) • M g* • CZ ^ (suc k') ≈⟨ cright lemma-Mg-CZ^k (suc k') ⟩
+  CZ ^ (1 Nat.* toℕ g) • CZ ^ (suc k' Nat.* toℕ g) • M g* ≈⟨ sym assoc ⟩
+  (CZ ^ (1 Nat.* toℕ g) • CZ ^ (suc k' Nat.* toℕ g)) • M g* ≈⟨ cleft sym (lemma-^-+ CZ (1 Nat.* toℕ g) (suc k' Nat.* toℕ g)) ⟩
+  (CZ ^ ((1 Nat.* toℕ g) Nat.+ (suc k' Nat.* toℕ g))) • M g* ≈⟨ cleft refl' (Eq.cong (CZ ^_) (Eq.sym (NP.*-distribʳ-+ (toℕ g) 1 (suc k')))) ⟩
+  CZ ^ ((1 Nat.+ suc k') Nat.* toℕ g) • M g* ≈⟨ refl ⟩
+  CZ ^ (k Nat.* toℕ g) • M g* ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+
+lemma-Mg^k-CZ : ∀ {n} k -> let open PB ((suc (suc n)) QRel,_===_) in
+  M g* ^ k • CZ ≈ CZ^ (g ^′ k) • M g* ^ k
+lemma-Mg^k-CZ {n} k@0 = begin
+  M g* ^ k • CZ ≈⟨ left-unit ⟩
+  CZ ≈⟨ sym right-unit ⟩
+  CZ • ε ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+lemma-Mg^k-CZ {n} k@1 = begin
+  M g* ^ k • CZ ≈⟨ refl ⟩
+  M g* • CZ ≈⟨ _≈_.axiom _QRel,_===_.semi-M↓CZ ⟩
+  CZ^ g • M g* ≈⟨ cleft refl' (Eq.cong CZ^ (Eq.sym (lemma-x^′1=x g))) ⟩
+  CZ^ (g ^′ k) • M g* ^ k ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+lemma-Mg^k-CZ {n} k@(suc (suc k')) = begin
+  M g* ^ k • CZ ≈⟨ refl ⟩
+  (M g* • M g* ^ (suc k')) • CZ ≈⟨ assoc ⟩
+  M g* • (M g* ^ (suc k') • CZ) ≈⟨ cright lemma-Mg^k-CZ (suc k') ⟩
+  M g* • (CZ^ (g ^′ (suc k')) • M g* ^ (suc k')) ≈⟨ sym assoc ⟩
+  (M g* • CZ^ (g ^′ (suc k'))) • M g* ^ (suc k') ≈⟨ cleft lemma-Mg-CZ^k (toℕ (g ^′ (suc k'))) ⟩
+  (CZ ^ (toℕ (g ^′ (suc k')) Nat.* toℕ g) • M g*) • M g* ^ (suc k') ≈⟨ assoc ⟩
+  CZ ^ (toℕ (g ^′ (suc k')) Nat.* toℕ g) • (M g* • M g* ^ (suc k')) ≈⟨ cleft lemma-CZ^k-% (toℕ (g ^′ (suc k')) Nat.* toℕ g) ⟩
+  CZ ^ ((toℕ (g ^′ (suc k')) Nat.* toℕ g) % p) • (M g* • M g* ^ (suc k')) ≡⟨ Eq.cong (\ x -> CZ ^ x • (M g* • M g* ^ (suc k'))) (lemma-toℕ-% (g ^′ (suc k')) g) ⟩
+  CZ ^ toℕ (g ^′ (suc k') * g) • (M g* • M g* ^ (suc k')) ≡⟨ Eq.cong (\ x -> CZ ^ toℕ x • (M g* • M g* ^ (suc k'))) (*-comm (g ^′ (suc k')) g) ⟩
+  CZ ^ toℕ (g * g ^′ (suc k')) • (M g* • M g* ^ (suc k')) ≡⟨ auto ⟩
+  CZ^ (g ^′ k) • M g* ^ k ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+
+lemma-M₋₁-CZ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  M₋₁ • CZ ≈ CZ^ ((-'₁) .proj₁) • M₋₁
+lemma-M₋₁-CZ {n} = begin
+  M₋₁ • CZ ≈⟨ refl' (Eq.cong (_• CZ) (CL.aux-M≡M (suc n) -'₁ (g^ k₀) eqk)) ⟩
+  M (g^ k₀) • CZ ≈⟨ cleft sym (_≈_.axiom (_QRel,_===_.M-power k₀)) ⟩
+  M g* ^ (toℕ k₀) • CZ ≈⟨ lemma-Mg^k-CZ (toℕ k₀) ⟩
+  CZ^ (g ^′ toℕ k₀) • M g* ^ (toℕ k₀) ≈⟨ cright _≈_.axiom (_QRel,_===_.M-power k₀) ⟩
+  CZ^ (g ^′ toℕ k₀) • M (g^ k₀) ≈⟨ refl' (Eq.cong (CZ^ (g ^′ toℕ k₀) •_) (Eq.sym (CL.aux-M≡M (suc n) -'₁ (g^ k₀) eqk))) ⟩
+  CZ^ (g ^′ toℕ k₀) • M₋₁ ≈⟨ cleft refl' (Eq.cong CZ^ (Eq.sym eqk)) ⟩
+  CZ^ ((-'₁) .proj₁) • M₋₁ ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+--  open Primitive-Root-Modp' g* g-gen
+  k₀ = inject₁ (log (-'₁))
+  eqk : (-'₁) .proj₁ ≡ g ^′ toℕ k₀
+  eqk = Eq.sym (lemma-log-inject (-'₁))
+
+lemma-M₋₁CZM₋₁ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  M₋₁ • CZ • M₋₁ ≈ CZ^ ((-'₁) .proj₁)
+lemma-M₋₁CZM₋₁ {n} = begin
+  M₋₁ • CZ • M₋₁ ≈⟨ sym assoc ⟩
+  (M₋₁ • CZ) • M₋₁ ≈⟨ cong lemma-M₋₁-CZ refl ⟩
+  (CZ^ ((-'₁) .proj₁) • M₋₁) • M₋₁ ≈⟨ assoc ⟩
+  CZ^ ((-'₁) .proj₁) • (M₋₁ • M₋₁) ≈⟨ cong refl (CL.lemma-M₋₁^2 (suc n)) ⟩
+  CZ^ ((-'₁) .proj₁) • ε ≈⟨ right-unit ⟩
+  CZ^ ((-'₁) .proj₁) ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+
+lemma-M₋₁CZ⁻¹M₋₁ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  M₋₁ • CZ^ ((-'₁) .proj₁) • M₋₁ ≈ CZ
+lemma-M₋₁CZ⁻¹M₋₁ {n} = begin
+  M₋₁ • CZ^ ((-'₁) .proj₁) • M₋₁ ≈⟨ cong refl (sym lemma-M₋₁-CZ) ⟩
+  M₋₁ • (M₋₁ • CZ) ≈⟨ sym assoc ⟩
+  (M₋₁ • M₋₁) • CZ ≈⟨ cong (CL.lemma-M₋₁^2 (suc n)) refl ⟩
+  ε • CZ ≈⟨ left-unit ⟩
+  CZ ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+
+lemma-HHCZHH : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  H • H • CZ • H • H ≈ CZ^ ((-'₁) .proj₁)
+lemma-HHCZHH {n} = begin
+  H • H • CZ • H • H ≈⟨ special-assoc (□ • □ • □ • □ • □) ((□ • □) • □ • (□ • □)) auto ⟩
+  (H • H) • CZ • (H • H) ≈⟨ cong (_≈_.axiom _QRel,_===_.order-H) (cong refl (_≈_.axiom _QRel,_===_.order-H)) ⟩
+  M₋₁ • CZ • M₋₁ ≈⟨ lemma-M₋₁CZM₋₁ ⟩
+  CZ^ ((-'₁) .proj₁) ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+lemma-HHCZ⁻¹HH : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  H • H • CZ^ ((-'₁) .proj₁) • H • H ≈ CZ
+lemma-HHCZ⁻¹HH {n} = begin
+  H • H • CZ^ ((-'₁) .proj₁) • H • H ≈⟨ special-assoc (□ • □ • □ • □ • □) ((□ • □) • □ • (□ • □)) auto ⟩
+  (H • H) • CZ^ ((-'₁) .proj₁) • (H • H) ≈⟨ cong (_≈_.axiom _QRel,_===_.order-H) (cong refl (_≈_.axiom _QRel,_===_.order-H)) ⟩
+  M₋₁ • CZ^ ((-'₁) .proj₁) • M₋₁ ≈⟨ lemma-M₋₁CZ⁻¹M₋₁ ⟩
+  CZ ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+lemma-S'CZS'⁻¹ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  H • H • S • H • H • CZ • H • H • S ^ p-1 • H • H ≈ CZ
+lemma-S'CZS'⁻¹ {n} = begin
+  H • H • S • H • H • CZ • H • H • S ^ p-1 • H • H
+    ≈⟨ special-assoc (□ • □ • □ • □ • □ • □ • □ • □ • □ • □ • □) (□ • □ • □ • (□ • □ • □ • □ • □) • □ • □ • □) auto ⟩
+  H • H • S • (H • H • CZ • H • H) • S ^ p-1 • H • H
+    ≈⟨ cong refl (cong refl (cong refl (cong lemma-HHCZHH refl))) ⟩
+  H • H • S • CZ^ ((-'₁) .proj₁) • S ^ p-1 • H • H
+    ≈⟨ cong refl (cong refl (trans (sym assoc) (trans (cong (word-comm 1 (toℕ ((-'₁) .proj₁)) (sym (_≈_.axiom _QRel,_===_.comm-CZ-S↓))) refl) assoc))) ⟩
+  H • H • CZ^ ((-'₁) .proj₁) • S • S ^ p-1 • H • H
+    ≈⟨ cong refl (cong refl (cong refl (trans (sym assoc) (cong lemma-S•S^p-1 refl)))) ⟩
+  H • H • CZ^ ((-'₁) .proj₁) • ε • H • H
+    ≈⟨ cong refl (cong refl (cong refl left-unit)) ⟩
+  H • H • CZ^ ((-'₁) .proj₁) • H • H
+    ≈⟨ lemma-HHCZ⁻¹HH ⟩
+  CZ ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+lemma-S'⁻¹S' : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  H • H • S ^ p-1 • H • H • H • H • S • H • H ≈ ε
+lemma-S'⁻¹S' {n} = begin
+  H • H • S ^ p-1 • H • H • H • H • S • H • H
+    ≈⟨ special-assoc (□ • □ • □ • □ • □ • □ • □ • □ • □ • □) (□ • □ • □ • (□ • □ • □ • □) • □ • □ • □) auto ⟩
+  H • H • S ^ p-1 • (H • H • H • H) • S • H • H
+    ≈⟨ cong refl (cong refl (cong refl (cong (CL.lemma-order-H (suc n)) refl))) ⟩
+  H • H • S ^ p-1 • ε • S • H • H
+    ≈⟨ cong refl (cong refl (cong refl left-unit)) ⟩
+  H • H • S ^ p-1 • S • H • H
+    ≈⟨ cong refl (cong refl (trans (sym assoc) (cong lemma-S^p-1•S refl))) ⟩
+  H • H • ε • H • H
+    ≈⟨ cong refl (cong refl left-unit) ⟩
+  H • H • H • H
+    ≈⟨ CL.lemma-order-H (suc n) ⟩
+  ε ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+lemma-comm-S'-CZ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  H • H • S • H • H • CZ ≈ CZ • H • H • S • H • H
+lemma-comm-S'-CZ {n} = begin
+  H • H • S • H • H • CZ
+    ≈⟨ sym right-unit ⟩
+  (H • H • S • H • H • CZ) • ε
+    ≈⟨ cong refl (sym lemma-S'⁻¹S') ⟩
+  (H • H • S • H • H • CZ) • (H • H • S ^ p-1 • H • H • H • H • S • H • H)
+    ≈⟨ special-assoc ((□ • □ • □ • □ • □ • □) • (□ • □ • □ • □ • □ • □ • □ • □ • □ • □)) ((□ • □ • □ • □ • □ • □ • □ • □ • □ • □ • □) • □ • □ • □ • □ • □) auto ⟩
+  (H • H • S • H • H • CZ • H • H • S ^ p-1 • H • H) • H • H • S • H • H
+    ≈⟨ cong lemma-S'CZS'⁻¹ refl ⟩
+  CZ • H • H • S • H • H ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+lemma-Mg↑-CZ^k : ∀ {n} k -> let open PB ((suc (suc n)) QRel,_===_) in
+  M g* ↑ • CZ ^ k ≈ CZ ^ (k Nat.* toℕ g) • M g* ↑
+lemma-Mg↑-CZ^k {n} k@0 = trans right-unit (sym left-unit)
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+lemma-Mg↑-CZ^k {n} k@1 = begin
+  M g* ↑ • CZ ^ k ≈⟨ refl ⟩
+  M g* ↑ • CZ ≈⟨ _≈_.axiom _QRel,_===_.semi-M↑CZ ⟩
+  CZ^ g • M g* ↑ ≈⟨ refl ⟩
+  CZ ^ toℕ g • M g* ↑ ≈⟨ cleft refl' (Eq.cong (CZ ^_) (Eq.sym (NP.*-identityˡ (toℕ g)))) ⟩
+  CZ ^ (k Nat.* toℕ g) • M g* ↑ ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+lemma-Mg↑-CZ^k {n} k@(suc (suc k')) = begin
+  M g* ↑ • CZ ^ k ≈⟨ refl ⟩
+  M g* ↑ • CZ • CZ ^ (suc k') ≈⟨ sym assoc ⟩
+  (M g* ↑ • CZ) • CZ ^ (suc k') ≈⟨ cleft lemma-Mg↑-CZ^k 1 ⟩
+  (CZ ^ (1 Nat.* toℕ g) • M g* ↑) • CZ ^ (suc k') ≈⟨ assoc ⟩
+  CZ ^ (1 Nat.* toℕ g) • M g* ↑ • CZ ^ (suc k') ≈⟨ cright lemma-Mg↑-CZ^k (suc k') ⟩
+  CZ ^ (1 Nat.* toℕ g) • CZ ^ (suc k' Nat.* toℕ g) • M g* ↑ ≈⟨ sym assoc ⟩
+  (CZ ^ (1 Nat.* toℕ g) • CZ ^ (suc k' Nat.* toℕ g)) • M g* ↑ ≈⟨ cleft sym (lemma-^-+ CZ (1 Nat.* toℕ g) (suc k' Nat.* toℕ g)) ⟩
+  (CZ ^ ((1 Nat.* toℕ g) Nat.+ (suc k' Nat.* toℕ g))) • M g* ↑ ≈⟨ cleft refl' (Eq.cong (CZ ^_) (Eq.sym (NP.*-distribʳ-+ (toℕ g) 1 (suc k')))) ⟩
+  CZ ^ ((1 Nat.+ suc k') Nat.* toℕ g) • M g* ↑ ≈⟨ refl ⟩
+  CZ ^ (k Nat.* toℕ g) • M g* ↑ ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+
+lemma-Mg↑^k-CZ : ∀ {n} k -> let open PB ((suc (suc n)) QRel,_===_) in
+  (M g* ↑) ^ k • CZ ≈ CZ^ (g ^′ k) • (M g* ↑) ^ k
+lemma-Mg↑^k-CZ {n} k@0 = begin
+  (M g* ↑) ^ k • CZ ≈⟨ left-unit ⟩
+  CZ ≈⟨ sym right-unit ⟩
+  CZ • ε ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+lemma-Mg↑^k-CZ {n} k@1 = begin
+  (M g* ↑) ^ k • CZ ≈⟨ refl ⟩
+  M g* ↑ • CZ ≈⟨ _≈_.axiom _QRel,_===_.semi-M↑CZ ⟩
+  CZ^ g • M g* ↑ ≈⟨ cleft refl' (Eq.cong CZ^ (Eq.sym (lemma-x^′1=x g))) ⟩
+  CZ^ (g ^′ k) • (M g* ↑) ^ k ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+lemma-Mg↑^k-CZ {n} k@(suc (suc k')) = begin
+  (M g* ↑) ^ k • CZ ≈⟨ refl ⟩
+  (M g* ↑ • (M g* ↑) ^ (suc k')) • CZ ≈⟨ assoc ⟩
+  M g* ↑ • ((M g* ↑) ^ (suc k') • CZ) ≈⟨ cright lemma-Mg↑^k-CZ (suc k') ⟩
+  M g* ↑ • (CZ^ (g ^′ (suc k')) • (M g* ↑) ^ (suc k')) ≈⟨ sym assoc ⟩
+  (M g* ↑ • CZ^ (g ^′ (suc k'))) • (M g* ↑) ^ (suc k') ≈⟨ cleft lemma-Mg↑-CZ^k (toℕ (g ^′ (suc k'))) ⟩
+  (CZ ^ (toℕ (g ^′ (suc k')) Nat.* toℕ g) • M g* ↑) • (M g* ↑) ^ (suc k') ≈⟨ assoc ⟩
+  CZ ^ (toℕ (g ^′ (suc k')) Nat.* toℕ g) • (M g* ↑ • (M g* ↑) ^ (suc k')) ≈⟨ cleft lemma-CZ^k-% (toℕ (g ^′ (suc k')) Nat.* toℕ g) ⟩
+  CZ ^ ((toℕ (g ^′ (suc k')) Nat.* toℕ g) % p) • (M g* ↑ • (M g* ↑) ^ (suc k')) ≡⟨ Eq.cong (\ x -> CZ ^ x • (M g* ↑ • (M g* ↑) ^ (suc k'))) (lemma-toℕ-% (g ^′ (suc k')) g) ⟩
+  CZ ^ toℕ (g ^′ (suc k') * g) • (M g* ↑ • (M g* ↑) ^ (suc k')) ≡⟨ Eq.cong (\ x -> CZ ^ toℕ x • (M g* ↑ • (M g* ↑) ^ (suc k'))) (*-comm (g ^′ (suc k')) g) ⟩
+  CZ ^ toℕ (g * g ^′ (suc k')) • (M g* ↑ • (M g* ↑) ^ (suc k')) ≡⟨ auto ⟩
+  CZ^ (g ^′ k) • (M g* ↑) ^ k ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+
+lemma-M₋₁↑-CZ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  M₋₁ ↑ • CZ ≈ CZ^ ((-'₁) .proj₁) • M₋₁ ↑
+lemma-M₋₁↑-CZ {n} = begin
+  M₋₁ ↑ • CZ ≈⟨ refl' (Eq.cong (\ x -> x ↑ • CZ) (CL.aux-M≡M n -'₁ (g^ k₀) eqk)) ⟩
+  M (g^ k₀) ↑ • CZ ≈⟨ cleft sym bridge ⟩
+  (M g* ^ (toℕ k₀)) ↑ • CZ ≈⟨ cleft refl' (lemma-↑^ (toℕ k₀) (M g*)) ⟩
+  (M g* ↑) ^ (toℕ k₀) • CZ ≈⟨ lemma-Mg↑^k-CZ (toℕ k₀) ⟩
+  CZ^ (g ^′ toℕ k₀) • (M g* ↑) ^ (toℕ k₀) ≈⟨ cright refl' (Eq.sym (lemma-↑^ (toℕ k₀) (M g*))) ⟩
+  CZ^ (g ^′ toℕ k₀) • (M g* ^ (toℕ k₀)) ↑ ≈⟨ cright bridge ⟩
+  CZ^ (g ^′ toℕ k₀) • M (g^ k₀) ↑ ≈⟨ refl' (Eq.cong (\ x -> CZ^ (g ^′ toℕ k₀) • x ↑) (Eq.sym (CL.aux-M≡M n -'₁ (g^ k₀) eqk))) ⟩
+  CZ^ (g ^′ toℕ k₀) • M₋₁ ↑ ≈⟨ cleft refl' (Eq.cong CZ^ (Eq.sym eqk)) ⟩
+  CZ^ ((-'₁) .proj₁) • M₋₁ ↑ ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+--  open Primitive-Root-Modp' g* g-gen
+  k₀ = inject₁ (log (-'₁))
+  eqk : (-'₁) .proj₁ ≡ g ^′ toℕ k₀
+  eqk = Eq.sym (lemma-log-inject (-'₁))
+  bridge : (M g* ^ toℕ k₀) ↑ ≈ M (g^ k₀) ↑
+  bridge = lemma-cong↑ (M g* ^ toℕ k₀) (M (g^ k₀)) (PB.axiom (_QRel,_===_.M-power {n = n} k₀))
+
+lemma-M₋₁↑CZM₋₁↑ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  M₋₁ ↑ • CZ • M₋₁ ↑ ≈ CZ^ ((-'₁) .proj₁)
+lemma-M₋₁↑CZM₋₁↑ {n} = begin
+  M₋₁ ↑ • CZ • M₋₁ ↑ ≈⟨ sym assoc ⟩
+  (M₋₁ ↑ • CZ) • M₋₁ ↑ ≈⟨ cong lemma-M₋₁↑-CZ refl ⟩
+  (CZ^ ((-'₁) .proj₁) • M₋₁ ↑) • M₋₁ ↑ ≈⟨ assoc ⟩
+  CZ^ ((-'₁) .proj₁) • (M₋₁ ↑ • M₋₁ ↑) ≈⟨ cong refl (lemma-cong↑ (M₋₁ • M₋₁) ε (CL.lemma-M₋₁^2 n)) ⟩
+  CZ^ ((-'₁) .proj₁) • ε ≈⟨ right-unit ⟩
+  CZ^ ((-'₁) .proj₁) ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+
+lemma-M₋₁↑CZ⁻¹M₋₁↑ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  M₋₁ ↑ • CZ^ ((-'₁) .proj₁) • M₋₁ ↑ ≈ CZ
+lemma-M₋₁↑CZ⁻¹M₋₁↑ {n} = begin
+  M₋₁ ↑ • CZ^ ((-'₁) .proj₁) • M₋₁ ↑ ≈⟨ cong refl (sym lemma-M₋₁↑-CZ) ⟩
+  M₋₁ ↑ • (M₋₁ ↑ • CZ) ≈⟨ sym assoc ⟩
+  (M₋₁ ↑ • M₋₁ ↑) • CZ ≈⟨ cong (lemma-cong↑ (M₋₁ • M₋₁) ε (CL.lemma-M₋₁^2 n)) refl ⟩
+  ε • CZ ≈⟨ left-unit ⟩
+  CZ ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+
+
+lemma-HHCZHH↑ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  H ↑ • H ↑ • CZ • H ↑ • H ↑ ≈ CZ^ ((-'₁) .proj₁)
+lemma-HHCZHH↑ {n} = begin
+  H ↑ • H ↑ • CZ • H ↑ • H ↑ ≈⟨ special-assoc (□ • □ • □ • □ • □) ((□ • □) • □ • (□ • □)) auto ⟩
+  (H ↑ • H ↑) • CZ • (H ↑ • H ↑) ≈⟨ cong bridge (cong refl bridge) ⟩
+  M₋₁ ↑ • CZ • M₋₁ ↑ ≈⟨ lemma-M₋₁↑CZM₋₁↑ ⟩
+  CZ^ ((-'₁) .proj₁) ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+  bridge : H ↑ • H ↑ ≈ M₋₁ ↑
+  bridge = lemma-cong↑ (H • H) M₋₁ (PB.axiom (_QRel,_===_.order-H {n = n}))
+
+lemma-HHCZ⁻¹HH↑ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  H ↑ • H ↑ • CZ^ ((-'₁) .proj₁) • H ↑ • H ↑ ≈ CZ
+lemma-HHCZ⁻¹HH↑ {n} = begin
+  H ↑ • H ↑ • CZ^ ((-'₁) .proj₁) • H ↑ • H ↑ ≈⟨ special-assoc (□ • □ • □ • □ • □) ((□ • □) • □ • (□ • □)) auto ⟩
+  (H ↑ • H ↑) • CZ^ ((-'₁) .proj₁) • (H ↑ • H ↑) ≈⟨ cong bridge (cong refl bridge) ⟩
+  M₋₁ ↑ • CZ^ ((-'₁) .proj₁) • M₋₁ ↑ ≈⟨ lemma-M₋₁↑CZ⁻¹M₋₁↑ ⟩
+  CZ ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+  bridge : H ↑ • H ↑ ≈ M₋₁ ↑
+  bridge = lemma-cong↑ (H • H) M₋₁ (PB.axiom (_QRel,_===_.order-H {n = n}))
+
+lemma-S^p-1•S↑ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  (S ↑) ^ p-1 • S ↑ ≈ ε
+lemma-S^p-1•S↑ {n} = begin
+  (S ↑) ^ p-1 • S ↑ ≈⟨ cleft refl' (Eq.sym (lemma-↑^ p-1 S)) ⟩
+  (S ^ p-1) ↑ • S ↑ ≈⟨ bridge ⟩
+  ε ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+  bridge : (S ^ p-1) ↑ • S ↑ ≈ ε
+  bridge = lemma-cong↑ (S ^ p-1 • S) ε (lemma-S^p-1•S {n = n})
+lemma-S•S^p-1↑ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  S ↑ • (S ↑) ^ p-1 ≈ ε
+lemma-S•S^p-1↑ {n} = begin
+  S ↑ • (S ↑) ^ p-1 ≈⟨ cright refl' (Eq.sym (lemma-↑^ p-1 S)) ⟩
+  S ↑ • (S ^ p-1) ↑ ≈⟨ lemma-cong↑ (S • S ^ p-1) ε (lemma-S•S^p-1 {n = n}) ⟩
+  ε ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+
+lemma-S'CZS'⁻¹↑ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • CZ • H ↑ • H ↑ • (S ↑) ^ p-1 • H ↑ • H ↑ ≈ CZ
+lemma-S'CZS'⁻¹↑ {n} = begin
+  H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • CZ • H ↑ • H ↑ • (S ↑) ^ p-1 • H ↑ • H ↑
+    ≈⟨ special-assoc (□ • □ • □ • □ • □ • □ • □ • □ • □ • □ • □) (□ • □ • □ • (□ • □ • □ • □ • □) • □ • □ • □) auto ⟩
+  H ↑ • H ↑ • S ↑ • (H ↑ • H ↑ • CZ • H ↑ • H ↑) • (S ↑) ^ p-1 • H ↑ • H ↑
+    ≈⟨ cong refl (cong refl (cong refl (cong lemma-HHCZHH↑ refl))) ⟩
+  H ↑ • H ↑ • S ↑ • CZ^ ((-'₁) .proj₁) • (S ↑) ^ p-1 • H ↑ • H ↑
+    ≈⟨ cong refl (cong refl (trans (sym assoc) (trans (cong (word-comm 1 (toℕ ((-'₁) .proj₁)) (sym (_≈_.axiom _QRel,_===_.comm-CZ-S↑))) refl) assoc))) ⟩
+  H ↑ • H ↑ • CZ^ ((-'₁) .proj₁) • S ↑ • (S ↑) ^ p-1 • H ↑ • H ↑
+    ≈⟨ cong refl (cong refl (cong refl (trans (sym assoc) (cong lemma-S•S^p-1↑ refl)))) ⟩
+  H ↑ • H ↑ • CZ^ ((-'₁) .proj₁) • ε • H ↑ • H ↑
+    ≈⟨ cong refl (cong refl (cong refl left-unit)) ⟩
+  H ↑ • H ↑ • CZ^ ((-'₁) .proj₁) • H ↑ • H ↑
+    ≈⟨ lemma-HHCZ⁻¹HH↑ ⟩
+  CZ ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+lemma-S'⁻¹S'↑ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  H ↑ • H ↑ • (S ↑) ^ p-1 • H ↑ • H ↑ • H ↑ • H ↑ • S ↑ • H ↑ • H ↑ ≈ ε
+lemma-S'⁻¹S'↑ {n} = begin
+  H ↑ • H ↑ • (S ↑) ^ p-1 • H ↑ • H ↑ • H ↑ • H ↑ • S ↑ • H ↑ • H ↑
+    ≈⟨ special-assoc (□ • □ • □ • □ • □ • □ • □ • □ • □ • □) (□ • □ • □ • (□ • □ • □ • □) • □ • □ • □) auto ⟩
+  H ↑ • H ↑ • (S ↑) ^ p-1 • (H ↑ • H ↑ • H ↑ • H ↑) • S ↑ • H ↑ • H ↑
+    ≈⟨ cong refl (cong refl (cong refl (cong order-H↑ refl))) ⟩
+  H ↑ • H ↑ • (S ↑) ^ p-1 • ε • S ↑ • H ↑ • H ↑
+    ≈⟨ cong refl (cong refl (cong refl left-unit)) ⟩
+  H ↑ • H ↑ • (S ↑) ^ p-1 • S ↑ • H ↑ • H ↑
+    ≈⟨ cong refl (cong refl (trans (sym assoc) (cong lemma-S^p-1•S↑ refl))) ⟩
+  H ↑ • H ↑ • ε • H ↑ • H ↑
+    ≈⟨ cong refl (cong refl left-unit) ⟩
+  H ↑ • H ↑ • H ↑ • H ↑
+    ≈⟨ order-H↑ ⟩
+  ε ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+  order-H↑ : H ↑ • H ↑ • H ↑ • H ↑ ≈ ε
+  order-H↑ = begin
+    H ↑ • H ↑ • H ↑ • H ↑ ≡⟨ Eq.cong _↑ auto ⟩
+    (H • H • H • H) ↑ ≈⟨ lemma-cong↑ (H ^ 4) ε (CL.lemma-order-H n) ⟩
+    ε ∎
+
+lemma-comm-S'-CZ↑ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • CZ ≈ CZ • H ↑ • H ↑ • S ↑ • H ↑ • H ↑
+lemma-comm-S'-CZ↑ {n} = begin
+  H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • CZ
+    ≈⟨ sym right-unit ⟩
+  (H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • CZ) • ε
+    ≈⟨ cong refl (sym lemma-S'⁻¹S'↑) ⟩
+  (H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • CZ) • (H ↑ • H ↑ • (S ↑) ^ p-1 • H ↑ • H ↑ • H ↑ • H ↑ • S ↑ • H ↑ • H ↑)
+    ≈⟨ special-assoc ((□ • □ • □ • □ • □ • □) • (□ • □ • □ • □ • □ • □ • □ • □ • □ • □)) ((□ • □ • □ • □ • □ • □ • □ • □ • □ • □ • □) • □ • □ • □ • □ • □) auto ⟩
+  (H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • CZ • H ↑ • H ↑ • (S ↑) ^ p-1 • H ↑ • H ↑) • H ↑ • H ↑ • S ↑ • H ↑ • H ↑
+    ≈⟨ cong lemma-S'CZS'⁻¹↑ refl ⟩
+  CZ • H ↑ • H ↑ • S ↑ • H ↑ • H ↑ ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+lemma-Z↑ : ∀ {n} -> Z {n} ↑ ≡ H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • (S ↑) ^ p-1
+lemma-Z↑ {n} = begin
+  Z ↑ ≡⟨ auto ⟩
+  (H • H • S • H • H • S ^ p-1) ↑ ≡⟨ auto ⟩
+  H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • (S ^ p-1) ↑ ≡⟨ Eq.cong (\ x -> H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • x) (lemma-↑^ p-1 S) ⟩
+  H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • (S ↑) ^ p-1 ∎
+  where open ≡-Reasoning
+
+lemma-comm-Z↑-CZ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  Z ↑ • CZ ≈ CZ • Z ↑
+lemma-comm-Z↑-CZ {n} = begin
+  Z ↑ • CZ ≈⟨ refl' (Eq.cong (_• CZ) lemma-Z↑) ⟩
+  (H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • (S ↑) ^ p-1) • CZ
+    ≈⟨ special-assoc ((□ • □ • □ • □ • □ • □) • □) (□ • □ • □ • □ • □ • (□ • □)) auto ⟩
+  H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • ((S ↑) ^ p-1 • CZ)
+    ≈⟨ cong refl (cong refl (cong refl (cong refl (cong refl (word-comm p-1 1 (sym (_≈_.axiom _QRel,_===_.comm-CZ-S↑))))))) ⟩
+  H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • (CZ • (S ↑) ^ p-1)
+    ≈⟨ special-assoc (□ • □ • □ • □ • □ • (□ • □)) ((□ • □ • □ • □ • □ • □) • □) auto ⟩
+  (H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • CZ) • (S ↑) ^ p-1
+    ≈⟨ cong lemma-comm-S'-CZ↑ refl ⟩
+  (CZ • H ↑ • H ↑ • S ↑ • H ↑ • H ↑) • (S ↑) ^ p-1
+    ≈⟨ by-assoc auto ⟩
+  CZ • (H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • (S ↑) ^ p-1)
+    ≈⟨ refl' (Eq.cong (CZ •_) (Eq.sym lemma-Z↑)) ⟩
+  CZ • Z ↑ ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+lemma-𝑠↑ : ∀ {n} -> 𝑠 {n} ↑ ≡ S ↑ • (Z ↑) ^ toℕ 1/2
+lemma-𝑠↑ {n} = begin
+  𝑠 ↑ ≡⟨ auto ⟩
+  (S • Z ^ toℕ 1/2) ↑ ≡⟨ auto ⟩
+  S ↑ • (Z ^ toℕ 1/2) ↑ ≡⟨ Eq.cong (S ↑ •_) (lemma-↑^ (toℕ 1/2) Z) ⟩
+  S ↑ • (Z ↑) ^ toℕ 1/2 ∎
+  where open ≡-Reasoning
+
+lemma-comm-𝑠↑-CZ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  𝑠 ↑ • CZ ≈ CZ • 𝑠 ↑
+lemma-comm-𝑠↑-CZ {n} = begin
+  𝑠 ↑ • CZ ≈⟨ refl' (Eq.cong (_• CZ) lemma-𝑠↑) ⟩
+  (S ↑ • (Z ↑) ^ toℕ 1/2) • CZ ≈⟨ assoc ⟩
+  S ↑ • ((Z ↑) ^ toℕ 1/2 • CZ) ≈⟨ cong refl (word-comm (toℕ 1/2) 1 lemma-comm-Z↑-CZ) ⟩
+  S ↑ • (CZ ^ 1 • (Z ↑) ^ toℕ 1/2) ≡⟨ auto ⟩
+  S ↑ • (CZ • (Z ↑) ^ toℕ 1/2) ≈⟨ sym assoc ⟩
+  (S ↑ • CZ) • (Z ↑) ^ toℕ 1/2 ≈⟨ cong (sym (_≈_.axiom _QRel,_===_.comm-CZ-S↑)) refl ⟩
+  (CZ • S ↑) • (Z ↑) ^ toℕ 1/2 ≈⟨ assoc ⟩
+  CZ • (S ↑ • (Z ↑) ^ toℕ 1/2) ≈⟨ refl' (Eq.cong (CZ •_) (Eq.sym lemma-𝑠↑)) ⟩
+  CZ • 𝑠 ↑ ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+
+lemma-comm-Z-CZ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  Z • CZ ≈ CZ • Z
+lemma-comm-Z-CZ {n} = begin
+  Z • CZ ≡⟨ auto ⟩
+  (H • H • S • H • H • S ^ p-1) • CZ ≈⟨ special-assoc ((□ • □ • □ • □ • □ • □) • □) (□ • □ • □ • □ • □ • (□ • □)) auto ⟩
+  H • H • S • H • H • (S ^ p-1 • CZ) ≈⟨ cong refl (cong refl (cong refl (cong refl (cong refl (word-comm p-1 1 (sym (_≈_.axiom _QRel,_===_.comm-CZ-S↓))))))) ⟩
+  H • H • S • H • H • (CZ • S ^ p-1) ≈⟨ special-assoc (□ • □ • □ • □ • □ • (□ • □)) ((□ • □ • □ • □ • □ • □) • □) auto ⟩
+  (H • H • S • H • H • CZ) • S ^ p-1 ≈⟨ cong lemma-comm-S'-CZ refl ⟩
+  (CZ • H • H • S • H • H) • S ^ p-1 ≈⟨ by-assoc auto ⟩
+  CZ • (H • H • S • H • H • S ^ p-1) ≡⟨ auto ⟩
+  CZ • Z ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+
+lemma-comm-𝑠-CZ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
+  𝑠 • CZ ≈ CZ • 𝑠
+lemma-comm-𝑠-CZ {n} = begin
+  𝑠 • CZ ≡⟨ auto ⟩
+  (S • Z ^ toℕ 1/2) • CZ ≈⟨ assoc ⟩
+  S • (Z ^ toℕ 1/2 • CZ) ≈⟨ cong refl (word-comm (toℕ 1/2) 1 lemma-comm-Z-CZ) ⟩
+  S • (CZ ^ 1 • Z ^ toℕ 1/2) ≡⟨ auto ⟩
+  S • (CZ • Z ^ toℕ 1/2) ≈⟨ sym assoc ⟩
+  (S • CZ) • Z ^ toℕ 1/2 ≈⟨ cong (sym (_≈_.axiom _QRel,_===_.comm-CZ-S↓)) refl ⟩
+  (CZ • S) • Z ^ toℕ 1/2 ≈⟨ assoc ⟩
+  CZ • (S • Z ^ toℕ 1/2) ≡⟨ auto ⟩
+  CZ • 𝑠 ∎
+  where
+  open PB ((suc (suc n)) QRel,_===_)
+  open PP ((suc (suc n)) QRel,_===_)
+  open SR word-setoid
+
