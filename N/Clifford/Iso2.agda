@@ -99,6 +99,127 @@ module Iso-Inverse-Direction (n : ℕ) where
   open Clifford-Relations
   open Iso n
 
+  lemma-h↑ : ∀ {m} (w : Word (Cli.Gen m)) -> (h *) (w ↑) ≡ ((h *) w) SemiDirect.↑
+  lemma-h↑ [ x ]ʷ = Eq.refl
+  lemma-h↑ ε = Eq.refl
+  lemma-h↑ (u • v) = Eq.cong₂ _•_ (lemma-h↑ u) (lemma-h↑ v)
+
+  lemma-w↑H : ∀ {m} (w : Word (SemiDirect.Gen (₁₊ m))) →
+    let open PB (SemiDirect._QRel,_===_ (₂₊ m)) using (_≈_) in
+    (w SemiDirect.↑) • SemiDirect.H ≈ SemiDirect.H • (w SemiDirect.↑)
+  lemma-w↑H [ inj₁ xz ]ʷ = PB.sym (PB.axiom (mid (comm (xz XZ.↥) Sym.H-gen)))
+  lemma-w↑H [ inj₂ sm ]ʷ = PB.axiom (right Sim.comm-H)
+  lemma-w↑H ε = PB.trans PB.left-unit (PB.sym PB.right-unit)
+  lemma-w↑H (u • v) = PB.trans PB.assoc (PB.trans (PB.cong PB.refl (lemma-w↑H v)) (PB.trans (PB.sym PB.assoc) (PB.trans (PB.cong (lemma-w↑H u) PB.refl) PB.assoc)))
+
+  lemma-w↑↑CZ : ∀ {m} (w : Word (SemiDirect.Gen (₁₊ m))) →
+    let open PB (SemiDirect._QRel,_===_ (₃₊ m)) using (_≈_) in
+    (w SemiDirect.↑ SemiDirect.↑) • SemiDirect.CZ ≈ SemiDirect.CZ • (w SemiDirect.↑ SemiDirect.↑)
+  lemma-w↑↑CZ [ inj₁ xz ]ʷ = PB.sym (PB.axiom (mid (comm (xz XZ.↥ XZ.↥) Sym.CZ-gen)))
+  lemma-w↑↑CZ [ inj₂ sm ]ʷ = PB.axiom (right Sim.comm-CZ)
+  lemma-w↑↑CZ ε = PB.trans PB.left-unit (PB.sym PB.right-unit)
+  lemma-w↑↑CZ (u • v) = PB.trans PB.assoc (PB.trans (PB.cong PB.refl (lemma-w↑↑CZ v)) (PB.trans (PB.sym PB.assoc) (PB.trans (PB.cong (lemma-w↑↑CZ u) PB.refl) PB.assoc)))
+
+  lemma-w↑S : ∀ {m} (w : Word (SemiDirect.Gen (₁₊ m))) →
+    let open PB (SemiDirect._QRel,_===_ (₂₊ m)) using (_≈_) in
+    (w SemiDirect.↑) • SemiDirect.S ≈ SemiDirect.S • (w SemiDirect.↑)
+  lemma-w↑S [ inj₁ xz ]ʷ = PB.sym (PB.axiom (mid (comm (xz XZ.↥) Sym.S-gen)))
+  lemma-w↑S [ inj₂ sm ]ʷ = PB.axiom (right Sim.comm-S)
+  lemma-w↑S ε = PB.trans PB.left-unit (PB.sym PB.right-unit)
+  lemma-w↑S (u • v) = PB.trans PB.assoc (PB.trans (PB.cong PB.refl (lemma-w↑S v)) (PB.trans (PB.sym PB.assoc) (PB.trans (PB.cong (lemma-w↑S u) PB.refl) PB.assoc)))
+
+  lemma-w↑Z : ∀ {m} (w : Word (SemiDirect.Gen (₁₊ m))) →
+    let open PB (SemiDirect._QRel,_===_ (₂₊ m)) using (_≈_) in
+    (w SemiDirect.↑) • SemiDirect.Z ≈ SemiDirect.Z • (w SemiDirect.↑)
+  lemma-w↑Z [ inj₁ xz ]ʷ = PB.axiom (left XZ.comm-Z)
+  lemma-w↑Z [ inj₂ sm ]ʷ = PB.axiom (mid (comm XZ.Z-gen (sm Sym.↥)))
+  lemma-w↑Z ε = PB.trans PB.left-unit (PB.sym PB.right-unit)
+  lemma-w↑Z (u • v) = PB.trans PB.assoc (PB.trans (PB.cong PB.refl (lemma-w↑Z v)) (PB.trans (PB.sym PB.assoc) (PB.trans (PB.cong (lemma-w↑Z u) PB.refl) PB.assoc)))
+
+  lemma-w↑Zk : ∀ {m} (w : Word (SemiDirect.Gen (₁₊ m))) (k : ℕ) →
+    let open PB (SemiDirect._QRel,_===_ (₂₊ m)) using (_≈_) in
+    (w SemiDirect.↑) • (SemiDirect.Z ^ k) ≈ (SemiDirect.Z ^ k) • (w SemiDirect.↑)
+  lemma-w↑Zk w 0 = PB.trans PB.right-unit (PB.sym PB.left-unit)
+  lemma-w↑Zk w 1 = lemma-w↑Z w
+  lemma-w↑Zk w (₂₊ k) = PB.trans (PB.sym PB.assoc) (PB.trans (PB.cong (lemma-w↑Z w) PB.refl) (PB.trans PB.assoc (PB.trans (PB.cong PB.refl (lemma-w↑Zk w (₁₊ k))) (PB.sym PB.assoc))))
+
+  lemma-CZ-Zk : ∀ {m} (k : ℕ) →
+    let open PB (SemiDirect._QRel,_===_ (₂₊ m)) using (_≈_) in
+    SemiDirect.CZ • (SemiDirect.Z ^ k) ≈ (SemiDirect.Z ^ k) • SemiDirect.CZ
+  lemma-CZ-Zk 0 = PB.trans PB.right-unit (PB.sym PB.left-unit)
+  lemma-CZ-Zk 1 = PB.axiom (mid (comm XZ.Z-gen Sym.CZ-gen))
+  lemma-CZ-Zk (₂₊ k) = PB.trans (PB.sym PB.assoc) (PB.trans (PB.cong (lemma-CZ-Zk 1) PB.refl) (PB.trans PB.assoc (PB.trans (PB.cong PB.refl (lemma-CZ-Zk (₁₊ k))) (PB.sym PB.assoc))))
+
+  lemma-CZ-Z↑k : ∀ {m} (k : ℕ) →
+    let open PB (SemiDirect._QRel,_===_ (₂₊ m)) using (_≈_) in
+    SemiDirect.CZ • ((SemiDirect.Z ^ k) SemiDirect.↑) ≈ ((SemiDirect.Z ^ k) SemiDirect.↑) • SemiDirect.CZ
+  lemma-CZ-Z↑k 0 = PB.trans PB.right-unit (PB.sym PB.left-unit)
+  lemma-CZ-Z↑k 1 = PB.axiom (mid (comm (XZ.Z-gen XZ.↥) Sym.CZ-gen))
+  lemma-CZ-Z↑k (₂₊ k) = PB.trans (PB.sym PB.assoc) (PB.trans (PB.cong (lemma-CZ-Z↑k 1) PB.refl) (PB.trans PB.assoc (PB.trans (PB.cong PB.refl (lemma-CZ-Z↑k (₁₊ k))) (PB.sym PB.assoc))))
+
+  -- The metaplectic correspondence: h maps Clifford's Mg to the Sim Mg.
+  -- This is the single foundational obligation that the semi-M*/order-H/etc. cases reduce to.
+  -- Building blocks for the metaplectic foundation h-Z : (h *) Clifford.Z ≈ SemiDirect.Z.
+  lemma-HX : ∀ {m} → let open PB (SemiDirect._QRel,_===_ (₁₊ m)) using (_≈_) in SemiDirect.H • SemiDirect.X ≈ SemiDirect.Z • SemiDirect.H
+  lemma-HX = PB.axiom (mid (comm XZ.X-gen Sym.H-gen))
+
+  lemma-HZ : ∀ {m} → let open PB (SemiDirect._QRel,_===_ (₁₊ m)) using (_≈_) in SemiDirect.H • SemiDirect.Z ≈ SemiDirect.X ^ p-1 • SemiDirect.H
+  lemma-HZ {m} = begin
+      SemiDirect.H • SemiDirect.Z       ≈⟨ axiom (mid (comm XZ.Z-gen Sym.H-gen)) ⟩
+      [ XZ.X ^ p-1 ]ₗ • SemiDirect.H    ≡⟨ Eq.cong (_• SemiDirect.H) (SemiDirect.lemma-[]ₗ^k XZ.X p-1) ⟩
+      SemiDirect.X ^ p-1 • SemiDirect.H ∎
+    where
+    open PB (SemiDirect._QRel,_===_ (₁₊ m))
+    open PP (SemiDirect._QRel,_===_ (₁₊ m))
+    open SR word-setoid
+
+  lemma-HX^k : ∀ {m} (k : ℕ) → let open PB (SemiDirect._QRel,_===_ (₁₊ m)) using (_≈_) in SemiDirect.H • SemiDirect.X ^ k ≈ SemiDirect.Z ^ k • SemiDirect.H
+  lemma-HX^k 0 = PB.trans PB.right-unit (PB.sym PB.left-unit)
+  lemma-HX^k 1 = lemma-HX
+  lemma-HX^k (₂₊ k) = PB.trans (PB.sym PB.assoc) (PB.trans (PB.cong lemma-HX PB.refl) (PB.trans PB.assoc (PB.trans (PB.cong PB.refl (lemma-HX^k (₁₊ k))) (PB.sym PB.assoc))))
+
+  lemma-HH-Z : ∀ {m} → let open PB (SemiDirect._QRel,_===_ (₁₊ m)) using (_≈_) in SemiDirect.H • SemiDirect.H • SemiDirect.Z ≈ SemiDirect.Z ^ p-1 • (SemiDirect.H • SemiDirect.H)
+  lemma-HH-Z = PB.trans (PB.cong PB.refl lemma-HZ) (PB.trans (PB.sym PB.assoc) (PB.trans (PB.cong (lemma-HX^k p-1) PB.refl) PB.assoc))
+
+  lemma-HH-S : ∀ {m} → let open PB (SemiDirect._QRel,_===_ (₁₊ m)) using (_≈_) in SemiDirect.H • SemiDirect.H • SemiDirect.S ≈ SemiDirect.S • SemiDirect.H • SemiDirect.H
+  lemma-HH-S {m} = rights lemma-comm-HHS
+    where
+    open LeftRightCongruence (XZ._QRel,_===_ (₁₊ m)) (Sim._QRel,_===_ (₁₊ m)) (Γⱼ' SemiDirect.conj)
+    open NSim.Lemmas1b m
+
+  lemma-H⁴ : ∀ {m} → let open PB (SemiDirect._QRel,_===_ (₁₊ m)) using (_≈_) in SemiDirect.H ^ 4 ≈ ε
+  lemma-H⁴ {m} = begin
+      SemiDirect.H ^ 4   ≡⟨ Eq.sym (SemiDirect.lemma-[]ᵣ^k Sym.H 4) ⟩
+      [ Sym.H ^ 4 ]ᵣ     ≈⟨ rights lemma-order-H ⟩
+      ε ∎
+    where
+    open PB (SemiDirect._QRel,_===_ (₁₊ m))
+    open PP (SemiDirect._QRel,_===_ (₁₊ m))
+    open SR word-setoid
+    open LeftRightCongruence (XZ._QRel,_===_ (₁₊ m)) (Sim._QRel,_===_ (₁₊ m)) (Γⱼ' SemiDirect.conj)
+    open NSim.Lemmas1 m
+
+  lemma-HH-Z^k : ∀ {m} (k : ℕ) → let open PB (SemiDirect._QRel,_===_ (₁₊ m)) using (_≈_) in (SemiDirect.H • SemiDirect.H) • SemiDirect.Z ^ k ≈ (SemiDirect.Z ^ p-1) ^ k • (SemiDirect.H • SemiDirect.H)
+  lemma-HH-Z^k 0 = PB.trans PB.right-unit (PB.sym PB.left-unit)
+  lemma-HH-Z^k 1 = PB.trans PB.assoc lemma-HH-Z
+  lemma-HH-Z^k (₂₊ k) = PB.trans (PB.sym PB.assoc) (PB.trans (PB.cong (lemma-HH-Z^k 1) PB.refl) (PB.trans PB.assoc (PB.trans (PB.cong PB.refl (lemma-HH-Z^k (₁₊ k))) (PB.sym PB.assoc))))
+
+  -- h-Mg reduces to h-𝑠 : (h*) Clifford.𝑠 ≈ S, which reduces to
+  --   h-Z : (h*) Clifford.Z ≈ SemiDirect.Z.
+  -- h-Z assembly (using the 7 lemmas above), with k = toℕ -1/2:
+  --   (h*)Z = HH·Zᵏ·S·HH·(Zᵏ·S)^{p-1}
+  --     ≈ Z^{(p-1)k}·HH·S·HH·(Zᵏ·S)^{p-1}      (lemma-HH-Z^k)
+  --     ≈ Z^{(p-1)k}·S·(HH·HH)·(Zᵏ·S)^{p-1}     (lemma-HH-S)
+  --     ≈ Z^{(p-1)k}·S·(Zᵏ·S)^{p-1}              (lemma-H⁴, HH·HH = H⁴ ≈ ε)
+  --     ≈ Z^{(p-1)k}·S·Z^{k(p-1)}·S^{p-1}        (lemma-^-•)
+  --     ≈ Z^{(p-1)k}·Z^{k(p-1)}·S^p              (Z,S commute; order-S: S^p ≈ ε)
+  --     ≈ Z^{2k(p-1)} ≈ Z                        (lemma-^-+;  2k(p-1) ≡ 1 mod p  -- remaining ℤ_p arithmetic)
+  h-Mg : ∀ {m} → let open PB (SemiDirect._QRel,_===_ (₁₊ m)) using (_≈_) in (h *) (Mg {m}) ≈ [ Sim.Mg {m} ]ᵣ
+  h-Mg = {!!}
+
+  h-Mg↑ : ∀ {m} → let open PB (SemiDirect._QRel,_===_ (₂₊ m)) using (_≈_) in ((h *) (Mg {m})) SemiDirect.↑ ≈ ([ Sim.Mg {m} ]ᵣ) SemiDirect.↑
+  h-Mg↑ {m} = SemiDirect.lemma-cong↑ {₁₊ m} _ _ (h-Mg {m})
+
 
   h-well-defined : ∀ {n w v} ->
     let
@@ -107,33 +228,97 @@ module Iso-Inverse-Direction (n : ℕ) where
     in
     w ===₂ v -> (h *) w ≈₁ (h *) v
 
-  h-well-defined {n} {w} {v} order-S = {!!}
+  h-well-defined {₁₊ n} order-S = begin
+    (h *) (S ^ p)                              ≡⟨ lemma-f*-w^n {f = h} {w = S} p ⟩
+    (h *) S ^ p                                ≈⟨ lemma-^-• (SemiDirect.Z ^ k) SemiDirect.S p commZS ⟩
+    (SemiDirect.Z ^ k) ^ p • SemiDirect.S ^ p  ≈⟨ cong zk^p sp ⟩
+    ε • ε                                      ≈⟨ left-unit ⟩
+    ε ∎
+    where
+    open PB (SemiDirect._QRel,_===_ (₁₊ n))
+    open PP (SemiDirect._QRel,_===_ (₁₊ n))
+    open SR word-setoid
+    k : ℕ
+    k = toℕ Cli.-1/2
+    commZS : (SemiDirect.Z ^ k) • SemiDirect.S ≈ SemiDirect.S • (SemiDirect.Z ^ k)
+    commZS = word-comm k 1 (sym (axiom (mid (comm XZ.Z-gen Sym.S-gen))))
+    zp : SemiDirect.Z ^ p ≈ ε
+    zp = begin
+      SemiDirect.Z ^ p  ≡⟨ Eq.sym (SemiDirect.lemma-[]ₗ^k XZ.Z p) ⟩
+      [ XZ.Z ^ p ]ₗ     ≈⟨ axiom (left XZ.order-Z) ⟩
+      ε ∎
+    sp : SemiDirect.S ^ p ≈ ε
+    sp = begin
+      SemiDirect.S ^ p  ≡⟨ Eq.sym (SemiDirect.lemma-[]ᵣ^k Sym.S p) ⟩
+      [ Sym.S ^ p ]ᵣ    ≈⟨ axiom (right Sim.order-S) ⟩
+      ε ∎
+    zk^p : (SemiDirect.Z ^ k) ^ p ≈ ε
+    zk^p = begin
+      (SemiDirect.Z ^ k) ^ p        ≈⟨ lemma-^^ SemiDirect.Z k p ⟩
+      SemiDirect.Z ^ (k Nat.* p)    ≡⟨ Eq.cong (SemiDirect.Z ^_) (NP.*-comm k p) ⟩
+      SemiDirect.Z ^ (p Nat.* k)    ≈⟨ sym (lemma-^^ SemiDirect.Z p k) ⟩
+      (SemiDirect.Z ^ p) ^ k        ≈⟨ lemma-^-cong (SemiDirect.Z ^ p) ε k zp ⟩
+      ε ^ k                         ≈⟨ lemma-ε^k=ε k ⟩
+      ε ∎
   h-well-defined {n} {w} {v} order-H = {!!}
   h-well-defined {n} {w} {v} (M-power k) = {!!}
   h-well-defined {n} {w} {v} semi-M𝑠 = {!!}
   h-well-defined {n} {w} {v} order-SH = {!!}
   h-well-defined {n} {w} {v} comm-HHSHHS = {!!}
   h-well-defined {n} {w} {v} comm-X-Z = {!!}
-  h-well-defined {n} {w} {v} semi-M↑CZ = {!!}
-  h-well-defined {n} {w} {v} semi-M↓CZ = {!!}
+  h-well-defined {₂₊ n} semi-M↑CZ rewrite lemma-h↑ (Mg {n}) = begin
+      ((h *) (Mg {n})) SemiDirect.↑ • SemiDirect.CZ                       ≈⟨ cong (h-Mg↑ {n}) refl ⟩
+      ([ Sim.Mg {n} ]ᵣ) SemiDirect.↑ • SemiDirect.CZ                   ≈⟨ bareM ⟩
+      SemiDirect.CZ ^ (toℕ g) • ([ Sim.Mg {n} ]ᵣ) SemiDirect.↑        ≈⟨ cong refl (sym (h-Mg↑ {n})) ⟩
+      SemiDirect.CZ ^ (toℕ g) • ((h *) (Mg {n})) SemiDirect.↑        ≡⟨ Eq.cong (_• ((h *) (Mg {n})) SemiDirect.↑) (Eq.sym (lemma-f*-w^n {f = h} {w = CZ} (toℕ g))) ⟩
+      (h *) (CZ^ g) • ((h *) (Mg {n})) SemiDirect.↑ ∎
+    where
+    open PB (SemiDirect._QRel,_===_ (₂₊ n))
+    open PP (SemiDirect._QRel,_===_ (₂₊ n))
+    open SR word-setoid
+    bareM : ([ Sim.Mg {n} ]ᵣ) SemiDirect.↑ • SemiDirect.CZ ≈ SemiDirect.CZ ^ (toℕ g) • ([ Sim.Mg {n} ]ᵣ) SemiDirect.↑
+    bareM = begin
+      ([ Sim.Mg {n} ]ᵣ) SemiDirect.↑ • SemiDirect.CZ           ≡⟨ Eq.cong (_• SemiDirect.CZ) (SemiDirect.lemma-[]ᵣ-↑ (Sim.Mg {n})) ⟩
+      [ Sim.Mg {n} Sym.↑ ]ᵣ • SemiDirect.CZ                    ≈⟨ axiom (right Sim.semi-M↑CZ) ⟩
+      [ Sym.CZ ^ toℕ g ]ᵣ • [ Sim.Mg {n} Sym.↑ ]ᵣ             ≡⟨ Eq.cong₂ _•_ (SemiDirect.lemma-[]ᵣ^k Sym.CZ (toℕ g)) (Eq.sym (SemiDirect.lemma-[]ᵣ-↑ (Sim.Mg {n}))) ⟩
+      SemiDirect.CZ ^ (toℕ g) • ([ Sim.Mg {n} ]ᵣ) SemiDirect.↑ ∎
+  h-well-defined {₂₊ n} semi-M↓CZ = begin
+      (h *) (Mg {₁₊ n}) • SemiDirect.CZ              ≈⟨ cong (h-Mg {₁₊ n}) refl ⟩
+      [ Sim.Mg {₁₊ n} ]ᵣ • SemiDirect.CZ            ≈⟨ bareM↓ ⟩
+      SemiDirect.CZ ^ (toℕ g) • [ Sim.Mg {₁₊ n} ]ᵣ  ≈⟨ cong refl (sym (h-Mg {₁₊ n})) ⟩
+      SemiDirect.CZ ^ (toℕ g) • (h *) (Mg {₁₊ n})   ≡⟨ Eq.cong (_• (h *) (Mg {₁₊ n})) (Eq.sym (lemma-f*-w^n {f = h} {w = CZ} (toℕ g))) ⟩
+      (h *) (CZ^ g) • (h *) (Mg {₁₊ n}) ∎
+    where
+    open PB (SemiDirect._QRel,_===_ (₂₊ n))
+    open PP (SemiDirect._QRel,_===_ (₂₊ n))
+    open SR word-setoid
+    bareM↓ : [ Sim.Mg {₁₊ n} ]ᵣ • SemiDirect.CZ ≈ SemiDirect.CZ ^ (toℕ g) • [ Sim.Mg {₁₊ n} ]ᵣ
+    bareM↓ = begin
+      [ Sim.Mg {₁₊ n} ]ᵣ • SemiDirect.CZ            ≈⟨ axiom (right Sim.semi-M↓CZ) ⟩
+      [ Sym.CZ ^ toℕ g ]ᵣ • [ Sim.Mg {₁₊ n} ]ᵣ      ≡⟨ Eq.cong (_• [ Sim.Mg {₁₊ n} ]ᵣ) (SemiDirect.lemma-[]ᵣ^k Sym.CZ (toℕ g)) ⟩
+      SemiDirect.CZ ^ (toℕ g) • [ Sim.Mg {₁₊ n} ]ᵣ ∎
   h-well-defined {n} {w} {v} rel-X↑-CZ = {!!}
   h-well-defined {n} {w} {v} rel-X↓-CZ = {!!}
-  h-well-defined {n} {w} {v} order-CZ = {!!}
-  h-well-defined {n} {w} {v} comm-CZ-S↓ = {!!}
-  h-well-defined {n} {w} {v} comm-CZ-S↑ = {!!}
+  h-well-defined order-CZ = begin
+    (h *) (CZ ^ p)   ≡⟨ lemma-f*-w^n {f = h} {w = CZ} p ⟩
+    (h *) CZ ^ p     ≡⟨ Eq.sym (SemiDirect.lemma-[]ᵣ^k Sym.CZ p) ⟩
+    [ Sym.CZ ^ p ]ᵣ  ≈⟨ PB.axiom (right Sim.order-CZ) ⟩
+    ε ∎
+    where open SR (PP.word-setoid (SemiDirect._QRel,_===_ _))
+  h-well-defined comm-CZ-S↓ = PB.trans (PB.sym PB.assoc) (PB.trans (PB.cong (lemma-CZ-Zk _) PB.refl) (PB.trans PB.assoc (PB.trans (PB.cong PB.refl (PB.axiom (right Sim.comm-CZ-S↓))) (PB.sym PB.assoc))))
+  h-well-defined comm-CZ-S↑ rewrite lemma-h↑ S = PB.trans (PB.sym PB.assoc) (PB.trans (PB.cong (lemma-CZ-Z↑k _) PB.refl) (PB.trans PB.assoc (PB.trans (PB.cong PB.refl (PB.axiom (right Sim.comm-CZ-S↑))) (PB.sym PB.assoc))))
   h-well-defined {n} {w} {v} selinger-c10 = {!!}
   h-well-defined {n} {w} {v} selinger-c11 = {!!}
   h-well-defined {n} {w} {v} selinger-c12 = {!!}
   h-well-defined {n} {w} {v} selinger-c13 = {!!}
   h-well-defined {n} {w} {v} selinger-c14 = {!!}
   h-well-defined {n} {w} {v} selinger-c15 = {!!}
-  h-well-defined {n} {w} {v} comm-H = {!!}
-  h-well-defined {n} {w} {v} comm-S = {!!}
-  h-well-defined {n} {w} {v} comm-CZ = {!!}
-  h-well-defined {n} {w} {v} (cong↑ eq) = {!!}
+  h-well-defined (comm-H {x = x}) = lemma-w↑H (h x)
+  h-well-defined (comm-S {x = x}) = PB.trans (PB.sym PB.assoc) (PB.trans (PB.cong (lemma-w↑Zk (h x) _) PB.refl) (PB.trans PB.assoc (PB.trans (PB.cong PB.refl (lemma-w↑S (h x))) (PB.sym PB.assoc))))
+  h-well-defined (comm-CZ {x = x}) = lemma-w↑↑CZ (h x)
+  h-well-defined (cong↑ {n'} {w'} {v'} eq) rewrite lemma-h↑ w' | lemma-h↑ v' = SemiDirect.lemma-cong↑ _ _ (h-well-defined eq)
 
-
-
+{-
 {-  
 
 {-
@@ -605,3 +790,4 @@ module Clifford-Mod-Scalar-Completeness where
 
 -}
 
+-}
