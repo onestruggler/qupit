@@ -133,9 +133,9 @@ module Simplified-Relations where
     --     [proposed; the Pauli tail still needs to be verified.]
     ----------------------------------------------------------------
     selinger-c10 :  ∀ {n} → (₂₊ n) QRel,
-      CZ • H ↑ • CZ • X ↑ • Z ↑ === S⁻¹ ↑ • H ↑ • S⁻¹ ↑ • CZ • H ↑ • S⁻¹ ↑ • S⁻¹ ↓
+      CZ • H ↑ • CZ • X ↑ • Z ↑ === S ↑ ^ p-1 • H ↑ • S ↑ ^ p-1 • CZ • H ↑ • S ↑ ^ p-1 • S ↓ ^ p-1
     selinger-c11 :  ∀ {n} → (₂₊ n) QRel,
-      CZ • H ↓ • CZ • X ↓ • Z ↓ === S⁻¹ ↓ • H ↓ • S⁻¹ ↓ • CZ • H ↓ • S⁻¹ ↓ • S⁻¹ ↑
+      CZ • H ↓ • CZ • X ↓ • Z ↓ === S ↓ ^ p-1 • H ↓ • S ↓ ^ p-1 • CZ • H ↓ • S ↓ ^ p-1 • S ↑ ^ p-1
 
     ----------------------------------------------------------------
     -- (F) Three-qudit selinger relations (no X/Z): kept verbatim.
