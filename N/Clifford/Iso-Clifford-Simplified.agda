@@ -47,10 +47,12 @@ open import N.Clifford.Clifford-Mod-Scalar p-3 p-prime g* g-gen
 import N.Clifford.Clifford-Mod-Scalars-Simplified p-3 p-prime g* g-gen as Sim
 import N.Clifford.Clifford-Simplified-Verify p-3 p-prime g* g-gen as Snd
 import N.Clifford.Simplified-Lemmas p-3 p-prime g* g-gen as Cmp
--- semi-M𝑠 bridges: soundness (simplified holds in Clifford) and
--- completeness (original holds in Simplified) of the simplified semi-M𝑠.
+-- semi-M bridges: soundness (simplified holds in Clifford) and
+-- completeness (original holds in Simplified) of the simplified semi-M relations.
 import N.Clifford.Mg-Simplify   p-3 p-prime g* g-gen as MgC
 import N.Clifford.Mg-Simplify-S p-3 p-prime g* g-gen as MgS
+-- Clifford-side proofs of Z↔CZ (the new comm-Z-CZ / comm-Z↑-CZ axioms).
+import N.Clifford.Clifford-Lemmas p-3 p-prime g* g-gen as CliL
 
 open import Algebra.Bundles using (Group)
 
@@ -67,8 +69,8 @@ f-well-defined CliR.semi-M𝑠        = MgS.SemiS.completeness-semi-M𝑠 _
 f-well-defined CliR.order-SH       = PB.axiom SimR.order-SH
 f-well-defined CliR.comm-HHSHHS    = PB.axiom SimR.comm-HHSHHS
 f-well-defined CliR.comm-X-Z       = PB.axiom SimR.comm-X-Z
-f-well-defined CliR.semi-M↑CZ      = PB.axiom SimR.semi-M↑CZ
-f-well-defined CliR.semi-M↓CZ      = PB.axiom SimR.semi-M↓CZ
+f-well-defined CliR.semi-M↑CZ      = MgS.SemiCZ.completeness-semi-M↑CZ _
+f-well-defined CliR.semi-M↓CZ      = MgS.SemiCZ↓.completeness-semi-M↓CZ _
 f-well-defined CliR.rel-X↑-CZ      = PB.axiom SimR.rel-X↑-CZ
 f-well-defined CliR.rel-X↓-CZ      = PB.axiom SimR.rel-X↓-CZ
 f-well-defined CliR.order-CZ       = PB.axiom SimR.order-CZ
@@ -95,10 +97,12 @@ g-well-defined SimR.semi-M𝑠        = MgC.SemiS.simplified-semi-M𝑠 _
 g-well-defined SimR.order-SH       = PB.axiom CliR.order-SH
 g-well-defined SimR.comm-HHSHHS    = PB.axiom CliR.comm-HHSHHS
 g-well-defined SimR.comm-X-Z       = PB.axiom CliR.comm-X-Z
-g-well-defined SimR.semi-M↑CZ      = PB.axiom CliR.semi-M↑CZ
-g-well-defined SimR.semi-M↓CZ      = PB.axiom CliR.semi-M↓CZ
+g-well-defined SimR.semi-M↑CZ      = MgC.SemiCZ.simplified-semi-M↑CZ _
+g-well-defined SimR.semi-M↓CZ      = MgC.SemiCZ↓.simplified-semi-M↓CZ _
 g-well-defined SimR.rel-X↑-CZ      = PB.axiom CliR.rel-X↑-CZ
 g-well-defined SimR.rel-X↓-CZ      = PB.axiom CliR.rel-X↓-CZ
+g-well-defined SimR.comm-Z-CZ      = CliL.lemma-comm-Z-CZ
+g-well-defined SimR.comm-Z↑-CZ     = CliL.lemma-comm-Z↑-CZ
 g-well-defined SimR.order-CZ       = PB.axiom CliR.order-CZ
 g-well-defined SimR.comm-CZ-S↓     = PB.axiom CliR.comm-CZ-S↓
 g-well-defined SimR.comm-CZ-S↑     = PB.axiom CliR.comm-CZ-S↑

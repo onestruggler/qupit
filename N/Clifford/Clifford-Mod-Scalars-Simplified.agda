@@ -97,38 +97,51 @@ module Simplified-Relations where
     -- (B) Metaplectic layer.
     --     order-H / M-power pin down the "diagonal" subgroup; kept verbatim.
     --
-    --     semi-M𝑠 is stated in its *simplified* form: the metaplectic
-    --     Mg = M g′ is replaced by its bare S,H multiplier
+    --     All three semi-M relations are stated in their *simplified* form: the
+    --     metaplectic Mg = M g′ is replaced by its bare S,H multiplier
     --     Wg = S^g·H·S^(g⁻¹)·H·S^g·H, with Mg's own Pauli pushed out and
     --     cancelled, leaving a single Z^zX correction (zX = ½(g-1)):
     --
-    --        semi-M𝑠 :  Wg · 𝑠 = 𝑠^(g²) · Wg · Z^(½(g-1))
+    --        semi-M𝑠   :  Wg  · 𝑠  = 𝑠^(g²) · Wg · Z^(½(g-1))
+    --        semi-M↑CZ :  Wg↑ · CZ = Z↓^(½(g-1)) · CZ^g · Wg↑
+    --        semi-M↓CZ :  Wg  · CZ = Z↑^(½(g-1)) · CZ^g · Wg
     --
-    --     This is the `simplified-semi-M𝑠` theorem of N.Clifford.Mg-Simplify
+    --     These are the `simplified-semi-M*` theorems of N.Clifford.Mg-Simplify
     --     (soundness, in the original Clifford presentation); the original
-    --     Mg-form is recovered as `completeness-semi-M𝑠` in N.Clifford.Mg-Simplify-S.
+    --     Mg-forms are recovered as the `completeness-semi-M*` lemmas of
+    --     N.Clifford.Mg-Simplify-S.
     --
-    --     semi-M↑CZ / semi-M↓CZ are kept in their *original* Mg-form.  They
-    --     cannot be simplified the same way: the simplified statement's
-    --     completeness proof would need Z↔CZ commutation, which (unlike the
-    --     single-qudit 𝑠 case) is NOT a consequence of the selinger + Pauli
-    --     relations — it genuinely requires the metaplectic relations
-    --     themselves, so demoting them is circular.  Kept verbatim.
+    --     The completeness proofs of the two CZ relations need Z↔CZ
+    --     commutation, which is NOT a consequence of selinger + Pauli (it would
+    --     otherwise loop back through the metaplectic relations).  We therefore
+    --     add Z↔CZ as the explicit Pauli-layer axioms comm-Z-CZ / comm-Z↑-CZ
+    --     (see (C) below) — both hold in the Clifford presentation as theorems,
+    --     so the two presentations remain isomorphic.
     ----------------------------------------------------------------
     order-H :       ∀ {n} → (₁₊ n) QRel,  H ^ 2 === M₋₁
     M-power : ∀ {n} (k : ℤ ₚ) → (₁₊ n) QRel,  Mg^ k === M (g^ k)
     semi-M𝑠 :       ∀ {n} → (₁₊ n) QRel,  Wg • 𝑠 === 𝑠^ (g * g) • Wg • Z ^ zX
-    semi-M↑CZ :     ∀ {n} → (₂₊ n) QRel,  Mg ↑ • CZ === CZ^ g • Mg ↑
-    semi-M↓CZ :     ∀ {n} → (₂₊ n) QRel,  Mg ↓ • CZ === CZ^ g • Mg ↓
+    semi-M↑CZ :     ∀ {n} → (₂₊ n) QRel,  Wg ↑ • CZ === (Z ↓) ^ zX • CZ^ g • Wg ↑
+    semi-M↓CZ :     ∀ {n} → (₂₊ n) QRel,  Wg • CZ === (Z ↑) ^ zX • CZ^ g • Wg
 
     ----------------------------------------------------------------
     -- (C) Pauli layer — the canonical transport rules for X, Z.
     --     X and Z are already at the right-most positions, nothing
     --     to cancel: these *define* the Pauli action, kept verbatim.
+    --
+    --     comm-Z-CZ / comm-Z↑-CZ ("CZ is diagonal": it commutes with the
+    --     Z Paulis on both qudits) are NEW axioms.  They are theorems in the
+    --     original Clifford presentation (proved there via the metaplectic
+    --     relations), but in the Simplified presentation they cannot be
+    --     re-derived from selinger + Pauli alone, and they are exactly what is
+    --     needed to break the circularity in the semi-M↑CZ / semi-M↓CZ
+    --     completeness proofs.  One per qudit: neither follows from the other.
     ----------------------------------------------------------------
     comm-X-Z :      ∀ {n} → (₁₊ n) QRel,  X • Z === Z • X
     rel-X↑-CZ :     ∀ {n} → (₂₊ n) QRel,  CZ • X ↑ === X ↑ • Z ↓ • CZ
     rel-X↓-CZ :     ∀ {n} → (₂₊ n) QRel,  CZ • X ↓ === X ↓ • Z ↑ • CZ
+    comm-Z-CZ :     ∀ {n} → (₂₊ n) QRel,  Z • CZ === CZ • Z
+    comm-Z↑-CZ :    ∀ {n} → (₂₊ n) QRel,  Z ↑ • CZ === CZ • Z ↑
 
     ----------------------------------------------------------------
     -- (D) CZ layer (no X/Z): kept verbatim.

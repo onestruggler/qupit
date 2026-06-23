@@ -176,6 +176,11 @@ lemma-CZ^k-% {n} k = begin
   open SR word-setoid
   open import Data.Nat.DivMod using (m≡m%n+[m/n]*n)
 
+{- DEAD CLUSTER (parked): the Mg / M₋₁ / H²·CZ·H² CZ-conjugation family
+   (lemma-Mg-CZ^k … lemma-comm-S'-CZ↑).  Routed through `axiom semi-M↓CZ`/
+   `semi-M↑CZ`, now in simplified Wg-form, so it no longer type-checks here;
+   its only live consumers (lemma-comm-Z-CZ / lemma-comm-Z↑-CZ) are now the
+   comm-Z-CZ / comm-Z↑-CZ axioms.  Kept verbatim for reference.
 lemma-Mg-CZ^k : ∀ {n} k -> let open PB ((suc (suc n)) QRel,_===_) in
   M g* • CZ ^ k ≈ CZ ^ (k Nat.* toℕ g) • M g*
 lemma-Mg-CZ^k {n} k@0 = trans right-unit (sym left-unit)
@@ -614,6 +619,7 @@ lemma-comm-S'-CZ↑ {n} = begin
   open PP ((suc (suc n)) QRel,_===_)
   open SR word-setoid
   open Pattern-Assoc
+-}  -- end DEAD CZ-conjugation cluster
 
 lemma-Z↑ : ∀ {n} -> Z {n} ↑ ≡ H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • (S ↑) ^ p-1
 lemma-Z↑ {n} = begin
@@ -625,26 +631,11 @@ lemma-Z↑ {n} = begin
 
 lemma-comm-Z↑-CZ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
   Z ↑ • CZ ≈ CZ • Z ↑
-lemma-comm-Z↑-CZ {n} = begin
-  Z ↑ • CZ ≈⟨ refl' (Eq.cong (_• CZ) lemma-Z↑) ⟩
-  (H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • (S ↑) ^ p-1) • CZ
-    ≈⟨ special-assoc ((□ • □ • □ • □ • □ • □) • □) (□ • □ • □ • □ • □ • (□ • □)) auto ⟩
-  H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • ((S ↑) ^ p-1 • CZ)
-    ≈⟨ cong refl (cong refl (cong refl (cong refl (cong refl (word-comm p-1 1 (sym (_≈_.axiom _QRel,_===_.comm-CZ-S↑))))))) ⟩
-  H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • (CZ • (S ↑) ^ p-1)
-    ≈⟨ special-assoc (□ • □ • □ • □ • □ • (□ • □)) ((□ • □ • □ • □ • □ • □) • □) auto ⟩
-  (H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • CZ) • (S ↑) ^ p-1
-    ≈⟨ cong lemma-comm-S'-CZ↑ refl ⟩
-  (CZ • H ↑ • H ↑ • S ↑ • H ↑ • H ↑) • (S ↑) ^ p-1
-    ≈⟨ by-assoc auto ⟩
-  CZ • (H ↑ • H ↑ • S ↑ • H ↑ • H ↑ • (S ↑) ^ p-1)
-    ≈⟨ refl' (Eq.cong (CZ •_) (Eq.sym lemma-Z↑)) ⟩
-  CZ • Z ↑ ∎
-  where
-  open PB ((suc (suc n)) QRel,_===_)
-  open PP ((suc (suc n)) QRel,_===_)
-  open SR word-setoid
-  open Pattern-Assoc
+-- Z↑ commutes with CZ: taken as the axiom comm-Z↑-CZ in the Simplified
+-- presentation (the metaplectic-route proof would loop through the demoted
+-- semi-M relations).
+lemma-comm-Z↑-CZ {n} = _≈_.axiom _QRel,_===_.comm-Z↑-CZ
+  where open PB ((suc (suc n)) QRel,_===_)
 
 lemma-𝑠↑ : ∀ {n} -> 𝑠 {n} ↑ ≡ S ↑ • (Z ↑) ^ toℕ 1/2
 lemma-𝑠↑ {n} = begin
@@ -673,20 +664,10 @@ lemma-comm-𝑠↑-CZ {n} = begin
 
 lemma-comm-Z-CZ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
   Z • CZ ≈ CZ • Z
-lemma-comm-Z-CZ {n} = begin
-  Z • CZ ≡⟨ auto ⟩
-  (H • H • S • H • H • S ^ p-1) • CZ ≈⟨ special-assoc ((□ • □ • □ • □ • □ • □) • □) (□ • □ • □ • □ • □ • (□ • □)) auto ⟩
-  H • H • S • H • H • (S ^ p-1 • CZ) ≈⟨ cong refl (cong refl (cong refl (cong refl (cong refl (word-comm p-1 1 (sym (_≈_.axiom _QRel,_===_.comm-CZ-S↓))))))) ⟩
-  H • H • S • H • H • (CZ • S ^ p-1) ≈⟨ special-assoc (□ • □ • □ • □ • □ • (□ • □)) ((□ • □ • □ • □ • □ • □) • □) auto ⟩
-  (H • H • S • H • H • CZ) • S ^ p-1 ≈⟨ cong lemma-comm-S'-CZ refl ⟩
-  (CZ • H • H • S • H • H) • S ^ p-1 ≈⟨ by-assoc auto ⟩
-  CZ • (H • H • S • H • H • S ^ p-1) ≡⟨ auto ⟩
-  CZ • Z ∎
-  where
-  open PB ((suc (suc n)) QRel,_===_)
-  open PP ((suc (suc n)) QRel,_===_)
-  open SR word-setoid
-  open Pattern-Assoc
+-- Z commutes with CZ: taken as the axiom comm-Z-CZ in the Simplified
+-- presentation (see lemma-comm-Z↑-CZ for the rationale).
+lemma-comm-Z-CZ {n} = _≈_.axiom _QRel,_===_.comm-Z-CZ
+  where open PB ((suc (suc n)) QRel,_===_)
 
 lemma-comm-𝑠-CZ : ∀ {n} -> let open PB ((suc (suc n)) QRel,_===_) in
   𝑠 • CZ ≈ CZ • 𝑠

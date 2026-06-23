@@ -494,14 +494,166 @@ module Decomp (n : ℕ) (x : ℤ* ₚ) where
     S ^ a • H • S ^ b • H • S ^ a • H • Z ^ toℕ ((1ₚ + (- β)) * hf) • X ^ toℕ ((α + (- 1ₚ)) * hf) ∎
 
 -- ════════════════════════════════════════════════════════════════════
--- NOTE: the CZ analogues (SemiCZ / SemiCZ↓) are intentionally omitted.
--- semi-M↑CZ / semi-M↓CZ are kept as the *original* Mg-form axioms in the
--- Simplified presentation, because their completeness proofs would need
--- Z↔CZ commutation — which is not a consequence of the selinger + Pauli
--- relations (it requires the metaplectic relations themselves), so the
--- derivation would be circular.  Only the single-qudit semi-M𝑠 (below)
--- is demoted to derived.
+-- semi-M↑CZ completeness: recover the original Mg↑-form from the simplified
+-- axiom.  Z↔CZ commutation (lemma-comm-Z↑-CZ) is an axiom of the Simplified
+-- presentation, so the M-decomposition push goes through and the reverse
+-- derivation (cancel the leading (Z↓)^zX) closes — no circularity.
 -- ════════════════════════════════════════════════════════════════════
+module SemiCZ (n : ℕ) where
+  open PB ((₂₊ n) QRel,_===_)
+  open PP ((₂₊ n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+  open Group-Lemmas (Gen (₂₊ n)) ((₂₊ n) QRel,_===_) (grouplike {₂₊ n}) using (lemma-left-cancel)
+  module D = Decomp n g*
+  private
+    a  = toℕ (g* .proj₁)
+    b  = toℕ ((g* ⁻¹) .proj₁)
+    zZ = toℕ ((1ₚ + (- ((g* ⁻¹) .proj₁))) * 1/2)
+    zX = toℕ ((g* .proj₁ + (- 1ₚ)) * 1/2)
+
+  Wg↑ : Word (Gen (₂₊ n))
+  Wg↑ = (S ^ a • H • S ^ b • H • S ^ a • H) ↑
+  P↑ : Word (Gen (₂₊ n))
+  P↑ = (Z ↑) ^ zZ • (X ↑) ^ zX
+
+  decomp↑ : (M g*) ↑ ≈ Wg↑ • P↑
+  decomp↑ = trans (lemma-cong↑ _ _ D.M-decomp-clean)
+            (trans (cright (cright (cright (cright (cright (cright
+                      (cong (refl' (lemma-↑^ zZ Z)) (refl' (lemma-↑^ zX X)))))))))
+                   (special-assoc (□ ^ 8) (□ ^ 6 • □ ^ 2) auto))
+
+  relpow : ∀ a → CZ • (X ↑) ^ a ≈ (X ↑) ^ a • (Z ↓) ^ a • CZ
+  relpow a = trans (lemma-Induction (trans (axiom rel-X↑-CZ) (sym assoc)) a)
+                   (trans (cleft (lemma-^-• (X ↑) (Z ↓) a (sym (lemma-comm-Z-w↑ X)))) assoc)
+
+  commZ↑CZ : (Z ↑) ^ zZ • CZ ≈ CZ • (Z ↑) ^ zZ
+  commZ↑CZ = word-comm zZ 1 lemma-comm-Z↑-CZ
+
+  commMgZ : (M g*) ↑ • (Z ↓) ^ zX ≈ (Z ↓) ^ zX • (M g*) ↑
+  commMgZ = sym (word-comm zX 1 (lemma-comm-Z-w↑ (M g*)))
+
+  CZP↑push : CZ • P↑ ≈ P↑ • ((Z ↓) ^ zX • CZ)
+  CZP↑push = begin
+    CZ • ((Z ↑) ^ zZ • (X ↑) ^ zX)        ≈⟨ sym assoc ⟩
+    (CZ • (Z ↑) ^ zZ) • (X ↑) ^ zX        ≈⟨ cleft (sym commZ↑CZ) ⟩
+    ((Z ↑) ^ zZ • CZ) • (X ↑) ^ zX        ≈⟨ assoc ⟩
+    (Z ↑) ^ zZ • (CZ • (X ↑) ^ zX)        ≈⟨ cright (relpow zX) ⟩
+    (Z ↑) ^ zZ • ((X ↑) ^ zX • (Z ↓) ^ zX • CZ)  ≈⟨ sym assoc ⟩
+    ((Z ↑) ^ zZ • (X ↑) ^ zX) • ((Z ↓) ^ zX • CZ) ∎
+
+  completeness-semi-M↑CZ : (M g*) ↑ • CZ ≈ CZ^ g • (M g*) ↑
+  completeness-semi-M↑CZ = lemma-left-cancel (begin
+    (Z ↓) ^ zX • ((M g*) ↑ • CZ)          ≈⟨ sym halfA ⟩
+    (Wg↑ • CZ) • P↑                       ≈⟨ cleft (axiom semi-M↑CZ) ⟩
+    ((Z ↓) ^ zX • CZ^ g • Wg↑) • P↑       ≈⟨ sym halfB ⟩
+    (Z ↓) ^ zX • (CZ^ g • (M g*) ↑) ∎)
+    where
+    halfA : (Wg↑ • CZ) • P↑ ≈ (Z ↓) ^ zX • ((M g*) ↑ • CZ)
+    halfA = begin
+      (Wg↑ • CZ) • P↑                       ≈⟨ assoc ⟩
+      Wg↑ • (CZ • P↑)                       ≈⟨ cright CZP↑push ⟩
+      Wg↑ • (P↑ • ((Z ↓) ^ zX • CZ))        ≈⟨ sym assoc ⟩
+      (Wg↑ • P↑) • ((Z ↓) ^ zX • CZ)        ≈⟨ cleft (sym decomp↑) ⟩
+      (M g*) ↑ • ((Z ↓) ^ zX • CZ)          ≈⟨ sym assoc ⟩
+      ((M g*) ↑ • (Z ↓) ^ zX) • CZ          ≈⟨ cleft commMgZ ⟩
+      ((Z ↓) ^ zX • (M g*) ↑) • CZ          ≈⟨ assoc ⟩
+      (Z ↓) ^ zX • ((M g*) ↑ • CZ) ∎
+    halfB : (Z ↓) ^ zX • (CZ^ g • (M g*) ↑) ≈ ((Z ↓) ^ zX • CZ^ g • Wg↑) • P↑
+    halfB = begin
+      (Z ↓) ^ zX • (CZ^ g • (M g*) ↑)       ≈⟨ cright (cright decomp↑) ⟩
+      (Z ↓) ^ zX • (CZ^ g • (Wg↑ • P↑))     ≈⟨ trans (cright (sym assoc)) (sym assoc) ⟩
+      ((Z ↓) ^ zX • CZ^ g • Wg↑) • P↑ ∎
+
+-- ════════════════════════════════════════════════════════════════════
+-- semi-M↓CZ completeness (the qudit-2/↓ version; cancel the leading Q=(Z↑)^zX).
+-- ════════════════════════════════════════════════════════════════════
+module SemiCZ↓ (n : ℕ) where
+  open PB ((₂₊ n) QRel,_===_)
+  open PP ((₂₊ n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+  open Group-Lemmas (Gen (₂₊ n)) ((₂₊ n) QRel,_===_) (grouplike {₂₊ n}) using (lemma-left-cancel)
+  module D2 = Decomp (₁₊ n) g*
+  private
+    a  = toℕ (g* .proj₁)
+    b  = toℕ ((g* ⁻¹) .proj₁)
+    zZ = toℕ ((1ₚ + (- ((g* ⁻¹) .proj₁))) * 1/2)
+    zX = toℕ ((g* .proj₁ + (- 1ₚ)) * 1/2)
+
+  Wg : Word (Gen (₂₊ n))
+  Wg = S ^ a • H • S ^ b • H • S ^ a • H
+  P : Word (Gen (₂₊ n))
+  P = Z ^ zZ • X ^ zX
+  Q : Word (Gen (₂₊ n))
+  Q = (Z ↑) ^ zX
+
+  decompWP : M g* ≈ Wg • P
+  decompWP = trans D2.M-decomp-clean (special-assoc (□ ^ 8) (□ ^ 6 • □ ^ 2) auto)
+
+  relpow↓ : ∀ k → CZ • X ^ k ≈ X ^ k • (Z ↑) ^ k • CZ
+  relpow↓ k = trans (lemma-Induction (trans (axiom rel-X↓-CZ) (sym assoc)) k)
+                    (trans (cleft (lemma-^-• (X ↓) (Z ↑) k (lemma-comm-X-w↑ Z))) assoc)
+
+  commSᵏQ : ∀ k → S ^ k • Q ≈ Q • S ^ k
+  commSᵏQ k = word-comm k zX (lemma-comm-S-w↑ Z)
+  commHQ : H • Q ≈ Q • H
+  commHQ = word-comm 1 zX (lemma-comm-H-w↑ Z)
+  commZQ : Z ^ zZ • Q ≈ Q • Z ^ zZ
+  commZQ = word-comm zZ zX (lemma-comm-Z-w↑ Z)
+  commXQ : X ^ zX • Q ≈ Q • X ^ zX
+  commXQ = word-comm zX zX (lemma-comm-X-w↑ Z)
+  commZCZ : Z ^ zZ • CZ ≈ CZ • Z ^ zZ
+  commZCZ = word-comm zZ 1 lemma-comm-Z-CZ
+
+  commWgZ↑ : Wg • Q ≈ Q • Wg
+  commWgZ↑ = trans (special-assoc (□ ^ 6 • □) (□ ^ 7) auto)
+    (trans (cright (cright (cright (cright (cright commHQ)))))
+    (trans (cright (cright (cright (cright (trans (sym assoc) (trans (cleft (commSᵏQ a)) assoc))))))
+    (trans (cright (cright (cright (trans (sym assoc) (trans (cleft commHQ) assoc)))))
+    (trans (cright (cright (trans (sym assoc) (trans (cleft (commSᵏQ b)) assoc))))
+    (trans (cright (trans (sym assoc) (trans (cleft commHQ) assoc)))
+           (trans (sym assoc) (trans (cleft (commSᵏQ a)) assoc)))))))
+
+  commPZ↑ : P • Q ≈ Q • P
+  commPZ↑ = trans assoc (trans (cright commXQ) (trans (sym assoc) (trans (cleft commZQ) assoc)))
+
+  commMgZ↑ : M g* • Q ≈ Q • M g*
+  commMgZ↑ = trans (cleft decompWP) (trans assoc (trans (cright commPZ↑)
+             (trans (sym assoc) (trans (cleft commWgZ↑) (trans assoc (cright (sym decompWP)))))))
+
+  CZP↓push : CZ • P ≈ P • (Q • CZ)
+  CZP↓push = begin
+    CZ • (Z ^ zZ • X ^ zX)            ≈⟨ sym assoc ⟩
+    (CZ • Z ^ zZ) • X ^ zX            ≈⟨ cleft (sym commZCZ) ⟩
+    (Z ^ zZ • CZ) • X ^ zX            ≈⟨ assoc ⟩
+    Z ^ zZ • (CZ • X ^ zX)            ≈⟨ cright (relpow↓ zX) ⟩
+    Z ^ zZ • (X ^ zX • Q • CZ)        ≈⟨ sym assoc ⟩
+    (Z ^ zZ • X ^ zX) • (Q • CZ) ∎
+
+  completeness-semi-M↓CZ : M g* • CZ ≈ CZ^ g • M g*
+  completeness-semi-M↓CZ = lemma-left-cancel (begin
+    Q • (M g* • CZ)                   ≈⟨ sym halfA ⟩
+    (Wg • CZ) • P                     ≈⟨ cleft (axiom semi-M↓CZ) ⟩
+    (Q • CZ^ g • Wg) • P              ≈⟨ sym halfB ⟩
+    Q • (CZ^ g • M g*) ∎)
+    where
+    halfA : (Wg • CZ) • P ≈ Q • (M g* • CZ)
+    halfA = begin
+      (Wg • CZ) • P                     ≈⟨ assoc ⟩
+      Wg • (CZ • P)                     ≈⟨ cright CZP↓push ⟩
+      Wg • (P • (Q • CZ))               ≈⟨ sym assoc ⟩
+      (Wg • P) • (Q • CZ)               ≈⟨ cleft (sym decompWP) ⟩
+      M g* • (Q • CZ)                   ≈⟨ sym assoc ⟩
+      (M g* • Q) • CZ                   ≈⟨ cleft commMgZ↑ ⟩
+      (Q • M g*) • CZ                   ≈⟨ assoc ⟩
+      Q • (M g* • CZ) ∎
+    halfB : Q • (CZ^ g • M g*) ≈ (Q • CZ^ g • Wg) • P
+    halfB = begin
+      Q • (CZ^ g • M g*)                ≈⟨ cright (cright decompWP) ⟩
+      Q • (CZ^ g • (Wg • P))            ≈⟨ trans (cright (sym assoc)) (sym assoc) ⟩
+      (Q • CZ^ g • Wg) • P ∎
+
 -- ════════════════════════════════════════════════════════════════════
 -- semi-M𝑠 with the Paulis pushed out & cancelled (single-qudit; no lift).
 -- The X-Pauli of Mg cancels, leaving an irreducible Z^(½(g-1)).
