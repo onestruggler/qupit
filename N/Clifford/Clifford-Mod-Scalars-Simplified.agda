@@ -70,6 +70,18 @@ open Clifford-Relations hiding (_QRel,_===_)
 
 module Simplified-Relations where
 
+  -- The bare S,H multiplier of Mg = M g′ and the leftover Pauli exponent
+  -- ½(g-1), used only to state the simplified semi-M𝑠 relation.  Kept
+  -- `private` so they don't collide with the local copies in Mg-Simplify /
+  -- Mg-Simplify-S (they are definitionally equal to those, so the iso still
+  -- lines up).
+  private
+    Wg : ∀ {n} -> Word (Gen (₁₊ n))
+    Wg = S ^ toℕ (g* .proj₁) • H • S ^ toℕ ((g* ⁻¹) .proj₁) • H • S ^ toℕ (g* .proj₁) • H
+
+    zX : ℕ
+    zX = toℕ ((g* .proj₁ + (- 1ₚ)) * 1/2)
+
   infix 4 _QRel,_===_
   data _QRel,_===_ : (n : ℕ) → WRel (Gen n) where
 
@@ -83,15 +95,29 @@ module Simplified-Relations where
 
     ----------------------------------------------------------------
     -- (B) Metaplectic layer.
-    --     These pin down the "diagonal" subgroup.  They are stated
-    --     with 𝑠 (the symplectic shear = S · Z^½) and M, which are
-    --     the *natural* gates here: rewriting them into the basic
-    --     gate S would re-introduce Z corrections and make the
-    --     relations longer, against goal (2)/(3).  Kept verbatim.
+    --     order-H / M-power pin down the "diagonal" subgroup; kept verbatim.
+    --
+    --     semi-M𝑠 is stated in its *simplified* form: the metaplectic
+    --     Mg = M g′ is replaced by its bare S,H multiplier
+    --     Wg = S^g·H·S^(g⁻¹)·H·S^g·H, with Mg's own Pauli pushed out and
+    --     cancelled, leaving a single Z^zX correction (zX = ½(g-1)):
+    --
+    --        semi-M𝑠 :  Wg · 𝑠 = 𝑠^(g²) · Wg · Z^(½(g-1))
+    --
+    --     This is the `simplified-semi-M𝑠` theorem of N.Clifford.Mg-Simplify
+    --     (soundness, in the original Clifford presentation); the original
+    --     Mg-form is recovered as `completeness-semi-M𝑠` in N.Clifford.Mg-Simplify-S.
+    --
+    --     semi-M↑CZ / semi-M↓CZ are kept in their *original* Mg-form.  They
+    --     cannot be simplified the same way: the simplified statement's
+    --     completeness proof would need Z↔CZ commutation, which (unlike the
+    --     single-qudit 𝑠 case) is NOT a consequence of the selinger + Pauli
+    --     relations — it genuinely requires the metaplectic relations
+    --     themselves, so demoting them is circular.  Kept verbatim.
     ----------------------------------------------------------------
     order-H :       ∀ {n} → (₁₊ n) QRel,  H ^ 2 === M₋₁
     M-power : ∀ {n} (k : ℤ ₚ) → (₁₊ n) QRel,  Mg^ k === M (g^ k)
-    semi-M𝑠 :       ∀ {n} → (₁₊ n) QRel,  Mg • 𝑠 === 𝑠^ (g * g) • Mg
+    semi-M𝑠 :       ∀ {n} → (₁₊ n) QRel,  Wg • 𝑠 === 𝑠^ (g * g) • Wg • Z ^ zX
     semi-M↑CZ :     ∀ {n} → (₂₊ n) QRel,  Mg ↑ • CZ === CZ^ g • Mg ↑
     semi-M↓CZ :     ∀ {n} → (₂₊ n) QRel,  Mg ↓ • CZ === CZ^ g • Mg ↓
 

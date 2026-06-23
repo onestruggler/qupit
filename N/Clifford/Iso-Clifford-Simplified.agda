@@ -47,6 +47,10 @@ open import N.Clifford.Clifford-Mod-Scalar p-3 p-prime g* g-gen
 import N.Clifford.Clifford-Mod-Scalars-Simplified p-3 p-prime g* g-gen as Sim
 import N.Clifford.Clifford-Simplified-Verify p-3 p-prime g* g-gen as Snd
 import N.Clifford.Simplified-Lemmas p-3 p-prime g* g-gen as Cmp
+-- semi-M𝑠 bridges: soundness (simplified holds in Clifford) and
+-- completeness (original holds in Simplified) of the simplified semi-M𝑠.
+import N.Clifford.Mg-Simplify   p-3 p-prime g* g-gen as MgC
+import N.Clifford.Mg-Simplify-S p-3 p-prime g* g-gen as MgS
 
 open import Algebra.Bundles using (Group)
 
@@ -59,7 +63,7 @@ f-well-defined : ∀ {n} → let open PB (SimR._QRel,_===_ n) renaming (_≈_ to
 f-well-defined CliR.order-S        = PB.axiom SimR.order-S
 f-well-defined CliR.order-H        = PB.axiom SimR.order-H
 f-well-defined (CliR.M-power k)    = PB.axiom (SimR.M-power k)
-f-well-defined CliR.semi-M𝑠        = PB.axiom SimR.semi-M𝑠
+f-well-defined CliR.semi-M𝑠        = MgS.SemiS.completeness-semi-M𝑠 _
 f-well-defined CliR.order-SH       = PB.axiom SimR.order-SH
 f-well-defined CliR.comm-HHSHHS    = PB.axiom SimR.comm-HHSHHS
 f-well-defined CliR.comm-X-Z       = PB.axiom SimR.comm-X-Z
@@ -87,7 +91,7 @@ g-well-defined : ∀ {n} → let open PB (CliR._QRel,_===_ n) renaming (_≈_ to
 g-well-defined SimR.order-S        = PB.axiom CliR.order-S
 g-well-defined SimR.order-H        = PB.axiom CliR.order-H
 g-well-defined (SimR.M-power k)    = PB.axiom (CliR.M-power k)
-g-well-defined SimR.semi-M𝑠        = PB.axiom CliR.semi-M𝑠
+g-well-defined SimR.semi-M𝑠        = MgC.SemiS.simplified-semi-M𝑠 _
 g-well-defined SimR.order-SH       = PB.axiom CliR.order-SH
 g-well-defined SimR.comm-HHSHHS    = PB.axiom CliR.comm-HHSHHS
 g-well-defined SimR.comm-X-Z       = PB.axiom CliR.comm-X-Z
