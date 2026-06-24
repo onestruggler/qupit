@@ -543,6 +543,22 @@ module SemiCZ (n : ℕ) where
     (Z ↓) ^ zX • (CZ^ g • (Wg↑ • P↑))     ≈⟨ trans (cright (sym assoc)) (sym assoc) ⟩
     ((Z ↓) ^ zX • CZ^ g • Wg↑) • P↑ ∎)
 
+  -- (Z↓)^zX commutes past CZ^g (comm-Z-CZ) and past Wg↑ (different qudits)
+  commZ↓CZ : (Z ↓) ^ zX • CZ^ g ≈ CZ^ g • (Z ↓) ^ zX
+  commZ↓CZ = word-comm zX (toℕ g) lemma-comm-Z-CZ
+  commZ↓Wg↑ : (Z ↓) ^ zX • Wg↑ ≈ Wg↑ • (Z ↓) ^ zX
+  commZ↓Wg↑ = word-comm zX 1 (lemma-comm-Z-w↑ (S ^ a • H • S ^ b • H • S ^ a • H))
+
+  -- Paulis pushed to the right-most (same shape as semi-M𝑠):
+  final-semi-M↑CZ : Wg↑ • CZ ≈ CZ^ g • Wg↑ • (Z ↓) ^ zX
+  final-semi-M↑CZ = begin
+    Wg↑ • CZ                        ≈⟨ simplified-semi-M↑CZ ⟩
+    (Z ↓) ^ zX • CZ^ g • Wg↑        ≈⟨ sym assoc ⟩
+    ((Z ↓) ^ zX • CZ^ g) • Wg↑      ≈⟨ cleft commZ↓CZ ⟩
+    (CZ^ g • (Z ↓) ^ zX) • Wg↑      ≈⟨ assoc ⟩
+    CZ^ g • ((Z ↓) ^ zX • Wg↑)      ≈⟨ cright commZ↓Wg↑ ⟩
+    CZ^ g • (Wg↑ • (Z ↓) ^ zX) ∎
+
 -- ════════════════════════════════════════════════════════════════════
 -- semi-M↓CZ simplified (the qudit-2/↓ Paulis cancel, leaving Z↑^(½(g-1))).
 -- _↓ is the identity, so Mg is already at level ₂₊ n (no lift needed).
@@ -625,6 +641,20 @@ module SemiCZ↓ (n : ℕ) where
     Q • (CZ^ g • M g*)                ≈⟨ cright (cright decompWP) ⟩
     Q • (CZ^ g • (Wg • P))            ≈⟨ trans (cright (sym assoc)) (sym assoc) ⟩
     (Q • CZ^ g • Wg) • P ∎)
+
+  -- Q = (Z↑)^zX commutes past CZ^g (comm-Z↑-CZ); past Wg is commWgZ↑.
+  commQCZ : Q • CZ^ g ≈ CZ^ g • Q
+  commQCZ = word-comm zX (toℕ g) lemma-comm-Z↑-CZ
+
+  -- Paulis pushed to the right-most (same shape as semi-M𝑠):
+  final-semi-M↓CZ : Wg • CZ ≈ CZ^ g • Wg • Q
+  final-semi-M↓CZ = begin
+    Wg • CZ            ≈⟨ simplified-semi-M↓CZ ⟩
+    Q • CZ^ g • Wg     ≈⟨ sym assoc ⟩
+    (Q • CZ^ g) • Wg   ≈⟨ cleft commQCZ ⟩
+    (CZ^ g • Q) • Wg   ≈⟨ assoc ⟩
+    CZ^ g • (Q • Wg)   ≈⟨ cright (sym commWgZ↑) ⟩
+    CZ^ g • (Wg • Q) ∎
 
 -- ════════════════════════════════════════════════════════════════════
 -- Sanity check: the g = -1 instance of the simplified semi-M↓CZ relation.
@@ -944,3 +974,179 @@ module SemiS-collected (n : ℕ) where
       (S ^ a • H • S ^ b • H • S ^ a • H) • Z ^ toℕ (β * ((g * g) * 1/2))
         ≈⟨ cright (refl' (Eq.cong (Z ^_) (Eq.cong toℕ ringβ))) ⟩
       Wg • Z ^ toℕ (g * 1/2) ∎
+
+  -- ── final cross-cancellation: remove the left-over Z^½ from both sides ──
+  open Group-Lemmas (Gen (₁₊ n)) ((₁₊ n) QRel,_===_) (grouplike {₁₊ n}) using (lemma-right-cancel)
+  private
+    2* : ℤ* ₚ
+    2* = (₂ , λ ())          -- the ℤ* element 2 (exactly as in the definition of 1/2)
+    2ₚ = 2* .proj₁
+    gm = g + (- 1ₚ)
+  -- 2·½ ≡ 1.  (2* ⁻¹).proj₁ is *definitionally* 1/2, so the inverse law applies directly.
+  half2 : 2ₚ * 1/2 ≡ 1ₚ
+  half2 = lemma-⁻¹ʳ 2ₚ {{nztoℕ {y = 2ₚ} {neq0 = 2* .proj₂}}}
+  half-half : 1/2 + 1/2 ≡ 1ₚ
+  half-half = Eq.trans (Eq.cong₂ _+_ (Eq.sym (*-identityˡ 1/2)) (Eq.sym (*-identityˡ 1/2)))
+              (Eq.trans (Eq.sym (*-distribʳ-+ 1/2 1ₚ 1ₚ)) half2)
+  gsplit : g ≡ gm + 1ₚ
+  gsplit = Eq.sym (Eq.trans (+-assoc g (- 1ₚ) 1ₚ)
+                  (Eq.trans (Eq.cong (g +_) (+-inverseˡ 1ₚ)) (+-identityʳ g)))
+  ringEq : g * 1/2 + gm * 1/2 ≡ gm + 1/2
+  ringEq = Eq.trans (Eq.cong (λ t → t * 1/2 + gm * 1/2) gsplit)
+           (Eq.trans (Eq.cong (λ t → t + gm * 1/2) (*-distribʳ-+ 1/2 gm 1ₚ))
+           (Eq.trans (Eq.cong (λ t → (gm * 1/2 + t) + gm * 1/2) (*-identityˡ 1/2))
+           (Eq.trans (+-assoc (gm * 1/2) 1/2 (gm * 1/2))
+           (Eq.trans (Eq.cong (λ t → gm * 1/2 + t) (+-comm 1/2 (gm * 1/2)))
+           (Eq.trans (Eq.sym (+-assoc (gm * 1/2) (gm * 1/2) 1/2))
+           (Eq.trans (Eq.cong (λ t → t + 1/2) (Eq.sym (*-distribˡ-+ gm 1/2 1/2)))
+           (Eq.trans (Eq.cong (λ t → gm * t + 1/2) half-half)
+                     (Eq.cong (λ t → t + 1/2) (*-identityʳ gm)))))))))
+
+  -- Wg · S ≈ S^(g²) · Wg · Z^(g-1)
+  final-semi-M𝑠 : Wg • S ≈ S ^ c • Wg • Z ^ toℕ (g + (- 1ₚ))
+  final-semi-M𝑠 = lemma-right-cancel {h = Z ^ z½} (begin
+    (Wg • S) • Z ^ z½                              ≈⟨ assoc ⟩
+    Wg • (S • Z ^ z½)                              ≈⟨ collected-semi-M𝑠 ⟩
+    S ^ c • Wg • Z ^ (toℕ (g * 1/2) Nat.+ zX)      ≈⟨ cright (cright expeq) ⟩
+    S ^ c • Wg • Z ^ (toℕ (g + (- 1ₚ)) Nat.+ z½)   ≈⟨ cright (cright (lemma-^-+ Z (toℕ (g + (- 1ₚ))) z½)) ⟩
+    S ^ c • Wg • (Z ^ toℕ (g + (- 1ₚ)) • Z ^ z½)   ≈⟨ cright (sym assoc) ⟩
+    S ^ c • ((Wg • Z ^ toℕ (g + (- 1ₚ))) • Z ^ z½) ≈⟨ sym assoc ⟩
+    (S ^ c • Wg • Z ^ toℕ (g + (- 1ₚ))) • Z ^ z½ ∎)
+    where
+    expeq : Z ^ (toℕ (g * 1/2) Nat.+ zX) ≈ Z ^ (toℕ (g + (- 1ₚ)) Nat.+ z½)
+    expeq = begin
+      Z ^ (toℕ (g * 1/2) Nat.+ zX)             ≈⟨ Zmod (toℕ (g * 1/2) Nat.+ zX) ⟩
+      Z ^ ((toℕ (g * 1/2) Nat.+ zX) % p)       ≈⟨ refl' (Eq.cong (Z ^_) modeq) ⟩
+      Z ^ ((toℕ (g + (- 1ₚ)) Nat.+ z½) % p)    ≈⟨ sym (Zmod (toℕ (g + (- 1ₚ)) Nat.+ z½)) ⟩
+      Z ^ (toℕ (g + (- 1ₚ)) Nat.+ z½) ∎
+      where
+      modeq : (toℕ (g * 1/2) Nat.+ zX) % p ≡ (toℕ (g + (- 1ₚ)) Nat.+ z½) % p
+      modeq = Eq.trans (D.toℕ-+ (g * 1/2) ((g + (- 1ₚ)) * 1/2))
+              (Eq.trans (Eq.cong toℕ ringEq) (Eq.sym (D.toℕ-+ (g + (- 1ₚ)) 1/2)))
+
+-- ════════════════════════════════════════════════════════════════════
+-- lemma-Mg^kS : the S-analogue of lemma-Mg^k𝑠.
+--   Mg^k · S  ≈  S^((g²)^k) · Mg^k · Z^(½(g^k-1)).
+-- Mg^k = M(g^k) conjugates Z by g^(-k); pushing the half-Pauli of 𝑠
+-- through Mg^k turns the lemma-Mg^k𝑠 right-hand 𝑠-power into S plus a
+-- single right-most Z, exactly as Wg does in final-semi-M𝑠.
+-- ════════════════════════════════════════════════════════════════════
+module MgPowS (n : ℕ) where
+  open PB ((₁₊ n) QRel,_===_)
+  open PP ((₁₊ n) QRel,_===_)
+  open SR word-setoid
+  open Pattern-Assoc
+  open Push n
+  open import Algebra.Properties.Ring (+-*-ring p-2)
+  module D  = Decomp n g*
+  module SC = SemiS-collected n
+  open Group-Lemmas (Gen (₁₊ n)) ((₁₊ n) QRel,_===_) (grouplike {₁₊ n}) using (lemma-right-cancel)
+  private
+    α  = g* .proj₁
+    β  = (g* ⁻¹) .proj₁
+    z½ = toℕ 1/2
+    zZ = toℕ ((1ₚ + (- β)) * 1/2)
+    zX = toℕ ((α + (- 1ₚ)) * 1/2)
+  Wg : Word (Gen (₁₊ n))
+  Wg = SC.Wg
+  P : Word (Gen (₁₊ n))
+  P = Z ^ zZ • X ^ zX
+
+  decompWP : Mg ≈ Wg • P
+  decompWP = trans D.M-decomp-clean (special-assoc (□ ^ 8) (□ ^ 6 • □ ^ 2) auto)
+
+  -- Z^e commutes through the Pauli block P (Z–Z and Z–X both commute).
+  commZP : ∀ e → Z ^ e • P ≈ P • Z ^ e
+  commZP e = begin
+    Z ^ e • (Z ^ zZ • X ^ zX)       ≈⟨ sym assoc ⟩
+    (Z ^ e • Z ^ zZ) • X ^ zX       ≈⟨ cleft ZZcomm ⟩
+    (Z ^ zZ • Z ^ e) • X ^ zX       ≈⟨ assoc ⟩
+    Z ^ zZ • (Z ^ e • X ^ zX)       ≈⟨ cright (word-comm e zX (sym (axiom comm-X-Z))) ⟩
+    Z ^ zZ • (X ^ zX • Z ^ e)       ≈⟨ sym assoc ⟩
+    (Z ^ zZ • X ^ zX) • Z ^ e ∎
+    where
+    ZZcomm : Z ^ e • Z ^ zZ ≈ Z ^ zZ • Z ^ e
+    ZZcomm = trans (sym (lemma-^-+ Z e zZ))
+             (trans (refl' (Eq.cong (Z ^_) (NP.+-comm e zZ))) (lemma-^-+ Z zZ e))
+
+  -- Z conjugates through a single Mg, picking up the factor β = g⁻¹.
+  Z-Mg : ∀ (k : ℤ ₚ) → Z ^ toℕ k • Mg ≈ Mg • Z ^ toℕ (β * k)
+  Z-Mg k = begin
+    Z ^ toℕ k • Mg                   ≈⟨ cright decompWP ⟩
+    Z ^ toℕ k • (Wg • P)             ≈⟨ sym assoc ⟩
+    (Z ^ toℕ k • Wg) • P             ≈⟨ cleft (SC.Z-Wg k) ⟩
+    (Wg • Z ^ toℕ (β * k)) • P       ≈⟨ assoc ⟩
+    Wg • (Z ^ toℕ (β * k) • P)       ≈⟨ cright (commZP (toℕ (β * k))) ⟩
+    Wg • (P • Z ^ toℕ (β * k))       ≈⟨ sym assoc ⟩
+    (Wg • P) • Z ^ toℕ (β * k)       ≈⟨ cleft (sym decompWP) ⟩
+    Mg • Z ^ toℕ (β * k) ∎
+
+  -- Z conjugates through Mg^j, picking up β^j.
+  Z-Mg^k : ∀ (j : ℕ) (m : ℤ ₚ) → Z ^ toℕ m • Mg ^ j ≈ Mg ^ j • Z ^ toℕ (β ^′ j * m)
+  Z-Mg^k 0 m = begin
+    Z ^ toℕ m • ε              ≈⟨ right-unit ⟩
+    Z ^ toℕ m                  ≈⟨ refl' (Eq.cong (Z ^_) (Eq.cong toℕ (Eq.sym (*-identityˡ m)))) ⟩
+    Z ^ toℕ (1ₚ * m)           ≈⟨ sym left-unit ⟩
+    ε • Z ^ toℕ (1ₚ * m) ∎
+  Z-Mg^k 1 m = trans (Z-Mg m)
+    (cright (refl' (Eq.cong (Z ^_) (Eq.cong toℕ (Eq.cong (λ t → t * m) (Eq.sym (lemma-x^′1=x β)))))))
+  Z-Mg^k (₂₊ i) m = begin
+    Z ^ toℕ m • Mg ^ (₂₊ i)                               ≈⟨ sym assoc ⟩
+    (Z ^ toℕ m • Mg) • Mg ^ (₁₊ i)                        ≈⟨ cleft (Z-Mg m) ⟩
+    (Mg • Z ^ toℕ (β * m)) • Mg ^ (₁₊ i)                  ≈⟨ assoc ⟩
+    Mg • (Z ^ toℕ (β * m) • Mg ^ (₁₊ i))                  ≈⟨ cright (Z-Mg^k (₁₊ i) (β * m)) ⟩
+    Mg • (Mg ^ (₁₊ i) • Z ^ toℕ (β ^′ (₁₊ i) * (β * m)))  ≈⟨ sym assoc ⟩
+    (Mg • Mg ^ (₁₊ i)) • Z ^ toℕ (β ^′ (₁₊ i) * (β * m))  ≈⟨ cright (refl' (Eq.cong (Z ^_) (Eq.cong toℕ e2))) ⟩
+    (Mg • Mg ^ (₁₊ i)) • Z ^ toℕ (β ^′ (₂₊ i) * m) ∎
+    where
+    e2 : β ^′ (₁₊ i) * (β * m) ≡ β ^′ (₂₊ i) * m
+    e2 = Eq.trans (Eq.sym (*-assoc (β ^′ (₁₊ i)) β m))
+                  (Eq.cong (λ t → t * m) (*-comm (β ^′ (₁₊ i)) β))
+
+  -- ring facts for the exponents
+  private
+    βα≡1 : β * g ≡ 1ₚ
+    βα≡1 = lemma-⁻¹ˡ (g* .proj₁) {{nztoℕ {y = g* .proj₁} {neq0 = g* .proj₂}}}
+    βgg : β * (g * g) ≡ g
+    βgg = Eq.trans (Eq.sym (*-assoc β g g)) (Eq.trans (Eq.cong (λ t → t * g) βα≡1) (*-identityˡ g))
+
+  lemma-Mg^kS : ∀ (k : ℕ) →
+    Mg ^ k • S ≈ S ^ toℕ ((g * g) ^′ k) • Mg ^ k • Z ^ toℕ ((g ^′ k + (- 1ₚ)) * 1/2)
+  lemma-Mg^kS k = lemma-right-cancel {h = Z ^ z½} (begin
+    (Mg ^ k • S) • Z ^ z½                                                          ≈⟨ assoc ⟩
+    Mg ^ k • (S • Z ^ z½)                                                          ≈⟨ refl ⟩
+    Mg ^ k • 𝑠                                                                     ≈⟨ CL.lemma-Mg^k𝑠 n k ⟩
+    𝑠^ ((g * g) ^′ k) • Mg ^ k                                                     ≈⟨ cleft (𝑠-collect (toℕ ((g * g) ^′ k))) ⟩
+    (S ^ toℕ ((g * g) ^′ k) • Z ^ (toℕ ((g * g) ^′ k) Nat.* z½)) • Mg ^ k          ≈⟨ assoc ⟩
+    S ^ toℕ ((g * g) ^′ k) • (Z ^ (toℕ ((g * g) ^′ k) Nat.* z½) • Mg ^ k)          ≈⟨ cright (cleft (Zmod (toℕ ((g * g) ^′ k) Nat.* z½))) ⟩
+    S ^ toℕ ((g * g) ^′ k) • (Z ^ ((toℕ ((g * g) ^′ k) Nat.* z½) % p) • Mg ^ k)    ≈⟨ cright (cleft (refl' (Eq.cong (Z ^_) (lemma-toℕ-% ((g * g) ^′ k) 1/2)))) ⟩
+    S ^ toℕ ((g * g) ^′ k) • (Z ^ toℕ ((g * g) ^′ k * 1/2) • Mg ^ k)               ≈⟨ cright (Z-Mg^k k ((g * g) ^′ k * 1/2)) ⟩
+    S ^ toℕ ((g * g) ^′ k) • (Mg ^ k • Z ^ toℕ (β ^′ k * ((g * g) ^′ k * 1/2)))    ≈⟨ cright (cright (refl' (Eq.cong (Z ^_) (Eq.cong toℕ expEqk)))) ⟩
+    S ^ toℕ ((g * g) ^′ k) • (Mg ^ k • Z ^ toℕ (g ^′ k * 1/2))                     ≈⟨ cright (cright splitZ) ⟩
+    S ^ toℕ ((g * g) ^′ k) • (Mg ^ k • (Z ^ toℕ ((g ^′ k + (- 1ₚ)) * 1/2) • Z ^ z½))  ≈⟨ cright (sym assoc) ⟩
+    S ^ toℕ ((g * g) ^′ k) • ((Mg ^ k • Z ^ toℕ ((g ^′ k + (- 1ₚ)) * 1/2)) • Z ^ z½)  ≈⟨ sym assoc ⟩
+    (S ^ toℕ ((g * g) ^′ k) • Mg ^ k • Z ^ toℕ ((g ^′ k + (- 1ₚ)) * 1/2)) • Z ^ z½ ∎)
+    where
+    expEqk : β ^′ k * ((g * g) ^′ k * 1/2) ≡ g ^′ k * 1/2
+    expEqk = Eq.trans (Eq.sym (*-assoc (β ^′ k) ((g * g) ^′ k) 1/2))
+             (Eq.cong (λ t → t * 1/2)
+               (Eq.trans (Eq.sym (*-^′-distribʳ β (g * g) k)) (Eq.cong (λ t → t ^′ k) βgg)))
+    hsplit : (g ^′ k + (- 1ₚ)) + 1ₚ ≡ g ^′ k
+    hsplit = Eq.trans (+-assoc (g ^′ k) (- 1ₚ) 1ₚ)
+             (Eq.trans (Eq.cong (g ^′ k +_) (+-inverseˡ 1ₚ)) (+-identityʳ (g ^′ k)))
+    ringk : (g ^′ k + (- 1ₚ)) * 1/2 + 1/2 ≡ g ^′ k * 1/2
+    ringk = Eq.trans (Eq.cong (λ t → (g ^′ k + (- 1ₚ)) * 1/2 + t) (Eq.sym (*-identityˡ 1/2)))
+            (Eq.trans (Eq.sym (*-distribʳ-+ 1/2 (g ^′ k + (- 1ₚ)) 1ₚ))
+                      (Eq.cong (λ t → t * 1/2) hsplit))
+    splitZ : Z ^ toℕ (g ^′ k * 1/2) ≈ Z ^ toℕ ((g ^′ k + (- 1ₚ)) * 1/2) • Z ^ z½
+    splitZ = begin
+      Z ^ toℕ (g ^′ k * 1/2)                                       ≈⟨ Zmod (toℕ (g ^′ k * 1/2)) ⟩
+      Z ^ (toℕ (g ^′ k * 1/2) % p)                                 ≈⟨ refl' (Eq.cong (Z ^_) modeqk) ⟩
+      Z ^ ((toℕ ((g ^′ k + (- 1ₚ)) * 1/2) Nat.+ z½) % p)           ≈⟨ sym (Zmod (toℕ ((g ^′ k + (- 1ₚ)) * 1/2) Nat.+ z½)) ⟩
+      Z ^ (toℕ ((g ^′ k + (- 1ₚ)) * 1/2) Nat.+ z½)                 ≈⟨ lemma-^-+ Z (toℕ ((g ^′ k + (- 1ₚ)) * 1/2)) z½ ⟩
+      Z ^ toℕ ((g ^′ k + (- 1ₚ)) * 1/2) • Z ^ z½ ∎
+      where
+      modeqk : toℕ (g ^′ k * 1/2) % p ≡ (toℕ ((g ^′ k + (- 1ₚ)) * 1/2) Nat.+ z½) % p
+      modeqk = Eq.trans (m<n⇒m%n≡m (toℕ<n (g ^′ k * 1/2)))
+               (Eq.trans (Eq.cong toℕ (Eq.sym ringk))
+                         (Eq.sym (D.toℕ-+ ((g ^′ k + (- 1ₚ)) * 1/2) 1/2)))

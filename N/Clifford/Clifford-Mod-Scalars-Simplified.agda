@@ -100,16 +100,22 @@ module Simplified-Relations where
     --     All three semi-M relations are stated in their *simplified* form: the
     --     metaplectic Mg = M g′ is replaced by its bare S,H multiplier
     --     Wg = S^g·H·S^(g⁻¹)·H·S^g·H, with Mg's own Pauli pushed out and
-    --     cancelled, leaving a single Z^zX correction (zX = ½(g-1)):
+    --     cancelled.  semi-M𝑠 is further reduced to its fully-collected form,
+    --     using the basic S (not 𝑠 = S·Z^½) and a single Z^(g-1) tail (the
+    --     left-over Z^½ has been cross-cancelled):
     --
-    --        semi-M𝑠   :  Wg  · 𝑠  = 𝑠^(g²) · Wg · Z^(½(g-1))
-    --        semi-M↑CZ :  Wg↑ · CZ = Z↓^(½(g-1)) · CZ^g · Wg↑
-    --        semi-M↓CZ :  Wg  · CZ = Z↑^(½(g-1)) · CZ^g · Wg
+    --     All three now carry their Pauli at the right-most position:
     --
-    --     These are the `simplified-semi-M*` theorems of N.Clifford.Mg-Simplify
-    --     (soundness, in the original Clifford presentation); the original
-    --     Mg-forms are recovered as the `completeness-semi-M*` lemmas of
-    --     N.Clifford.Mg-Simplify-S.
+    --        semi-M𝑠   :  Wg  · S  = S^(g²) · Wg  · Z^(g-1)
+    --        semi-M↑CZ :  Wg↑ · CZ = CZ^g  · Wg↑ · Z↓^(½(g-1))
+    --        semi-M↓CZ :  Wg  · CZ = CZ^g  · Wg  · Z↑^(½(g-1))
+    --
+    --     The S-form semi-M𝑠 is the `final-semi-M𝑠` theorem of
+    --     N.Clifford.Mg-Simplify; the CZ ones are the `final-semi-M*CZ`
+    --     theorems (all soundness, in the original Clifford presentation).
+    --     The original Mg-forms are recovered as the `completeness-semi-M*`
+    --     lemmas of N.Clifford.Mg-Simplify-S (the S-form is first turned back
+    --     into the 𝑠-form by `SemiS-rev.lemma-semi-M𝑠`).
     --
     --     The completeness proofs of the two CZ relations need Z↔CZ
     --     commutation, which is NOT a consequence of selinger + Pauli (it would
@@ -120,9 +126,9 @@ module Simplified-Relations where
     ----------------------------------------------------------------
     order-H :       ∀ {n} → (₁₊ n) QRel,  H ^ 2 === M₋₁
     M-power : ∀ {n} (k : ℤ ₚ) → (₁₊ n) QRel,  Mg^ k === M (g^ k)
-    semi-M𝑠 :       ∀ {n} → (₁₊ n) QRel,  Wg • 𝑠 === 𝑠^ (g * g) • Wg • Z ^ zX
-    semi-M↑CZ :     ∀ {n} → (₂₊ n) QRel,  Wg ↑ • CZ === (Z ↓) ^ zX • CZ^ g • Wg ↑
-    semi-M↓CZ :     ∀ {n} → (₂₊ n) QRel,  Wg • CZ === (Z ↑) ^ zX • CZ^ g • Wg
+    semi-M𝑠 :       ∀ {n} → (₁₊ n) QRel,  Wg • S === S ^ toℕ (g * g) • Wg • Z ^ toℕ (g + (- 1ₚ))
+    semi-M↑CZ :     ∀ {n} → (₂₊ n) QRel,  Wg ↑ • CZ === CZ^ g • Wg ↑ • (Z ↓) ^ zX
+    semi-M↓CZ :     ∀ {n} → (₂₊ n) QRel,  Wg • CZ === CZ^ g • Wg • (Z ↑) ^ zX
 
     ----------------------------------------------------------------
     -- (C) Pauli layer — the canonical transport rules for X, Z.

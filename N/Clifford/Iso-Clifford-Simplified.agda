@@ -93,12 +93,12 @@ g-well-defined : ∀ {n} → let open PB (CliR._QRel,_===_ n) renaming (_≈_ to
 g-well-defined SimR.order-S        = PB.axiom CliR.order-S
 g-well-defined SimR.order-H        = PB.axiom CliR.order-H
 g-well-defined (SimR.M-power k)    = PB.axiom (CliR.M-power k)
-g-well-defined SimR.semi-M𝑠        = MgC.SemiS.simplified-semi-M𝑠 _
+g-well-defined SimR.semi-M𝑠        = MgC.SemiS-collected.final-semi-M𝑠 _
 g-well-defined SimR.order-SH       = PB.axiom CliR.order-SH
 g-well-defined SimR.comm-HHSHHS    = PB.axiom CliR.comm-HHSHHS
 g-well-defined SimR.comm-X-Z       = PB.axiom CliR.comm-X-Z
-g-well-defined SimR.semi-M↑CZ      = MgC.SemiCZ.simplified-semi-M↑CZ _
-g-well-defined SimR.semi-M↓CZ      = MgC.SemiCZ↓.simplified-semi-M↓CZ _
+g-well-defined SimR.semi-M↑CZ      = MgC.SemiCZ.final-semi-M↑CZ _
+g-well-defined SimR.semi-M↓CZ      = MgC.SemiCZ↓.final-semi-M↓CZ _
 g-well-defined SimR.rel-X↑-CZ      = PB.axiom CliR.rel-X↑-CZ
 g-well-defined SimR.rel-X↓-CZ      = PB.axiom CliR.rel-X↓-CZ
 g-well-defined SimR.comm-Z-CZ      = CliL.lemma-comm-Z-CZ
