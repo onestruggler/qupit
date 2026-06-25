@@ -1,0 +1,61 @@
+﻿\begin{tikzpicture}
+\begin{pgfonlayer}{nodelayer}
+\node [style=A box] (n0y50) at (2.0, 5.0) {$A_{{0b}}$};
+\node [style=gate] (n0y51) at (4.75, 5.0) {$H$};
+\node [style=none] (lm0el05) at (0.0, 5.0){};
+\node [style=none] (lm0er05) at (6.5, 5.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el05.center) to (lm0er05.center);
+\end{pgfonlayer}
+\node [style=none] (equiv) at (7.5, 5.0) {$\equiv_{s}$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=A box] (n8y50) at (10.5, 5.0) {$A_{{b0}}$};
+\node [style=none] (lm8el05) at (8.5, 5.0){};
+\node [style=none] (lm8er05) at (12.25, 5.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm8el05.center) to (lm8er05.center);
+\end{pgfonlayer}
+\node [style=none,label={right:$b\neq 0$}] (rspec) at (12.75, 5.0) {};
+\begin{pgfonlayer}{nodelayer}
+\node [style=A box] (n0y20) at (2.0, 2.5) {$A_{{a0}}$};
+\node [style=gate] (n0y21) at (4.75, 2.5) {$H$};
+\node [style=none] (lm0el02) at (0.0, 2.5){};
+\node [style=none] (lm0er02) at (6.5, 2.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el02.center) to (lm0er02.center);
+\end{pgfonlayer}
+\node [style=none] (equiv) at (7.5, 2.5) {$\equiv_{s}$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=A box] (n8y20) at (10.625, 2.5) {$A_{{0,-a}}$};
+\node [style=none] (lm8el02) at (8.5, 2.5){};
+\node [style=none] (lm8er02) at (12.375, 2.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm8el02.center) to (lm8er02.center);
+\end{pgfonlayer}
+\node [style=none,label={right:$a\neq 0$}] (rspec) at (12.875, 2.5) {};
+\begin{pgfonlayer}{nodelayer}
+\node [style=A box] (n0y00) at (2.0, 0.0) {$A_{{ab}}$};
+\node [style=gate] (n0y01) at (4.75, 0.0) {$H$};
+\node [style=none] (lm0el00) at (0.0, 0.0){};
+\node [style=none] (lm0er00) at (6.5, 0.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el00.center) to (lm0er00.center);
+\end{pgfonlayer}
+\node [style=none] (equiv) at (7.5, 0.0) {$\equiv_{s}$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n8y00) at (10.75, 0.0) {$S^{1/(ab)}$};
+\node [style=A box] (n8y01) at (14.125, 0.0) {$A_{{b,-a}}$};
+\node [style=none] (lm8el00) at (8.5, 0.0){};
+\node [style=none] (lm8er00) at (15.875, 0.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm8el00.center) to (lm8er00.center);
+\end{pgfonlayer}
+\node [style=none,label={right:$a,b\neq 0$}] (rspec) at (16.375, 0.0) {};
+\end{tikzpicture}
+

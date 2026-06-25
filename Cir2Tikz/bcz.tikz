@@ -1,0 +1,115 @@
+\begin{tikzpicture}
+\begin{pgfonlayer}{nodelayer}
+\node [style=cnot ctrl, label={above:$$}] (n0y60) at (1.75, 8.5) {};
+\node [style=cnot ctrl] (n0y60t) at (1.75, 6.5) {$$};
+\node [style=B box] (n0y61) at (4.5, 9.5) {$B_{{0b}}$};
+\node [style=none] (lm0el06) at (0.0, 6.5){};
+\node [style=none] (lm0el16) at (0.0, 8.5){};
+\node [style=none] (lm0el26) at (0.0, 10.5){};
+\node [style=none] (lm0er06) at (6.25, 6.5){};
+\node [style=none] (lm0er16) at (6.25, 8.5){};
+\node [style=none] (lm0er26) at (6.25, 10.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el06.center) to (lm0er06.center);
+\draw (lm0el16.center) to (lm0er16.center);
+\draw (lm0el26.center) to (lm0er26.center);
+\draw (n0y60.center) to (n0y60t.center);
+\end{pgfonlayer}
+\node [style=none] (equiv) at (7.25, 8.5) {$\equiv_{s}$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=B box] (n8y60) at (10.25, 9.5) {$B_{{0b}}$};
+\node [style=none] (n8y61tl) at (12.25, 8.5) {$$};
+\node [style=none] (n8y61bl) at (12.25, 6.5) {$$};
+\node [style=none] (n8y61br) at (13.75, 6.5) {$$};
+\node [style=none] (n8y61tr) at (13.75, 8.5) {$$};
+\node [style=none] (n8y61ftl) at (12.25, 8.65) {};
+\node [style=none] (n8y61fbr) at (13.75, 6.35) {};
+\node [style=cnot ctrl, label={above:$$}] (n8y62) at (15.5, 10.5) {};
+\node [style=cnot ctrl] (n8y62t) at (15.5, 8.5) {$$};
+\node [style=none] (n8y63tl) at (17.25, 8.5) {$$};
+\node [style=none] (n8y63bl) at (17.25, 6.5) {$$};
+\node [style=none] (n8y63br) at (18.75, 6.5) {$$};
+\node [style=none] (n8y63tr) at (18.75, 8.5) {$$};
+\node [style=none] (n8y63ftl) at (17.25, 8.65) {};
+\node [style=none] (n8y63fbr) at (18.75, 6.35) {};
+\node [style=cnot ctrl, label={above:$-b$}] (n8y64) at (20.5, 8.5) {};
+\node [style=cnot ctrl] (n8y64t) at (20.5, 6.5) {$$};
+\node [style=none] (lm8el06) at (8.25, 6.5){};
+\node [style=none] (lm8el16) at (8.25, 8.5){};
+\node [style=none] (lm8el26) at (8.25, 10.5){};
+\node [style=none] (lm8er06) at (22.25, 6.5){};
+\node [style=none] (lm8er16) at (22.25, 8.5){};
+\node [style=none] (lm8er26) at (22.25, 10.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm8el06.center) to (lm8er06.center);
+\draw (lm8el16.center) to (lm8er16.center);
+\draw (lm8el26.center) to (lm8er26.center);
+\fill [white] (n8y61ftl.center) rectangle (n8y61fbr.center);
+\draw (n8y61bl.center) to (n8y61tr.center);
+\draw (n8y61tl.center) to (n8y61br.center);
+\draw (n8y62.center) to (n8y62t.center);
+\fill [white] (n8y63ftl.center) rectangle (n8y63fbr.center);
+\draw (n8y63bl.center) to (n8y63tr.center);
+\draw (n8y63tl.center) to (n8y63br.center);
+\draw (n8y64.center) to (n8y64t.center);
+\end{pgfonlayer}
+\begin{pgfonlayer}{nodelayer}
+\node [style=cnot ctrl, label={above:$$}] (n0y00) at (1.75, 2.0) {};
+\node [style=cnot ctrl] (n0y00t) at (1.75, 0.0) {$$};
+\node [style=B box] (n0y01) at (4.5, 3.0) {$B_{{ab}}$};
+\node [style=none] (lm0el00) at (0.0, 0.0){};
+\node [style=none] (lm0el10) at (0.0, 2.0){};
+\node [style=none] (lm0el20) at (0.0, 4.0){};
+\node [style=none] (lm0er00) at (6.25, 0.0){};
+\node [style=none] (lm0er10) at (6.25, 2.0){};
+\node [style=none] (lm0er20) at (6.25, 4.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el00.center) to (lm0er00.center);
+\draw (lm0el10.center) to (lm0er10.center);
+\draw (lm0el20.center) to (lm0er20.center);
+\draw (n0y00.center) to (n0y00t.center);
+\end{pgfonlayer}
+\node [style=none] (equiv) at (7.25, 2.0) {$\equiv_{s}$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=B box] (n8y00) at (10.25, 3.0) {$B_{{ab}}$};
+\node [style=none] (n8y01tl) at (12.25, 2.0) {$$};
+\node [style=none] (n8y01bl) at (12.25, 0.0) {$$};
+\node [style=none] (n8y01br) at (13.75, 0.0) {$$};
+\node [style=none] (n8y01tr) at (13.75, 2.0) {$$};
+\node [style=none] (n8y01ftl) at (12.25, 2.15) {};
+\node [style=none] (n8y01fbr) at (13.75, -0.15) {};
+\node [style=cnot ctrl, label={above:$$}] (n8y02) at (15.5, 4.0) {};
+\node [style=cnot ctrl] (n8y02t) at (15.5, 2.0) {$$};
+\node [style=none] (n8y03tl) at (17.25, 2.0) {$$};
+\node [style=none] (n8y03bl) at (17.25, 0.0) {$$};
+\node [style=none] (n8y03br) at (18.75, 0.0) {$$};
+\node [style=none] (n8y03tr) at (18.75, 2.0) {$$};
+\node [style=none] (n8y03ftl) at (17.25, 2.15) {};
+\node [style=none] (n8y03fbr) at (18.75, -0.15) {};
+\node [style=cnot ctrl, label={above:$-a$}] (n8y04) at (20.5, 2.0) {};
+\node [style=cnot ctrl] (n8y04t) at (20.5, 0.0) {$$};
+\node [style=none] (lm8el00) at (8.25, 0.0){};
+\node [style=none] (lm8el10) at (8.25, 2.0){};
+\node [style=none] (lm8el20) at (8.25, 4.0){};
+\node [style=none] (lm8er00) at (22.25, 0.0){};
+\node [style=none] (lm8er10) at (22.25, 2.0){};
+\node [style=none] (lm8er20) at (22.25, 4.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm8el00.center) to (lm8er00.center);
+\draw (lm8el10.center) to (lm8er10.center);
+\draw (lm8el20.center) to (lm8er20.center);
+\fill [white] (n8y01ftl.center) rectangle (n8y01fbr.center);
+\draw (n8y01bl.center) to (n8y01tr.center);
+\draw (n8y01tl.center) to (n8y01br.center);
+\draw (n8y02.center) to (n8y02t.center);
+\fill [white] (n8y03ftl.center) rectangle (n8y03fbr.center);
+\draw (n8y03bl.center) to (n8y03tr.center);
+\draw (n8y03tl.center) to (n8y03br.center);
+\draw (n8y04.center) to (n8y04t.center);
+\end{pgfonlayer}
+\node [style=none,label={right:$a\neq 0$}] (rspec) at (22.75, 2.0) {};
+\end{tikzpicture}

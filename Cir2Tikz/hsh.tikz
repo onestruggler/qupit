@@ -1,0 +1,23 @@
+\begin{tikzpicture}
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n0y00) at (1.75, 0.0) {$H$};
+\node [style=gate] (n0y01) at (4.25, 0.0) {$S^{p-1}$};
+\node [style=gate] (n0y02) at (6.75, 0.0) {$H$};
+\node [style=none] (lm0el00) at (0.0, 0.0){};
+\node [style=none] (lm0er00) at (8.5, 0.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el00.center) to (lm0er00.center);
+\end{pgfonlayer}
+\node [style=none] (equiv) at (9.5, 0.0) {$\equiv_{s}$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n10y00) at (12.25, 0.0) {$S$};
+\node [style=gate] (n10y01) at (14.75, 0.0) {$H$};
+\node [style=gate] (n10y02) at (17.25, 0.0) {$S$};
+\node [style=none] (lm10el00) at (10.5, 0.0){};
+\node [style=none] (lm10er00) at (19.0, 0.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm10el00.center) to (lm10er00.center);
+\end{pgfonlayer}
+\end{tikzpicture}

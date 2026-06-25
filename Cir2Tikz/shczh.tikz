@@ -1,0 +1,39 @@
+\begin{tikzpicture}
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n0y00) at (1.75, 0.0) {$H$};
+\node [style=cnot ctrl, label={above:$$}] (n0y01) at (4.25, 2.0) {};
+\node [style=cnot ctrl] (n0y01t) at (4.25, 0.0) {$$};
+\node [style=gate] (n0y02) at (6.75, 0.0) {$H$};
+\node [style=gate] (n0y03) at (9.25, 0.0) {$S$};
+\node [style=none] (lm0el00) at (0.0, 0.0){};
+\node [style=none] (lm0el10) at (0.0, 2.0){};
+\node [style=none] (lm0er00) at (11.0, 0.0){};
+\node [style=none] (lm0er10) at (11.0, 2.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el00.center) to (lm0er00.center);
+\draw (lm0el10.center) to (lm0er10.center);
+\draw (n0y01.center) to (n0y01t.center);
+\end{pgfonlayer}
+\node [style=none] (equiv) at (12.0, 1.0) {$\equiv_{s}$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n13y00) at (14.75, 0.0) {$S$};
+\node [style=gate] (n13y01) at (14.75, 2.0) {$S$};
+\node [style=cnot ctrl, label={above:$$}] (n13y02) at (17.25, 2.0) {};
+\node [style=cnot ctrl] (n13y02t) at (17.25, 0.0) {$$};
+\node [style=gate] (n13y03) at (19.75, 0.0) {$H$};
+\node [style=cnot ctrl, label={above:$$}] (n13y04) at (22.25, 2.0) {};
+\node [style=cnot ctrl] (n13y04t) at (22.25, 0.0) {$$};
+\node [style=gate] (n13y05) at (24.75, 0.0) {$H$};
+\node [style=none] (lm13el00) at (13.0, 0.0){};
+\node [style=none] (lm13el10) at (13.0, 2.0){};
+\node [style=none] (lm13er00) at (26.5, 0.0){};
+\node [style=none] (lm13er10) at (26.5, 2.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm13el00.center) to (lm13er00.center);
+\draw (lm13el10.center) to (lm13er10.center);
+\draw (n13y02.center) to (n13y02t.center);
+\draw (n13y04.center) to (n13y04t.center);
+\end{pgfonlayer}
+\end{tikzpicture}

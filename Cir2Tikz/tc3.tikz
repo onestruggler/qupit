@@ -1,0 +1,159 @@
+\begin{tikzpicture}
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (0) at (1.75, 2.0) {$H$};
+\node [style=gate] (1) at (1.75, 4.0) {$S^{3}$};
+\node [style=gate] (2) at (1.75, 6.0) {$H^{ab}$};
+\node [style=B box] (3) at (4.625, 3.0) {$B_{0,-a}$};
+\node [style=cnot ctrl, label={above:$$}] (4) at (7.5, 4.0) {};
+\node [style=none, label={[yshift=0.5em]$$}] (4tarab) at (7.5, 6.0) {};
+\node [style=cnot targ] (4t) at (7.5, 6.0) {$$};
+\node [style=cnot ctrl, label={above:$$}] (5) at (10.0, 6.0) {};
+\node [style=cnot ctrl] (5t) at (10.0, 4.0) {$$};
+\node [style=cnot ctrl, label={above:$4$}] (6) at (12.5, 6.0) {};
+\node [style=cnot targ] (6t) at (12.5, 4.0) {$$};
+\node [style=cnot ctrl, label={above:$a$}] (7) at (1.75, 10.0) {};
+\node [style=cnot ctrl] (7t) at (1.75, 8.0) {$$};
+\node [style=gate] (8) at (7.5, 2.0) {$1$};
+\node [style=none] (el02) at (0.0, 2.0){};
+\node [style=none] (el12) at (0.0, 4.0){};
+\node [style=none] (el22) at (0.0, 6.0){};
+\node [style=none] (el32) at (0.0, 8.0){};
+\node [style=none] (el42) at (0.0, 10.0){};
+\node [style=none] (er02) at (14.25, 2.0){};
+\node [style=none] (er12) at (14.25, 4.0){};
+\node [style=none] (er22) at (14.25, 6.0){};
+\node [style=none] (er32) at (14.25, 8.0){};
+\node [style=none] (er42) at (14.25, 10.0){};
+\node [style=none, label={above:eg1}] (spec) at (7.125, 0.0) {};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (el02.center) to (er02.center);
+\draw (el12.center) to (er12.center);
+\draw (el22.center) to (er22.center);
+\draw (el32.center) to (er32.center);
+\draw (el42.center) to (er42.center);
+\draw (4.center) to (4t.center);
+\draw (5.center) to (5t.center);
+\draw (6.center) to (6t.center);
+\draw (7.center) to (7t.center);
+\end{pgfonlayer}
+\node [style=none,rotate=90] (equiv) at (7.125, 11.0) {$\Rightarrow$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (0) at (1.75, 14.0) {$a$};
+\node [style=gate] (1) at (1.75, 20.0) {$H^{3}$};
+\node [style=gate] (2) at (4.25, 14.0) {$S^{ab}$};
+\node [style=D box] (3) at (7.125, 15.0) {$D_{0,-a}$};
+\node [style=cnot ctrl, label={above:$$}] (4) at (10.0, 16.0) {};
+\node [style=none, label={[yshift=0.5em]$$}] (4tarab) at (10.0, 18.0) {};
+\node [style=cnot targ] (4t) at (10.0, 18.0) {$$};
+\node [style=cnot ctrl, label={above:$$}] (5) at (12.5, 18.0) {};
+\node [style=cnot ctrl] (5t) at (12.5, 16.0) {$$};
+\node [style=cnot ctrl, label={above:$4$}] (6) at (15.0, 18.0) {};
+\node [style=cnot ctrl] (6t) at (15.0, 16.0) {$$};
+\node [style=cnot ctrl, label={above:$$}] (7) at (4.25, 20.0) {};
+\node [style=none, label={[yshift=0.5em]$a$}] (7tarab) at (4.25, 22.0) {};
+\node [style=cnot targ] (7t) at (4.25, 22.0) {$$};
+\node [style=gate] (8) at (10.0, 14.0) {$H^{1}$};
+\node [style=none] (el014) at (0.0, 14.0){};
+\node [style=none] (el114) at (0.0, 16.0){};
+\node [style=none] (el214) at (0.0, 18.0){};
+\node [style=none] (el314) at (0.0, 20.0){};
+\node [style=none] (el414) at (0.0, 22.0){};
+\node [style=none] (er014) at (16.75, 14.0){};
+\node [style=none] (er114) at (16.75, 16.0){};
+\node [style=none] (er214) at (16.75, 18.0){};
+\node [style=none] (er314) at (16.75, 20.0){};
+\node [style=none] (er414) at (16.75, 22.0){};
+\node [style=none, label={above:eg2}] (spec) at (8.375, 12.0) {};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (el014.center) to (er014.center);
+\draw (el114.center) to (er114.center);
+\draw (el214.center) to (er214.center);
+\draw (el314.center) to (er314.center);
+\draw (el414.center) to (er414.center);
+\draw (4.center) to (4t.center);
+\draw (5.center) to (5t.center);
+\draw (6.center) to (6t.center);
+\draw (7.center) to (7t.center);
+\end{pgfonlayer}
+\node [style=none] (equiv) at (17.75, 17.0) {$\mapsto$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (lm190) at (20.5, 14.0) {$H$};
+\node [style=gate] (lm191) at (20.5, 16.0) {$S^{3}$};
+\node [style=gate] (lm192) at (20.5, 18.0) {$H^{ab}$};
+\node [style=B box] (lm193) at (23.375, 15.0) {$B_{0,-a}$};
+\node [style=cnot ctrl, label={above:$$}] (lm194) at (26.25, 16.0) {};
+\node [style=none, label={[yshift=0.5em]$$}] (lm194tarab) at (26.25, 18.0) {};
+\node [style=cnot targ] (lm194t) at (26.25, 18.0) {$$};
+\node [style=cnot ctrl, label={above:$$}] (lm195) at (28.75, 18.0) {};
+\node [style=cnot ctrl] (lm195t) at (28.75, 16.0) {$$};
+\node [style=cnot ctrl, label={above:$4$}] (lm196) at (31.25, 18.0) {};
+\node [style=cnot targ] (lm196t) at (31.25, 16.0) {$$};
+\node [style=cnot ctrl, label={above:$a$}] (lm197) at (20.5, 22.0) {};
+\node [style=cnot ctrl] (lm197t) at (20.5, 20.0) {$$};
+\node [style=gate] (lm198) at (26.25, 14.0) {$1$};
+\node [style=none] (lmel014) at (18.75, 14.0){};
+\node [style=none] (lmel114) at (18.75, 16.0){};
+\node [style=none] (lmel214) at (18.75, 18.0){};
+\node [style=none] (lmel314) at (18.75, 20.0){};
+\node [style=none] (lmel414) at (18.75, 22.0){};
+\node [style=none] (lmer014) at (33.0, 14.0){};
+\node [style=none] (lmer114) at (33.0, 16.0){};
+\node [style=none] (lmer214) at (33.0, 18.0){};
+\node [style=none] (lmer314) at (33.0, 20.0){};
+\node [style=none] (lmer414) at (33.0, 22.0){};
+\node [style=none, label={above:eg1 again}] (lm19spec) at (25.875, 12.0) {};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lmel014.center) to (lmer014.center);
+\draw (lmel114.center) to (lmer114.center);
+\draw (lmel214.center) to (lmer214.center);
+\draw (lmel314.center) to (lmer314.center);
+\draw (lmel414.center) to (lmer414.center);
+\draw (lm194.center) to (lm194t.center);
+\draw (lm195.center) to (lm195t.center);
+\draw (lm196.center) to (lm196t.center);
+\draw (lm197.center) to (lm197t.center);
+\end{pgfonlayer}
+\node [style=none,rotate=45] (equiv) at (34.0, 23.0) {$\rightarrow$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (lm350) at (36.75, 26.0) {$a$};
+\node [style=gate] (lm351) at (36.75, 32.0) {$H^{3}$};
+\node [style=gate] (lm352) at (39.25, 26.0) {$S^{ab}$};
+\node [style=D box] (lm353) at (42.125, 27.0) {$D_{0,-a}$};
+\node [style=cnot ctrl, label={above:$$}] (lm354) at (45.0, 28.0) {};
+\node [style=none, label={[yshift=0.5em]$$}] (lm354tarab) at (45.0, 30.0) {};
+\node [style=cnot targ] (lm354t) at (45.0, 30.0) {$$};
+\node [style=cnot ctrl, label={above:$$}] (lm355) at (47.5, 30.0) {};
+\node [style=cnot ctrl] (lm355t) at (47.5, 28.0) {$$};
+\node [style=cnot ctrl, label={above:$4$}] (lm356) at (50.0, 30.0) {};
+\node [style=cnot ctrl] (lm356t) at (50.0, 28.0) {$$};
+\node [style=cnot ctrl, label={above:$$}] (lm357) at (39.25, 32.0) {};
+\node [style=none, label={[yshift=0.5em]$a$}] (lm357tarab) at (39.25, 34.0) {};
+\node [style=cnot targ] (lm357t) at (39.25, 34.0) {$$};
+\node [style=gate] (lm358) at (45.0, 26.0) {$H^{1}$};
+\node [style=none] (lmel026) at (35.0, 26.0){};
+\node [style=none] (lmel126) at (35.0, 28.0){};
+\node [style=none] (lmel226) at (35.0, 30.0){};
+\node [style=none] (lmel326) at (35.0, 32.0){};
+\node [style=none] (lmel426) at (35.0, 34.0){};
+\node [style=none] (lmer026) at (51.75, 26.0){};
+\node [style=none] (lmer126) at (51.75, 28.0){};
+\node [style=none] (lmer226) at (51.75, 30.0){};
+\node [style=none] (lmer326) at (51.75, 32.0){};
+\node [style=none] (lmer426) at (51.75, 34.0){};
+\node [style=none, label={above:eg2 again}] (lm35spec) at (43.375, 24.0) {};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lmel026.center) to (lmer026.center);
+\draw (lmel126.center) to (lmer126.center);
+\draw (lmel226.center) to (lmer226.center);
+\draw (lmel326.center) to (lmer326.center);
+\draw (lmel426.center) to (lmer426.center);
+\draw (lm354.center) to (lm354t.center);
+\draw (lm355.center) to (lm355t.center);
+\draw (lm356.center) to (lm356t.center);
+\draw (lm357.center) to (lm357t.center);
+\end{pgfonlayer}
+\end{tikzpicture}

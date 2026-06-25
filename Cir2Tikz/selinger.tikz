@@ -1,0 +1,39 @@
+\begin{tikzpicture}
+\begin{pgfonlayer}{nodelayer}
+\node [style=cnot ctrl, label={above:$$}] (n0y00) at (1.75, 2.0) {};
+\node [style=cnot ctrl] (n0y00t) at (1.75, 0.0) {$$};
+\node [style=gate] (n0y01) at (4.25, 0.0) {$H$};
+\node [style=cnot ctrl, label={above:$$}] (n0y02) at (6.75, 2.0) {};
+\node [style=cnot ctrl] (n0y02t) at (6.75, 0.0) {$$};
+\node [style=none] (lm0el00) at (0.0, 0.0){};
+\node [style=none] (lm0el10) at (0.0, 2.0){};
+\node [style=none] (lm0er00) at (8.5, 0.0){};
+\node [style=none] (lm0er10) at (8.5, 2.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el00.center) to (lm0er00.center);
+\draw (lm0el10.center) to (lm0er10.center);
+\draw (n0y00.center) to (n0y00t.center);
+\draw (n0y02.center) to (n0y02t.center);
+\end{pgfonlayer}
+\node [style=none] (equiv) at (9.5, 1.0) {$\equiv_{s}$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n10y00) at (12.25, 2.0) {$S^{p-1}$};
+\node [style=gate] (n10y01) at (12.25, 0.0) {$S^{p-1}$};
+\node [style=gate] (n10y02) at (14.75, 0.0) {$H$};
+\node [style=cnot ctrl, label={above:$$}] (n10y03) at (17.25, 2.0) {};
+\node [style=cnot ctrl] (n10y03t) at (17.25, 0.0) {$$};
+\node [style=gate] (n10y04) at (19.75, 0.0) {$S^{p-1}$};
+\node [style=gate] (n10y05) at (22.25, 0.0) {$H$};
+\node [style=gate] (n10y06) at (24.75, 0.0) {$S^{p-1}$};
+\node [style=none] (lm10el00) at (10.5, 0.0){};
+\node [style=none] (lm10el10) at (10.5, 2.0){};
+\node [style=none] (lm10er00) at (26.5, 0.0){};
+\node [style=none] (lm10er10) at (26.5, 2.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm10el00.center) to (lm10er00.center);
+\draw (lm10el10.center) to (lm10er10.center);
+\draw (n10y03.center) to (n10y03t.center);
+\end{pgfonlayer}
+\end{tikzpicture}

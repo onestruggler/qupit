@@ -1,0 +1,165 @@
+\begin{tikzpicture}
+\begin{pgfonlayer}{nodelayer}
+\node [style=cnot ctrl, label={above:$$}] (n0y200) at (1.75, 21.5) {};
+\node [style=cnot ctrl] (n0y200t) at (1.75, 19.5) {$$};
+\node [style=D box] (n0y201) at (4.5, 22.5) {$D_{{0b}}$};
+\node [style=D box] (n0y202) at (7.5, 20.5) {$D_{{0d}}$};
+\node [style=none] (lm0el020) at (0.0, 19.5){};
+\node [style=none] (lm0el120) at (0.0, 21.5){};
+\node [style=none] (lm0el220) at (0.0, 23.5){};
+\node [style=none] (lm0er020) at (9.25, 19.5){};
+\node [style=none] (lm0er120) at (9.25, 21.5){};
+\node [style=none] (lm0er220) at (9.25, 23.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el020.center) to (lm0er020.center);
+\draw (lm0el120.center) to (lm0er120.center);
+\draw (lm0el220.center) to (lm0er220.center);
+\draw (n0y200.center) to (n0y200t.center);
+\end{pgfonlayer}
+\node [style=none] (equiv) at (10.25, 21.5) {$\equiv_{s}$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=D box] (n11y200) at (13.25, 22.5) {$D_{{0b}}$};
+\node [style=D box] (n11y201) at (16.25, 20.5) {$D_{{0d}}$};
+\node [style=cnot ctrl, label={above:$$}] (n11y202) at (19.0, 23.5) {};
+\node [style=cnot ctrl] (n11y202t) at (19.0, 21.5) {$$};
+\node [style=none] (lm11el020) at (11.25, 19.5){};
+\node [style=none] (lm11el120) at (11.25, 21.5){};
+\node [style=none] (lm11el220) at (11.25, 23.5){};
+\node [style=none] (lm11er020) at (20.75, 19.5){};
+\node [style=none] (lm11er120) at (20.75, 21.5){};
+\node [style=none] (lm11er220) at (20.75, 23.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm11el020.center) to (lm11er020.center);
+\draw (lm11el120.center) to (lm11er120.center);
+\draw (lm11el220.center) to (lm11er220.center);
+\draw (n11y202.center) to (n11y202t.center);
+\end{pgfonlayer}
+\begin{pgfonlayer}{nodelayer}
+\node [style=cnot ctrl, label={above:$$}] (n0y130) at (1.75, 15.0) {};
+\node [style=cnot ctrl] (n0y130t) at (1.75, 13.0) {$$};
+\node [style=D box] (n0y131) at (4.5, 16.0) {$D_{{ab}}$};
+\node [style=D box] (n0y132) at (7.5, 14.0) {$D_{{0d}}$};
+\node [style=none] (lm0el013) at (0.0, 13.0){};
+\node [style=none] (lm0el113) at (0.0, 15.0){};
+\node [style=none] (lm0el213) at (0.0, 17.0){};
+\node [style=none] (lm0er013) at (9.25, 13.0){};
+\node [style=none] (lm0er113) at (9.25, 15.0){};
+\node [style=none] (lm0er213) at (9.25, 17.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el013.center) to (lm0er013.center);
+\draw (lm0el113.center) to (lm0er113.center);
+\draw (lm0el213.center) to (lm0er213.center);
+\draw (n0y130.center) to (n0y130t.center);
+\end{pgfonlayer}
+\node [style=none] (equiv) at (10.25, 15.0) {$\equiv_{s}$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=D box] (n11y130) at (13.25, 16.0) {$D_{{ab}}$};
+\node [style=D box] (n11y131) at (16.5, 14.0) {$D_{{0,d-a}}$};
+\node [style=none] (n11y132) at (17.75, 13.0) {$$};
+\node [style=gate] (n11y133) at (19.5, 17.0) {$H^{3}$};
+\node [style=cnot ctrl, label={above:$$}] (n11y134) at (22.0, 17.0) {};
+\node [style=cnot ctrl] (n11y134t) at (22.0, 15.0) {$$};
+\node [style=gate] (n11y135) at (24.5, 17.0) {$H$};
+\node [style=none] (lm11el013) at (11.25, 13.0){};
+\node [style=none] (lm11el113) at (11.25, 15.0){};
+\node [style=none] (lm11el213) at (11.25, 17.0){};
+\node [style=none] (lm11er013) at (26.25, 13.0){};
+\node [style=none] (lm11er113) at (26.25, 15.0){};
+\node [style=none] (lm11er213) at (26.25, 17.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm11el013.center) to (lm11er013.center);
+\draw (lm11el113.center) to (lm11er113.center);
+\draw (lm11el213.center) to (lm11er213.center);
+\draw (n11y134.center) to (n11y134t.center);
+\end{pgfonlayer}
+\node [style=none,label={right:$a\neq 0$}] (rspec) at (26.75, 15.0) {};
+\begin{pgfonlayer}{nodelayer}
+\node [style=cnot ctrl, label={above:$$}] (n0y60) at (1.75, 8.5) {};
+\node [style=cnot ctrl] (n0y60t) at (1.75, 6.5) {$$};
+\node [style=D box] (n0y61) at (4.5, 9.5) {$D_{{0b}}$};
+\node [style=D box] (n0y62) at (7.5, 7.5) {$D_{{cd}}$};
+\node [style=none] (lm0el06) at (0.0, 6.5){};
+\node [style=none] (lm0el16) at (0.0, 8.5){};
+\node [style=none] (lm0el26) at (0.0, 10.5){};
+\node [style=none] (lm0er06) at (9.25, 6.5){};
+\node [style=none] (lm0er16) at (9.25, 8.5){};
+\node [style=none] (lm0er26) at (9.25, 10.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el06.center) to (lm0er06.center);
+\draw (lm0el16.center) to (lm0er16.center);
+\draw (lm0el26.center) to (lm0er26.center);
+\draw (n0y60.center) to (n0y60t.center);
+\end{pgfonlayer}
+\node [style=none] (equiv) at (10.25, 8.5) {$\equiv_{s}$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=D box] (n11y60) at (13.5, 9.5) {$D_{{0,b-c}}$};
+\node [style=D box] (n11y61) at (16.75, 7.5) {$D_{{c,d}}$};
+\node [style=gate] (n11y62) at (19.5, 8.5) {$H^{3}$};
+\node [style=cnot ctrl, label={above:$$}] (n11y63) at (22.0, 10.5) {};
+\node [style=cnot ctrl] (n11y63t) at (22.0, 8.5) {$$};
+\node [style=gate] (n11y64) at (24.5, 8.5) {$H$};
+\node [style=none] (lm11el06) at (11.25, 6.5){};
+\node [style=none] (lm11el16) at (11.25, 8.5){};
+\node [style=none] (lm11el26) at (11.25, 10.5){};
+\node [style=none] (lm11er06) at (26.25, 6.5){};
+\node [style=none] (lm11er16) at (26.25, 8.5){};
+\node [style=none] (lm11er26) at (26.25, 10.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm11el06.center) to (lm11er06.center);
+\draw (lm11el16.center) to (lm11er16.center);
+\draw (lm11el26.center) to (lm11er26.center);
+\draw (n11y63.center) to (n11y63t.center);
+\end{pgfonlayer}
+\node [style=none,label={right:$c\neq 0$}] (rspec) at (26.75, 8.5) {};
+\begin{pgfonlayer}{nodelayer}
+\node [style=cnot ctrl, label={above:$$}] (n0y00) at (1.75, 2.0) {};
+\node [style=cnot ctrl] (n0y00t) at (1.75, 0.0) {$$};
+\node [style=D box] (n0y01) at (4.5, 3.0) {$D_{{ab}}$};
+\node [style=D box] (n0y02) at (7.5, 1.0) {$D_{{cd}}$};
+\node [style=none] (lm0el00) at (0.0, 0.0){};
+\node [style=none] (lm0el10) at (0.0, 2.0){};
+\node [style=none] (lm0el20) at (0.0, 4.0){};
+\node [style=none] (lm0er00) at (9.25, 0.0){};
+\node [style=none] (lm0er10) at (9.25, 2.0){};
+\node [style=none] (lm0er20) at (9.25, 4.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el00.center) to (lm0er00.center);
+\draw (lm0el10.center) to (lm0er10.center);
+\draw (lm0el20.center) to (lm0er20.center);
+\draw (n0y00.center) to (n0y00t.center);
+\end{pgfonlayer}
+\node [style=none] (equiv) at (10.25, 2.0) {$\equiv_{s}$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=D box] (n11y00) at (13.5, 3.0) {$D_{{a,b-c}}$};
+\node [style=D box] (n11y01) at (17.0, 1.0) {$D_{{c,d-a}}$};
+\node [style=none] (n11y02) at (18.25, 0.0) {$$};
+\node [style=gate] (n11y03) at (20.0, 2.0) {$H^{3}$};
+\node [style=gate] (n11y04) at (23.0, 2.0) {$S^{-a/c}$};
+\node [style=gate] (n11y05) at (20.0, 4.0) {$H^{3}$};
+\node [style=gate] (n11y06) at (23.0, 4.0) {$S^{-c/a}$};
+\node [style=cnot ctrl, label={above:$$}] (n11y07) at (26.0, 4.0) {};
+\node [style=cnot ctrl] (n11y07t) at (26.0, 2.0) {$$};
+\node [style=gate] (n11y08) at (28.5, 4.0) {$H$};
+\node [style=gate] (n11y09) at (28.5, 2.0) {$H$};
+\node [style=none] (lm11el00) at (11.25, 0.0){};
+\node [style=none] (lm11el10) at (11.25, 2.0){};
+\node [style=none] (lm11el20) at (11.25, 4.0){};
+\node [style=none] (lm11er00) at (30.25, 0.0){};
+\node [style=none] (lm11er10) at (30.25, 2.0){};
+\node [style=none] (lm11er20) at (30.25, 4.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm11el00.center) to (lm11er00.center);
+\draw (lm11el10.center) to (lm11er10.center);
+\draw (lm11el20.center) to (lm11er20.center);
+\draw (n11y07.center) to (n11y07t.center);
+\end{pgfonlayer}
+\node [style=none,label={right:$a,c\neq 0$}] (rspec) at (30.75, 2.0) {};
+\end{tikzpicture}

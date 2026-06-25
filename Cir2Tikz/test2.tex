@@ -1,0 +1,63 @@
+\documentclass[a4paper]{article}
+
+\usepackage[margin=1.5cm]{geometry}
+\usepackage{tikzit}
+\input{circuits.tikzstyles}
+\usepackage{amsmath}
+
+\definecolor{normGreen}{RGB}{214, 243, 221}
+\definecolor{normRed}{RGB}{249, 196, 196}
+
+\title{Circuit Rewriting Steps: \texttt{lemma-S$\downarrow$HCZH}}
+\date{}
+
+\begin{document}
+\maketitle
+
+The lemma \texttt{lemma-S$\downarrow$HCZH} in \texttt{N/Ex.agda} (line 100) states:
+\[
+  S \cdot H \cdot CZ \cdot H \;\equiv_s\; H \cdot CZ \cdot H \cdot CZ \cdot S^{\uparrow} \cdot S
+\]
+where $\cdot$ is matrix multiplication order (rightmost applied first to the state), wire $0$ is bottom ($\downarrow$), wire $1$ is top ($\uparrow$).
+
+%% -----------------------------------------------------------------------
+\section*{Main theorem}
+%% -----------------------------------------------------------------------
+
+\[
+  S \cdot H \cdot CZ \cdot H \;\equiv_s\; H \cdot CZ \cdot H \cdot CZ \cdot S^{\uparrow} \cdot S
+\]
+\scalebox{0.85}{\tikzfig{shczh}}
+
+%% -----------------------------------------------------------------------
+\section*{Proof chain}
+%% -----------------------------------------------------------------------
+
+The proof proceeds from the right-hand side $H \cdot CZ \cdot H \cdot CZ \cdot S^{\uparrow} \cdot S$
+to the left-hand side $S \cdot H \cdot CZ \cdot H$ in two main steps:
+
+\begin{enumerate}
+  \item Apply \textbf{selinger-c11} to the inner $CZ \cdot H \cdot CZ$, then cancel
+        $S^{-1\uparrow} \cdot S^{\uparrow} = \varepsilon$ and $S^{-1} \cdot S = \varepsilon$.
+  \item Apply the Hadamard conjugation $H \cdot S^{-1} \cdot H \equiv_s S \cdot H \cdot S$
+        to the leftmost triple, then cancel $S \cdot S^{-1} = \varepsilon$.
+\end{enumerate}
+
+\bigskip
+\begin{center}
+\scalebox{0.8}{\tikzfig{shczh_chain}}
+\end{center}
+
+%% -----------------------------------------------------------------------
+\section*{Key lemmas}
+%% -----------------------------------------------------------------------
+
+\subsection*{selinger-c11 (axiom): $CZ \cdot H \cdot CZ \equiv_s S^{-1} \cdot H \cdot S^{-1} \cdot CZ \cdot H \cdot S^{-1} \cdot S^{-1\uparrow}$}
+
+\scalebox{0.75}{\tikzfig{selinger}}
+
+\subsection*{Hadamard conjugation: $H \cdot S^{-1} \cdot H \equiv_s S \cdot H \cdot S$}
+
+\scalebox{0.9}{\tikzfig{hsh}}
+
+\end{document}

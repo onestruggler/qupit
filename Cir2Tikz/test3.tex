@@ -1,0 +1,362 @@
+﻿\documentclass[a4paper]{article}
+
+\usepackage[margin=1.2cm]{geometry}
+\usepackage{tikzit}
+\input{circuits.tikzstyles}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multicol}
+
+\definecolor{normGreen}{RGB}{214, 243, 221}
+\definecolor{normRed}{RGB}{249, 196, 196}
+
+\title{Proof Steps for All Box Relations}
+\date{}
+
+\begin{document}
+\maketitle
+
+\noindent
+For each group, the left column shows \textbf{all cases} of the relation (the ``what'');
+the right column shows \textbf{representative proof chains} (the ``how'').
+Connectives: $=$ means definitional equality (box expansion/fold); $\equiv_s$ means symplectic equivalence.
+
+%% =====================================================================
+\section*{Box Definitions}
+%% =====================================================================
+
+\scalebox{0.65}{\tikzfig{def}}
+
+%% =====================================================================
+\section*{$E \leftarrow S$: $S \cdot E[b] \equiv_s E[b-1]$}
+%% =====================================================================
+
+\begin{center}
+\scalebox{0.9}{\tikzfig{es}}
+\end{center}
+
+\paragraph{Proof chain} (expand $E[b]=S^{-b}$, combine $S \cdot S^{-b} = S^{1-b}$, fold $E[b-1]=S^{-(b-1)}$):
+
+\begin{center}
+\scalebox{0.9}{\tikzfig{chains/chain_se}}
+\end{center}
+
+%% =====================================================================
+\section*{$A \leftarrow H$: $H \cdot A[\mathbf{v}] \equiv_s \mathrm{dir} \cdot A[\mathbf{v}']$}
+%% =====================================================================
+
+\scalebox{0.75}{\tikzfig{ah}}
+
+\subsection*{Case $b \neq 0,\; a=0$: $H \cdot A[0,b] = A[b,0]$}
+
+\noindent Expand $A[0,b] = M[b]$, fold as $A[b,0] = M[b] \cdot H$:
+
+\begin{center}
+\scalebox{0.9}{\tikzfig{chains/chain_ah_0b}}
+\end{center}
+
+\subsection*{Case $a \neq 0,\; b=0$: $H \cdot A[a,0] \equiv_s A[0,-a]$}
+
+\noindent Expand $A[a,0] = M[a] \cdot H$ (circuit $[H, M[a]]$), apply $H^2=I$ and symplectic conjugation:
+
+\begin{center}
+\scalebox{0.9}{\tikzfig{chains/chain_ah_a0}}
+\end{center}
+
+\subsection*{Case $a,b \neq 0$: $H \cdot A[a,b] \equiv_s S^{1/(ab)} \cdot A[b,-a]$}
+
+\noindent Expand $A[a,b] = M[a] \cdot H \cdot S^{-b/a}$, apply Hadamard conjugation of $S^{-b/a}$:
+
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_ah_ab}}
+\end{center}
+
+%% =====================================================================
+\section*{$A \leftarrow S$: $S \cdot A[\mathbf{v}] \equiv_s \mathrm{dir} \cdot A[\mathbf{v}']$}
+%% =====================================================================
+
+\scalebox{0.85}{\tikzfig{as}}
+
+\subsection*{Case $a=0$: $S \cdot A[0,b] \equiv_s S^{1/b^2} \cdot A[0,b]$}
+
+\noindent Expand $A[0,b] = M[b]$, use $S \cdot M[b] \equiv_s M[b] \cdot S^{1/b^2}$:
+
+\begin{center}
+\scalebox{0.9}{\tikzfig{chains/chain_sa_0b}}
+\end{center}
+
+\subsection*{Case $a \neq 0$: $S \cdot A[a,b] = A[a,b-a]$}
+
+\noindent Expand $A[a,b]$, combine $S \cdot S^{-b/a} = S^{(a-b)/a}$, fold $A[a,b-a]$:
+
+\begin{center}
+\scalebox{0.9}{\tikzfig{chains/chain_sa_ab}}
+\end{center}
+
+%% =====================================================================
+\section*{$D \leftarrow H$: $H_\downarrow \cdot D[\mathbf{v}] \equiv_s \mathrm{dir} \cdot D[\mathbf{v}']$}
+%% =====================================================================
+
+\scalebox{0.72}{\tikzfig{dh}}
+
+\subsection*{Case $a=b=0$: $H_\downarrow \cdot D[0,0] \equiv_s D[0,0] \cdot H_\uparrow$}
+
+\noindent Key axiom: $H_\downarrow \cdot \mathrm{Ex} \equiv_s \mathrm{Ex} \cdot H_\uparrow$ (Hadamard slides through swap):
+
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_hd_00}}
+\end{center}
+
+\subsection*{Case $a=0, b\neq 0$: $H_\downarrow \cdot D[0,b] = D[b,0]$}
+
+\noindent Expand $D[0,b] = [CZ^{-b}, \mathrm{Ex}]$; the result $[H, CZ^{-b}, \mathrm{Ex}]$ is exactly $D[b,0]$:
+
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_hd_0b}}
+\end{center}
+
+\subsection*{Case $a \neq 0, b=0$: $H_\downarrow \cdot D[a,0] \equiv_s H^2_\uparrow \cdot D[0,-a]$}
+
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_hd_a0}}
+\end{center}
+
+\subsection*{Case $a,b \neq 0$: $H_\downarrow \cdot D[a,b] \equiv_s M_\uparrow[b/a] \cdot S_\uparrow^{b/a} \cdot D[b,-a]$}
+
+\begin{center}
+\scalebox{0.8}{\tikzfig{chains/chain_hd_ab}}
+\end{center}
+
+%% =====================================================================
+\section*{$D \leftarrow S_\downarrow$: $S_\downarrow \cdot D[\mathbf{v}] \equiv_s \mathrm{dir} \cdot D[\mathbf{v}']$}
+%% =====================================================================
+
+\subsection*{Case $a=0$: $S_\downarrow \cdot D[0,b] \equiv_s D[0,b] \cdot S_\uparrow$}
+
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_sd_0b}}
+\end{center}
+
+\subsection*{Case $a \neq 0$: $S_\downarrow \cdot D[a,b] = D[a,b-a]$}
+
+\noindent Expand $D[a,b]$, combine $S \cdot S^{-b/a} = S^{(a-b)/a}$, fold $D[a,b-a]$:
+
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_sd_ab}}
+\end{center}
+
+%% =====================================================================
+\section*{$D \leftarrow S_\uparrow$: $S_\uparrow \cdot D[\mathbf{v}] \equiv_s D[\mathbf{v}] \cdot S_\downarrow$}
+%% =====================================================================
+
+\begin{center}
+\scalebox{0.9}{\tikzfig{chains/chain_std}}
+\end{center}
+
+%% =====================================================================
+\section*{$D \leftarrow CZ$: $CZ \cdot D[\mathbf{v}] \equiv_s \mathrm{dir} \cdot D[\mathbf{v}']$}
+%% =====================================================================
+
+\subsection*{Case $a=0$: $CZ \cdot D[0,b] = D[0,b-1]$}
+
+\noindent Key step: $CZ \cdot CZ^{-b} = CZ^{1-b}$.
+
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_czd_0b}}
+\end{center}
+
+\subsection*{Case $a \neq 0$: $CZ \cdot D[a,b] \equiv_s S^a_\downarrow \cdot H_\uparrow \cdot S^{-1/a}_\uparrow \cdot H^3_\uparrow \cdot D[a,b-1]$}
+
+\begin{center}
+\scalebox{0.8}{\tikzfig{chains/chain_czd_ab}}
+\end{center}
+
+%% =====================================================================
+\section*{$B \leftarrow H_\uparrow$: $H_\uparrow \cdot B[\mathbf{v}] \equiv_s \mathrm{dir} \cdot B[\mathbf{v}']$}
+%% =====================================================================
+
+\scalebox{0.72}{\tikzfig{bh}}
+
+\subsection*{Case $a=b=0$: $H_\uparrow \cdot B[0,0] \equiv_s B[0,0] \cdot H_\downarrow$}
+
+\noindent Key: $H_\uparrow \cdot \mathrm{Ex} \equiv_s \mathrm{Ex} \cdot H_\downarrow$:
+
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_hb_00}}
+\end{center}
+
+\subsection*{Case $a=0, b\neq 0$: $H_\uparrow \cdot B[0,b] = B[b,0]$}
+
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_hb_0b}}
+\end{center}
+
+\subsection*{Case $a \neq 0, b=0$: $H_\uparrow \cdot B[a,0] \equiv_s H^2_\downarrow \cdot B[0,-a]$}
+
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_hb_a0}}
+\end{center}
+
+\subsection*{Case $a,b \neq 0$: $H_\uparrow \cdot B[a,b] \equiv_s M_\downarrow[b/a] \cdot S^{b/a}_\downarrow \cdot B[b,-a]$}
+
+\begin{center}
+\scalebox{0.8}{\tikzfig{chains/chain_hb_ab}}
+\end{center}
+
+%% =====================================================================
+\section*{$B \leftarrow S_\uparrow$: $S_\uparrow \cdot B[\mathbf{v}] \equiv_s \mathrm{dir} \cdot B[\mathbf{v}']$}
+%% =====================================================================
+
+\subsection*{Case $a=0$: $S_\uparrow \cdot B[0,b] \equiv_s B[0,b] \cdot S_\downarrow$}
+
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_stb_0b}}
+\end{center}
+
+\subsection*{Case $a \neq 0$: $S_\uparrow \cdot B[a,b] = B[a,b-a]$}
+
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_stb_ab}}
+\end{center}
+
+%% =====================================================================
+\section*{$B \leftarrow S_\downarrow$: $S_\downarrow \cdot B[\mathbf{v}] \equiv_s \mathrm{dir} \cdot B[\mathbf{v}']$}
+%% =====================================================================
+
+\subsection*{Case $a=b=0$: $S_\downarrow \cdot B[0,0] \equiv_s B[0,0] \cdot S_\uparrow$}
+
+\noindent Key: $S_\downarrow \cdot \mathrm{Ex} \equiv_s \mathrm{Ex} \cdot S_\uparrow$:
+
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_sb_00}}
+\end{center}
+
+\subsection*{Case $a=0, b \neq 0$: $S_\downarrow \cdot B[0,b] \equiv_s CZ^{-b} \cdot S^{b^2}_\downarrow \cdot S_\uparrow \cdot B[0,b]$}
+
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_sb_0b}}
+\end{center}
+
+\subsection*{Case $a \neq 0$: $S_\downarrow \cdot B[a,b] \equiv_s CZ^{-a} \cdot S^{a^2}_\downarrow \cdot S_\uparrow \cdot B[a,b]$}
+
+\begin{center}
+\scalebox{0.8}{\tikzfig{chains/chain_sb_ab}}
+\end{center}
+
+%% =====================================================================
+\section*{$B^\uparrow \leftarrow CZ$: $CZ \cdot B^\uparrow[\mathbf{v}] \equiv_s \mathrm{dir} \cdot B^\uparrow[\mathbf{v}]$}
+%% =====================================================================
+
+\scalebox{0.75}{\tikzfig{bcz}}
+
+\subsection*{Case $a=0$: expand $B^\uparrow[0,b]$, apply key axiom}
+
+\begin{center}
+\scalebox{0.75}{\tikzfig{chains/chain_czbat_0b}}
+\end{center}
+
+\subsection*{Case $a \neq 0$: expand $B^\uparrow[a,b]$, apply key axiom}
+
+\begin{center}
+\scalebox{0.75}{\tikzfig{chains/chain_czbat_ab}}
+\end{center}
+
+%% =====================================================================
+\section*{$DD \leftarrow CZ$: $CZ \cdot DD[\mathbf{v}_1, \mathbf{v}_2] \equiv_s \mathrm{dir} \cdot DD[\mathbf{v}'_1, \mathbf{v}'_2]$}
+%% =====================================================================
+
+\scalebox{0.6}{\tikzfig{ddcz}}
+
+\subsection*{Case 1: $a_1 = a_2 = 0$}
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_czdd_1}}
+\end{center}
+
+\subsection*{Case 2: $a_1 \neq 0,\; a_2 = 0$}
+\begin{center}
+\scalebox{0.75}{\tikzfig{chains/chain_czdd_2}}
+\end{center}
+
+\subsection*{Case 3: $a_1 = 0,\; a_2 \neq 0$}
+\begin{center}
+\scalebox{0.75}{\tikzfig{chains/chain_czdd_3}}
+\end{center}
+
+\subsection*{Case 4: $a_1, a_2 \neq 0$}
+\begin{center}
+\scalebox{0.6}{\tikzfig{chains/chain_czdd_4}}
+\end{center}
+
+%% =====================================================================
+\section*{$BB \leftarrow CZ^\uparrow$: $CZ^\uparrow \cdot BB[\mathbf{v}_1, \mathbf{v}_2] \equiv_s \mathrm{dir} \cdot BB[\mathbf{v}'_1, \mathbf{v}'_2]$}
+%% =====================================================================
+
+\scalebox{0.6}{\tikzfig{bbcz}}
+
+\subsection*{Case 1: $a_1 = a_2 = 0$}
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_czbb_1}}
+\end{center}
+
+\subsection*{Case 2: $a_1 \neq 0,\; a_2 = 0$}
+\begin{center}
+\scalebox{0.75}{\tikzfig{chains/chain_czbb_2}}
+\end{center}
+
+\subsection*{Case 3: $a_1 = 0,\; a_2 \neq 0$}
+\begin{center}
+\scalebox{0.75}{\tikzfig{chains/chain_czbb_3}}
+\end{center}
+
+\subsection*{Case 4: $a_1, a_2 \neq 0$}
+\begin{center}
+\scalebox{0.6}{\tikzfig{chains/chain_czbb_4}}
+\end{center}
+
+%% =====================================================================
+\section*{$L \leftarrow CZ$: $CZ \cdot L[\mathbf{v}] \equiv_s \mathrm{dir} \cdot L[\mathbf{v}']$}
+%% =====================================================================
+
+\scalebox{0.55}{\tikzfig{lcz}}
+
+\subsection*{Case 1: $CZ \cdot A^\uparrow[0,b]$ \quad ($b \neq 0$)}
+\begin{center}
+\scalebox{0.9}{\tikzfig{chains/chain_lcz_1}}
+\end{center}
+
+\subsection*{Case 2: $CZ \cdot A^\uparrow[a,b]$ \quad ($a \neq 0$)}
+\begin{center}
+\scalebox{0.75}{\tikzfig{chains/chain_lcz_2}}
+\end{center}
+
+\subsection*{Case 3: $CZ \cdot A[0,b] \cdot B[0,0]$}
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_lcz_3}}
+\end{center}
+
+\subsection*{Case 4: $CZ \cdot A[0,b] \cdot B[0,d]$ \quad ($b,d \neq 0$)}
+\begin{center}
+\scalebox{0.8}{\tikzfig{chains/chain_lcz_4}}
+\end{center}
+
+\subsection*{Case 5: $CZ \cdot A[0,b] \cdot B[c,d]$ \quad ($b \neq c$)}
+\begin{center}
+\scalebox{0.7}{\tikzfig{chains/chain_lcz_5}}
+\end{center}
+
+\subsection*{Case 6: $CZ \cdot A[0,b] \cdot B[b,d]$ \quad ($b = c$)}
+\begin{center}
+\scalebox{0.75}{\tikzfig{chains/chain_lcz_6}}
+\end{center}
+
+\subsection*{Case 7: $CZ \cdot A[a,b] \cdot B[0,d]$ \quad ($a \neq 0$)}
+\begin{center}
+\scalebox{0.85}{\tikzfig{chains/chain_lcz_7}}
+\end{center}
+
+\subsection*{Case 8: $CZ \cdot A[a,b] \cdot B[c,d]$ \quad ($a,c \neq 0$)}
+\begin{center}
+\scalebox{0.75}{\tikzfig{chains/chain_lcz_8}}
+\end{center}
+
+\end{document}

@@ -1,0 +1,77 @@
+\begin{tikzpicture}
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n0y00) at (1.75, 0.0) {$S$};
+\node [style=D box] (n0y01) at (4.5, 1.0) {$D_{{ab}}$};
+\node [style=none] (lm0el00) at (0.0, 0.0){};
+\node [style=none] (lm0el10) at (0.0, 2.0){};
+\node [style=none] (lm0er00) at (6.25, 0.0){};
+\node [style=none] (lm0er10) at (6.25, 2.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el00.center) to (lm0er00.center);
+\draw (lm0el10.center) to (lm0er10.center);
+\end{pgfonlayer}
+\node [style=none,rotate=-90] (equiv) at (3.125, -1.75) {$=$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n0y-60) at (1.75, -5.5) {$S$};
+\node [style=gate] (n0y-61) at (4.75, -5.5) {$S^{{-b/a}}$};
+\node [style=gate] (n0y-62) at (7.75, -5.5) {$H$};
+\node [style=cnot ctrl, label={above:${-a}$}] (n0y-63) at (10.25, -3.5) {};
+\node [style=cnot ctrl] (n0y-63t) at (10.25, -5.5) {$$};
+\node [style=none] (n0y-64tl) at (12.0, -3.5) {$$};
+\node [style=none] (n0y-64bl) at (12.0, -5.5) {$$};
+\node [style=none] (n0y-64br) at (13.5, -5.5) {$$};
+\node [style=none] (n0y-64tr) at (13.5, -3.5) {$$};
+\node [style=none] (n0y-64ftl) at (12.0, -3.35) {};
+\node [style=none] (n0y-64fbr) at (13.5, -5.65) {};
+\node [style=none] (lm0el0-6) at (0.0, -5.5){};
+\node [style=none] (lm0el1-6) at (0.0, -3.5){};
+\node [style=none] (lm0er0-6) at (14.5, -5.5){};
+\node [style=none] (lm0er1-6) at (14.5, -3.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el0-6.center) to (lm0er0-6.center);
+\draw (lm0el1-6.center) to (lm0er1-6.center);
+\draw (n0y-63.center) to (n0y-63t.center);
+\fill [white] (n0y-64ftl.center) rectangle (n0y-64fbr.center);
+\draw (n0y-64bl.center) to (n0y-64tr.center);
+\draw (n0y-64tl.center) to (n0y-64br.center);
+\end{pgfonlayer}
+\node [style=none,rotate=-90] (equiv) at (7.25, -7.25) {$=$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n0y-110) at (2.25, -11.0) {$S^{{(a-b)/a}}$};
+\node [style=gate] (n0y-111) at (5.25, -11.0) {$H$};
+\node [style=cnot ctrl, label={above:${-a}$}] (n0y-112) at (7.75, -9.0) {};
+\node [style=cnot ctrl] (n0y-112t) at (7.75, -11.0) {$$};
+\node [style=none] (n0y-113tl) at (9.5, -9.0) {$$};
+\node [style=none] (n0y-113bl) at (9.5, -11.0) {$$};
+\node [style=none] (n0y-113br) at (11.0, -11.0) {$$};
+\node [style=none] (n0y-113tr) at (11.0, -9.0) {$$};
+\node [style=none] (n0y-113ftl) at (9.5, -8.85) {};
+\node [style=none] (n0y-113fbr) at (11.0, -11.15) {};
+\node [style=none] (lm0el0-11) at (0.0, -11.0){};
+\node [style=none] (lm0el1-11) at (0.0, -9.0){};
+\node [style=none] (lm0er0-11) at (12.0, -11.0){};
+\node [style=none] (lm0er1-11) at (12.0, -9.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el0-11.center) to (lm0er0-11.center);
+\draw (lm0el1-11.center) to (lm0er1-11.center);
+\draw (n0y-112.center) to (n0y-112t.center);
+\fill [white] (n0y-113ftl.center) rectangle (n0y-113fbr.center);
+\draw (n0y-113bl.center) to (n0y-113tr.center);
+\draw (n0y-113tl.center) to (n0y-113br.center);
+\end{pgfonlayer}
+\node [style=none,rotate=-90] (equiv) at (6.0, -12.75) {$=$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=D box] (n0y-160) at (2.25, -15.5) {$D_{{a,b-a}}$};
+\node [style=none] (lm0el0-16) at (0.0, -16.5){};
+\node [style=none] (lm0el1-16) at (0.0, -14.5){};
+\node [style=none] (lm0er0-16) at (4.0, -16.5){};
+\node [style=none] (lm0er1-16) at (4.0, -14.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el0-16.center) to (lm0er0-16.center);
+\draw (lm0el1-16.center) to (lm0er1-16.center);
+\end{pgfonlayer}
+\end{tikzpicture}

@@ -1,0 +1,34 @@
+\begin{tikzpicture}
+\begin{pgfonlayer}{nodelayer}
+\node [style=cnot ctrl, label={above:$$}] (n0y00) at (1.75, 2.0) {};
+\node [style=cnot ctrl] (n0y00t) at (1.75, 0.0) {$$};
+\node [style=A box] (n0y01) at (4.5, 0.0) {$A_{{0b}}$};
+\node [style=B box] (n0y02) at (7.5, 1.0) {$B_{{0d}}$};
+\node [style=none] (lm0el00) at (0.0, 0.0){};
+\node [style=none] (lm0el10) at (0.0, 2.0){};
+\node [style=none] (lm0er00) at (9.25, 0.0){};
+\node [style=none] (lm0er10) at (9.25, 2.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el00.center) to (lm0er00.center);
+\draw (lm0el10.center) to (lm0er10.center);
+\draw (n0y00.center) to (n0y00t.center);
+\end{pgfonlayer}
+\node [style=none,rotate=-90] (equiv) at (4.625, -1.75) {$\equiv_s$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=A box] (n0y-60) at (2.0, -5.5) {$A_{{0b}}$};
+\node [style=B box] (n0y-61) at (5.0, -4.5) {$B_{{0d}}$};
+\node [style=gate] (n0y-62) at (8.25, -5.5) {$S^{{-2d/b}}$};
+\node [style=cnot ctrl, label={above:${1/b}$}] (n0y-63) at (11.25, -3.5) {};
+\node [style=cnot ctrl] (n0y-63t) at (11.25, -5.5) {$$};
+\node [style=none] (lm0el0-6) at (0.0, -5.5){};
+\node [style=none] (lm0el1-6) at (0.0, -3.5){};
+\node [style=none] (lm0er0-6) at (13.0, -5.5){};
+\node [style=none] (lm0er1-6) at (13.0, -3.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el0-6.center) to (lm0er0-6.center);
+\draw (lm0el1-6.center) to (lm0er1-6.center);
+\draw (n0y-63.center) to (n0y-63t.center);
+\end{pgfonlayer}
+\end{tikzpicture}

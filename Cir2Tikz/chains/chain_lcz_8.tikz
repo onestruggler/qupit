@@ -1,0 +1,33 @@
+\begin{tikzpicture}
+\begin{pgfonlayer}{nodelayer}
+\node [style=cnot ctrl, label={above:$$}] (n0y00) at (1.75, 2.0) {};
+\node [style=cnot ctrl] (n0y00t) at (1.75, 0.0) {$$};
+\node [style=A box] (n0y01) at (4.5, 0.0) {$A_{{ab}}$};
+\node [style=B box] (n0y02) at (7.5, 1.0) {$B_{{cd}}$};
+\node [style=none] (lm0el00) at (0.0, 0.0){};
+\node [style=none] (lm0el10) at (0.0, 2.0){};
+\node [style=none] (lm0er00) at (9.25, 0.0){};
+\node [style=none] (lm0er10) at (9.25, 2.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el00.center) to (lm0er00.center);
+\draw (lm0el10.center) to (lm0er10.center);
+\draw (n0y00.center) to (n0y00t.center);
+\end{pgfonlayer}
+\node [style=none,rotate=-90] (equiv) at (4.625, -1.75) {$\equiv_s$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=A box] (n0y-60) at (2.25, -5.5) {$A_{{a,b-c}}$};
+\node [style=B box] (n0y-61) at (5.75, -4.5) {$B_{{c,d-a}}$};
+\node [style=gate] (n0y-62) at (8.75, -5.5) {$H$};
+\node [style=gate] (n0y-63) at (11.75, -5.5) {$S^{{-a/c}}$};
+\node [style=gate] (n0y-64) at (14.75, -5.5) {$H^{3}$};
+\node [style=none] (lm0el0-6) at (0.0, -5.5){};
+\node [style=none] (lm0el1-6) at (0.0, -3.5){};
+\node [style=none] (lm0er0-6) at (16.5, -5.5){};
+\node [style=none] (lm0er1-6) at (16.5, -3.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el0-6.center) to (lm0er0-6.center);
+\draw (lm0el1-6.center) to (lm0er1-6.center);
+\end{pgfonlayer}
+\end{tikzpicture}

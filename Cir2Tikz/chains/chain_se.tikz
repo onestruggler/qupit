@@ -1,0 +1,39 @@
+\begin{tikzpicture}
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n0y00) at (1.75, 0.0) {$S$};
+\node [style=E box] (n0y01) at (4.375, 0.0) {$E_{{b}}$};
+\node [style=none] (lm0el00) at (0.0, 0.0){};
+\node [style=none] (lm0er00) at (6.125, 0.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el00.center) to (lm0er00.center);
+\end{pgfonlayer}
+\node [style=none,rotate=-90] (equiv) at (3.0625, -1.75) {$=$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n0y-40) at (1.75, -3.5) {$S$};
+\node [style=gate] (n0y-41) at (4.25, -3.5) {$S^{{-b}}$};
+\node [style=none] (lm0el0-4) at (0.0, -3.5){};
+\node [style=none] (lm0er0-4) at (6.0, -3.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el0-4.center) to (lm0er0-4.center);
+\end{pgfonlayer}
+\node [style=none,rotate=-90] (equiv) at (3.0, -5.25) {$=$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n0y-70) at (1.75, -7.0) {$S^{{1-b}}$};
+\node [style=none] (lm0el0-7) at (0.0, -7.0){};
+\node [style=none] (lm0er0-7) at (3.5, -7.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el0-7.center) to (lm0er0-7.center);
+\end{pgfonlayer}
+\node [style=none,rotate=-90] (equiv) at (1.75, -8.75) {$=$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=E box] (n0y-100) at (2.125, -10.5) {$E_{{b-1}}$};
+\node [style=none] (lm0el0-10) at (0.0, -10.5){};
+\node [style=none] (lm0er0-10) at (3.875, -10.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el0-10.center) to (lm0er0-10.center);
+\end{pgfonlayer}
+\end{tikzpicture}

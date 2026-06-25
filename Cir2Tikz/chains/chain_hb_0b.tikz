@@ -1,0 +1,50 @@
+\begin{tikzpicture}
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n0y00) at (1.75, 2.0) {$H$};
+\node [style=B box] (n0y01) at (4.5, 1.0) {$B_{{0b}}$};
+\node [style=none] (lm0el00) at (0.0, 0.0){};
+\node [style=none] (lm0el10) at (0.0, 2.0){};
+\node [style=none] (lm0er00) at (6.25, 0.0){};
+\node [style=none] (lm0er10) at (6.25, 2.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el00.center) to (lm0er00.center);
+\draw (lm0el10.center) to (lm0er10.center);
+\end{pgfonlayer}
+\node [style=none,rotate=-90] (equiv) at (3.125, -1.75) {$=$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n0y-60) at (1.75, -3.5) {$H$};
+\node [style=cnot ctrl, label={above:$b$}] (n0y-61) at (4.25, -3.5) {};
+\node [style=cnot targ] (n0y-61t) at (4.25, -5.5) {$$};
+\node [style=none] (n0y-62tl) at (6.0, -3.5) {$$};
+\node [style=none] (n0y-62bl) at (6.0, -5.5) {$$};
+\node [style=none] (n0y-62br) at (7.5, -5.5) {$$};
+\node [style=none] (n0y-62tr) at (7.5, -3.5) {$$};
+\node [style=none] (n0y-62ftl) at (6.0, -3.35) {};
+\node [style=none] (n0y-62fbr) at (7.5, -5.65) {};
+\node [style=none] (lm0el0-6) at (0.0, -5.5){};
+\node [style=none] (lm0el1-6) at (0.0, -3.5){};
+\node [style=none] (lm0er0-6) at (8.5, -5.5){};
+\node [style=none] (lm0er1-6) at (8.5, -3.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el0-6.center) to (lm0er0-6.center);
+\draw (lm0el1-6.center) to (lm0er1-6.center);
+\draw (n0y-61.center) to (n0y-61t.center);
+\fill [white] (n0y-62ftl.center) rectangle (n0y-62fbr.center);
+\draw (n0y-62bl.center) to (n0y-62tr.center);
+\draw (n0y-62tl.center) to (n0y-62br.center);
+\end{pgfonlayer}
+\node [style=none,rotate=-90] (equiv) at (4.25, -7.25) {$=$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=B box] (n0y-110) at (2.0, -10.0) {$B_{{b0}}$};
+\node [style=none] (lm0el0-11) at (0.0, -11.0){};
+\node [style=none] (lm0el1-11) at (0.0, -9.0){};
+\node [style=none] (lm0er0-11) at (3.75, -11.0){};
+\node [style=none] (lm0er1-11) at (3.75, -9.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el0-11.center) to (lm0er0-11.center);
+\draw (lm0el1-11.center) to (lm0er1-11.center);
+\end{pgfonlayer}
+\end{tikzpicture}

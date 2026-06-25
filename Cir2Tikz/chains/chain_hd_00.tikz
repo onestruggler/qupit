@@ -1,0 +1,69 @@
+\begin{tikzpicture}
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n0y00) at (1.75, 0.0) {$H$};
+\node [style=D box] (n0y01) at (4.5, 1.0) {$D_{{00}}$};
+\node [style=none] (lm0el00) at (0.0, 0.0){};
+\node [style=none] (lm0el10) at (0.0, 2.0){};
+\node [style=none] (lm0er00) at (6.25, 0.0){};
+\node [style=none] (lm0er10) at (6.25, 2.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el00.center) to (lm0er00.center);
+\draw (lm0el10.center) to (lm0er10.center);
+\end{pgfonlayer}
+\node [style=none,rotate=-90] (equiv) at (3.125, -1.75) {$=$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n0y-60) at (1.75, -5.5) {$H$};
+\node [style=none] (n0y-61tl) at (3.5, -3.5) {$$};
+\node [style=none] (n0y-61bl) at (3.5, -5.5) {$$};
+\node [style=none] (n0y-61br) at (5.0, -5.5) {$$};
+\node [style=none] (n0y-61tr) at (5.0, -3.5) {$$};
+\node [style=none] (n0y-61ftl) at (3.5, -3.35) {};
+\node [style=none] (n0y-61fbr) at (5.0, -5.65) {};
+\node [style=none] (lm0el0-6) at (0.0, -5.5){};
+\node [style=none] (lm0el1-6) at (0.0, -3.5){};
+\node [style=none] (lm0er0-6) at (6.0, -5.5){};
+\node [style=none] (lm0er1-6) at (6.0, -3.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el0-6.center) to (lm0er0-6.center);
+\draw (lm0el1-6.center) to (lm0er1-6.center);
+\fill [white] (n0y-61ftl.center) rectangle (n0y-61fbr.center);
+\draw (n0y-61bl.center) to (n0y-61tr.center);
+\draw (n0y-61tl.center) to (n0y-61br.center);
+\end{pgfonlayer}
+\node [style=none,rotate=-90] (equiv) at (3.0, -7.25) {$\equiv_s$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=none] (n0y-110tl) at (1.0, -9.0) {$$};
+\node [style=none] (n0y-110bl) at (1.0, -11.0) {$$};
+\node [style=none] (n0y-110br) at (2.5, -11.0) {$$};
+\node [style=none] (n0y-110tr) at (2.5, -9.0) {$$};
+\node [style=none] (n0y-110ftl) at (1.0, -8.85) {};
+\node [style=none] (n0y-110fbr) at (2.5, -11.15) {};
+\node [style=gate] (n0y-111) at (4.25, -9.0) {$H$};
+\node [style=none] (lm0el0-11) at (0.0, -11.0){};
+\node [style=none] (lm0el1-11) at (0.0, -9.0){};
+\node [style=none] (lm0er0-11) at (6.0, -11.0){};
+\node [style=none] (lm0er1-11) at (6.0, -9.0){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el0-11.center) to (lm0er0-11.center);
+\draw (lm0el1-11.center) to (lm0er1-11.center);
+\fill [white] (n0y-110ftl.center) rectangle (n0y-110fbr.center);
+\draw (n0y-110bl.center) to (n0y-110tr.center);
+\draw (n0y-110tl.center) to (n0y-110br.center);
+\end{pgfonlayer}
+\node [style=none,rotate=-90] (equiv) at (3.0, -12.75) {$=$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=D box] (n0y-160) at (2.0, -15.5) {$D_{{00}}$};
+\node [style=gate] (n0y-161) at (4.75, -14.5) {$H$};
+\node [style=none] (lm0el0-16) at (0.0, -16.5){};
+\node [style=none] (lm0el1-16) at (0.0, -14.5){};
+\node [style=none] (lm0er0-16) at (6.5, -16.5){};
+\node [style=none] (lm0er1-16) at (6.5, -14.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el0-16.center) to (lm0er0-16.center);
+\draw (lm0el1-16.center) to (lm0er1-16.center);
+\end{pgfonlayer}
+\end{tikzpicture}

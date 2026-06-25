@@ -1,0 +1,30 @@
+\begin{tikzpicture}
+\begin{pgfonlayer}{nodelayer}
+\node [style=gate] (n0y20) at (1.75, 2.0) {$H$};
+\node [style=gate] (n0y21) at (1.75, 4.0) {$S$};
+\node [style=cnot ctrl, label={above:$$}] (n0y22) at (4.25, 2.0) {};
+\node [style=none, label={[yshift=0.5em]$$}] (n0y22tarab) at (4.25, 4.0) {};
+\node [style=cnot targ] (n0y22t) at (4.25, 4.0) {$$};
+\node [style=cnot ctrl, label={above:$$}] (n0y23) at (6.75, 8.0) {};
+\node [style=cnot ctrl] (n0y23t) at (6.75, 4.0) {$$};
+\node [style=gate] (n0y24) at (1.75, 6.0) {$X$};
+\node [style=gate] (n0y25) at (9.25, 8.0) {$Z$};
+\node [style=none] (lm0el02) at (0.0, 2.0){};
+\node [style=none] (lm0el12) at (0.0, 4.0){};
+\node [style=none] (lm0el22) at (0.0, 6.0){};
+\node [style=none] (lm0el32) at (0.0, 8.0){};
+\node [style=none] (lm0er02) at (11.0, 2.0){};
+\node [style=none] (lm0er12) at (11.0, 4.0){};
+\node [style=none] (lm0er22) at (11.0, 6.0){};
+\node [style=none] (lm0er32) at (11.0, 8.0){};
+\node [style=none, label={above:hello}] (spec) at (5.5, 0.0) {};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el02.center) to (lm0er02.center);
+\draw (lm0el12.center) to (lm0er12.center);
+\draw (lm0el22.center) to (lm0er22.center);
+\draw (lm0el32.center) to (lm0er32.center);
+\draw (n0y22.center) to (n0y22t.center);
+\draw (n0y23.center) to (n0y23t.center);
+\end{pgfonlayer}
+\end{tikzpicture}

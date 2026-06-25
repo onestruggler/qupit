@@ -1,0 +1,68 @@
+\documentclass[a4paper]{article}
+
+\usepackage[margin=1.5cm, landscape]{geometry}
+\usepackage{tikzit}
+\input{circuits.tikzstyles}
+\usepackage{amsmath}
+
+\definecolor{normGreen}{RGB}{214, 243, 221}
+\definecolor{normRed}{RGB}{249, 196, 196}
+
+\title{Box Relations}
+\date{}
+
+\begin{document}
+\maketitle
+
+%% -----------------------------------------------------------------------
+%% Box definitions
+%% -----------------------------------------------------------------------
+\section*{Box definitions}
+\scalebox{0.65}{\tikzfig{def}}
+
+%% -----------------------------------------------------------------------
+%% One-qupit relations (module One)
+%% -----------------------------------------------------------------------
+\section*{$A \leftarrow H$: pushing $H$ through an $A$ box}
+\[ [x]^a \cdot H \;\equiv_s\; \mathrm{dir} \cdot [x']^a \]
+\scalebox{0.75}{\tikzfig{ah}}
+
+\section*{$A \leftarrow S$: pushing $S$ through an $A$ box}
+\[ [x]^a \cdot S \;\equiv_s\; \mathrm{dir} \cdot [x']^a \]
+\scalebox{0.75}{\tikzfig{as}}
+
+\section*{$E \leftarrow S$: pushing $S$ through an $E$ box}
+\[ [b]^e \cdot S \;\equiv_s\; [b-1]^e \]
+\scalebox{0.75}{\tikzfig{es}}
+
+%% -----------------------------------------------------------------------
+%% Two-qupit relations (module Two)
+%% -----------------------------------------------------------------------
+\section*{$L \leftarrow CZ$: pushing $CZ$ through an $L$ box}
+\[ [l]^\ell \cdot CZ \;\equiv_s\; \mathrm{dir} \cdot [l']^\ell \]
+\scalebox{0.6}{\tikzfig{lcz}}
+
+\section*{$B \leftarrow H^\uparrow, S^\uparrow, S$: pushing $H^\uparrow$, $S^\uparrow$, $S$ through a $B$ box}
+\[ [b]^b \cdot [g]^w \;\equiv_s\; \mathrm{dir} \cdot [b']^b \]
+\scalebox{0.6}{\tikzfig{bh}}
+
+\section*{$D \leftarrow H, S^\uparrow, S, CZ$: pushing $H$, $S^\uparrow$, $S$, $CZ$ through a $D$ box}
+\[ [d]^d \cdot [g]^w \;\equiv_s\; S^e \cdot \mathrm{dir}^\uparrow \cdot [d']^d \]
+\scalebox{0.6}{\tikzfig{dh}}
+
+%% -----------------------------------------------------------------------
+%% Three-qupit relations (module Three)
+%% -----------------------------------------------------------------------
+\section*{$BB \leftarrow CZ^\uparrow$: pushing $CZ^\uparrow$ through a $BB$ box}
+\[ [vb]^{vb} \cdot CZ^\uparrow \;\equiv_s\; \mathrm{dir}{\Downarrow} \cdot [vb']^{vb} \]
+\scalebox{0.6}{\tikzfig{bbcz}}
+
+\section*{$B^\uparrow \leftarrow CZ$: pushing $CZ$ through a $B^\uparrow$ box}
+\[ [b]^b{\uparrow} \cdot CZ \;\equiv_s\; \mathrm{dir} \cdot [b]^b{\uparrow} \]
+\scalebox{0.65}{\tikzfig{bcz}}
+
+\section*{$DD \leftarrow CZ$: pushing $CZ$ through a $DD$ box}
+\[ [vd]^{vd} \cdot CZ \;\equiv_s\; \mathrm{dir}^\uparrow \cdot [vd']^{vd} \]
+\scalebox{0.6}{\tikzfig{ddcz}}
+
+\end{document}
