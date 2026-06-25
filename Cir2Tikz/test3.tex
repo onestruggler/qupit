@@ -1,362 +1,366 @@
-﻿\documentclass[a4paper]{article}
+\documentclass[a4paper]{article}
 
 \usepackage[margin=1.2cm]{geometry}
 \usepackage{tikzit}
 \input{circuits.tikzstyles}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage{multicol}
+\usepackage{enumitem}
 
 \definecolor{normGreen}{RGB}{214, 243, 221}
 \definecolor{normRed}{RGB}{249, 196, 196}
 
-\title{Proof Steps for All Box Relations}
+\newcommand{\lem}[1]{\textsf{[#1]}}      % library-lemma tag used in step traces
+
+\title{Box Relations, traced to axioms}
 \date{}
 
 \begin{document}
 \maketitle
 
 \noindent
-For each group, the left column shows \textbf{all cases} of the relation (the ``what'');
-the right column shows \textbf{representative proof chains} (the ``how'').
-Connectives: $=$ means definitional equality (box expansion/fold); $\equiv_s$ means symplectic equivalence.
+This document proves every box relation in \texttt{BoxRelations.agda} in
+\emph{layers}, in the style of \texttt{test2.tex}:
+
+\begin{itemize}[nosep]
+  \item \textbf{Layer 0 (\S\ref{sec:lib})} — the \emph{axioms and core lemmas}
+        (the leaves of every proof), each shown as a circuit rewrite.
+  \item \textbf{Layer 1 (\S\ref{sec:rel})} — each box relation: its statement, its
+        proof chain, and a \emph{step trace} in which every step is justified by a
+        definitional move ($=$: box expand/fold, power combine) or by a Layer-0
+        lemma (tagged \lem{name}).
+\end{itemize}
+Following a tag down to Layer~0 makes every step bottom out in an axiom.
+Connectives: $=$ is definitional equality; $\equiv_s$ is symplectic equivalence.
+Circuit order: leftmost gate is applied first; wire $0$ is bottom ($\downarrow$),
+wire $1$ is top ($\uparrow$).
 
 %% =====================================================================
-\section*{Box Definitions}
+\section{Box definitions}\label{sec:def}
 %% =====================================================================
-
-\scalebox{0.65}{\tikzfig{def}}
-
-%% =====================================================================
-\section*{$E \leftarrow S$: $S \cdot E[b] \equiv_s E[b-1]$}
-%% =====================================================================
-
-\begin{center}
-\scalebox{0.9}{\tikzfig{es}}
-\end{center}
-
-\paragraph{Proof chain} (expand $E[b]=S^{-b}$, combine $S \cdot S^{-b} = S^{1-b}$, fold $E[b-1]=S^{-(b-1)}$):
-
-\begin{center}
-\scalebox{0.9}{\tikzfig{chains/chain_se}}
-\end{center}
+Each box is a word in the generators $H,S,CZ$ (and the derived $M[a]$, $CX$,
+$\mathrm{Ex}$). Folding/unfolding a box is a definitional ($=$) step.
+\begin{center}\scalebox{0.62}{\tikzfig{def}}\end{center}
 
 %% =====================================================================
-\section*{$A \leftarrow H$: $H \cdot A[\mathbf{v}] \equiv_s \mathrm{dir} \cdot A[\mathbf{v}']$}
+\section{Layer 0 — Axioms and core lemmas}\label{sec:lib}
 %% =====================================================================
+Every $\equiv_s$ step in \S\ref{sec:rel} is one of the following.
 
-\scalebox{0.75}{\tikzfig{ah}}
+\subsection*{\lem{M-mul} \; $M[a]\cdot M[b] = M[ab]$ \hfill (axiom \texttt{M-mul})}
+\begin{center}\scalebox{0.9}{\tikzfig{lib_mmul}}\end{center}
 
-\subsection*{Case $b \neq 0,\; a=0$: $H \cdot A[0,b] = A[b,0]$}
+\subsection*{\lem{semi-MS} \; $S\cdot M[b] \equiv_s M[b]\cdot S^{1/b^2}$ \hfill (axiom \texttt{semi-MS})}
+$S$ pushed through a metaplectic $M$ box rescales by $1/b^2$.
+\begin{center}\scalebox{0.9}{\tikzfig{lib_semims}}\end{center}
 
-\noindent Expand $A[0,b] = M[b]$, fold as $A[b,0] = M[b] \cdot H$:
+\subsection*{\lem{HHM} \; $H^2\cdot M[a] \equiv_s M[-a]$ \hfill ($H^2=M[-1]$, then \lem{M-mul})}
+\begin{center}\scalebox{0.9}{\tikzfig{lib_hhm}}\end{center}
 
-\begin{center}
-\scalebox{0.9}{\tikzfig{chains/chain_ah_0b}}
-\end{center}
+\subsection*{\lem{Hconj} \; $H\cdot S^{-1}\cdot H \equiv_s S\cdot H\cdot S$ \hfill (Hadamard conjugation)}
+Conjugating $S^{k}$ by $H$; the instance used below is $H\cdot S^{-b/a}\cdot H$.
+\begin{center}\scalebox{0.9}{\tikzfig{hsh}}\end{center}
 
-\subsection*{Case $a \neq 0,\; b=0$: $H \cdot A[a,0] \equiv_s A[0,-a]$}
+\subsection*{\lem{selinger} \; $CZ\cdot H\cdot CZ \equiv_s S^{-1}\!\cdot H\cdot S^{-1}\!\cdot CZ\cdot H\cdot S^{-1}\!\cdot S^{-1\uparrow}$ \hfill (axiom \texttt{selinger-c10/c11})}
+\begin{center}\scalebox{0.7}{\tikzfig{selinger}}\end{center}
 
-\noindent Expand $A[a,0] = M[a] \cdot H$ (circuit $[H, M[a]]$), apply $H^2=I$ and symplectic conjugation:
+\subsection*{\lem{Ex-slide} \; $g_\downarrow\cdot \mathrm{Ex} \equiv_s \mathrm{Ex}\cdot g_\uparrow$ \;(and $\uparrow\!\to\!\downarrow$), \quad $CZ\cdot\mathrm{Ex}=\mathrm{Ex}\cdot CZ$ \hfill (swap lemmas)}
+A single-wire gate $g\in\{H,S,S^k,H^2\}$ slides across the swap $\mathrm{Ex}$, changing wire;
+$CZ$ (symmetric) passes unchanged. Exercised throughout the $D$/$B$ chains.
 
-\begin{center}
-\scalebox{0.9}{\tikzfig{chains/chain_ah_a0}}
-\end{center}
+\subsection*{\lem{CZ-pow} \; $CZ\cdot CZ^{k} = CZ^{k+1}$, \quad $CX\cdot CX^{k}=CX^{k+1}$ \hfill (generator order)}
+Combining adjacent same-control gates. Exercised in \S\ref{sub:czd0b}.
 
-\subsection*{Case $a,b \neq 0$: $H \cdot A[a,b] \equiv_s S^{1/(ab)} \cdot A[b,-a]$}
+\subsection*{\lem{X-CZ} \; $CZ\cdot X^{\uparrow} = X^{\uparrow}\cdot Z^{\downarrow}\cdot CZ$ \hfill (axiom \texttt{rel-X$\uparrow$-CZ})}
+How $CZ$ conjugates a Pauli $X$; underlies the two-qupit $CZ$ relations.
 
-\noindent Expand $A[a,b] = M[a] \cdot H \cdot S^{-b/a}$, apply Hadamard conjugation of $S^{-b/a}$:
+\subsection*{\lem{comm-CZ-S} \; $CZ\cdot S_\downarrow = S_\downarrow\cdot CZ$, \quad $CZ\cdot S_\uparrow = S_\uparrow\cdot CZ$ \hfill (axioms \texttt{comm-CZ-S$\downarrow$/$\uparrow$})}
+$CZ$ commutes with a single-wire $S$. (Exercised in \S\ref{sub:sd0b}, \S\ref{sub:czdab}.)
 
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_ah_ab}}
-\end{center}
+\subsection*{\lem{HH-CZ} \; $CZ^{-a}\cdot H^2 \equiv_s H^2\cdot CZ^{a}$ \hfill (\texttt{lemma-semi-HH$\downarrow$-CZ$^{k}$})}
+$H^2$ ($=M[-1]$) inverts a $CZ$ power. (Exercised in \S\ref{sub:hda0}.)
 
-%% =====================================================================
-\section*{$A \leftarrow S$: $S \cdot A[\mathbf{v}] \equiv_s \mathrm{dir} \cdot A[\mathbf{v}']$}
-%% =====================================================================
+\subsection*{\lem{CZ-H-CZ} \; $CZ^{-a}\cdot H\cdot CZ \equiv_s H\cdot S^{a}_\uparrow\cdot S^{-1/a}\cdot CX^{-a}\cdot S^{1/a}$ \hfill (\texttt{aux-CZ$^{-k}$-H-CZ})}
+The two-qupit core (a $CZ$--$H$--$CZ$ sandwich), the analogue of \lem{selinger}. (Exercised in \S\ref{sub:czdab}.)
 
-\scalebox{0.85}{\tikzfig{as}}
+\subsection*{\lem{Euler} \; $H\cdot S^{k}\cdot H \equiv_s M[-1/k]\cdot S^{-k}\cdot H\cdot S^{-1/k}$ \hfill (\texttt{lemma-Euler$'$}, the $HSH$ normal form)}
+The general Hadamard--$S^k$ conjugation (\lem{Hconj} is the $k=-1$ instance), producing an $M$ box. (Exercised in $A\leftarrow H$ and $D\leftarrow H$, cases $a,b\neq0$.)
 
-\subsection*{Case $a=0$: $S \cdot A[0,b] \equiv_s S^{1/b^2} \cdot A[0,b]$}
+\subsection*{\lem{HH-CX} \; $CX^{a}\cdot H^2_\uparrow \equiv_s H^2_\uparrow\cdot CX^{-a}$ \hfill (up/down dual of \lem{HH-CZ})}
+Used by $B\leftarrow H_\uparrow$. (Exercised in \S\ref{sub:hba0}.)
 
-\noindent Expand $A[0,b] = M[b]$, use $S \cdot M[b] \equiv_s M[b] \cdot S^{1/b^2}$:
+\subsection*{\lem{CX-S} \; $CX^{b}\cdot S_\downarrow \equiv_s S_\downarrow\cdot S^{b^2}_\uparrow\cdot CZ^{-b}\cdot CX^{b}$ \hfill (\texttt{lemma-CX$^{k}$-S})}
+Pushing $S_\downarrow$ through a $CX$ power spawns a $CZ$ --- the two-qupit dual of \lem{semi-MS}. (Exercised in \S\ref{sub:sb0b}.)
 
-\begin{center}
-\scalebox{0.9}{\tikzfig{chains/chain_sa_0b}}
-\end{center}
+\subsection*{\lem{M-CZ} \; $M[a]\cdot CZ \equiv_s CZ^{1/a}\cdot M[a]$ \hfill (axiom \texttt{semi-M$\downarrow$CZ})}
+The metaplectic $M$ box conjugates $CZ$ to a $CZ$ power (the exponent inverts in the Cir2Tikz $M[a]$ convention); the engine of the $L$ and $A^{\uparrow}\!\leftarrow CZ$ relations.
 
-\subsection*{Case $a \neq 0$: $S \cdot A[a,b] = A[a,b-a]$}
+\subsection*{\lem{Ex-Ex-CZ} \; $\mathrm{Ex}\cdot\mathrm{Ex}^{\uparrow}\cdot CZ \equiv_s CZ^{\uparrow}\cdot\mathrm{Ex}\cdot\mathrm{Ex}^{\uparrow}$ \hfill (\texttt{lemma-Ex-Ex$\uparrow$-CZ})}
+The double swap carries a bottom-pair $CZ$ to the top pair; the braiding at the heart of the three-qupit relations. (Exercised in \S\ref{sub:czdd1}.)
 
-\noindent Expand $A[a,b]$, combine $S \cdot S^{-b/a} = S^{(a-b)/a}$, fold $A[a,b-a]$:
+\subsection*{\lem{CZ-CZ} \; $CZ\cdot CZ^{\uparrow} \equiv_s CZ^{\uparrow}\cdot CZ$, \quad $CZ\cdot\mathrm{Ex}=\mathrm{Ex}\cdot CZ$ \hfill (axiom \texttt{selinger-c12})}
+Disjoint $CZ$ gates commute, and $CZ$ slides through a same-pair $\mathrm{Ex}$. (Exercised in \S\ref{sub:czdd1}.)
 
-\begin{center}
-\scalebox{0.9}{\tikzfig{chains/chain_sa_ab}}
-\end{center}
+\subsection*{\lem{CZ02-CZ-CZ} \; $CZ_{02}^{-a}\,H\,CZ^{-c}_\uparrow H_\uparrow CZ \equiv_s H\,H_\uparrow CZ\,S^{-c/a}CX_{02}^{-a}S^{c/a}\,S^{-a/c}_\uparrow CX^{-c}_\uparrow S^{a/c}_\uparrow$ \hfill (\texttt{lemma-CZ02$^{k}$-CZ$^{l}\uparrow$-CZ})}
+The three-wire core of $DD\leftarrow CZ$ (both heads nontrivial): the two-pair analogue of \lem{CZ-H-CZ}. (Exercised in \S\ref{sub:czdd4}.)
 
-%% =====================================================================
-\section*{$D \leftarrow H$: $H_\downarrow \cdot D[\mathbf{v}] \equiv_s \mathrm{dir} \cdot D[\mathbf{v}']$}
-%% =====================================================================
-
-\scalebox{0.72}{\tikzfig{dh}}
-
-\subsection*{Case $a=b=0$: $H_\downarrow \cdot D[0,0] \equiv_s D[0,0] \cdot H_\uparrow$}
-
-\noindent Key axiom: $H_\downarrow \cdot \mathrm{Ex} \equiv_s \mathrm{Ex} \cdot H_\uparrow$ (Hadamard slides through swap):
-
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_hd_00}}
-\end{center}
-
-\subsection*{Case $a=0, b\neq 0$: $H_\downarrow \cdot D[0,b] = D[b,0]$}
-
-\noindent Expand $D[0,b] = [CZ^{-b}, \mathrm{Ex}]$; the result $[H, CZ^{-b}, \mathrm{Ex}]$ is exactly $D[b,0]$:
-
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_hd_0b}}
-\end{center}
-
-\subsection*{Case $a \neq 0, b=0$: $H_\downarrow \cdot D[a,0] \equiv_s H^2_\uparrow \cdot D[0,-a]$}
-
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_hd_a0}}
-\end{center}
-
-\subsection*{Case $a,b \neq 0$: $H_\downarrow \cdot D[a,b] \equiv_s M_\uparrow[b/a] \cdot S_\uparrow^{b/a} \cdot D[b,-a]$}
-
-\begin{center}
-\scalebox{0.8}{\tikzfig{chains/chain_hd_ab}}
-\end{center}
+\subsection*{\lem{A$\uparrow$-CZ} \; $A^{\uparrow}[a,b]\cdot CZ \equiv_s (H\,CZ^{1/a}H^3)\cdot B[a,b]\cdot A^{\uparrow}[0,-a]$ \hfill (\texttt{lemma-A-CZ-2})}
+How $CZ$ passes a top-wire $A$ box: it descends, spawning a $B$ box. The composite sub-relation behind $L\leftarrow CZ$ cases with an $A^{\uparrow}$ factor (itself built from \lem{M-CZ}, \lem{Euler}). Proven in \texttt{N/BR/Two/A-CZ.agda}.
 
 %% =====================================================================
-\section*{$D \leftarrow S_\downarrow$: $S_\downarrow \cdot D[\mathbf{v}] \equiv_s \mathrm{dir} \cdot D[\mathbf{v}']$}
+\section{Layer 1 — Box relations}\label{sec:rel}
 %% =====================================================================
 
-\subsection*{Case $a=0$: $S_\downarrow \cdot D[0,b] \equiv_s D[0,b] \cdot S_\uparrow$}
-
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_sd_0b}}
-\end{center}
-
-\subsection*{Case $a \neq 0$: $S_\downarrow \cdot D[a,b] = D[a,b-a]$}
-
-\noindent Expand $D[a,b]$, combine $S \cdot S^{-b/a} = S^{(a-b)/a}$, fold $D[a,b-a]$:
-
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_sd_ab}}
-\end{center}
-
-%% =====================================================================
-\section*{$D \leftarrow S_\uparrow$: $S_\uparrow \cdot D[\mathbf{v}] \equiv_s D[\mathbf{v}] \cdot S_\downarrow$}
-%% =====================================================================
-
-\begin{center}
-\scalebox{0.9}{\tikzfig{chains/chain_std}}
-\end{center}
-
-%% =====================================================================
-\section*{$D \leftarrow CZ$: $CZ \cdot D[\mathbf{v}] \equiv_s \mathrm{dir} \cdot D[\mathbf{v}']$}
-%% =====================================================================
-
-\subsection*{Case $a=0$: $CZ \cdot D[0,b] = D[0,b-1]$}
-
-\noindent Key step: $CZ \cdot CZ^{-b} = CZ^{1-b}$.
-
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_czd_0b}}
-\end{center}
-
-\subsection*{Case $a \neq 0$: $CZ \cdot D[a,b] \equiv_s S^a_\downarrow \cdot H_\uparrow \cdot S^{-1/a}_\uparrow \cdot H^3_\uparrow \cdot D[a,b-1]$}
-
-\begin{center}
-\scalebox{0.8}{\tikzfig{chains/chain_czd_ab}}
-\end{center}
-
-%% =====================================================================
-\section*{$B \leftarrow H_\uparrow$: $H_\uparrow \cdot B[\mathbf{v}] \equiv_s \mathrm{dir} \cdot B[\mathbf{v}']$}
-%% =====================================================================
-
-\scalebox{0.72}{\tikzfig{bh}}
-
-\subsection*{Case $a=b=0$: $H_\uparrow \cdot B[0,0] \equiv_s B[0,0] \cdot H_\downarrow$}
-
-\noindent Key: $H_\uparrow \cdot \mathrm{Ex} \equiv_s \mathrm{Ex} \cdot H_\downarrow$:
-
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_hb_00}}
-\end{center}
-
-\subsection*{Case $a=0, b\neq 0$: $H_\uparrow \cdot B[0,b] = B[b,0]$}
-
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_hb_0b}}
-\end{center}
-
-\subsection*{Case $a \neq 0, b=0$: $H_\uparrow \cdot B[a,0] \equiv_s H^2_\downarrow \cdot B[0,-a]$}
-
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_hb_a0}}
-\end{center}
-
-\subsection*{Case $a,b \neq 0$: $H_\uparrow \cdot B[a,b] \equiv_s M_\downarrow[b/a] \cdot S^{b/a}_\downarrow \cdot B[b,-a]$}
-
-\begin{center}
-\scalebox{0.8}{\tikzfig{chains/chain_hb_ab}}
-\end{center}
-
-%% =====================================================================
-\section*{$B \leftarrow S_\uparrow$: $S_\uparrow \cdot B[\mathbf{v}] \equiv_s \mathrm{dir} \cdot B[\mathbf{v}']$}
-%% =====================================================================
-
-\subsection*{Case $a=0$: $S_\uparrow \cdot B[0,b] \equiv_s B[0,b] \cdot S_\downarrow$}
-
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_stb_0b}}
-\end{center}
-
-\subsection*{Case $a \neq 0$: $S_\uparrow \cdot B[a,b] = B[a,b-a]$}
-
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_stb_ab}}
-\end{center}
-
-%% =====================================================================
-\section*{$B \leftarrow S_\downarrow$: $S_\downarrow \cdot B[\mathbf{v}] \equiv_s \mathrm{dir} \cdot B[\mathbf{v}']$}
-%% =====================================================================
-
-\subsection*{Case $a=b=0$: $S_\downarrow \cdot B[0,0] \equiv_s B[0,0] \cdot S_\uparrow$}
-
-\noindent Key: $S_\downarrow \cdot \mathrm{Ex} \equiv_s \mathrm{Ex} \cdot S_\uparrow$:
-
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_sb_00}}
-\end{center}
-
-\subsection*{Case $a=0, b \neq 0$: $S_\downarrow \cdot B[0,b] \equiv_s CZ^{-b} \cdot S^{b^2}_\downarrow \cdot S_\uparrow \cdot B[0,b]$}
-
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_sb_0b}}
-\end{center}
-
-\subsection*{Case $a \neq 0$: $S_\downarrow \cdot B[a,b] \equiv_s CZ^{-a} \cdot S^{a^2}_\downarrow \cdot S_\uparrow \cdot B[a,b]$}
-
-\begin{center}
-\scalebox{0.8}{\tikzfig{chains/chain_sb_ab}}
-\end{center}
-
-%% =====================================================================
-\section*{$B^\uparrow \leftarrow CZ$: $CZ \cdot B^\uparrow[\mathbf{v}] \equiv_s \mathrm{dir} \cdot B^\uparrow[\mathbf{v}]$}
-%% =====================================================================
-
-\scalebox{0.75}{\tikzfig{bcz}}
-
-\subsection*{Case $a=0$: expand $B^\uparrow[0,b]$, apply key axiom}
-
-\begin{center}
-\scalebox{0.75}{\tikzfig{chains/chain_czbat_0b}}
-\end{center}
-
-\subsection*{Case $a \neq 0$: expand $B^\uparrow[a,b]$, apply key axiom}
-
-\begin{center}
-\scalebox{0.75}{\tikzfig{chains/chain_czbat_ab}}
-\end{center}
-
-%% =====================================================================
-\section*{$DD \leftarrow CZ$: $CZ \cdot DD[\mathbf{v}_1, \mathbf{v}_2] \equiv_s \mathrm{dir} \cdot DD[\mathbf{v}'_1, \mathbf{v}'_2]$}
-%% =====================================================================
-
-\scalebox{0.6}{\tikzfig{ddcz}}
-
-\subsection*{Case 1: $a_1 = a_2 = 0$}
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_czdd_1}}
-\end{center}
-
-\subsection*{Case 2: $a_1 \neq 0,\; a_2 = 0$}
-\begin{center}
-\scalebox{0.75}{\tikzfig{chains/chain_czdd_2}}
-\end{center}
-
-\subsection*{Case 3: $a_1 = 0,\; a_2 \neq 0$}
-\begin{center}
-\scalebox{0.75}{\tikzfig{chains/chain_czdd_3}}
-\end{center}
-
-\subsection*{Case 4: $a_1, a_2 \neq 0$}
-\begin{center}
-\scalebox{0.6}{\tikzfig{chains/chain_czdd_4}}
-\end{center}
-
-%% =====================================================================
-\section*{$BB \leftarrow CZ^\uparrow$: $CZ^\uparrow \cdot BB[\mathbf{v}_1, \mathbf{v}_2] \equiv_s \mathrm{dir} \cdot BB[\mathbf{v}'_1, \mathbf{v}'_2]$}
-%% =====================================================================
-
-\scalebox{0.6}{\tikzfig{bbcz}}
-
-\subsection*{Case 1: $a_1 = a_2 = 0$}
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_czbb_1}}
-\end{center}
-
-\subsection*{Case 2: $a_1 \neq 0,\; a_2 = 0$}
-\begin{center}
-\scalebox{0.75}{\tikzfig{chains/chain_czbb_2}}
-\end{center}
-
-\subsection*{Case 3: $a_1 = 0,\; a_2 \neq 0$}
-\begin{center}
-\scalebox{0.75}{\tikzfig{chains/chain_czbb_3}}
-\end{center}
-
-\subsection*{Case 4: $a_1, a_2 \neq 0$}
-\begin{center}
-\scalebox{0.6}{\tikzfig{chains/chain_czbb_4}}
-\end{center}
-
-%% =====================================================================
-\section*{$L \leftarrow CZ$: $CZ \cdot L[\mathbf{v}] \equiv_s \mathrm{dir} \cdot L[\mathbf{v}']$}
-%% =====================================================================
-
-\scalebox{0.55}{\tikzfig{lcz}}
-
-\subsection*{Case 1: $CZ \cdot A^\uparrow[0,b]$ \quad ($b \neq 0$)}
-\begin{center}
-\scalebox{0.9}{\tikzfig{chains/chain_lcz_1}}
-\end{center}
-
-\subsection*{Case 2: $CZ \cdot A^\uparrow[a,b]$ \quad ($a \neq 0$)}
-\begin{center}
-\scalebox{0.75}{\tikzfig{chains/chain_lcz_2}}
-\end{center}
-
-\subsection*{Case 3: $CZ \cdot A[0,b] \cdot B[0,0]$}
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_lcz_3}}
-\end{center}
-
-\subsection*{Case 4: $CZ \cdot A[0,b] \cdot B[0,d]$ \quad ($b,d \neq 0$)}
-\begin{center}
-\scalebox{0.8}{\tikzfig{chains/chain_lcz_4}}
-\end{center}
-
-\subsection*{Case 5: $CZ \cdot A[0,b] \cdot B[c,d]$ \quad ($b \neq c$)}
-\begin{center}
-\scalebox{0.7}{\tikzfig{chains/chain_lcz_5}}
-\end{center}
-
-\subsection*{Case 6: $CZ \cdot A[0,b] \cdot B[b,d]$ \quad ($b = c$)}
-\begin{center}
-\scalebox{0.75}{\tikzfig{chains/chain_lcz_6}}
-\end{center}
-
-\subsection*{Case 7: $CZ \cdot A[a,b] \cdot B[0,d]$ \quad ($a \neq 0$)}
-\begin{center}
-\scalebox{0.85}{\tikzfig{chains/chain_lcz_7}}
-\end{center}
-
-\subsection*{Case 8: $CZ \cdot A[a,b] \cdot B[c,d]$ \quad ($a,c \neq 0$)}
-\begin{center}
-\scalebox{0.75}{\tikzfig{chains/chain_lcz_8}}
-\end{center}
+%% ---------------------------------------------------------------------
+\subsection{$E\leftarrow S$: \; $S\cdot E[b]\equiv_s E[b-1]$}
+%% ---------------------------------------------------------------------
+\begin{center}\scalebox{0.85}{\tikzfig{es}}\end{center}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_se}}\end{center}
+\textbf{Trace.}
+$S\cdot E[b]
+ \;\overset{=}{\;}\; S\cdot S^{-b}$ (expand $E[b]=S^{-b}$)
+ $\;\overset{=}{\;}\; S^{1-b}$ (combine powers)
+ $\;\overset{=}{\;}\; E[b-1]$ (fold). Purely definitional.
+
+%% ---------------------------------------------------------------------
+\subsection{$A\leftarrow H$: \; $H\cdot A[\mathbf v]\equiv_s \mathrm{dir}\cdot A[\mathbf v']$}
+%% ---------------------------------------------------------------------
+\begin{center}\scalebox{0.72}{\tikzfig{ah}}\end{center}
+
+\paragraph{Case $a=0,b\neq0$ \;($H\cdot A[0,b]=A[b,0]$).}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_ah_0b}}\end{center}
+\textbf{Trace.} expand $A[0,b]=M[b]$ $\;\overset{=}{\;}$ ; the word $[H,M[b]]$ folds to $A[b,0]$. Definitional.
+
+\paragraph{Case $a\neq0,b=0$ \;($H\cdot A[a,0]\equiv_s A[0,-a]$).}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_ah_a0}}\end{center}
+\textbf{Trace.} expand $A[a,0]=M[a]\cdot H$ $\;\overset{=}{\;}\;$ gives $[H,H,M[a]]$; then
+$\equiv_s$ by \lem{HHM} (so $H^2M[a]=M[-a]$), fold $A[0,-a]$.
+
+\paragraph{Case $a,b\neq0$ \;($H\cdot A[a,b]\equiv_s S^{1/(ab)}\cdot A[b,-a]$).}
+\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_ah_ab}}\end{center}
+\textbf{Trace.} expand $A[a,b]=[H,S^{-b/a},H,M[a]]$; then $\equiv_s$ by \lem{Hconj}
+on the $H\,S^{-b/a}\,H$ block, and \lem{M-mul} to recombine; fold $S^{1/(ab)}\cdot A[b,-a]$.
+
+%% ---------------------------------------------------------------------
+\subsection{$A\leftarrow S$: \; $S\cdot A[\mathbf v]\equiv_s \mathrm{dir}\cdot A[\mathbf v']$}
+%% ---------------------------------------------------------------------
+\begin{center}\scalebox{0.8}{\tikzfig{as}}\end{center}
+
+\paragraph{Case $a=0$ \;($S\cdot A[0,b]\equiv_s S^{1/b^2}\cdot A[0,b]$).}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_sa_0b}}\end{center}
+\textbf{Trace.} expand $A[0,b]=M[b]$; then $\equiv_s$ directly by \lem{semi-MS}; fold.
+
+\paragraph{Case $a\neq0$ \;($S\cdot A[a,b]=A[a,b-a]$).}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_sa_ab}}\end{center}
+\textbf{Trace.} expand, combine $S\cdot S^{-b/a}=S^{(a-b)/a}$, fold. Definitional.
+
+%% ---------------------------------------------------------------------
+\subsection{$D\leftarrow H$: \; $H_\downarrow\cdot D[\mathbf v]\equiv_s \mathrm{dir}\cdot D[\mathbf v']$}
+%% ---------------------------------------------------------------------
+\begin{center}\scalebox{0.68}{\tikzfig{dh}}\end{center}
+
+\paragraph{Case $a=b=0$ \;($H_\downarrow\cdot D[0,0]\equiv_s D[0,0]\cdot H_\uparrow$).}\label{sub:hd00}
+\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_hd_00}}\end{center}
+\textbf{Trace.} expand $D[0,0]=\mathrm{Ex}$; the middle step $H_\downarrow\cdot\mathrm{Ex}\equiv_s \mathrm{Ex}\cdot H_\uparrow$ is \lem{Ex-slide}; fold.
+
+\paragraph{Case $a=0,b\neq0$ \;($H_\downarrow\cdot D[0,b]=D[b,0]$).}
+\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_hd_0b}}\end{center}
+\textbf{Trace.} expand $D[0,b]=[CZ^{-b},\mathrm{Ex}]$; $[H,CZ^{-b},\mathrm{Ex}]$ folds to $D[b,0]$. Definitional.
+
+\paragraph{Case $a\neq0,b=0$ \;($H_\downarrow\cdot D[a,0]\equiv_s H^2_\uparrow\cdot D[0,-a]$).}\label{sub:hda0}
+\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_hd_a0}}\end{center}
+\textbf{Trace.} expand $D[a,0]$; \lem{HH-CZ} ($CZ^{-a}H^2=H^2CZ^{a}$); \lem{Ex-slide} ($H^2$ across $\mathrm{Ex}$); fold $D[0,-a]$.
+
+\paragraph{Case $a,b\neq0$ \;($H_\downarrow\cdot D[a,b]\equiv_s M_\uparrow[b/a]\cdot S_\uparrow^{b/a}\cdot D[b,-a]$).}
+\begin{center}\scalebox{0.78}{\tikzfig{chains/chain_hd_ab}}\end{center}
+\textbf{Trace.} expand $D[a,b]$; \lem{Euler} on the $H\,S^{-b/a}\,H$ block (creates the $M$), then \lem{comm-CZ-S}/\lem{Ex-slide} cleanup and \lem{M-mul}; fold.
+
+%% ---------------------------------------------------------------------
+\subsection{$D\leftarrow S_\downarrow$: \; $S_\downarrow\cdot D[\mathbf v]\equiv_s \mathrm{dir}\cdot D[\mathbf v']$}
+%% ---------------------------------------------------------------------
+\paragraph{Case $a=0$ \;($S_\downarrow\cdot D[0,b]\equiv_s D[0,b]\cdot S_\uparrow$).}\label{sub:sd0b}
+\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_sd_0b}}\end{center}
+\textbf{Trace.} expand $D[0,b]$; \lem{comm-CZ-S} ($S$ past $CZ$); \lem{Ex-slide} ($S_\downarrow$ across $\mathrm{Ex}\to S_\uparrow$); fold.
+
+\paragraph{Case $a\neq0$ \;($S_\downarrow\cdot D[a,b]=D[a,b-a]$).}
+\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_sd_ab}}\end{center}
+\textbf{Trace.} expand, combine $S\cdot S^{-b/a}=S^{(a-b)/a}$, fold. Definitional.
+
+%% ---------------------------------------------------------------------
+\subsection{$D\leftarrow S_\uparrow$: \; $S_\uparrow\cdot D[\mathbf v]\equiv_s D[\mathbf v]\cdot S_\downarrow$}
+%% ---------------------------------------------------------------------
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_std}}\end{center}
+\textbf{Trace.} expand $D[a,b]$; $S_\uparrow$ commutes left through the bottom-wire gates (\lem{comm-CZ-S} for the $CZ$); \lem{Ex-slide} ($S_\uparrow$ across $\mathrm{Ex}\to S_\downarrow$); fold.
+
+%% ---------------------------------------------------------------------
+\subsection{$D\leftarrow CZ$: \; $CZ\cdot D[\mathbf v]\equiv_s \mathrm{dir}\cdot D[\mathbf v']$}
+%% ---------------------------------------------------------------------
+\paragraph{Case $a=0$ \;($CZ\cdot D[0,b]=D[0,b-1]$).}\label{sub:czd0b}
+\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_czd_0b}}\end{center}
+\textbf{Trace.} expand; $CZ\cdot CZ^{-b}=CZ^{1-b}$ by \lem{CZ-pow}; fold. (Definitional after \lem{CZ-pow}.)
+
+\paragraph{Case $a\neq0$ \;($CZ\cdot D[a,b]\equiv_s S^a_\downarrow\cdot H_\uparrow\cdot S^{-1/a}_\uparrow\cdot H^3_\uparrow\cdot D[a,b-1]$).}\label{sub:czdab}
+\begin{center}\scalebox{0.82}{\tikzfig{chains/chain_czd_ab_p1}}\end{center}
+\newpage
+\begin{center}\scalebox{0.82}{\tikzfig{chains/chain_czd_ab_p2}}\end{center}
+\textbf{Trace} (fully expanded to axioms).
+expand $D[a,b]=[S^{-b/a},H,CZ^{-a},\mathrm{Ex}]$;
+\lem{comm-CZ-S} moves $CZ$ left past $S^{-b/a}$;
+\lem{CZ-H-CZ} rewrites the core $CZ^{-a}H\,CZ = H\,S^{a}_\uparrow S^{-1/a}CX^{-a}S^{1/a}$ (spawning the $CX^{-a}$);
+\lem{CZ-pow} merges $S^{1/a}S^{-b/a}=S^{(1-b)/a}$;
+\lem{Ex-slide} floats $H$ up ($\mathrm{Ex}\,H=H_\uparrow\mathrm{Ex}$);
+$CX^{-a}=H^3 CZ^{-a}H$ rebuilds a $CZ$ (\lem{CZ-H-CZ} read backwards);
+three more \lem{Ex-slide}s carry $S^{a}_\uparrow$, $S^{-1/a}_\downarrow$ and $H^3_\downarrow$ across $\mathrm{Ex}$;
+\lem{comm-CZ-S} commutes $S^{a}_\downarrow$ past $H_\uparrow$;
+fold $\mathrm{dir}^{\uparrow}=H_\uparrow S^{-1/a}_\uparrow H^3_\uparrow$ and the box $D[a,b-1]$, leaving $S^{a}_\downarrow$.
+
+%% ---------------------------------------------------------------------
+\subsection{$B\leftarrow H_\uparrow$: \; $H_\uparrow\cdot B[\mathbf v]\equiv_s \mathrm{dir}\cdot B[\mathbf v']$}
+%% ---------------------------------------------------------------------
+\begin{center}\scalebox{0.68}{\tikzfig{bh}}\end{center}
+These mirror $D\leftarrow H$ under the up/down swap.
+
+\paragraph{Case $a=b=0$ \;($H_\uparrow\cdot B[0,0]\equiv_s B[0,0]\cdot H_\downarrow$).}
+\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_hb_00}}\end{center}
+\textbf{Trace.} expand $B[0,0]=\mathrm{Ex}$; middle step is \lem{Ex-slide}; fold.
+
+\paragraph{Case $a=0,b\neq0$ \;($H_\uparrow\cdot B[0,b]=B[b,0]$).}
+\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_hb_0b}}\end{center}
+\textbf{Trace.} expand $B[0,b]=[CX^b,\mathrm{Ex}]$; folds to $B[b,0]$. Definitional.
+
+\paragraph{Case $a\neq0,b=0$ \;($H_\uparrow\cdot B[a,0]\equiv_s H^2_\downarrow\cdot B[0,-a]$).}
+\label{sub:hba0}\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_hb_a0}}\end{center}
+\textbf{Trace.} expand $B[a,0]$; \lem{HH-CX} ($CX^{a}H^2_\uparrow=H^2_\uparrow CX^{-a}$); \lem{Ex-slide} ($H^2_\uparrow$ across $\mathrm{Ex}\to H^2_\downarrow$); fold $B[0,-a]$.
+
+\paragraph{Case $a,b\neq0$ \;($H_\uparrow\cdot B[a,b]\equiv_s M_\downarrow[b/a]\cdot S^{b/a}_\downarrow\cdot B[b,-a]$).}
+\begin{center}\scalebox{0.76}{\tikzfig{chains/chain_hb_ab}}\end{center}
+\textbf{Trace.} expand $B[a,b]$; \lem{Euler} on the $H\,S^{-b/a}\,H$ block, then \lem{Ex-slide} and \lem{M-mul}; fold. (Up/down dual of $D\leftarrow H$, $a,b\neq0$.)
+
+%% ---------------------------------------------------------------------
+\subsection{$B\leftarrow S_\uparrow$: \; $S_\uparrow\cdot B[\mathbf v]\equiv_s \mathrm{dir}\cdot B[\mathbf v']$}
+%% ---------------------------------------------------------------------
+\paragraph{Case $a=0$ \;($S_\uparrow\cdot B[0,b]\equiv_s B[0,b]\cdot S_\downarrow$).}
+\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_stb_0b}}\end{center}
+\textbf{Trace.} expand $B[0,b]$; $S_\uparrow$ commutes past $CX$ (control wire); \lem{Ex-slide} ($S_\uparrow$ across $\mathrm{Ex}\to S_\downarrow$); fold. (Dual of $D\leftarrow S_\downarrow$, $a=0$.)
+
+\paragraph{Case $a\neq0$ \;($S_\uparrow\cdot B[a,b]=B[a,b-a]$).}
+\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_stb_ab}}\end{center}
+\textbf{Trace.} expand, combine $S$-powers, fold. Definitional.
+
+%% ---------------------------------------------------------------------
+\subsection{$B\leftarrow S_\downarrow$: \; $S_\downarrow\cdot B[\mathbf v]\equiv_s \mathrm{dir}\cdot B[\mathbf v']$}
+%% ---------------------------------------------------------------------
+\paragraph{Case $a=b=0$ \;($S_\downarrow\cdot B[0,0]\equiv_s B[0,0]\cdot S_\uparrow$).}\label{sub:sb00}
+\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_sb_00}}\end{center}
+\textbf{Trace.} expand $B[0,0]=\mathrm{Ex}$; middle step $S_\downarrow\cdot\mathrm{Ex}\equiv_s\mathrm{Ex}\cdot S_\uparrow$ is \lem{Ex-slide}; fold.
+
+\paragraph{Case $a=0,b\neq0$ \;($S_\downarrow\cdot B[0,b]\equiv_s CZ^{-b}\cdot S^{b^2}_\downarrow\cdot S_\uparrow\cdot B[0,b]$).}
+\label{sub:sb0b}\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_sb_0b}}\end{center}
+\textbf{Trace.} expand $B[0,b]=[CX^b,\mathrm{Ex}]$; \lem{CX-S} ($CX^b S_\downarrow=S_\downarrow S^{b^2}_\uparrow CZ^{-b} CX^b$, spawning the $CZ^{-b}$); \lem{Ex-slide} moves $S_\downarrow,S^{b^2}_\uparrow,CZ^{-b}$ past $\mathrm{Ex}$; fold.
+
+\paragraph{Case $a\neq0$ \;($S_\downarrow\cdot B[a,b]\equiv_s CZ^{-a}\cdot S^{a^2}_\downarrow\cdot S_\uparrow\cdot B[a,b]$).}
+\begin{center}\scalebox{0.76}{\tikzfig{chains/chain_sb_ab}}\end{center}
+\textbf{Trace.} expand $B[a,b]$; $S_\downarrow$ commutes past the $(H\,S^{-b/a})_\uparrow$ head, reducing to the $a=0$ case: \lem{CX-S} then \lem{Ex-slide}; fold.
+
+%% ---------------------------------------------------------------------
+\subsection{$L\leftarrow CZ$: \; $CZ\cdot L[\mathbf v]\equiv_s \mathrm{dir}\cdot L[\mathbf v']$}
+%% ---------------------------------------------------------------------
+\begin{center}\scalebox{0.5}{\tikzfig{lcz}}\end{center}
+An $L$ box is $A^{\uparrow}$ (top wire only) or $A\cdot B$; the eight cases split on which
+factors are present and whether their first indices vanish or coincide. In every case the
+chain shows the box-expansion, then routes $CZ$ to the right, then folds.
+
+\paragraph{Case 1 \;($CZ\cdot A^{\uparrow}[0,b]$, $b\neq0$).}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_lcz_1}}\end{center}
+\textbf{Trace} (to axioms). $A^{\uparrow}[0,b]=M^{\uparrow}[b]$; the single $\equiv_s$ is \lem{M-CZ} on the top wire ($M^{\uparrow}[b]\,CZ=CZ^{1/b}M^{\uparrow}[b]$); fold.
+
+\paragraph{Case 2 \;($CZ\cdot A^{\uparrow}[a,b]$, $a\neq0$).}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_lcz_2}}\end{center}
+\textbf{Trace} (to named lemmas). expand $A^{\uparrow}[a,b]$; the single $\equiv_s$ is \lem{A$\uparrow$-CZ} ($\mathrm{dir}=H\,CZ^{1/a}H^3$, spawning $B[a,b]$); fold. (\lem{A$\uparrow$-CZ} unfolds to \lem{M-CZ}+\lem{Euler}.)
+
+\paragraph{Case 3 \;($CZ\cdot A[0,b]\cdot B[0,0]$).}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_lcz_3}}\end{center}
+\textbf{Trace} (fully expanded to axioms). $B[0,0]=\mathrm{Ex}$, $A[0,b]=M[b]$; \lem{M-CZ} ($M[b]\,CZ=CZ^{1/b}M[b]$); \lem{Ex-slide} ($CZ$ past $\mathrm{Ex}$); fold.
+
+\paragraph{Case 4 \;($CZ\cdot A[0,b]\cdot B[0,d]$, $b,d\neq0$).}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_lcz_4}}\end{center}
+\textbf{Trace} (fully expanded to axioms). expand $A[0,b]=M[b]$, $B[0,d]=[CX^d,\mathrm{Ex}]$; \lem{M-CZ} ($M[b]\,CZ=CZ^{1/b}M[b]$); \lem{X-CZ} ($CX^d$ through $CZ$ spawns $S^{-2d/b}_\uparrow$); \lem{Ex-slide} ($S_\uparrow\!\to S_\downarrow$ and $CZ$ across $\mathrm{Ex}$); fold.
+
+\paragraph{Case 5 \;($CZ\cdot A[0,b]\cdot B[c,d]$, $b\neq c$).}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_lcz_5}}\end{center}
+\textbf{Trace} (to named lemmas; \texttt{L-CZ.agda:588}). expand both factors ($B[c,d]$ via $CX'^c=H^3CZ^cH$); \lem{M-CZ} and the top-wire $M^{\uparrow}\!$-$CZ$ pull $CZ$ in; \lem{semi-MS}/\lem{Hconj} normalise the $A$ head; the $b\neq c$ generic core fires \texttt{lemma-$\beth$-CZ$^y$} (a $CZ$-conjugation producing $M\,CZ\,\beth\,M$); \lem{HH-CZ} and \lem{Ex-slide} clean up; fold. \emph{(Full circuit inlining deferred: 98-step proof with the auxiliary $\beth$ gate.)}
+
+\paragraph{Case 6 \;($CZ\cdot A[0,b]\cdot B[b,d]$, $b=c$ coincidence).}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_lcz_6}}\end{center}
+\textbf{Trace} (to named lemmas; \texttt{L-CZ.agda:543}). the $b=c$ coincidence: conjugating by $(H\,CZ^{1/b}H^3)(\cdot)CZ^{-1}$ and using \lem{A$\uparrow$-CZ} backwards collapses the $A\cdot B$ pair to a single $A^{\uparrow}[b,d]$; $\mathrm{dir}=(H\,CZ^{1/b}H^3)^{-1}H^2$. \emph{(Reduction proof; circuit inlining deferred.)}
+
+\paragraph{Case 7 \;($CZ\cdot A[a,b]\cdot B[0,d]$, $a\neq0$).}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_lcz_7}}\end{center}
+\textbf{Trace} (to named lemmas; \texttt{L-CZ.agda:414}, $\mathrm{dir}=\varepsilon$). expand $A[a,b]=M[a]HS^{-b/a}$, $B[0,d]$; \lem{comm-CZ-S} then \lem{M-CZ} ($M[a]\,CZ=CZ^{1/a}M[a]$); \lem{CZ-pow} merges the two $CZ$ powers; \lem{HH-CZ} and \lem{semi-MS} reabsorb everything into the boxes --- $CZ$ is fully absorbed ($\mathrm{dir}=\varepsilon$), giving $A[a,b]\cdot B[0,d-a]$. \emph{(Circuit inlining deferred: uses $CX'=H^3CZH$.)}
+
+\paragraph{Case 8 \;($CZ\cdot A[a,b]\cdot B[c,d]$, $a,c\neq0$).}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_lcz_8}}\end{center}
+\textbf{Trace} (to named lemmas; \texttt{L-CZ.agda:278}). the general case, $\sim$35 steps: \lem{comm-CZ-S}, then \lem{CZ-H-CZ} (\texttt{aux-CZ$^{-k}$-H-CZ}) on the $A$--$B$ junction, \lem{Euler} (\texttt{lemma-Euler$'$}) on both heads, \lem{HH-CZ}, \lem{semi-MS} and many \lem{Ex-slide}s; $\mathrm{dir}=H^3 S^{-a/c} H$. \emph{(Full circuit inlining deferred.)}
+
+%% ---------------------------------------------------------------------
+\subsection{$B^{\uparrow}\leftarrow CZ$: \; $CZ\cdot B^{\uparrow}[\mathbf v]\equiv_s \mathrm{dir}\cdot B^{\uparrow}[\mathbf v]$}
+%% ---------------------------------------------------------------------
+\begin{center}\scalebox{0.72}{\tikzfig{bcz}}\end{center}
+\paragraph{Case $a=0$.}
+\begin{center}\scalebox{0.72}{\tikzfig{chains/chain_czbat_0b}}\end{center}
+\textbf{Trace} (to axioms). expand $B^{\uparrow}[0,b]=[CX^b,\mathrm{Ex}]^{\uparrow}$; \lem{X-CZ} pushes $CX^b_\uparrow$ past $CZ$, spawning the long-range $CZ_{02}^{-b}$; \lem{Ex-slide} sends $\mathrm{Ex}^{\uparrow}\!\cdot CZ=CZ_{02}\cdot\mathrm{Ex}^{\uparrow}$, then $\mathrm{Ex}^{\uparrow}\!\cdot CZ_{02}^{-b}=CZ^{-b}\cdot\mathrm{Ex}^{\uparrow}$; fold $\mathrm{dir}=CZ_{02}\cdot CZ^{-b}$.
+\paragraph{Case $a\neq0$.}
+\begin{center}\scalebox{0.72}{\tikzfig{chains/chain_czbat_ab}}\end{center}
+\textbf{Trace} (to axioms). expand $B^{\uparrow}[a,b]$; the $[S^{-b/a},H]^{\uparrow\uparrow}$ head lives on wire 2, so \lem{comm-CZ-S} slides $CZ$ past it; this reduces to the $a=0$ case applied to $CX^a$ (\lem{X-CZ} then two \lem{Ex-slide}s); fold $\mathrm{dir}=CZ_{02}\cdot CZ^{-a}$.
+
+%% ---------------------------------------------------------------------
+\subsection{$DD\leftarrow CZ$: \; $CZ\cdot DD[\mathbf v_1,\mathbf v_2]\equiv_s \mathrm{dir}^{\uparrow}\cdot DD[\mathbf v_1',\mathbf v_2']$}
+%% ---------------------------------------------------------------------
+\begin{center}\scalebox{0.55}{\tikzfig{ddcz}}\end{center}
+The four cases split on $a_1,a_2=0$ or $\neq0$; each routes $CZ$ through both $D$ boxes by the braiding \lem{Ex-Ex-CZ}, with the $a_i\neq0$ heads contributing the $D\leftarrow CZ$ \,$\mathrm{dir}$ (\S\ref{sub:czd0b}, \S\ref{sub:czdab}).
+
+\paragraph{Case $a_1=a_2=0$ \;(fully expanded to axioms).}\label{sub:czdd1}
+\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_czdd_1}}\end{center}
+\textbf{Trace.} expand both $D[0,\cdot]=[CZ^{\cdot},\mathrm{Ex}]$; \lem{CZ-CZ} slides the outer $CZ$ inward past $CZ^{-b}_\uparrow$ and $\mathrm{Ex}$; \lem{Ex-Ex-CZ} braids it to the top pair as $CZ^{\uparrow}$; \lem{CZ-CZ} (\texttt{selinger-c12}) commutes it past $CZ^{-d}$; \lem{CZ-CZ} slides it out; fold $CZ^{\uparrow}\cdot DD[\mathbf v,\mathbf v]$.
+
+\paragraph{Case $a_1=0,\,a_2\neq0$ \;(upper box nontrivial; fully expanded to axioms).}\label{sub:czdd2}
+\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_czdd_2_p1}}\end{center}
+\newpage
+\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_czdd_2_p2}}\end{center}
+\textbf{Trace.} expand both boxes; \lem{comm-CZ-S} pulls the upper $S^{\uparrow}$ past $CZ$; the cross identity $CZ^{-a}_\uparrow H_\uparrow CZ = H_\uparrow CZ\, CZ_{02}^{a} CX^{-a}_\uparrow$ (\lem{CZ-H-CZ} on the $0$--$2$ pair) spawns the long-range $CZ_{02}$; \lem{Ex-slide} and \lem{comm-Ex-CZ} float the upper $H$/box out of the way; \lem{Ex-Ex-CZ} braids $CZ$ to the top, \lem{CZ-CZ} commutes it through, $CZ_{02}$ collapses to $CZ$ across $\mathrm{Ex}^{\uparrow}$ and merges by \lem{CZ-pow}; finally $CX^{-a}_\uparrow=H^3_\uparrow CZ^{-a}_\uparrow H_\uparrow$ rebuilds the upper $D$ box and the $H^{(3)}_{\uparrow\uparrow}$ conjugation leaves $\mathrm{dir}=H^{\uparrow}CZ H^{3\uparrow}$; fold.
+
+\paragraph{Case $a_1\neq0,\,a_2=0$ \;(lower box nontrivial; reduction to the previous case).}\label{sub:czdd3}
+\begin{center}\scalebox{0.8}{\tikzfig{chains/chain_czdd_3}}\end{center}
+\textbf{Trace.} this is the mirror of \S\ref{sub:czdd2}: conjugating the whole equation by $\mathrm{Ex}^{\uparrow}(\cdot)\,\mathrm{Ex}$ swaps the two $D$ boxes (\lem{Ex-Ex-CZ} / Yang--Baxter, \texttt{lemma-swap-DD}), turning it into the $a_1=0,a_2\neq0$ case already expanded above; conjugating back gives the result with $\mathrm{dir}=H_\downarrow CZ\,H^3_\downarrow$.
+
+\paragraph{Case $a_1,a_2\neq0$ \;(both heads nontrivial; fully expanded to axioms).}\label{sub:czdd4}
+\begin{center}\scalebox{0.74}{\tikzfig{chains/chain_czdd_4_p1}}\end{center}
+\newpage
+\begin{center}\scalebox{0.74}{\tikzfig{chains/chain_czdd_4_p2}}\end{center}
+\textbf{Trace.} expand both $D$ boxes; \lem{comm-CZ-S} pulls each $S$ head clear of $CZ$; \lem{Ex-slide}/\lem{comm-Ex-CZ} bring the two $CZ$ powers and the swaps together (one becomes the long-range $CZ_{02}$); then the three-wire core \lem{CZ02-CZ-CZ} fires, producing the $CX_{02}$, $CX_\uparrow$ and the four $S$ rescalings; a final mechanical pass of \lem{Ex-slide}s, \lem{CZ-pow} $S$-merges and $CX=H^3CZH$ folds rebuilds $DD[\mathbf v']$ and leaves $\mathrm{dir}^{\uparrow}=H_\uparrow H_{\uparrow\uparrow}CZ_\uparrow S^{-a/c}_\uparrow H^3_\uparrow S^{-c/a}_{\uparrow\uparrow}H^3_{\uparrow\uparrow}$.
+
+%% ---------------------------------------------------------------------
+\subsection{$BB\leftarrow CZ^{\uparrow}$: \; $CZ^{\uparrow}\cdot BB[\mathbf v_1,\mathbf v_2]\equiv_s \mathrm{dir}^{\Downarrow}\cdot BB[\mathbf v_1',\mathbf v_2']$}
+%% ---------------------------------------------------------------------
+\begin{center}\scalebox{0.55}{\tikzfig{bbcz}}\end{center}
+\begin{center}\scalebox{0.55}{\tikzfig{bbcz}}\end{center}
+The up/down dual of $DD\leftarrow CZ$: the four cases split on the first index of the
+lower box $B_1$ ($a_1$) and the upper box $B_2$ ($a_2$).
+
+\paragraph{Case $a_1=0,\,a_2=0$.}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_czbb_1}}\end{center}
+\textbf{Trace.} $BB\leftarrow CZ^{\uparrow}$ is the exact up/down dual of $DD\leftarrow CZ$: $\mathrm{dir}=\mathrm{dual}(\mathrm{dir}_{DD}^{\mathrm{rev}})$, and the proof conjugates the corresponding $DD$ chain (\S\ref{sub:czdd1}) by the $H^3$/$\mathrm{Ex}$ duality bridge (\texttt{BB\textasciitilde DD}). So every step is the dual of the $DD$ case~1 derivation.
+
+\paragraph{Case $a_1\neq0,\,a_2=0$ \;(lower box nontrivial).}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_czbb_2}}\end{center}
+\textbf{Trace.} dual of $DD$ case \S\ref{sub:czdd3} under the up/down bridge (\texttt{BB\textasciitilde DD}): conjugate that derivation by $H^3$/$\mathrm{Ex}$.
+
+\paragraph{Case $a_1=0,\,a_2\neq0$ \;(upper box nontrivial).}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_czbb_3}}\end{center}
+\textbf{Trace.} dual of $DD$ case \S\ref{sub:czdd2} under the up/down bridge (\texttt{BB\textasciitilde DD}).
+
+\paragraph{Case $a_1,a_2\neq0$.}
+\begin{center}\scalebox{0.85}{\tikzfig{chains/chain_czbb_4}}\end{center}
+\textbf{Trace.} dual of $DD$ case \S\ref{sub:czdd4} under the up/down bridge (\texttt{BB\textasciitilde DD}): the dual of the \lem{CZ02-CZ-CZ} core.
 
 \end{document}

@@ -21,11 +21,20 @@
 \end{pgfonlayer}
 \node [style=none,rotate=-90] (equiv) at (4.25, -5.25) {$\equiv_s$};
 \begin{pgfonlayer}{nodelayer}
-\node [style=A box] (n0y-70) at (2.125, -7.0) {$A_{{0,-a}}$};
+\node [style=gate] (n0y-70) at (1.75, -7.0) {$-a$};
 \node [style=none] (lm0el0-7) at (0.0, -7.0){};
-\node [style=none] (lm0er0-7) at (3.875, -7.0){};
+\node [style=none] (lm0er0-7) at (3.5, -7.0){};
 \end{pgfonlayer}
 \begin{pgfonlayer}{edgelayer}
 \draw (lm0el0-7.center) to (lm0er0-7.center);
+\end{pgfonlayer}
+\node [style=none,rotate=-90] (equiv) at (1.75, -8.75) {$=$};
+\begin{pgfonlayer}{nodelayer}
+\node [style=A box] (n0y-100) at (2.125, -10.5) {$A_{{0,-a}}$};
+\node [style=none] (lm0el0-10) at (0.0, -10.5){};
+\node [style=none] (lm0er0-10) at (3.875, -10.5){};
+\end{pgfonlayer}
+\begin{pgfonlayer}{edgelayer}
+\draw (lm0el0-10.center) to (lm0er0-10.center);
 \end{pgfonlayer}
 \end{tikzpicture}

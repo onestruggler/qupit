@@ -152,10 +152,12 @@ chain_ah_0b = map pcir_trans
   ]
 
 -- A←H: H•A[a0] = A[0,−a]
+--   expand A[a0]=M[a]·H  →  H•H•M[a]  ≡_s[HHM] M[-a]  =fold A[0,-a]
 chain_ah_a0 :: [(CT.Circuit, PositionSpec)]
 chain_ah_a0 = map pcir_trans
   [ (Cir [H 0, A 0 "{a0}"]       (Spec ""), PositionSpec Down "=")
   , (Cir [H 0, H 0, Mul 0 "a"]   (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Mul 0 "-a"]            (Spec ""), PositionSpec Down "=")
   , (Cir [A 0 "{0,-a}"]          (Spec ""), PositionSpec Down "")
   ]
 
@@ -202,10 +204,13 @@ chain_hd_0b = map pcir_trans
   ]
 
 -- D←H: H↓•D[a0] = H^2↑•D[0,−a]
+--   expand D[a0] → CZ^{-a}·H² =[HH-CZ] H²·CZ^a =[Ex-slide H²] (across Ex) → fold
 chain_hd_a0 :: [(CT.Circuit, PositionSpec)]
 chain_hd_a0 = map pcir_trans
   [ (Cir [H 0, D 0 "{a0}"]                   (Spec ""), PositionSpec Down "=")
   , (Cir [H 0, H 0, CZe 1 0 "{-a}", Ex 0]    (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [CZe 1 0 "a", H 0, H 0, Ex 0]       (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [CZe 1 0 "a", Ex 0, H 1, H 1]       (Spec ""), PositionSpec Down "=")
   , (Cir [D 0 "{0,-a}", He 1 "2"]            (Spec ""), PositionSpec Down "")
   ]
 
@@ -218,10 +223,13 @@ chain_hd_ab = map pcir_trans
   ]
 
 -- D←S↓: S↓•D[0b] = D[0b]•S↑
+--   expand → S past CZ [comm-CZ-S] → S↓ across Ex → S↑ [Ex-slide] → fold
 chain_sd_0b :: [(CT.Circuit, PositionSpec)]
 chain_sd_0b = map pcir_trans
   [ (Cir [S 0, D 0 "{0b}"]            (Spec ""), PositionSpec Down "=")
   , (Cir [S 0, CZe 1 0 "{-b}", Ex 0]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [CZe 1 0 "{-b}", S 0, Ex 0]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [CZe 1 0 "{-b}", Ex 0, S 1]  (Spec ""), PositionSpec Down "=")
   , (Cir [D 0 "{0b}", S 1]            (Spec ""), PositionSpec Down "")
   ]
 
@@ -235,10 +243,15 @@ chain_sd_ab = map pcir_trans
   ]
 
 -- D←S↑: S↑•D[ab] = D[ab]•S↓
+--   expand → S↑ commutes through bottom-wire gates [comm-S↑ / comm-CZ-S↑]
+--        → S↑ across Ex → S↓ [Ex-slide] → fold
 chain_std :: [(CT.Circuit, PositionSpec)]
 chain_std = map pcir_trans
-  [ (Cir [S 1, D 0 "{ab}"]    (Spec ""), PositionSpec Down "\\equiv_s")
-  , (Cir [D 0 "{ab}", S 0]    (Spec ""), PositionSpec Down "")
+  [ (Cir [S 1, D 0 "{ab}"]                                 (Spec ""), PositionSpec Down "=")
+  , (Cir [S 1, Se 0 "{-b/a}", H 0, CZe 1 0 "{-a}", Ex 0]   (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 0 "{-b/a}", H 0, CZe 1 0 "{-a}", S 1, Ex 0]   (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 0 "{-b/a}", H 0, CZe 1 0 "{-a}", Ex 0, S 0]   (Spec ""), PositionSpec Down "=")
+  , (Cir [D 0 "{ab}", S 0]                                 (Spec ""), PositionSpec Down "")
   ]
 
 -- D←CZ: CZ•D[0b] = D[0,b−1]   (key: CZ•CZ^{−b} = CZ^{1−b})
@@ -251,11 +264,24 @@ chain_czd_0b = map pcir_trans
   ]
 
 -- D←CZ: CZ•D[ab] = S^a↓•H↑•S^{−1/a}↑•H^3↑•D[a,b−1]
+--   expand → CZ past S^{-b/a} [comm-CZ-S] → CZ·H·CZ core [aux-CZ-H-CZ]
+--        + Ex-slides & CX↔CZ cleanup → fold
+-- D←CZ, a≠0: fully inlined to axioms (N/BR/Two/D.agda:249).
+-- CX'^{-a} expanded as H³·CZ^{-a}·H.
 chain_czd_ab :: [(CT.Circuit, PositionSpec)]
 chain_czd_ab = map pcir_trans
-  [ (Cir [CZ 0 1, D 0 "{ab}"]                                       (Spec ""), PositionSpec Down "=")
-  , (Cir [CZ 0 1, Se 0 "{-b/a}", H 0, CZe 1 0 "{-a}", Ex 0]        (Spec ""), PositionSpec Down "\\equiv_s")
-  , (Cir [D 0 "{a,b-1}", He 1 "3", Se 1 "{-1/a}", H 1, Se 0 "a"]   (Spec ""), PositionSpec Down "")
+  [ (Cir [CZ 0 1, D 0 "{ab}"]                                                                 (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 0 1, Se 0 "{-b/a}", H 0, CZe 1 0 "{-a}", Ex 0]                                   (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 0 "{-b/a}", CZ 0 1, H 0, CZe 1 0 "{-a}", Ex 0]                                   (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 0 "{-b/a}", Se 0 "{1/a}", CXe 1 0 "{-a}", Se 0 "{-1/a}", Se 1 "{a}", H 0, Ex 0]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 0 "{(1-b)/a}", CXe 1 0 "{-a}", Se 0 "{-1/a}", Se 1 "{a}", H 0, Ex 0]             (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 0 "{(1-b)/a}", CXe 1 0 "{-a}", Se 0 "{-1/a}", Se 1 "{a}", Ex 0, H 1]             (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 0 "{(1-b)/a}", H 0, CZe 1 0 "{-a}", He 0 "3", Se 0 "{-1/a}", Se 1 "{a}", Ex 0, H 1]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 0 "{(1-b)/a}", H 0, CZe 1 0 "{-a}", He 0 "3", Se 0 "{-1/a}", Ex 0, Se 0 "{a}", H 1]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 0 "{(1-b)/a}", H 0, CZe 1 0 "{-a}", He 0 "3", Ex 0, Se 1 "{-1/a}", Se 0 "{a}", H 1]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 0 "{(1-b)/a}", H 0, CZe 1 0 "{-a}", Ex 0, He 1 "3", Se 1 "{-1/a}", Se 0 "{a}", H 1]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 0 "{(1-b)/a}", H 0, CZe 1 0 "{-a}", Ex 0, He 1 "3", Se 1 "{-1/a}", H 1, Se 0 "{a}"]  (Spec ""), PositionSpec Down "=")
+  , (Cir [D 0 "{a,b-1}", He 1 "3", Se 1 "{-1/a}", H 1, Se 0 "{a}"]                            (Spec ""), PositionSpec Down "")
   ]
 
 -- B←H↑: H↑•B[00] = B[00]•H↓   (key: H↑•Ex = Ex•H↓)
@@ -275,11 +301,14 @@ chain_hb_0b = map pcir_trans
   , (Cir [B 0 "{b0}"]               (Spec ""), PositionSpec Down "")
   ]
 
--- B←H↑: H↑•B[a0] = H^2↓•B[0,−a]
+-- B←H↑: H↑•B[a0] = H^2↓•B[0,−a]   (up/down dual of D←H a0)
+--   expand → CX^a·H²↑ =[HH-CX] H²↑·CX^{-a} =[Ex-slide H²↑→H²↓] → fold
 chain_hb_a0 :: [(CT.Circuit, PositionSpec)]
 chain_hb_a0 = map pcir_trans
   [ (Cir [H 1, B 0 "{a0}"]                  (Spec ""), PositionSpec Down "=")
   , (Cir [H 1, H 1, CXe 1 0 "a", Ex 0]      (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [CXe 1 0 "-a", H 1, H 1, Ex 0]     (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [CXe 1 0 "-a", Ex 0, H 0, H 0]     (Spec ""), PositionSpec Down "=")
   , (Cir [B 0 "{0,-a}", He 0 "2"]           (Spec ""), PositionSpec Down "")
   ]
 
@@ -291,11 +320,14 @@ chain_hb_ab = map pcir_trans
   , (Cir [B 0 "{b,-a}", Se 0 "{b/a}", Mul 0 "{b/a}"]         (Spec ""), PositionSpec Down "")
   ]
 
--- B←S↑: S↑•B[0b] = B[0b]•S↓
+-- B←S↑: S↑•B[0b] = B[0b]•S↓   (up/down dual of D←S↓ 0b)
+--   expand → S↑ past CX [comm-CX-S↑] → S↑ across Ex → S↓ [Ex-slide] → fold
 chain_stb_0b :: [(CT.Circuit, PositionSpec)]
 chain_stb_0b = map pcir_trans
   [ (Cir [S 1, B 0 "{0b}"]          (Spec ""), PositionSpec Down "=")
   , (Cir [S 1, CXe 1 0 "b", Ex 0]   (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [CXe 1 0 "b", S 1, Ex 0]   (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [CXe 1 0 "b", Ex 0, S 0]   (Spec ""), PositionSpec Down "=")
   , (Cir [B 0 "{0b}", S 0]          (Spec ""), PositionSpec Down "")
   ]
 
@@ -318,138 +350,246 @@ chain_sb_00 = map pcir_trans
   ]
 
 -- B←S↓: S↓•B[0b] = CZ^{−b}•S^{b^2}↓•S↑•B[0b]
+--   expand → CX-S conj [CX^b·S↓ = S↓·S^{b²}↑·CZ^{-b}·CX^b] → Ex-slides+comm-Ex-CZ → fold
 chain_sb_0b :: [(CT.Circuit, PositionSpec)]
 chain_sb_0b = map pcir_trans
-  [ (Cir [S 0, B 0 "{0b}"]                                    (Spec ""), PositionSpec Down "=")
-  , (Cir [S 0, CXe 1 0 "b", Ex 0]                             (Spec ""), PositionSpec Down "\\equiv_s")
-  , (Cir [B 0 "{0b}", S 1, Se 0 "{b^2}", CZe 0 1 "{-b}"]      (Spec ""), PositionSpec Down "")
+  [ (Cir [S 0, B 0 "{0b}"]                                       (Spec ""), PositionSpec Down "=")
+  , (Cir [S 0, CXe 1 0 "b", Ex 0]                                (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [CXe 1 0 "b", CZe 0 1 "{-b}", Se 1 "{b^2}", S 0, Ex 0]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [B 0 "{0b}", S 1, Se 0 "{b^2}", CZe 0 1 "{-b}"]         (Spec ""), PositionSpec Down "")
   ]
 
 -- B←S↓: S↓•B[ab] = CZ^{−a}•S^{a^2}↓•S↑•B[ab]
+--   expand → S↓ past the (H·S^{-b/a})↑ head [comm-S-w↑] → CX-S conj on CX^a·S↓ + Ex-slides → fold
 chain_sb_ab :: [(CT.Circuit, PositionSpec)]
 chain_sb_ab = map pcir_trans
   [ (Cir [S 0, B 0 "{ab}"]                                    (Spec ""), PositionSpec Down "=")
   , (Cir [S 0, Se 1 "{-b/a}", H 1, CXe 1 0 "a", Ex 0]        (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", H 1, S 0, CXe 1 0 "a", Ex 0]        (Spec ""), PositionSpec Down "\\equiv_s")
   , (Cir [B 0 "{ab}", S 1, Se 0 "{a^2}", CZe 0 1 "{-a}"]      (Spec ""), PositionSpec Down "")
   ]
 
 -- B↑←CZ: CZ↓•B↑[0b] = CZ^{−b}↓•CZ↑•Ex↓•B↑[0b]
 chain_czbat_0b :: [(CT.Circuit, PositionSpec)]
 chain_czbat_0b = map pcir_trans
-  [ (Cir [CZ 0 1, B 1 "{0b}"]                                (Spec ""), PositionSpec Down "=")
-  , (Cir [CZ 0 1, CXe 2 1 "b", Ex 1]                         (Spec ""), PositionSpec Down "\\equiv_s")
-  , (Cir [B 1 "{0b}", Ex 0, CZ 1 2, Ex 0, CZe 0 1 "{-b}"]   (Spec ""), PositionSpec Down "")
+  [ (Cir [CZ 0 1, B 1 "{0b}"]                               (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 0 1, CXe 2 1 "b", Ex 1]                        (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [CXe 2 1 "b", CZe 2 0 "{-b}", CZ 0 1, Ex 1]        (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [CXe 2 1 "b", CZe 2 0 "{-b}", Ex 1, CZe 2 0 ""]    (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [CXe 2 1 "b", Ex 1, CZe 1 0 "{-b}", CZe 2 0 ""]    (Spec ""), PositionSpec Down "=")
+  , (Cir [B 1 "{0b}", CZe 1 0 "{-b}", CZe 2 0 ""]           (Spec ""), PositionSpec Down "")
   ]
 
 -- B↑←CZ: CZ↓•B↑[ab] = CZ^{−a}↓•CZ↑•Ex↓•B↑[ab]
 chain_czbat_ab :: [(CT.Circuit, PositionSpec)]
 chain_czbat_ab = map pcir_trans
-  [ (Cir [CZ 0 1, B 1 "{ab}"]                                (Spec ""), PositionSpec Down "=")
-  , (Cir [CZ 0 1, Se 2 "{-b/a}", H 2, CXe 2 1 "a", Ex 1]    (Spec ""), PositionSpec Down "\\equiv_s")
-  , (Cir [B 1 "{ab}", Ex 0, CZ 1 2, Ex 0, CZe 0 1 "{-a}"]   (Spec ""), PositionSpec Down "")
+  [ (Cir [CZ 0 1, B 1 "{ab}"]                                              (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 0 1, Se 2 "{-b/a}", H 2, CXe 2 1 "a", Ex 1]                   (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 2 "{-b/a}", H 2, CZ 0 1, CXe 2 1 "a", Ex 1]                   (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 2 "{-b/a}", H 2, CXe 2 1 "a", CZe 2 0 "{-a}", CZ 0 1, Ex 1]   (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 2 "{-b/a}", H 2, CXe 2 1 "a", CZe 2 0 "{-a}", Ex 1, CZe 2 0 ""]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 2 "{-b/a}", H 2, CXe 2 1 "a", Ex 1, CZe 1 0 "{-a}", CZe 2 0 ""]  (Spec ""), PositionSpec Down "=")
+  , (Cir [B 1 "{ab}", CZe 1 0 "{-a}", CZe 2 0 ""]                          (Spec ""), PositionSpec Down "")
   ]
 
 -- DD←CZ: 4 cases (direct ≡_s, intermediate too complex to inline)
 chain_czdd_1 :: [(CT.Circuit, PositionSpec)]
 chain_czdd_1 = map pcir_trans
-  [ (Cir [CZ 0 1, D 1 "{0b}", D 0 "{0d}"]        (Spec ""), PositionSpec Down "\\equiv_s")
-  , (Cir [D 1 "{0b}", D 0 "{0d}", CZ 1 2]         (Spec ""), PositionSpec Down "")
+  [ (Cir [CZ 0 1, D 1 "{0b}", D 0 "{0d}"]                       (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 0 1, CZe 2 1 "{-b}", Ex 1, CZe 1 0 "{-d}", Ex 0]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [CZe 2 1 "{-b}", CZ 0 1, Ex 1, Ex 0, CZe 1 0 "{-d}"]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [CZe 2 1 "{-b}", Ex 1, Ex 0, CZ 1 2, CZe 1 0 "{-d}"]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [CZe 2 1 "{-b}", Ex 1, Ex 0, CZe 1 0 "{-d}", CZ 1 2]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [CZe 2 1 "{-b}", Ex 1, CZe 1 0 "{-d}", Ex 0, CZ 1 2]  (Spec ""), PositionSpec Down "=")
+  , (Cir [D 1 "{0b}", D 0 "{0d}", CZ 1 2]                       (Spec ""), PositionSpec Down "")
   ]
 
+-- DD←CZ, case d1=(0,b) lower, d2=(a,b) upper (a≠0): agda case 3 (DD-CZ.agda:368).
+-- Fully inlined to axioms. CZ02 = CZe 2 0 (wires 0,2); CX'^k expanded as H³·CZ·H.
 chain_czdd_2 :: [(CT.Circuit, PositionSpec)]
 chain_czdd_2 = map pcir_trans
-  [ (Cir [CZ 0 1, D 1 "{ab}", D 0 "{0d}"]                           (Spec ""), PositionSpec Down "\\equiv_s")
-  , (Cir [D 1 "{ab}", D 0 "{0,d-a}", Sep, He 2 "3", CZ 1 2, H 2]   (Spec ""), PositionSpec Down "")
+  [ (Cir [CZ 0 1, D 1 "{ab}", D 0 "{0d}"]                                                      (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 0 1, Se 1 "{-b/a}", H 1, CZe 2 1 "{-a}", Ex 1, CZe 1 0 "{-d}", Ex 0]              (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", CZ 0 1, H 1, CZe 2 1 "{-a}", Ex 1, CZe 1 0 "{-d}", Ex 0]              (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", CXe 2 1 "{-a}", CZe 2 0 "{a}", CZ 0 1, H 1, Ex 1, CZe 1 0 "{-d}", Ex 0]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", CXe 2 1 "{-a}", CZe 2 0 "{a}", CZ 0 1, Ex 1, H 2, CZe 1 0 "{-d}", Ex 0]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", CXe 2 1 "{-a}", CZe 2 0 "{a}", CZ 0 1, Ex 1, CZe 1 0 "{-d}", Ex 0, H 2]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", CXe 2 1 "{-a}", CZe 2 0 "{a}", CZ 0 1, Ex 1, Ex 0, CZe 1 0 "{-d}", H 2]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", CXe 2 1 "{-a}", CZe 2 0 "{a}", Ex 1, Ex 0, CZ 1 2, CZe 1 0 "{-d}", H 2]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", CXe 2 1 "{-a}", CZe 2 0 "{a}", Ex 1, Ex 0, CZe 1 0 "{-d}", CZ 1 2, H 2]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", CXe 2 1 "{-a}", Ex 1, CZe 1 0 "{a}", CZe 1 0 "{-d}", Ex 0, CZ 1 2, H 2]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", CXe 2 1 "{-a}", Ex 1, CZe 1 0 "{a-d}", Ex 0, CZ 1 2, H 2]              (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", H 1, CZe 2 1 "{-a}", He 1 "3", Ex 1, CZe 1 0 "{a-d}", Ex 0, CZ 1 2, H 2]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", H 1, CZe 2 1 "{-a}", Ex 1, He 2 "3", CZe 1 0 "{a-d}", Ex 0, CZ 1 2, H 2]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", H 1, CZe 2 1 "{-a}", Ex 1, CZe 1 0 "{a-d}", He 2 "3", Ex 0, CZ 1 2, H 2]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", H 1, CZe 2 1 "{-a}", Ex 1, CZe 1 0 "{a-d}", Ex 0, He 2 "3", CZ 1 2, H 2]  (Spec ""), PositionSpec Down "=")
+  , (Cir [D 1 "{ab}", D 0 "{0,d-a}", Sep, He 2 "3", CZ 1 2, H 2]                               (Spec ""), PositionSpec Down "")
   ]
 
 chain_czdd_3 :: [(CT.Circuit, PositionSpec)]
 chain_czdd_3 = map pcir_trans
-  [ (Cir [CZ 0 1, D 1 "{0b}", D 0 "{cd}"]                           (Spec ""), PositionSpec Down "\\equiv_s")
-  , (Cir [D 1 "{0,b-c}", D 0 "{c,d}", He 1 "3", CZ 1 2, H 1]       (Spec ""), PositionSpec Down "")
+  [ (Cir [CZ 0 1, D 1 "{0b}", D 0 "{cd}"]                                          (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 0 1, CZe 2 1 "{-b}", Ex 1, Se 0 "{-d/c}", H 0, CZe 1 0 "{-c}", Ex 0]  (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [D 1 "{0,b-c}", D 0 "{c,d}", He 1 "3", CZ 1 2, H 1]                       (Spec ""), PositionSpec Down "")
   ]
 
 chain_czdd_4 :: [(CT.Circuit, PositionSpec)]
+-- DD←CZ, both a,c≠0: agda case 4 (DD-CZ.agda:410). Convention swap a1=c,a2=a.
+-- Core: lemma-CZ02^k-CZ^l↑-CZ (the two-pair analogue of CZ-H-CZ). CZ02=CZe 2 0,
+-- CX02=CXe 2 0. Final cleanup (Ex-slides + S-merges + CX'-fold) shown as one step.
 chain_czdd_4 = map pcir_trans
-  [ (Cir [CZ 0 1, D 1 "{ab}", D 0 "{cd}"]                                                                            (Spec ""), PositionSpec Down "\\equiv_s")
+  [ (Cir [CZ 0 1, D 1 "{ab}", D 0 "{cd}"]                                                                          (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 0 1, Se 1 "{-b/a}", H 1, CZe 2 1 "{-a}", Ex 1, Se 0 "{-d/c}", H 0, CZe 1 0 "{-c}", Ex 0]             (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", CZ 0 1, H 1, CZe 2 1 "{-a}", Ex 1, Se 0 "{-d/c}", H 0, CZe 1 0 "{-c}", Ex 0]             (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", CZ 0 1, H 1, CZe 2 1 "{-a}", Se 0 "{-d/c}", H 0, Ex 1, CZe 1 0 "{-c}", Ex 0]             (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", CZ 0 1, Se 0 "{-d/c}", H 1, CZe 2 1 "{-a}", H 0, CZe 2 0 "{-c}", Ex 1, Ex 0]             (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", Se 0 "{-d/c}", CZ 0 1, H 1, CZe 2 1 "{-a}", H 0, CZe 2 0 "{-c}", Ex 1, Ex 0]             (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Se 1 "{-b/a}", Se 0 "{-d/c}", Se 1 "{c/a}", CXe 2 1 "{-a}", Se 1 "{-c/a}", Se 0 "{a/c}", CXe 2 0 "{-c}", Se 0 "{-a/c}", CZ 0 1, H 1, H 0, Ex 1, Ex 0]  (Spec ""), PositionSpec Down "\\equiv_s")
   , (Cir [D 1 "{a,b-c}", D 0 "{c,d-a}", Sep, He 1 "3", Se 1 "{-a/c}", He 2 "3", Se 2 "{-c/a}", CZ 1 2, H 2, H 1]  (Spec ""), PositionSpec Down "")
   ]
 
 -- BB←CZ↑: 4 cases (dual to DD←CZ)
 chain_czbb_1 :: [(CT.Circuit, PositionSpec)]
 chain_czbb_1 = map pcir_trans
-  [ (Cir [CZ 1 2, B 0 "{0b}", B 1 "{0d}"]        (Spec ""), PositionSpec Down "\\equiv_s")
-  , (Cir [B 0 "{0b}", B 1 "{0d}", CZ 0 1]         (Spec ""), PositionSpec Down "")
+  [ (Cir [CZ 1 2, B 0 "{0b}", B 1 "{0d}"]                      (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 1 2, CXe 1 0 "b", Ex 0, CXe 2 1 "d", Ex 1]        (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [B 0 "{0b}", B 1 "{0d}", CZ 0 1]                      (Spec ""), PositionSpec Down "")
   ]
 
 chain_czbb_2 :: [(CT.Circuit, PositionSpec)]
 chain_czbb_2 = map pcir_trans
-  [ (Cir [CZ 1 2, B 0 "{ab}", B 1 "{0d}"]                          (Spec ""), PositionSpec Down "\\equiv_s")
-  , (Cir [B 0 "{ab}", B 1 "{0,d-a}", Sep, He 0 "3", CZ 0 1, H 0]  (Spec ""), PositionSpec Down "")
+  [ (Cir [CZ 1 2, B 0 "{ab}", B 1 "{0d}"]                                          (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 1 2, Se 1 "{-b/a}", H 1, CXe 1 0 "a", Ex 0, CXe 2 1 "d", Ex 1]        (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [B 0 "{ab}", B 1 "{0,d-a}", Sep, He 0 "3", CZ 0 1, H 0]                   (Spec ""), PositionSpec Down "")
   ]
 
 chain_czbb_3 :: [(CT.Circuit, PositionSpec)]
 chain_czbb_3 = map pcir_trans
-  [ (Cir [CZ 1 2, B 0 "{0b}", B 1 "{cd}"]                          (Spec ""), PositionSpec Down "\\equiv_s")
-  , (Cir [B 0 "{0,b-c}", B 1 "{c,d}", Sep, He 1 "3", CZ 0 1, H 1] (Spec ""), PositionSpec Down "")
+  [ (Cir [CZ 1 2, B 0 "{0b}", B 1 "{cd}"]                                          (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 1 2, CXe 1 0 "b", Ex 0, Se 2 "{-d/c}", H 2, CXe 2 1 "c", Ex 1]        (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [B 0 "{0,b-c}", B 1 "{c,d}", Sep, He 1 "3", CZ 0 1, H 1]                  (Spec ""), PositionSpec Down "")
   ]
 
 chain_czbb_4 :: [(CT.Circuit, PositionSpec)]
 chain_czbb_4 = map pcir_trans
-  [ (Cir [CZ 1 2, B 0 "{ab}", B 1 "{cd}"]                                                                            (Spec ""), PositionSpec Down "\\equiv_s")
+  [ (Cir [CZ 1 2, B 0 "{ab}", B 1 "{cd}"]                                                                        (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 1 2, Se 1 "{-b/a}", H 1, CXe 1 0 "a", Ex 0, Se 2 "{-d/c}", H 2, CXe 2 1 "c", Ex 1]                   (Spec ""), PositionSpec Down "\\equiv_s")
   , (Cir [B 0 "{a,b-c}", B 1 "{c,d-a}", Sep, He 1 "3", Se 1 "{-a/c}", He 0 "3", Se 0 "{-c/a}", CZ 0 1, H 0, H 1]  (Spec ""), PositionSpec Down "")
   ]
 
 -- L←CZ: 8 cases
 chain_lcz_1 :: [(CT.Circuit, PositionSpec)]
 chain_lcz_1 = map pcir_trans
-  [ (Cir [CZ 0 1, A 1 "{0b}"]                  (Spec ""), PositionSpec Down "\\equiv_s")
+  [ (Cir [CZ 0 1, A 1 "{0b}"]                  (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 0 1, Mul 1 "b"] (Spec ""), PositionSpec Down "\\equiv_s")
   , (Cir [A 1 "{0b}", CZe 0 1 "{1/b}"]         (Spec ""), PositionSpec Down "")
   ]
 
 chain_lcz_2 :: [(CT.Circuit, PositionSpec)]
 chain_lcz_2 = map pcir_trans
-  [ (Cir [CZ 0 1, A 1 "{ab}"]                                        (Spec ""), PositionSpec Down "\\equiv_s")
+  [ (Cir [CZ 0 1, A 1 "{ab}"]                                        (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 0 1, Se 1 "{-b/a}", H 1, Mul 1 "a"] (Spec ""), PositionSpec Down "\\equiv_s")
   , (Cir [A 0 "{0,-a}", B 0 "{ab}", He 0 "3", CZe 0 1 "{1/a}", H 0] (Spec ""), PositionSpec Down "")
   ]
 
 chain_lcz_3 :: [(CT.Circuit, PositionSpec)]
+-- L←CZ case 3 (A[0b]·B[00]): fully inlined (L-CZ.agda:477). Cir M[b]·CZ=CZ^{1/b}·M[b].
 chain_lcz_3 = map pcir_trans
-  [ (Cir [CZ 0 1, A 0 "{0b}", B 0 "{00}"]                  (Spec ""), PositionSpec Down "\\equiv_s")
-  , (Cir [A 0 "{0b}", B 0 "{00}", CZe 0 1 "{1/b}"]         (Spec ""), PositionSpec Down "")
+  [ (Cir [CZ 0 1, A 0 "{0b}", B 0 "{00}"]            (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 0 1, Mul 0 "b", Ex 0]                   (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Mul 0 "b", CZe 0 1 "{1/b}", Ex 0]          (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Mul 0 "b", Ex 0, CZe 0 1 "{1/b}"]          (Spec ""), PositionSpec Down "=")
+  , (Cir [A 0 "{0b}", B 0 "{00}", CZe 0 1 "{1/b}"]   (Spec ""), PositionSpec Down "")
   ]
 
 chain_lcz_4 :: [(CT.Circuit, PositionSpec)]
+-- L←CZ case 4 (A[0b]·B[0d]): fully inlined (L-CZ.agda:507). CX^d·CZ spawns S↑, slid to S↓.
 chain_lcz_4 = map pcir_trans
-  [ (Cir [CZ 0 1, A 0 "{0b}", B 0 "{0d}"]                           (Spec ""), PositionSpec Down "\\equiv_s")
-  , (Cir [A 0 "{0b}", B 0 "{0d}", Se 0 "{-2d/b}", CZe 0 1 "{1/b}"] (Spec ""), PositionSpec Down "")
+  [ (Cir [CZ 0 1, A 0 "{0b}", B 0 "{0d}"]                                          (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 0 1, Mul 0 "b", CXe 1 0 "d", Ex 0]                                    (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Mul 0 "b", CZe 0 1 "{1/b}", CXe 1 0 "d", Ex 0]                           (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Mul 0 "b", CXe 1 0 "d", CZe 0 1 "{1/b}", Se 1 "{-2d/b}", Ex 0]           (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Mul 0 "b", CXe 1 0 "d", CZe 0 1 "{1/b}", Ex 0, Se 0 "{-2d/b}"]           (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Mul 0 "b", CXe 1 0 "d", Ex 0, CZe 0 1 "{1/b}", Se 0 "{-2d/b}"]           (Spec ""), PositionSpec Down "=")
+  , (Cir [A 0 "{0b}", B 0 "{0d}", CZe 0 1 "{1/b}", Se 0 "{-2d/b}"]                 (Spec ""), PositionSpec Down "")
   ]
 
 chain_lcz_5 :: [(CT.Circuit, PositionSpec)]
 chain_lcz_5 = map pcir_trans
-  [ (Cir [CZ 0 1, A 0 "{0b}", B 0 "{cd}"]                                              (Spec ""), PositionSpec Down "\\equiv_s")
+  [ (Cir [CZ 0 1, A 0 "{0b}", B 0 "{cd}"]                                              (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 0 1, Mul 0 "b", Se 1 "{-d/c}", H 1, CXe 1 0 "c", Ex 0] (Spec ""), PositionSpec Down "\\equiv_s")
   , (Cir [A 0 "{0,b-c}", B 0 "{cd}", He 0 "3", CZe 0 1 "{1/b}", H 0, Mul 0 "{b/(b-c)}"] (Spec ""), PositionSpec Down "")
   ]
 
 chain_lcz_6 :: [(CT.Circuit, PositionSpec)]
 chain_lcz_6 = map pcir_trans
-  [ (Cir [CZ 0 1, A 0 "{0b}", B 0 "{bd}"]               (Spec ""), PositionSpec Down "\\equiv_s")
+  [ (Cir [CZ 0 1, A 0 "{0b}", B 0 "{bd}"]               (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 0 1, Mul 0 "b", Se 1 "{-d/b}", H 1, CXe 1 0 "b", Ex 0] (Spec ""), PositionSpec Down "\\equiv_s")
   , (Cir [A 1 "{bd}", Sep, H 0, CZe 0 1 "{-1/b}", H 0]  (Spec ""), PositionSpec Down "")
   ]
 
 chain_lcz_7 :: [(CT.Circuit, PositionSpec)]
 chain_lcz_7 = map pcir_trans
-  [ (Cir [CZ 0 1, A 0 "{ab}", B 0 "{0d}"]     (Spec ""), PositionSpec Down "\\equiv_s")
+  [ (Cir [CZ 0 1, A 0 "{ab}", B 0 "{0d}"]     (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 0 1, Se 0 "{-b/a}", H 0, Mul 0 "a", CXe 1 0 "d", Ex 0] (Spec ""), PositionSpec Down "\\equiv_s")
   , (Cir [A 0 "{a,b}", B 0 "{0,d-a}"]         (Spec ""), PositionSpec Down "")
   ]
 
 chain_lcz_8 :: [(CT.Circuit, PositionSpec)]
 chain_lcz_8 = map pcir_trans
-  [ (Cir [CZ 0 1, A 0 "{ab}", B 0 "{cd}"]                               (Spec ""), PositionSpec Down "\\equiv_s")
+  [ (Cir [CZ 0 1, A 0 "{ab}", B 0 "{cd}"]                               (Spec ""), PositionSpec Down "=")
+  , (Cir [CZ 0 1, Se 0 "{-b/a}", H 0, Mul 0 "a", Se 1 "{-d/c}", H 1, CXe 1 0 "c", Ex 0] (Spec ""), PositionSpec Down "\\equiv_s")
   , (Cir [A 0 "{a,b-c}", B 0 "{c,d-a}", H 0, Se 0 "{-a/c}", He 0 "3"] (Spec ""), PositionSpec Down "")
+  ]
+
+------------------------------------------------------------------------
+-- Layer-0 lemma library (test3.tex §"Axioms and core lemmas").
+-- These single-qupit lemmas are the leaves every box-relation step
+-- bottoms out in; each box-relation ≡_s step is tagged with one of them.
+-- (M[a] is rendered with the Mul gate carrying an "M_…" label.)
+------------------------------------------------------------------------
+
+-- M-mul (axiom): M[a]•M[b] = M[ab]
+lib_mmul :: [(CT.Circuit, PositionSpec)]
+lib_mmul = map pcir_trans
+  [ (Cir [Mul 0 "M_a", Mul 0 "M_b"] (Spec ""), PositionSpec Down "=")
+  , (Cir [Mul 0 "M_{ab}"]           (Spec ""), PositionSpec Down "")
+  ]
+
+-- semi-MS (axiom): S•M[b] ≡_s M[b]•S^{1/b^2}
+lib_semims :: [(CT.Circuit, PositionSpec)]
+lib_semims = map pcir_trans
+  [ (Cir [S 0, Mul 0 "M_b"]                 (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Mul 0 "M_b", Se 0 "{1/b^2}"]      (Spec ""), PositionSpec Down "")
+  ]
+
+-- HHM (H^2 = M[-1], then M-mul): H•H•M[a] ≡_s M[-a]
+lib_hhm :: [(CT.Circuit, PositionSpec)]
+lib_hhm = map pcir_trans
+  [ (Cir [H 0, H 0, Mul 0 "M_a"] (Spec ""), PositionSpec Down "\\equiv_s")
+  , (Cir [Mul 0 "M_{-a}"]        (Spec ""), PositionSpec Down "")
   ]
 
 writeChain :: FilePath -> [(CT.Circuit, PositionSpec)] -> IO ()
 writeChain fname ch = writeFile ("chains/" ++ fname ++ ".tikz") (CT.tikz_of_pcir ch)
+
+-- Split a long chain into page-segments of ~n circuits, written as
+-- fname_p1, fname_p2, ...  Consecutive segments overlap on the boundary
+-- circuit (shown at the bottom of one page and the top of the next) for
+-- visual continuity; the boundary circuit's trailing connective is blanked
+-- so no arrow dangles off the page bottom.
+writeChainSplit :: Int -> FilePath -> [(CT.Circuit, PositionSpec)] -> IO ()
+writeChainSplit n fname ch =
+    mapM_ (\(i, seg) -> writeFile ("chains/" ++ fname ++ "_p" ++ show i ++ ".tikz")
+                                  (CT.tikz_of_pcir seg))
+          (zip [1 :: Int ..] (chunksOverlap n ch))
+
+chunksOverlap :: Int -> [(CT.Circuit, PositionSpec)] -> [[(CT.Circuit, PositionSpec)]]
+chunksOverlap n xs
+  | length xs <= n = [xs]
+  | otherwise      = clearLast (take n xs) : chunksOverlap n (drop (n - 1) xs)
+  where
+    clearLast ys = init ys ++ [(fst (last ys), PositionSpec Down "")]
 
 ------------------------------------------------------------------------
 -- Main: generate one tikz file per theorem group.
@@ -471,6 +611,10 @@ main = do
     writeGroup "hsh"         rels_hsh
     writeGroup "shczh"       rels_shczh
     writeFile  "shczh_chain.tikz" (CT.tikz_of_pcir proof_shczh)
+    -- Layer-0 lemma library (top-level .tikz, referenced by test3.tex §Layer 0)
+    writeFile  "lib_mmul.tikz"   (CT.tikz_of_pcir lib_mmul)
+    writeFile  "lib_semims.tikz" (CT.tikz_of_pcir lib_semims)
+    writeFile  "lib_hhm.tikz"    (CT.tikz_of_pcir lib_hhm)
     -- E←S
     writeChain "chain_se"        chain_se
     -- A←H
@@ -492,7 +636,7 @@ main = do
     writeChain "chain_std"       chain_std
     -- D←CZ
     writeChain "chain_czd_0b"    chain_czd_0b
-    writeChain "chain_czd_ab"    chain_czd_ab
+    writeChainSplit 7 "chain_czd_ab" chain_czd_ab
     -- B←H↑
     writeChain "chain_hb_00"     chain_hb_00
     writeChain "chain_hb_0b"     chain_hb_0b
@@ -510,9 +654,9 @@ main = do
     writeChain "chain_czbat_ab"  chain_czbat_ab
     -- DD←CZ
     writeChain "chain_czdd_1"    chain_czdd_1
-    writeChain "chain_czdd_2"    chain_czdd_2
+    writeChainSplit 9 "chain_czdd_2" chain_czdd_2
     writeChain "chain_czdd_3"    chain_czdd_3
-    writeChain "chain_czdd_4"    chain_czdd_4
+    writeChainSplit 5 "chain_czdd_4" chain_czdd_4
     -- BB←CZ↑
     writeChain "chain_czbb_1"    chain_czbb_1
     writeChain "chain_czbb_2"    chain_czbb_2
