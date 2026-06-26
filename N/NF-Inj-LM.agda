@@ -1,6 +1,7 @@
 -- Part of the N.NF-Inj split (memory-reduced typechecking).
 -- --safe omitted while the 4 head-injectivity lemmas remain postulated.
-{-# OPTIONS  --call-by-name #-}
+-- (call-by-need: --call-by-name omitted; these proof-heavy modules typecheck
+--  far faster and with less memory under the default sharing strategy.)
 {-# OPTIONS --termination-depth=4 #-}
 open import Level using (0ℓ)
 
@@ -89,8 +90,6 @@ open import N.Symplectic-Derived p-2 p-prime
 open Symplectic-Derived-Gen renaming (M to ZM)
 open import N.NF1 p-2 p-prime
 open import N.LM p-2 p-prime
-open import N.LM-Lemmas p-2 p-prime
-open import N.LM-Lemmas2 p-2 p-prime
 open Normal-Form1
 
 private

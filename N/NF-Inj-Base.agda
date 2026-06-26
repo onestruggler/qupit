@@ -1,6 +1,7 @@
 -- Part of the N.NF-Inj split (memory-reduced typechecking).
 -- --safe omitted while the 4 head-injectivity lemmas remain postulated.
-{-# OPTIONS  --call-by-name #-}
+-- (call-by-need: --call-by-name omitted; these proof-heavy modules typecheck
+--  far faster and with less memory under the default sharing strategy.)
 {-# OPTIONS --termination-depth=4 #-}
 open import Level using (0ℓ)
 
@@ -89,8 +90,6 @@ open import N.Symplectic-Derived p-2 p-prime
 open Symplectic-Derived-Gen renaming (M to ZM)
 open import N.NF1 p-2 p-prime
 open import N.LM p-2 p-prime
-open import N.LM-Lemmas p-2 p-prime
-open import N.LM-Lemmas2 p-2 p-prime
 open Normal-Form1
 
 private
@@ -150,66 +149,74 @@ postulate
     (∀ ps → head (act ([ m₁ ]ᵐ • [ l₁ ]ˡ') ps) ≡ head (act ([ m₂ ]ᵐ • [ l₂ ]ˡ') ps)) →
     m₁ ≡ m₂ × l₁ ≡ l₂
 
--- D-box pZ-prefix with pI second entry: head(act [d]ᵈ (pZ ∷ pI ∷ t)) = (₀, d.proj₁).
+-- D-box pZ-prefix, pI second entry. (Vector-level proof: head only at the end,
+-- to avoid forcing full act-normalization of the M-box word.)
 lemma-dbox-pZ-pI : ∀ {n} (d : D) (t : Pauli n) →
   head (act [ d ]ᵈ (pZ ∷ pI ∷ t)) ≡ (₀ , d .proj₁)
-lemma-dbox-pZ-pI {n} (₀ , dv) t = begin
-  head (act [ ₀ , dv ]ᵈ (pZ ∷ pI ∷ t))
-    ≡⟨ Eq.cong head (lemma-act-Ex (₀ , ₁ + ₀ * (- dv)) (₀ , ₀ + ₀ * (- dv)) t) ⟩
-  (₀ , ₀ + ₀ * (- dv))
-    ≡⟨ Eq.cong (₀ ,_) (Eq.trans (Eq.cong (₀ +_) (*-zeroˡ (- dv))) (+-identityʳ ₀)) ⟩
-  (₀ , ₀) ∎
-lemma-dbox-pZ-pI {n} (c@(₁₊ c') , dv) t = begin
-  head (act [ c , dv ]ᵈ (pZ ∷ pI ∷ t)) ≡⟨ auto ⟩
-  head (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ , HS^ -dv/c ⟧ₘ₊) (pZ ∷ pI ∷ t))
-    ≡⟨ Eq.cong (λ z → head (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ) z)) (lemma-HS-x -dv/c ₀ ₁ (pI ∷ t)) ⟩
-  head (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ) ((- (₁ + ₀ * -dv/c) , ₀) ∷ pI ∷ t))
-    ≡⟨ Eq.cong (λ z → head (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ) ((z , ₀) ∷ pI ∷ t))) eq1 ⟩
-  head (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ) ((- ₁ , ₀) ∷ pI ∷ t))
-    ≡⟨ Eq.cong (λ z → head (act [ ₀ , ₁ ]ᵈ z)) (lemma-M (- ₁) ₀ (pI ∷ t) ((c , λ ()) ⁻¹)) ⟩
-  head (act [ ₀ , ₁ ]ᵈ ((- ₁ * c⁻¹⁻¹ , ₀ * c⁻¹) ∷ pI ∷ t))
-    ≡⟨ Eq.cong (λ z → head (act [ ₀ , ₁ ]ᵈ ((z , ₀ * c⁻¹) ∷ pI ∷ t))) eq2 ⟩
-  head (act [ ₀ , ₁ ]ᵈ ((- c , ₀ * c⁻¹) ∷ pI ∷ t))
-    ≡⟨ Eq.cong (λ z → head (act [ ₀ , ₁ ]ᵈ ((- c , z) ∷ pI ∷ t))) (*-zeroˡ c⁻¹) ⟩
-  head (act [ ₀ , ₁ ]ᵈ ((- c , ₀) ∷ (₀ , ₀) ∷ t))
-    ≡⟨ Eq.cong head (lemma-act-Ex (- c , ₀ + ₀ * (- ₁)) (₀ , ₀ + (- c) * (- ₁)) t) ⟩
-  (₀ , ₀ + (- c) * (- ₁))
-    ≡⟨ Eq.cong (₀ ,_) eq3 ⟩
-  (₀ , c) ∎
+lemma-dbox-pZ-pI {n} (₀ , dv) t = Eq.cong head (begin
+  act [ ₀ , dv ]ᵈ (pZ ∷ pI ∷ t) ≡⟨ auto ⟩
+  act Ex ((₀ , ₁ + ₀ * (- dv)) ∷ (₀ , ₀ + ₀ * (- dv)) ∷ t)
+    ≡⟨ Eq.cong (act Ex) auxP ⟩
+  act Ex ((₀ , ₁) ∷ (₀ , ₀) ∷ t) ≡⟨ lemma-act-Ex (₀ , ₁) (₀ , ₀) t ⟩
+  (₀ , ₀) ∷ (₀ , ₁) ∷ t ∎)
+  where
+  auxP : ((₀ , ₁ + ₀ * (- dv)) ∷ (₀ , ₀ + ₀ * (- dv)) ∷ t) ≡ ((₀ , ₁) ∷ (₀ , ₀) ∷ t)
+  auxP = Eq.cong₂ (λ s1 s2 → (₀ , s1) ∷ (₀ , s2) ∷ t)
+           (Eq.trans (Eq.cong (₁ +_) (*-zeroˡ (- dv))) (+-identityʳ ₁))
+           (Eq.trans (Eq.cong (₀ +_) (*-zeroˡ (- dv))) (+-identityʳ ₀))
+lemma-dbox-pZ-pI {n} (c@(₁₊ c') , dv) t = Eq.cong head (begin
+  act [ c , dv ]ᵈ (pZ ∷ pI ∷ t) ≡⟨ auto ⟩
+  act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ , HS^ -dv/c ⟧ₘ₊) (pZ ∷ pI ∷ t)
+    ≡⟨ Eq.cong (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ)) (lemma-HS-x -dv/c ₀ ₁ (pI ∷ t)) ⟩
+  act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ) ((- (₁ + ₀ * -dv/c) , ₀) ∷ pI ∷ t)
+    ≡⟨ Eq.cong (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ)) auxA ⟩
+  act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ) ((- ₁ , ₀) ∷ pI ∷ t)
+    ≡⟨ Eq.cong (act [ ₀ , ₁ ]ᵈ) (lemma-M (- ₁) ₀ (pI ∷ t) ((c , λ ()) ⁻¹)) ⟩
+  act [ ₀ , ₁ ]ᵈ ((- ₁ * c⁻¹⁻¹ , ₀ * c⁻¹) ∷ pI ∷ t)
+    ≡⟨ Eq.cong (act [ ₀ , ₁ ]ᵈ) auxB ⟩
+  act [ ₀ , ₁ ]ᵈ ((- c , ₀) ∷ (₀ , ₀) ∷ t) ≡⟨ auto ⟩
+  act Ex ((- c , ₀ + ₀ * (- ₁)) ∷ (₀ , ₀ + (- c) * (- ₁)) ∷ t)
+    ≡⟨ Eq.cong (act Ex) auxC ⟩
+  act Ex ((- c , ₀) ∷ (₀ , c) ∷ t) ≡⟨ lemma-act-Ex (- c , ₀) (₀ , c) t ⟩
+  (₀ , c) ∷ (- c , ₀) ∷ t ∎)
   where
   c⁻¹ = ((c , λ ()) ⁻¹) .proj₁
   c⁻¹⁻¹ = (((c , λ ()) ⁻¹) ⁻¹) .proj₁
   -dv/c = - dv * c⁻¹
-  eq1 : - (₁ + ₀ * -dv/c) ≡ - ₁
-  eq1 = Eq.cong -_ (Eq.trans (Eq.cong (₁ +_) (*-zeroˡ -dv/c)) (+-identityʳ ₁))
-  eq2 : - ₁ * c⁻¹⁻¹ ≡ - c
-  eq2 = Eq.trans (-1*x≈-x c⁻¹⁻¹) (Eq.cong -_ (inv-involutive (c , λ ())))
-  eq3 : ₀ + (- c) * (- ₁) ≡ c
-  eq3 = Eq.trans (+-identityˡ ((- c) * (- ₁)))
-        (Eq.trans (*-comm (- c) (- ₁)) (Eq.trans (-1*x≈-x (- c)) (-‿involutive c)))
+  auxA : ((- (₁ + ₀ * -dv/c) , ₀) ∷ pI ∷ t) ≡ ((- ₁ , ₀) ∷ pI ∷ t)
+  auxA = Eq.cong (λ s → (s , ₀) ∷ pI ∷ t)
+           (Eq.cong -_ (Eq.trans (Eq.cong (₁ +_) (*-zeroˡ -dv/c)) (+-identityʳ ₁)))
+  auxB : ((- ₁ * c⁻¹⁻¹ , ₀ * c⁻¹) ∷ pI ∷ t) ≡ ((- c , ₀) ∷ (₀ , ₀) ∷ t)
+  auxB = Eq.cong (λ q → q ∷ pI ∷ t)
+           (≡×≡⇒≡ (Eq.trans (-1*x≈-x c⁻¹⁻¹) (Eq.cong -_ (inv-involutive (c , λ ()))) , *-zeroˡ c⁻¹))
+  auxC : ((- c , ₀ + ₀ * (- ₁)) ∷ (₀ , ₀ + (- c) * (- ₁)) ∷ t) ≡ ((- c , ₀) ∷ (₀ , c) ∷ t)
+  auxC = Eq.cong₂ (λ s1 s2 → (- c , s1) ∷ (₀ , s2) ∷ t)
+           (Eq.trans (Eq.cong (₀ +_) (*-zeroˡ (- ₁))) (+-identityʳ ₀))
+           (Eq.trans (+-identityˡ ((- c) * (- ₁))) (Eq.trans (*-comm (- c) (- ₁)) (Eq.trans (-1*x≈-x (- c)) (-‿involutive c))))
 
--- D-box pX-prefix with pI second entry: head(act [d]ᵈ (pX ∷ pI ∷ t)) = (₀, -d.proj₂).
+-- D-box pX-prefix, pI second entry.
 lemma-dbox-pX-pI : ∀ {n} (d : D) (t : Pauli n) →
   head (act [ d ]ᵈ (pX ∷ pI ∷ t)) ≡ (₀ , - d .proj₂)
-lemma-dbox-pX-pI {n} (₀ , dv) t = begin
-  head (act [ ₀ , dv ]ᵈ (pX ∷ pI ∷ t))
-    ≡⟨ Eq.cong head (lemma-act-Ex (₁ , ₀ + ₀ * (- dv)) (₀ , ₀ + ₁ * (- dv)) t) ⟩
-  (₀ , ₀ + ₁ * (- dv))
-    ≡⟨ Eq.cong (₀ ,_) (Eq.trans (+-identityˡ (₁ * (- dv))) (*-identityˡ (- dv))) ⟩
-  (₀ , - dv) ∎
-lemma-dbox-pX-pI {n} (c@(₁₊ c') , dv) t = begin
-  head (act [ c , dv ]ᵈ (pX ∷ pI ∷ t)) ≡⟨ auto ⟩
-  head (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ , HS^ -dv/c ⟧ₘ₊) (pX ∷ pI ∷ t))
-    ≡⟨ Eq.cong (λ z → head (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ) z)) (lemma-HS-x -dv/c ₁ ₀ (pI ∷ t)) ⟩
-  head (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ) ((- (₀ + ₁ * -dv/c) , ₁) ∷ pI ∷ t))
-    ≡⟨ Eq.cong (λ z → head (act [ ₀ , ₁ ]ᵈ z)) (lemma-M (- (₀ + ₁ * -dv/c)) ₁ (pI ∷ t) ((c , λ ()) ⁻¹)) ⟩
-  head (act [ ₀ , ₁ ]ᵈ ((- (₀ + ₁ * -dv/c) * c⁻¹⁻¹ , ₁ * c⁻¹) ∷ pI ∷ t))
-    ≡⟨ Eq.cong (λ z → head (act [ ₀ , ₁ ]ᵈ ((z , ₁ * c⁻¹) ∷ pI ∷ t))) eqA ⟩
-  head (act [ ₀ , ₁ ]ᵈ ((dv , ₁ * c⁻¹) ∷ pI ∷ t))
-    ≡⟨ Eq.cong head (lemma-act-Ex (dv , ₁ * c⁻¹ + ₀ * (- ₁)) (₀ , ₀ + dv * (- ₁)) t) ⟩
-  (₀ , ₀ + dv * (- ₁))
-    ≡⟨ Eq.cong (₀ ,_) eqB ⟩
-  (₀ , - dv) ∎
+lemma-dbox-pX-pI {n} (₀ , dv) t = Eq.cong head (begin
+  act [ ₀ , dv ]ᵈ (pX ∷ pI ∷ t) ≡⟨ auto ⟩
+  act Ex ((₁ , ₀ + ₀ * (- dv)) ∷ (₀ , ₀ + ₁ * (- dv)) ∷ t)
+    ≡⟨ lemma-act-Ex (₁ , ₀ + ₀ * (- dv)) (₀ , ₀ + ₁ * (- dv)) t ⟩
+  (₀ , ₀ + ₁ * (- dv)) ∷ (₁ , ₀ + ₀ * (- dv)) ∷ t
+    ≡⟨ Eq.cong (λ s → (₀ , s) ∷ (₁ , ₀ + ₀ * (- dv)) ∷ t) (Eq.trans (+-identityˡ (₁ * (- dv))) (*-identityˡ (- dv))) ⟩
+  (₀ , - dv) ∷ (₁ , ₀ + ₀ * (- dv)) ∷ t ∎)
+lemma-dbox-pX-pI {n} (c@(₁₊ c') , dv) t = Eq.cong head (begin
+  act [ c , dv ]ᵈ (pX ∷ pI ∷ t) ≡⟨ auto ⟩
+  act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ , HS^ -dv/c ⟧ₘ₊) (pX ∷ pI ∷ t)
+    ≡⟨ Eq.cong (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ)) (lemma-HS-x -dv/c ₁ ₀ (pI ∷ t)) ⟩
+  act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ) ((- (₀ + ₁ * -dv/c) , ₁) ∷ pI ∷ t)
+    ≡⟨ Eq.cong (act [ ₀ , ₁ ]ᵈ) (lemma-M (- (₀ + ₁ * -dv/c)) ₁ (pI ∷ t) ((c , λ ()) ⁻¹)) ⟩
+  act [ ₀ , ₁ ]ᵈ ((- (₀ + ₁ * -dv/c) * c⁻¹⁻¹ , ₁ * c⁻¹) ∷ pI ∷ t)
+    ≡⟨ Eq.cong (act [ ₀ , ₁ ]ᵈ) auxB ⟩
+  act [ ₀ , ₁ ]ᵈ ((dv , c⁻¹) ∷ (₀ , ₀) ∷ t) ≡⟨ auto ⟩
+  act Ex ((dv , c⁻¹ + ₀ * (- ₁)) ∷ (₀ , ₀ + dv * (- ₁)) ∷ t)
+    ≡⟨ Eq.cong (act Ex) auxC ⟩
+  act Ex ((dv , c⁻¹) ∷ (₀ , - dv) ∷ t) ≡⟨ lemma-act-Ex (dv , c⁻¹) (₀ , - dv) t ⟩
+  (₀ , - dv) ∷ (dv , c⁻¹) ∷ t ∎)
   where
   c⁻¹ = ((c , λ ()) ⁻¹) .proj₁
   c⁻¹⁻¹ = (((c , λ ()) ⁻¹) ⁻¹) .proj₁
@@ -221,43 +228,49 @@ lemma-dbox-pX-pI {n} (c@(₁₊ c') , dv) t = begin
         (Eq.trans (*-assoc dv c⁻¹ c)
         (Eq.trans (Eq.cong (dv *_) (Eq.trans (*-comm c⁻¹ c) (lemma-⁻¹ʳ c {{nztoℕ {y = c} {neq0 = λ ()}}})))
         (*-identityʳ dv)))))
-  eqB : ₀ + dv * (- ₁) ≡ - dv
-  eqB = Eq.trans (+-identityˡ (dv * (- ₁))) (Eq.trans (*-comm dv (- ₁)) (-1*x≈-x dv))
+  auxB : ((- (₀ + ₁ * -dv/c) * c⁻¹⁻¹ , ₁ * c⁻¹) ∷ pI ∷ t) ≡ ((dv , c⁻¹) ∷ (₀ , ₀) ∷ t)
+  auxB = Eq.cong (λ q → q ∷ pI ∷ t) (≡×≡⇒≡ (eqA , *-identityˡ c⁻¹))
+  auxC : ((dv , c⁻¹ + ₀ * (- ₁)) ∷ (₀ , ₀ + dv * (- ₁)) ∷ t) ≡ ((dv , c⁻¹) ∷ (₀ , - dv) ∷ t)
+  auxC = Eq.cong₂ (λ s1 s2 → (dv , s1) ∷ (₀ , s2) ∷ t)
+           (Eq.trans (Eq.cong (c⁻¹ +_) (*-zeroˡ (- ₁))) (+-identityʳ c⁻¹))
+           (Eq.trans (+-identityˡ (dv * (- ₁))) (Eq.trans (*-comm dv (- ₁)) (-1*x≈-x dv)))
 
--- D-box pZ-transparency: head(act [d]ᵈ (pZ ∷ q ∷ t)) = q +₁ (₀, d.proj₁).
+-- D-box pZ-transparency.
 lemma-dbox-pZ-head : ∀ {n} (d : D) (q : Pauli1) (t : Pauli n) →
   head (act [ d ]ᵈ (pZ ∷ q ∷ t)) ≡ q +₁ (₀ , d .proj₁)
-lemma-dbox-pZ-head {n} (₀ , dv) (qa , qb) t = begin
-  head (act [ ₀ , dv ]ᵈ (pZ ∷ (qa , qb) ∷ t))
-    ≡⟨ Eq.cong head (lemma-act-Ex (₀ , ₁ + qa * (- dv)) (qa , qb + ₀ * (- dv)) t) ⟩
-  (qa , qb + ₀ * (- dv))
-    ≡⟨ ≡×≡⇒≡ (Eq.sym (+-identityʳ qa) , Eq.cong (qb +_) (*-zeroˡ (- dv))) ⟩
-  (qa + ₀ , qb + ₀) ∎
-lemma-dbox-pZ-head {n} (c@(₁₊ c') , dv) (qa , qb) t = begin
-  head (act [ c , dv ]ᵈ (pZ ∷ (qa , qb) ∷ t)) ≡⟨ auto ⟩
-  head (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ , HS^ -dv/c ⟧ₘ₊) (pZ ∷ (qa , qb) ∷ t))
-    ≡⟨ Eq.cong (λ z → head (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ) z)) (lemma-HS-x -dv/c ₀ ₁ ((qa , qb) ∷ t)) ⟩
-  head (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ) ((- (₁ + ₀ * -dv/c) , ₀) ∷ (qa , qb) ∷ t))
-    ≡⟨ Eq.cong (λ z → head (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ) ((z , ₀) ∷ (qa , qb) ∷ t))) eq1 ⟩
-  head (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ) ((- ₁ , ₀) ∷ (qa , qb) ∷ t))
-    ≡⟨ Eq.cong (λ z → head (act [ ₀ , ₁ ]ᵈ z)) (lemma-M (- ₁) ₀ ((qa , qb) ∷ t) ((c , λ ()) ⁻¹)) ⟩
-  head (act [ ₀ , ₁ ]ᵈ ((- ₁ * c⁻¹⁻¹ , ₀ * c⁻¹) ∷ (qa , qb) ∷ t))
-    ≡⟨ Eq.cong (λ z → head (act [ ₀ , ₁ ]ᵈ ((z , ₀ * c⁻¹) ∷ (qa , qb) ∷ t))) eq2 ⟩
-  head (act [ ₀ , ₁ ]ᵈ ((- c , ₀ * c⁻¹) ∷ (qa , qb) ∷ t))
-    ≡⟨ Eq.cong (λ z → head (act [ ₀ , ₁ ]ᵈ ((- c , z) ∷ (qa , qb) ∷ t))) (*-zeroˡ c⁻¹) ⟩
-  head (act [ ₀ , ₁ ]ᵈ ((- c , ₀) ∷ (qa , qb) ∷ t))
-    ≡⟨ Eq.cong head (lemma-act-Ex (- c , ₀ + qa * (- ₁)) (qa , qb + (- c) * (- ₁)) t) ⟩
-  (qa , qb + (- c) * (- ₁))
-    ≡⟨ ≡×≡⇒≡ (Eq.sym (+-identityʳ qa) , Eq.cong (qb +_) eq3) ⟩
-  (qa + ₀ , qb + c) ∎
+lemma-dbox-pZ-head {n} (₀ , dv) (qa , qb) t = Eq.cong head (begin
+  act [ ₀ , dv ]ᵈ (pZ ∷ (qa , qb) ∷ t) ≡⟨ auto ⟩
+  act Ex ((₀ , ₁ + qa * (- dv)) ∷ (qa , qb + ₀ * (- dv)) ∷ t)
+    ≡⟨ lemma-act-Ex (₀ , ₁ + qa * (- dv)) (qa , qb + ₀ * (- dv)) t ⟩
+  (qa , qb + ₀ * (- dv)) ∷ (₀ , ₁ + qa * (- dv)) ∷ t
+    ≡⟨ Eq.cong (λ p → p ∷ (₀ , ₁ + qa * (- dv)) ∷ t) (≡×≡⇒≡ (Eq.sym (+-identityʳ qa) , Eq.cong (qb +_) (*-zeroˡ (- dv)))) ⟩
+  (qa + ₀ , qb + ₀) ∷ (₀ , ₁ + qa * (- dv)) ∷ t ∎)
+lemma-dbox-pZ-head {n} (c@(₁₊ c') , dv) (qa , qb) t = Eq.cong head (begin
+  act [ c , dv ]ᵈ (pZ ∷ (qa , qb) ∷ t) ≡⟨ auto ⟩
+  act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ , HS^ -dv/c ⟧ₘ₊) (pZ ∷ (qa , qb) ∷ t)
+    ≡⟨ Eq.cong (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ)) (lemma-HS-x -dv/c ₀ ₁ ((qa , qb) ∷ t)) ⟩
+  act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ) ((- (₁ + ₀ * -dv/c) , ₀) ∷ (qa , qb) ∷ t)
+    ≡⟨ Eq.cong (act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ)) auxA ⟩
+  act ([ ₀ , ₁ ]ᵈ • ⟦ (c , λ ()) ⁻¹ ⟧ₘ) ((- ₁ , ₀) ∷ (qa , qb) ∷ t)
+    ≡⟨ Eq.cong (act [ ₀ , ₁ ]ᵈ) (lemma-M (- ₁) ₀ ((qa , qb) ∷ t) ((c , λ ()) ⁻¹)) ⟩
+  act [ ₀ , ₁ ]ᵈ ((- ₁ * c⁻¹⁻¹ , ₀ * c⁻¹) ∷ (qa , qb) ∷ t)
+    ≡⟨ Eq.cong (act [ ₀ , ₁ ]ᵈ) auxB ⟩
+  act [ ₀ , ₁ ]ᵈ ((- c , ₀) ∷ (qa , qb) ∷ t) ≡⟨ auto ⟩
+  act Ex ((- c , ₀ + qa * (- ₁)) ∷ (qa , qb + (- c) * (- ₁)) ∷ t)
+    ≡⟨ lemma-act-Ex (- c , ₀ + qa * (- ₁)) (qa , qb + (- c) * (- ₁)) t ⟩
+  (qa , qb + (- c) * (- ₁)) ∷ (- c , ₀ + qa * (- ₁)) ∷ t
+    ≡⟨ Eq.cong (λ p → p ∷ (- c , ₀ + qa * (- ₁)) ∷ t) (≡×≡⇒≡ (Eq.sym (+-identityʳ qa) , Eq.cong (qb +_) eq3)) ⟩
+  (qa + ₀ , qb + c) ∷ (- c , ₀ + qa * (- ₁)) ∷ t ∎)
   where
   c⁻¹ = ((c , λ ()) ⁻¹) .proj₁
   c⁻¹⁻¹ = (((c , λ ()) ⁻¹) ⁻¹) .proj₁
   -dv/c = - dv * c⁻¹
-  eq1 : - (₁ + ₀ * -dv/c) ≡ - ₁
-  eq1 = Eq.cong -_ (Eq.trans (Eq.cong (₁ +_) (*-zeroˡ -dv/c)) (+-identityʳ ₁))
-  eq2 : - ₁ * c⁻¹⁻¹ ≡ - c
-  eq2 = Eq.trans (-1*x≈-x c⁻¹⁻¹) (Eq.cong -_ (inv-involutive (c , λ ())))
+  auxA : ((- (₁ + ₀ * -dv/c) , ₀) ∷ (qa , qb) ∷ t) ≡ ((- ₁ , ₀) ∷ (qa , qb) ∷ t)
+  auxA = Eq.cong (λ s → (s , ₀) ∷ (qa , qb) ∷ t)
+           (Eq.cong -_ (Eq.trans (Eq.cong (₁ +_) (*-zeroˡ -dv/c)) (+-identityʳ ₁)))
+  auxB : ((- ₁ * c⁻¹⁻¹ , ₀ * c⁻¹) ∷ (qa , qb) ∷ t) ≡ ((- c , ₀) ∷ (qa , qb) ∷ t)
+  auxB = Eq.cong (λ p → p ∷ (qa , qb) ∷ t)
+           (≡×≡⇒≡ (Eq.trans (-1*x≈-x c⁻¹⁻¹) (Eq.cong -_ (inv-involutive (c , λ ()))) , *-zeroˡ c⁻¹))
   eq3 : (- c) * (- ₁) ≡ c
   eq3 = Eq.trans (*-comm (- c) (- ₁)) (Eq.trans (-1*x≈-x (- c)) (-‿involutive c))
 
