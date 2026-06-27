@@ -21,7 +21,7 @@ open import Data.Nat hiding (_^_ ; _+_ ; _*_)
 open import Agda.Builtin.Nat using (_-_)
 import Data.Nat as Nat
 open import Data.Bool hiding (_<_ ; _≤_)
-open import Data.List hiding ([_] ; _++_ ; last ; head ; tail ; _∷ʳ_)
+open import Data.List hiding ([_] ; _++_ ; last ; head ; tail ; _∷ʳ_ ; _∷_)
 open import Data.Vec hiding ([_])
 import Data.Vec as Vec
 open import Data.Fin hiding (_+_ ; _-_)

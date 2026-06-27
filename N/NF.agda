@@ -1,6 +1,6 @@
-{-# OPTIONS  --safe #-}
+﻿-- {-# OPTIONS  --safe #-}  -- re-enable when all postulates are proved
 {-# OPTIONS  --call-by-name #-}
-{-# OPTIONS --termination-depth=4 #-}
+{-# OPTIONS --termination-depth=2 #-}
 open import Level using (0ℓ)
 
 open import Relation.Binary using (Rel)
@@ -23,7 +23,7 @@ import Data.Nat as Nat
 open import Data.Bool hiding (_<_ ; _≤_)
 --open import Data.List using () hiding ([_] ; _++_ ; last ; head ; tail ; _∷ʳ_)
 open import Data.Vec hiding ([_])
-open import Data.Vec as V
+import Data.Vec as V
 open import Data.Fin hiding (_+_ ; _-_ ; _≤_ ; _<_)
 
 open import Data.Maybe hiding (zipWith ; map)
@@ -102,7 +102,7 @@ open import Algebra.Properties.Ring (+-*-ring p-2)
 open import N.NF2 p-2 p-prime
 open LM2
 open ≡-Reasoning
-open Eq
+open Eq hiding ([_])
 
 lemma-sform-ZX1 : sform1 pZ pX ≡ ₁
 lemma-sform-ZX1 = begin
@@ -464,84 +464,81 @@ lemma-sform-aux-h3 a b c d = begin
   (- a) * d + c * b ∎
 
 
-sform-preserving-gen : ∀ {n} g ps qs → sform {n} (act1 g ps) (act1 g qs) ≡ sform ps qs
-sform-preserving-gen {n} (H-gen ₀) (x ∷ ps) (x₁ ∷ qs) = auto
-sform-preserving-gen {n} (H-gen ₂) (x@(a , b) ∷ ps) (x₁@(c , d) ∷ qs) =  Eq.cong₂ _+_ (lemma-sform-aux-h2 a b c d) auto
-sform-preserving-gen {n} (H-gen ₃) (x@(a , b) ∷ ps) (x₁@(c , d) ∷ qs) = Eq.cong₂ _+_ (lemma-sform-aux-h3 a b c d) auto
-sform-preserving-gen {n} (H-gen ₁) (x@(a , b) ∷ ps) (x₁@(c , d) ∷ qs) = Eq.cong₂ _+_ (Eq.sym (lemma-sform-aux a b c d)) Eq.refl
-sform-preserving-gen {n} (S-gen k) (x@(a , b) ∷ ps) (x₁@(c , d) ∷ qs) = Eq.cong₂ _+_ (Eq.sym (lemma-sform-aux-sk a b c d k)) Eq.refl
-sform-preserving-gen {n} (CZ-gen k) (x@(a , b) ∷ x₂@(a' , b') ∷ ps) (x₁@(c , d) ∷ x₃@(c' , d') ∷ qs) = begin
-  sform1 (a , b + a' * k) (c , d + c' * k) + (sform1 (a' , b' + a * k) (c' , d' + c * k) + sform ps qs) ≡⟨ sym (+-assoc (sform1 (a , b + a' * k) (c , d + c' * k)) (sform1 (a' , b' + a * k) (c' , d' + c * k)) (sform ps qs)) ⟩
-  sform1 (a , b + a' * k) (c , d + c' * k) + sform1 (a' , b' + a * k) (c' , d' + c * k) + sform ps qs ≡⟨ cong (_+ sform ps qs) (lemma-sform-aux-cz'k a b a' b' c d c' d' k) ⟩
-  (sform1 x x₁ + sform1 x₂ x₃) + sform ps qs ≡⟨ +-assoc (sform1 x x₁) (sform1 x₂ x₃)  (sform ps qs) ⟩
-  sform1 x x₁ + (sform1 x₂ x₃ + sform ps qs) ∎
-sform-preserving-gen {n} (g ↥) (x ∷ ps) (x₁ ∷ qs) = Eq.cong₂ _+_ (Eq.refl {x = sform1 x x₁})  (sform-preserving-gen g ps qs)
+abstract
+  sform-preserving-gen : ∀ {n} g ps qs → sform {n} (act1 g ps) (act1 g qs) ≡ sform ps qs
+  sform-preserving-gen {n} (H-gen ₀) (x ∷ ps) (x₁ ∷ qs) = auto
+  sform-preserving-gen {n} (H-gen ₂) (x@(a , b) ∷ ps) (x₁@(c , d) ∷ qs) =  Eq.cong₂ _+_ (lemma-sform-aux-h2 a b c d) auto
+  sform-preserving-gen {n} (H-gen ₃) (x@(a , b) ∷ ps) (x₁@(c , d) ∷ qs) = Eq.cong₂ _+_ (lemma-sform-aux-h3 a b c d) auto
+  sform-preserving-gen {n} (H-gen ₁) (x@(a , b) ∷ ps) (x₁@(c , d) ∷ qs) = Eq.cong₂ _+_ (Eq.sym (lemma-sform-aux a b c d)) Eq.refl
+  sform-preserving-gen {n} (S-gen k) (x@(a , b) ∷ ps) (x₁@(c , d) ∷ qs) = Eq.cong₂ _+_ (Eq.sym (lemma-sform-aux-sk a b c d k)) Eq.refl
+  sform-preserving-gen {n} (CZ-gen k) (x@(a , b) ∷ x₂@(a' , b') ∷ ps) (x₁@(c , d) ∷ x₃@(c' , d') ∷ qs) = begin
+    sform1 (a , b + a' * k) (c , d + c' * k) + (sform1 (a' , b' + a * k) (c' , d' + c * k) + sform ps qs) ≡⟨ sym (+-assoc (sform1 (a , b + a' * k) (c , d + c' * k)) (sform1 (a' , b' + a * k) (c' , d' + c * k)) (sform ps qs)) ⟩
+    sform1 (a , b + a' * k) (c , d + c' * k) + sform1 (a' , b' + a * k) (c' , d' + c * k) + sform ps qs ≡⟨ cong (_+ sform ps qs) (lemma-sform-aux-cz'k a b a' b' c d c' d' k) ⟩
+    (sform1 x x₁ + sform1 x₂ x₃) + sform ps qs ≡⟨ +-assoc (sform1 x x₁) (sform1 x₂ x₃)  (sform ps qs) ⟩
+    sform1 x x₁ + (sform1 x₂ x₃ + sform ps qs) ∎
+  sform-preserving-gen {n} (g ↥) (x ∷ ps) (x₁ ∷ qs) = Eq.cong₂ _+_ (Eq.refl {x = sform1 x x₁})  (sform-preserving-gen g ps qs)
+
+  sform-preserving : ∀ {n} w ps qs → sform {n} (act w ps) (act w qs) ≡ sform ps qs
+  sform-preserving {n} [ x ]ʷ ps qs = sform-preserving-gen x ps qs
+  sform-preserving {n} ε ps qs = auto
+  sform-preserving {n} (w • w₁) ps qs = begin
+    sform (act w (act w₁ ps)) (act w (act w₁ qs)) ≡⟨ sform-preserving w (act w₁ ps) (act w₁ qs) ⟩
+    sform ((act w₁ ps)) ((act w₁ qs)) ≡⟨ sform-preserving w₁ ps qs ⟩
+    sform ps qs ∎
+    where open ≡-Reasoning
 
 
-sform-preserving : ∀ {n} w ps qs → sform {n} (act w ps) (act w qs) ≡ sform ps qs
-sform-preserving {n} [ x ]ʷ ps qs = sform-preserving-gen x ps qs
-sform-preserving {n} ε ps qs = auto
-sform-preserving {n} (w • w₁) ps qs = begin
-  sform (act w (act w₁ ps)) (act w (act w₁ qs)) ≡⟨ sform-preserving w (act w₁ ps) (act w₁ qs) ⟩
-  sform ((act w₁ ps)) ((act w₁ qs)) ≡⟨ sform-preserving w₁ ps qs ⟩
-  sform ps qs ∎
-  where open ≡-Reasoning
 
+abstract
+  lemma-actw-fix-p0 : ∀ {n} (w : Word (Gen (₁₊ n))) → let f = act w in
+    f pZ₀ ≡ pZ₀ × f pX₀ ≡ pX₀ →
+    ∀ p ps → (f (p ∷ ps)) ≡ p ∷ tail (f (pI ∷ ps))
+  lemma-actw-fix-p0 {n} w (eqz , eqx) p ps = begin
+    act w (p ∷ ps) ≡⟨ Eq.cong (act w) (Eq.sym (+ₚ-idˡ (p ∷ ps))) ⟩
+    act w (pIₙ +ₚ (p ∷ ps)) ≡⟨ Eq.cong (act w) (Eq.cong₂ _∷_ (Eq.sym (cong₂ _,_ (+-comm (p .proj₁) ₀) (+-comm (p .proj₂) ₀))) auto) ⟩ -- (+₁-idˡ (₀ + p .proj₁ , ₀ + p .proj₂)
+    act w ((p ∷ pIₙ) +ₚ (pI ∷ ps)) ≡⟨ lemma-actw-linear-+ w (p ∷ pIₙ) (pI ∷ ps) ⟩
+    act w (p ∷ pIₙ) +ₚ act w (pI ∷ ps) ≡⟨ Eq.cong (_+ₚ act w (pI ∷ ps)) (lemma-actw-linear0 w (eqz , eqx) p) ⟩
+    (p ∷ pIₙ) +ₚ act w (pI ∷ ps) ≡⟨ Eq.cong ((p ∷ pIₙ) +ₚ_) (Eq.sym (lemma-aux-vec n (act w (pI ∷ ps)))) ⟩
+    (p ∷ pIₙ) +ₚ (head (act w (pI ∷ ps)) ∷ tail (act w (pI ∷ ps))) ≡⟨ Eq.cong (\ □ → (p ∷ pIₙ) +ₚ (□ ∷ tail (act w (pI ∷ ps)))) aux9 ⟩
+    (p ∷ pIₙ) +ₚ (pI ∷ tail (act w (pI ∷ ps))) ≡⟨ auto ⟩
+    (p +₁ pI) ∷ (pIₙ +ₚ tail (act w (pI ∷ ps))) ≡⟨ Eq.cong₂ _∷_ (+₁-idˡ p) (+ₚ-idˡ (tail (act w (pI ∷ ps)))) ⟩
+    p ∷ tail (act w (pI ∷ ps)) ∎
+    where
+    open ≡-Reasoning
 
+    aux2a : ∀ p → sform (p ∷ pIₙ) (act w (pI ∷ ps)) ≡ ₀
+    aux2a p = begin
+      sform (p ∷ pIₙ) (act w (pI ∷ ps)) ≡⟨ Eq.cong (\ □ → sform □ (act w (pI ∷ ps))) (Eq.sym (lemma-actw-linear0 w (eqz , eqx) p)) ⟩
+      sform (act w (p ∷ pIₙ)) (act w (pI ∷ ps)) ≡⟨ sform-preserving w (p ∷ pIₙ) ((pI ∷ ps)) ⟩
+      sform ((p ∷ pIₙ)) ((pI ∷ ps)) ≡⟨ Eq.cong₂ _+_ (lemma-sform1-pIʳ p) (lemma-sform-pIₙ-q=0 ps) ⟩
+      ₀ ∎
 
-lemma-actw-fix-p0 : ∀ {n} (w : Word (Gen (₁₊ n))) → let f = act w in
-  f pZ₀ ≡ pZ₀ × f pX₀ ≡ pX₀ →
-  ∀ p ps → (f (p ∷ ps)) ≡ p ∷ tail (f (pI ∷ ps))
-lemma-actw-fix-p0 {n} w (eqz , eqx) p ps = begin
-  act w (p ∷ ps) ≡⟨ Eq.cong (act w) (Eq.sym (+ₚ-idˡ (p ∷ ps))) ⟩
-  act w (pIₙ +ₚ (p ∷ ps)) ≡⟨ Eq.cong (act w) (Eq.cong₂ _∷_ (Eq.sym (cong₂ _,_ (+-comm (p .proj₁) ₀) (+-comm (p .proj₂) ₀))) auto) ⟩ -- (+₁-idˡ (₀ + p .proj₁ , ₀ + p .proj₂)
-  act w ((p ∷ pIₙ) +ₚ (pI ∷ ps)) ≡⟨ lemma-actw-linear-+ w (p ∷ pIₙ) (pI ∷ ps) ⟩
-  act w (p ∷ pIₙ) +ₚ act w (pI ∷ ps) ≡⟨ Eq.cong (_+ₚ act w (pI ∷ ps)) (lemma-actw-linear0 w (eqz , eqx) p) ⟩
-  (p ∷ pIₙ) +ₚ act w (pI ∷ ps) ≡⟨ Eq.cong ((p ∷ pIₙ) +ₚ_) (Eq.sym (lemma-aux-vec n (act w (pI ∷ ps)))) ⟩
-  (p ∷ pIₙ) +ₚ (head (act w (pI ∷ ps)) ∷ tail (act w (pI ∷ ps))) ≡⟨ Eq.cong (\ □ → (p ∷ pIₙ) +ₚ (□ ∷ tail (act w (pI ∷ ps)))) aux9 ⟩
-  (p ∷ pIₙ) +ₚ (pI ∷ tail (act w (pI ∷ ps))) ≡⟨ auto ⟩
-  (p +₁ pI) ∷ (pIₙ +ₚ tail (act w (pI ∷ ps))) ≡⟨ Eq.cong₂ _∷_ (+₁-idˡ p) (+ₚ-idˡ (tail (act w (pI ∷ ps)))) ⟩
-  p ∷ tail (act w (pI ∷ ps)) ∎
-  where
-  open ≡-Reasoning
-  pab = pasXZ p
-  a = pab .proj₁
-  b = pab .proj₂ .proj₁
-  eq = pab .proj₂ .proj₂
+    aux5 : ∀ p → let ps' = act w (pI ∷ ps) in sform (p ∷ pIₙ) (head ps' ∷ tail ps') ≡ ₀
+    aux5 p = let ps' = act w (pI ∷ ps) in begin
+      sform (p ∷ pIₙ) (head ps' ∷ tail ps') ≡⟨ Eq.cong (sform (p ∷ pIₙ)) (lemma-aux-vec n ps') ⟩
+      sform (p ∷ pIₙ) ps' ≡⟨ aux2a p ⟩
+      ₀ ∎
 
-  aux2a : ∀ p → sform (p ∷ pIₙ) (act w (pI ∷ ps)) ≡ ₀
-  aux2a p = begin
-    sform (p ∷ pIₙ) (act w (pI ∷ ps)) ≡⟨ Eq.cong (\ □ → sform □ (act w (pI ∷ ps))) (Eq.sym (lemma-actw-linear0 w (eqz , eqx) p)) ⟩
-    sform (act w (p ∷ pIₙ)) (act w (pI ∷ ps)) ≡⟨ sform-preserving w (p ∷ pIₙ) ((pI ∷ ps)) ⟩
-    sform ((p ∷ pIₙ)) ((pI ∷ ps)) ≡⟨ Eq.cong₂ _+_ (lemma-sform1-pIʳ p) (lemma-sform-pIₙ-q=0 ps) ⟩
-    ₀ ∎
+    aux7 : let ps' = act w (pI ∷ ps) in sform1 pX (head ps') ≡ ₀
+    aux7 = let ps' = act w (pI ∷ ps) in begin
+      sform1 pX (head ps') ≡⟨ Eq.sym (+-identityʳ (sform1 pX (head ps'))) ⟩
+      sform1 pX (head ps') + ₀ ≡⟨ Eq.cong (sform1 pX (head ps') +_) (Eq.sym (lemma-sform-pIₙ-q=0 (tail ps'))) ⟩
+      sform1 pX (head ps') + sform (pIₙ) (tail ps') ≡⟨ auto ⟩
+      sform (pX ∷ pIₙ) (head ps' ∷ tail ps') ≡⟨ Eq.cong (sform (pX ∷ pIₙ)) (lemma-aux-vec n ps') ⟩
+      sform (pX ∷ pIₙ) (ps') ≡⟨ aux2a pX ⟩
+      ₀ ∎
 
-  aux5 : ∀ p → let ps' = act w (pI ∷ ps) in sform (p ∷ pIₙ) (head ps' ∷ tail ps') ≡ ₀
-  aux5 p = let ps' = act w (pI ∷ ps) in begin
-    sform (p ∷ pIₙ) (head ps' ∷ tail ps') ≡⟨ Eq.cong (sform (p ∷ pIₙ)) (lemma-aux-vec n ps') ⟩
-    sform (p ∷ pIₙ) ps' ≡⟨ aux2a p ⟩
-    ₀ ∎
+    aux8 : let ps' = act w (pI ∷ ps) in sform1 pZ (head ps') ≡ ₀
+    aux8 = let ps' = act w (pI ∷ ps) in begin
+      sform1 pZ (head ps') ≡⟨ Eq.sym (+-identityʳ (sform1 pZ (head ps'))) ⟩
+      sform1 pZ (head ps') + ₀ ≡⟨ Eq.cong (sform1 pZ (head ps') +_) (Eq.sym (lemma-sform-pIₙ-q=0 (tail ps'))) ⟩
+      sform1 pZ (head ps') + sform (pIₙ) (tail ps') ≡⟨ auto ⟩
+      sform (pZ ∷ pIₙ) (head ps' ∷ tail ps') ≡⟨ Eq.cong (sform (pZ ∷ pIₙ)) (lemma-aux-vec n ps') ⟩
+      sform (pZ ∷ pIₙ) (ps') ≡⟨ aux2a pZ ⟩
+      ₀ ∎
 
-  aux7 : let ps' = act w (pI ∷ ps) in sform1 pX (head ps') ≡ ₀
-  aux7 = let ps' = act w (pI ∷ ps) in begin
-    sform1 pX (head ps') ≡⟨ Eq.sym (+-identityʳ (sform1 pX (head ps'))) ⟩
-    sform1 pX (head ps') + ₀ ≡⟨ Eq.cong (sform1 pX (head ps') +_) (Eq.sym (lemma-sform-pIₙ-q=0 (tail ps'))) ⟩
-    sform1 pX (head ps') + sform (pIₙ) (tail ps') ≡⟨ auto ⟩
-    sform (pX ∷ pIₙ) (head ps' ∷ tail ps') ≡⟨ Eq.cong (sform (pX ∷ pIₙ)) (lemma-aux-vec n ps') ⟩
-    sform (pX ∷ pIₙ) (ps') ≡⟨ aux2a pX ⟩
-    ₀ ∎
-
-  aux8 : let ps' = act w (pI ∷ ps) in sform1 pZ (head ps') ≡ ₀
-  aux8 = let ps' = act w (pI ∷ ps) in begin
-    sform1 pZ (head ps') ≡⟨ Eq.sym (+-identityʳ (sform1 pZ (head ps'))) ⟩
-    sform1 pZ (head ps') + ₀ ≡⟨ Eq.cong (sform1 pZ (head ps') +_) (Eq.sym (lemma-sform-pIₙ-q=0 (tail ps'))) ⟩
-    sform1 pZ (head ps') + sform (pIₙ) (tail ps') ≡⟨ auto ⟩
-    sform (pZ ∷ pIₙ) (head ps' ∷ tail ps') ≡⟨ Eq.cong (sform (pZ ∷ pIₙ)) (lemma-aux-vec n ps') ⟩
-    sform (pZ ∷ pIₙ) (ps') ≡⟨ aux2a pZ ⟩
-    ₀ ∎
-
-  aux9 : let ps' = act w (pI ∷ ps) in (head ps') ≡ pI
-  aux9 = let ps' = act w (pI ∷ ps) in lemma-sform1-XZ (head ps') (aux8 , aux7)
+    aux9 : let ps' = act w (pI ∷ ps) in (head ps') ≡ pI
+    aux9 = let ps' = act w (pI ∷ ps) in lemma-sform1-XZ (head ps') (aux8 , aux7)
 
 lemma-fix1 : ∀ {n} w → let f = act {₁₊ n} w in
   f pZ₀ ≡ pZ₀ × f pX₀ ≡ pX₀ →
@@ -705,65 +702,62 @@ lemma-actw-linear0' f (fp , fm) (eqz , eqx) p = let ps = pIₙ in begin
   eq = pab .proj₂ .proj₂
 
 
-Linear-Symp-FixZX⇒FixP : ∀ {n} (f : Pauli (suc n) → Pauli (suc n)) →
+abstract
+  Linear-Symp-FixZX⇒FixP : ∀ {n} (f : Pauli (suc n) → Pauli (suc n)) →
 
-  IsLinear f →
-  Symplectic f →
-  Fix-Z₀-X₀ f →
-  ------------------
-  Fix-P₀ f
+    IsLinear f →
+    Symplectic f →
+    Fix-Z₀-X₀ f →
+    ------------------
+    Fix-P₀ f
 
-Linear-Symp-FixZX⇒FixP {n} f (fp , fm) symp (eqz , eqx) p ps = begin
-  f (p ∷ ps) ≡⟨ Eq.cong (f) (Eq.sym (+ₚ-idˡ (p ∷ ps))) ⟩
-  f (pIₙ +ₚ (p ∷ ps)) ≡⟨ Eq.cong (f) (Eq.cong₂ _∷_ (Eq.sym (cong₂ _,_ (+-comm (p .proj₁) ₀) (+-comm (p .proj₂) ₀))) auto) ⟩
-  f ((p ∷ pIₙ) +ₚ (pI ∷ ps)) ≡⟨ fp (p ∷ pIₙ) (pI ∷ ps) ⟩
-  f (p ∷ pIₙ) +ₚ f (pI ∷ ps) ≡⟨ Eq.cong (_+ₚ f (pI ∷ ps)) (lemma-actw-linear0' f (fp , fm) (eqz , eqx) p ) ⟩
-  (p ∷ pIₙ) +ₚ f (pI ∷ ps) ≡⟨ Eq.cong ((p ∷ pIₙ) +ₚ_) (Eq.sym (lemma-aux-vec n (f (pI ∷ ps)))) ⟩
-  (p ∷ pIₙ) +ₚ (head (f (pI ∷ ps)) ∷ tail (f (pI ∷ ps))) ≡⟨ Eq.cong (\ □ → (p ∷ pIₙ) +ₚ (□ ∷ tail (f (pI ∷ ps)))) aux9 ⟩
-  (p ∷ pIₙ) +ₚ (pI ∷ tail (f (pI ∷ ps))) ≡⟨ auto ⟩
-  (p +₁ pI) ∷ (pIₙ +ₚ tail (f (pI ∷ ps))) ≡⟨ Eq.cong₂ _∷_ (+₁-idˡ p) (+ₚ-idˡ (tail (f (pI ∷ ps)))) ⟩
-  p ∷ tail (f (pI ∷ ps)) ∎
-  where
+  Linear-Symp-FixZX⇒FixP {n} f (fp , fm) symp (eqz , eqx) p ps = begin
+    f (p ∷ ps) ≡⟨ Eq.cong (f) (Eq.sym (+ₚ-idˡ (p ∷ ps))) ⟩
+    f (pIₙ +ₚ (p ∷ ps)) ≡⟨ Eq.cong (f) (Eq.cong₂ _∷_ (Eq.sym (cong₂ _,_ (+-comm (p .proj₁) ₀) (+-comm (p .proj₂) ₀))) auto) ⟩
+    f ((p ∷ pIₙ) +ₚ (pI ∷ ps)) ≡⟨ fp (p ∷ pIₙ) (pI ∷ ps) ⟩
+    f (p ∷ pIₙ) +ₚ f (pI ∷ ps) ≡⟨ Eq.cong (_+ₚ f (pI ∷ ps)) (lemma-actw-linear0' f (fp , fm) (eqz , eqx) p ) ⟩
+    (p ∷ pIₙ) +ₚ f (pI ∷ ps) ≡⟨ Eq.cong ((p ∷ pIₙ) +ₚ_) (Eq.sym (lemma-aux-vec n (f (pI ∷ ps)))) ⟩
+    (p ∷ pIₙ) +ₚ (head (f (pI ∷ ps)) ∷ tail (f (pI ∷ ps))) ≡⟨ Eq.cong (\ □ → (p ∷ pIₙ) +ₚ (□ ∷ tail (f (pI ∷ ps)))) aux9 ⟩
+    (p ∷ pIₙ) +ₚ (pI ∷ tail (f (pI ∷ ps))) ≡⟨ auto ⟩
+    (p +₁ pI) ∷ (pIₙ +ₚ tail (f (pI ∷ ps))) ≡⟨ Eq.cong₂ _∷_ (+₁-idˡ p) (+ₚ-idˡ (tail (f (pI ∷ ps)))) ⟩
+    p ∷ tail (f (pI ∷ ps)) ∎
+    where
 
-  open ≡-Reasoning
-  pab = pasXZ p
-  a = pab .proj₁
-  b = pab .proj₂ .proj₁
-  eq = pab .proj₂ .proj₂
+    open ≡-Reasoning
 
-  aux2a : ∀ p → sform (p ∷ pIₙ) (f (pI ∷ ps)) ≡ ₀
-  aux2a p = begin
-    sform (p ∷ pIₙ) (f (pI ∷ ps)) ≡⟨ Eq.cong (\ □ → sform □ (f (pI ∷ ps))) (Eq.sym (lemma-actw-linear0' f (fp , fm) (eqz , eqx) p )) ⟩
-    sform (f (p ∷ pIₙ)) (f (pI ∷ ps)) ≡⟨ symp (p ∷ pIₙ) (pI ∷ ps) ⟩
-    sform ((p ∷ pIₙ)) ((pI ∷ ps)) ≡⟨ Eq.cong₂ _+_ (lemma-sform1-pIʳ p) (lemma-sform-pIₙ-q=0 ps) ⟩
-    ₀ ∎
+    aux2a : ∀ p → sform (p ∷ pIₙ) (f (pI ∷ ps)) ≡ ₀
+    aux2a p = begin
+      sform (p ∷ pIₙ) (f (pI ∷ ps)) ≡⟨ Eq.cong (\ □ → sform □ (f (pI ∷ ps))) (Eq.sym (lemma-actw-linear0' f (fp , fm) (eqz , eqx) p )) ⟩
+      sform (f (p ∷ pIₙ)) (f (pI ∷ ps)) ≡⟨ symp (p ∷ pIₙ) (pI ∷ ps) ⟩
+      sform ((p ∷ pIₙ)) ((pI ∷ ps)) ≡⟨ Eq.cong₂ _+_ (lemma-sform1-pIʳ p) (lemma-sform-pIₙ-q=0 ps) ⟩
+      ₀ ∎
 
-  aux5 : ∀ p → let ps' = f (pI ∷ ps) in sform (p ∷ pIₙ) (head ps' ∷ tail ps') ≡ ₀
-  aux5 p = let ps' = f (pI ∷ ps) in begin
-    sform (p ∷ pIₙ) (head ps' ∷ tail ps') ≡⟨ Eq.cong (sform (p ∷ pIₙ)) (lemma-aux-vec n ps') ⟩
-    sform (p ∷ pIₙ) ps' ≡⟨ aux2a p ⟩
-    ₀ ∎
+    aux5 : ∀ p → let ps' = f (pI ∷ ps) in sform (p ∷ pIₙ) (head ps' ∷ tail ps') ≡ ₀
+    aux5 p = let ps' = f (pI ∷ ps) in begin
+      sform (p ∷ pIₙ) (head ps' ∷ tail ps') ≡⟨ Eq.cong (sform (p ∷ pIₙ)) (lemma-aux-vec n ps') ⟩
+      sform (p ∷ pIₙ) ps' ≡⟨ aux2a p ⟩
+      ₀ ∎
 
-  aux7 : let ps' = f (pI ∷ ps) in sform1 pX (head ps') ≡ ₀
-  aux7 = let ps' = f (pI ∷ ps) in begin
-    sform1 pX (head ps') ≡⟨ Eq.sym (+-identityʳ (sform1 pX (head ps'))) ⟩
-    sform1 pX (head ps') + ₀ ≡⟨ Eq.cong (sform1 pX (head ps') +_) (Eq.sym (lemma-sform-pIₙ-q=0 (tail ps'))) ⟩
-    sform1 pX (head ps') + sform (pIₙ) (tail ps') ≡⟨ auto ⟩
-    sform (pX ∷ pIₙ) (head ps' ∷ tail ps') ≡⟨ Eq.cong (sform (pX ∷ pIₙ)) (lemma-aux-vec n ps') ⟩
-    sform (pX ∷ pIₙ) (ps') ≡⟨ aux2a pX ⟩
-    ₀ ∎
+    aux7 : let ps' = f (pI ∷ ps) in sform1 pX (head ps') ≡ ₀
+    aux7 = let ps' = f (pI ∷ ps) in begin
+      sform1 pX (head ps') ≡⟨ Eq.sym (+-identityʳ (sform1 pX (head ps'))) ⟩
+      sform1 pX (head ps') + ₀ ≡⟨ Eq.cong (sform1 pX (head ps') +_) (Eq.sym (lemma-sform-pIₙ-q=0 (tail ps'))) ⟩
+      sform1 pX (head ps') + sform (pIₙ) (tail ps') ≡⟨ auto ⟩
+      sform (pX ∷ pIₙ) (head ps' ∷ tail ps') ≡⟨ Eq.cong (sform (pX ∷ pIₙ)) (lemma-aux-vec n ps') ⟩
+      sform (pX ∷ pIₙ) (ps') ≡⟨ aux2a pX ⟩
+      ₀ ∎
 
-  aux8 : let ps' = f (pI ∷ ps) in sform1 pZ (head ps') ≡ ₀
-  aux8 = let ps' = f (pI ∷ ps) in begin
-    sform1 pZ (head ps') ≡⟨ Eq.sym (+-identityʳ (sform1 pZ (head ps'))) ⟩
-    sform1 pZ (head ps') + ₀ ≡⟨ Eq.cong (sform1 pZ (head ps') +_) (Eq.sym (lemma-sform-pIₙ-q=0 (tail ps'))) ⟩
-    sform1 pZ (head ps') + sform (pIₙ) (tail ps') ≡⟨ auto ⟩
-    sform (pZ ∷ pIₙ) (head ps' ∷ tail ps') ≡⟨ Eq.cong (sform (pZ ∷ pIₙ)) (lemma-aux-vec n ps') ⟩
-    sform (pZ ∷ pIₙ) (ps') ≡⟨ aux2a pZ ⟩
-    ₀ ∎
+    aux8 : let ps' = f (pI ∷ ps) in sform1 pZ (head ps') ≡ ₀
+    aux8 = let ps' = f (pI ∷ ps) in begin
+      sform1 pZ (head ps') ≡⟨ Eq.sym (+-identityʳ (sform1 pZ (head ps'))) ⟩
+      sform1 pZ (head ps') + ₀ ≡⟨ Eq.cong (sform1 pZ (head ps') +_) (Eq.sym (lemma-sform-pIₙ-q=0 (tail ps'))) ⟩
+      sform1 pZ (head ps') + sform (pIₙ) (tail ps') ≡⟨ auto ⟩
+      sform (pZ ∷ pIₙ) (head ps' ∷ tail ps') ≡⟨ Eq.cong (sform (pZ ∷ pIₙ)) (lemma-aux-vec n ps') ⟩
+      sform (pZ ∷ pIₙ) (ps') ≡⟨ aux2a pZ ⟩
+      ₀ ∎
 
-  aux9 : let ps' = f (pI ∷ ps) in (head ps') ≡ pI
-  aux9 = let ps' = f (pI ∷ ps) in lemma-sform1-XZ (head ps') (aux8 , aux7)
+    aux9 : let ps' = f (pI ∷ ps) in (head ps') ≡ pI
+    aux9 = let ps' = f (pI ∷ ps) in lemma-sform1-XZ (head ps') (aux8 , aux7)
 
 -- lemma-fix-subform : ∀ {n} (f : Pauli (suc n) → Pauli (suc n)) → IsLinear f → Symplectic f →
 --   f pZ₀ ≡ pZ₀ × f pX₀ ≡ pX₀ →
@@ -902,244 +896,4 @@ lemma-nf {n} w = nf , claim
     act-nf nf (act (w ⁻¹ʷ • w) p) ≡⟨ auto ⟩
     act-nf nf (act (w ⁻¹ʷ) (act w p)) ≡⟨ invnf .proj₂ (act w p) ⟩
     act w p ∎
-
-
--- The NF circuit word gives the same Pauli action as act-nf.
--- Proof: structural induction on NF n, using lemma-act-↑ for the lifting step.
-lemma-act-nf : ∀ {n} (nf : NF n) → act [ nf ] ≗ act-nf nf
-lemma-act-nf {₀} tt [] = auto
-lemma-act-nf {₁₊ n} (ih , lm) ps =
-  let s = act [ lm ]ˡᵐ ps in
-  begin
-    act [ (ih , lm) ] ps                          ≡⟨ auto ⟩
-    act ([ ih ] ↑) (act [ lm ]ˡᵐ ps)             ≡⟨ Eq.cong (act ([ ih ] ↑)) (Eq.sym (lemma-aux-vec n s)) ⟩
-    act ([ ih ] ↑) (head s ∷ tail s)              ≡⟨ lemma-act-↑ [ ih ] (head s) (tail s) ⟩
-    head s ∷ act [ ih ] (tail s)                   ≡⟨ Eq.cong (head s ∷_) (lemma-act-nf ih (tail s)) ⟩
-    head s ∷ act-nf ih (tail s)                    ≡⟨ auto ⟩
-    act-nf (ih , lm) ps                            ∎
-
-
--- Sub-postulates for lemma-lm-head-inj.
-postulate
-  -- n=1: NF1 elements are distinguished by head of Pauli action.
-  lemma-nf1-head-inj : ∀ (lm₁ lm₂ : NF1) →
-    (∀ ps → head (act [ lm₁ ]ˡᵐ ps) ≡ head (act [ lm₂ ]ˡᵐ ps)) → lm₁ ≡ lm₂
-
-  -- n=2: Cosets2 elements are distinguished by head of Pauli action.
-  lemma-cosets2-head-inj : ∀ (lm₁ lm₂ : Cosets2) →
-    (∀ ps → head (act [ lm₁ ]ˡᵐ ps) ≡ head (act [ lm₂ ]ˡᵐ ps)) → lm₁ ≡ lm₂
-
-  -- The M×L' branch (inj₁) and D×LM branch (inj₂) produce distinct head outputs.
-  lemma-lm-inj₁≁inj₂ : ∀ {n} (m : M (₃₊ n)) (l : L' (₃₊ n)) (d : D) (lm' : LM (₂₊ n)) →
-    (∀ ps → head (act ([ m ]ᵐ • [ l ]ˡ') ps) ≡ head (act ([ d ]ᵈ • [ lm' ]ˡᵐ ↑) ps)) → ⊥
-
-  -- M×L' action is head-injective.
-  lemma-ml-head-inj : ∀ {n} (m₁ m₂ : M (₃₊ n)) (l₁ l₂ : L' (₃₊ n)) →
-    (∀ ps → head (act ([ m₁ ]ᵐ • [ l₁ ]ˡ') ps) ≡ head (act ([ m₂ ]ᵐ • [ l₂ ]ˡ') ps)) →
-    m₁ ≡ m₂ × l₁ ≡ l₂
-
-  -- D-box pZ-prefix with pI second entry: head(act [d]ᵈ (pZ ∷ pI ∷ t)) = (₀, d.proj₁).
-  lemma-dbox-pZ-pI : ∀ {n} (d : D) (t : Pauli n) →
-    head (act [ d ]ᵈ (pZ ∷ pI ∷ t)) ≡ (₀ , d .proj₁)
-
-  -- D-box pX-prefix with pI second entry: head(act [d]ᵈ (pX ∷ pI ∷ t)) = (₀, -d.proj₂).
-  lemma-dbox-pX-pI : ∀ {n} (d : D) (t : Pauli n) →
-    head (act [ d ]ᵈ (pX ∷ pI ∷ t)) ≡ (₀ , - d .proj₂)
-
-  -- D-box pZ-transparency: head(act [d]ᵈ (pZ ∷ q ∷ t)) = q +₁ (₀, d.proj₁).
-  lemma-dbox-pZ-head : ∀ {n} (d : D) (q : Pauli1) (t : Pauli n) →
-    head (act [ d ]ᵈ (pZ ∷ q ∷ t)) ≡ q +₁ (₀ , d .proj₁)
-
--- Right cancellation for componentwise addition on Pauli1.
-+₁-cancelʳ : ∀ (x y c : Pauli1) → x +₁ c ≡ y +₁ c → x ≡ y
-+₁-cancelʳ (a₁ , b₁) (a₂ , b₂) (c₁ , c₂) eq =
-  ≡×≡⇒≡ (aux (cong proj₁ eq) , aux (cong proj₂ eq))
-  where
-  aux : ∀ {a b c : ℤ ₚ} → a + c ≡ b + c → a ≡ b
-  aux {a} {b} {c} h = begin
-    a             ≡⟨ sym (+-identityʳ a) ⟩
-    a + ₀         ≡⟨ cong (a +_) (sym (+-inverseʳ c)) ⟩
-    a + (c + - c) ≡⟨ sym (+-assoc a c (- c)) ⟩
-    (a + c) + - c ≡⟨ cong (_+ - c) h ⟩
-    (b + c) + - c ≡⟨ +-assoc b c (- c) ⟩
-    b + (c + - c) ≡⟨ cong (b +_) (+-inverseʳ c) ⟩
-    b + ₀         ≡⟨ +-identityʳ b ⟩
-    b             ∎
-
-private
-  -- Negation is injective: -a ≡ -b → a ≡ b.
-  neg-inj : ∀ (a b : ℤ ₚ) → - a ≡ - b → a ≡ b
-  neg-inj a b h = begin
-    a     ≡⟨ sym (-‿involutive a) ⟩
-    - - a ≡⟨ cong -_ h ⟩
-    - - b ≡⟨ -‿involutive b ⟩
-    b     ∎
-
--- LM head-injectivity: if two LM coset representatives agree on every head output,
--- they are equal.  Proof by structural induction on n:
--- • n=0 (NF1), n=1 (Cosets2): sub-postulates.
--- • n=2+n' with inj₁/inj₂ tags: use lemma-ml-head-inj and lemma-lm-inj₁≁inj₂.
--- • inj₂/inj₂: recover d₁=d₂ from head at pZ∷pIₙ and pX∷pIₙ, then lm'
---   equality by IH using head at pZ-prefixed inputs after canceling d via +₁-cancelʳ.
-lemma-lm-head-inj : ∀ {n} (lm₁ lm₂ : LM (₁₊ n)) →
-  (∀ ps → head (act [ lm₁ ]ˡᵐ ps) ≡ head (act [ lm₂ ]ˡᵐ ps)) → lm₁ ≡ lm₂
-lemma-lm-head-inj {₀} lm₁ lm₂ h = lemma-nf1-head-inj lm₁ lm₂ h
-lemma-lm-head-inj {₁} lm₁ lm₂ h = lemma-cosets2-head-inj lm₁ lm₂ h
-lemma-lm-head-inj {₁₊ (₁₊ n)} (inj₁ (m₁ , l₁)) (inj₁ (m₂ , l₂)) h =
-  Eq.cong inj₁ (≡×≡⇒≡ (lemma-ml-head-inj m₁ m₂ l₁ l₂ h))
-lemma-lm-head-inj {₁₊ (₁₊ n)} (inj₁ (m , l)) (inj₂ (d , lm')) h =
-  ⊥-elim (lemma-lm-inj₁≁inj₂ m l d lm' h)
-lemma-lm-head-inj {₁₊ (₁₊ n)} (inj₂ (d , lm')) (inj₁ (m , l)) h =
-  ⊥-elim (lemma-lm-inj₁≁inj₂ m l d lm' (λ ps → sym (h ps)))
-lemma-lm-head-inj {₁₊ (₁₊ n)} (inj₂ (d₁ , lm₁')) (inj₂ (d₂ , lm₂')) h =
-  Eq.cong inj₂ (≡×≡⇒≡ (d-eq , lm'-eq))
-  where
-  -- act [inj₂(d,lm')]ˡᵐ (p ∷ ps') = act [d]ᵈ (p ∷ act [lm']ˡᵐ ps').
-  unfold-act : ∀ d lm' p₀ (ps' : Pauli (₂₊ n)) →
-    act [ inj₂ (d , lm') ]ˡᵐ (p₀ ∷ ps') ≡ act [ d ]ᵈ (p₀ ∷ act [ lm' ]ˡᵐ ps')
-  unfold-act d lm' p₀ ps' = begin
-    act [ inj₂ (d , lm') ]ˡᵐ (p₀ ∷ ps')
-      ≡⟨ auto ⟩
-    act [ d ]ᵈ (act ([ lm' ]ˡᵐ ↑) (p₀ ∷ ps'))
-      ≡⟨ Eq.cong (act [ d ]ᵈ) (lemma-act-↑ [ lm' ]ˡᵐ p₀ ps') ⟩
-    act [ d ]ᵈ (p₀ ∷ act [ lm' ]ˡᵐ ps') ∎
-
-  -- Head agreement after canceling lm' by act [lm']ˡᵐ pIₙ = pIₙ.
-  head-at-pI : ∀ p₀ → head (act [ d₁ ]ᵈ (p₀ ∷ pIₙ)) ≡ head (act [ d₂ ]ᵈ (p₀ ∷ pIₙ))
-  head-at-pI p₀ = begin
-    head (act [ d₁ ]ᵈ (p₀ ∷ pIₙ))
-      ≡⟨ cong (λ v → head (act [ d₁ ]ᵈ (p₀ ∷ v))) (sym (lemma-actw-pIₙ [ lm₁' ]ˡᵐ)) ⟩
-    head (act [ d₁ ]ᵈ (p₀ ∷ act [ lm₁' ]ˡᵐ pIₙ))
-      ≡⟨ cong head (sym (unfold-act d₁ lm₁' p₀ pIₙ)) ⟩
-    head (act [ inj₂ (d₁ , lm₁') ]ˡᵐ (p₀ ∷ pIₙ))
-      ≡⟨ h (p₀ ∷ pIₙ) ⟩
-    head (act [ inj₂ (d₂ , lm₂') ]ˡᵐ (p₀ ∷ pIₙ))
-      ≡⟨ cong head (unfold-act d₂ lm₂' p₀ pIₙ) ⟩
-    head (act [ d₂ ]ᵈ (p₀ ∷ act [ lm₂' ]ˡᵐ pIₙ))
-      ≡⟨ cong (λ v → head (act [ d₂ ]ᵈ (p₀ ∷ v))) (lemma-actw-pIₙ [ lm₂' ]ˡᵐ) ⟩
-    head (act [ d₂ ]ᵈ (p₀ ∷ pIₙ)) ∎
-
-  -- d.proj₁ extracted via pZ-prefix: head(act [d]ᵈ (pZ ∷ pI ∷ t)) = (₀, d.proj₁).
-  d-eq-fst : d₁ .proj₁ ≡ d₂ .proj₁
-  d-eq-fst = cong proj₂
-    (trans (sym (lemma-dbox-pZ-pI d₁ pIₙ))
-    (trans (head-at-pI pZ)
-           (lemma-dbox-pZ-pI d₂ pIₙ)))
-
-  -- d.proj₂ extracted via pX-prefix: head(act [d]ᵈ (pX ∷ pI ∷ t)) = (₀, -d.proj₂).
-  d-eq-snd : d₁ .proj₂ ≡ d₂ .proj₂
-  d-eq-snd = neg-inj _ _
-    (cong proj₂
-      (trans (sym (lemma-dbox-pX-pI d₁ pIₙ))
-      (trans (head-at-pI pX)
-             (lemma-dbox-pX-pI d₂ pIₙ))))
-
-  d-eq : d₁ ≡ d₂
-  d-eq = ≡×≡⇒≡ (d-eq-fst , d-eq-snd)
-
-  -- Head equality at arbitrary ps', using pZ-prefix and canceling d via d-eq.
-  lm'-head-eq : ∀ ps' → head (act [ lm₁' ]ˡᵐ ps') ≡ head (act [ lm₂' ]ˡᵐ ps')
-  lm'-head-eq ps' =
-    let
-      raw : head (act [ d₁ ]ᵈ (pZ ∷ act [ lm₁' ]ˡᵐ ps'))
-           ≡ head (act [ d₂ ]ᵈ (pZ ∷ act [ lm₂' ]ˡᵐ ps'))
-      raw = trans
-        (cong head (sym (unfold-act d₁ lm₁' pZ ps')))
-        (trans (h (pZ ∷ ps'))
-               (cong head (unfold-act d₂ lm₂' pZ ps')))
-      lhs : head (act [ d₁ ]ᵈ (pZ ∷ act [ lm₁' ]ˡᵐ ps'))
-           ≡ head (act [ lm₁' ]ˡᵐ ps') +₁ (₀ , d₁ .proj₁)
-      lhs = trans
-        (cong (λ v → head (act [ d₁ ]ᵈ (pZ ∷ v))) (sym (lemma-aux-vec (₁₊ n) _)))
-        (lemma-dbox-pZ-head d₁ _ _)
-      rhs : head (act [ d₂ ]ᵈ (pZ ∷ act [ lm₂' ]ˡᵐ ps'))
-           ≡ head (act [ lm₂' ]ˡᵐ ps') +₁ (₀ , d₂ .proj₁)
-      rhs = trans
-        (cong (λ v → head (act [ d₂ ]ᵈ (pZ ∷ v))) (sym (lemma-aux-vec (₁₊ n) _)))
-        (lemma-dbox-pZ-head d₂ _ _)
-      combined : head (act [ lm₁' ]ˡᵐ ps') +₁ (₀ , d₁ .proj₁)
-                ≡ head (act [ lm₂' ]ˡᵐ ps') +₁ (₀ , d₂ .proj₁)
-      combined = trans (sym lhs) (trans raw rhs)
-      combined' : head (act [ lm₁' ]ˡᵐ ps') +₁ (₀ , d₁ .proj₁)
-                 ≡ head (act [ lm₂' ]ˡᵐ ps') +₁ (₀ , d₁ .proj₁)
-      combined' = subst
-        (λ c → head (act [ lm₁' ]ˡᵐ ps') +₁ (₀ , d₁ .proj₁)
-              ≡ head (act [ lm₂' ]ˡᵐ ps') +₁ (₀ , c))
-        (sym d-eq-fst) combined
-    in +₁-cancelʳ _ _ _ combined'
-
-  lm'-eq : lm₁' ≡ lm₂'
-  lm'-eq = lemma-lm-head-inj lm₁' lm₂' lm'-head-eq
-
--- Full-action injectivity follows from head-injectivity (head equality implies full equality).
-lemma-lm-inj : ∀ {n} (lm₁ lm₂ : LM n) →
-  act [ lm₁ ]ˡᵐ ≗ act [ lm₂ ]ˡᵐ → lm₁ ≡ lm₂
-lemma-lm-inj {₀} tt tt _ = auto
-lemma-lm-inj {₁₊ n} lm₁ lm₂ h = lemma-lm-head-inj lm₁ lm₂ (λ ps → Eq.cong head (h ps))
-
--- Surjectivity of tail ∘ act [lm]ˡᵐ: the preimage of (pI ∷ qs) under act [lm]ˡᵐ
--- is act ([lm]ˡᵐ ⁻¹ʷ) (pI ∷ qs), and its image under act [lm]ˡᵐ is pI ∷ qs
--- by the right-inverse law, so its tail equals qs.
-lemma-lm-tail-surj : ∀ {n} (lm : LM (₁₊ n)) (qs : Pauli n) →
-  ∃ λ ps → tail (act [ lm ]ˡᵐ ps) ≡ qs
-lemma-lm-tail-surj {n} lm qs = ps , proof
-  where
-  open Group-Lemmas (Gen (₁₊ n)) ((₁₊ n) QRel,_===_) grouplike renaming (_⁻¹ to _⁻¹ʷ)
-  open Group-Action (Pauli (₁₊ n)) (Gen (₁₊ n)) ((₁₊ n) QRel,_===_) grouplike act1
-         (lemma-act-cong-ax {₁₊ n} _ _)
-
-  ps = act ([ lm ]ˡᵐ ⁻¹ʷ) (pI ∷ qs)
-
-  proof : tail (act [ lm ]ˡᵐ ps) ≡ qs
-  proof = Eq.cong tail
-    (act-cong ([ lm ]ˡᵐ • [ lm ]ˡᵐ ⁻¹ʷ) ε (pI ∷ qs) lemma-right-inverse)
-
-
--- Distinct NFs have distinct Pauli actions.
---
--- Proof (structural induction on n):
---   Base (n=0): NF 0 = ⊤, trivial.
---   Step (n = 1+n'): Given (ih₁,lm₁) and (ih₂,lm₂) with act-nf (ih₁,lm₁) = act-nf (ih₂,lm₂).
---   Write G_i = act [lm_i]ˡᵐ and M_i = act-nf ih_i.  The hypothesis expands to
---     head(G_i ps) ∷ M_i(tail(G_i ps)) equal for i=1,2 at every ps.
---
---   Step 1 – lm₁ = lm₂: head(act-nf (ih,lm) ps) = head(act [lm]ˡᵐ ps) by computation,
---   so Eq.cong head (hyp ps) gives head(G₁ ps) = head(G₂ ps) for all ps.
---   lemma-lm-head-inj then yields lm₁ = lm₂.
---
---   Step 2 – ih₁ = ih₂ via IH: substitute lm₁ = lm₂ into hyp to get
---   M₁(tail(G ps)) = M₂(tail(G ps)) for all ps (where G = act [lm₁]ˡᵐ).
---   By surjectivity of tail ∘ G (lemma-lm-tail-surj), this holds on all of Pauli n',
---   so the IH gives ih₁ = ih₂.
-lemma-nf-inj : ∀ {n} (nf₁ nf₂ : NF n) → act-nf nf₁ ≗ act-nf nf₂ → nf₁ ≡ nf₂
-lemma-nf-inj {₀} tt tt _ = auto
-lemma-nf-inj {₁₊ n} (ih₁ , lm₁) (ih₂ , lm₂) hyp = ≡×≡⇒≡ (ih-eq , lm-eq)
-  where
-  open ≡-Reasoning
-
-  head-eq : ∀ ps → head (act [ lm₁ ]ˡᵐ ps) ≡ head (act [ lm₂ ]ˡᵐ ps)
-  head-eq ps = Eq.cong head (hyp ps)
-
-  lm-eq : lm₁ ≡ lm₂
-  lm-eq = lemma-lm-head-inj lm₁ lm₂ head-eq
-
-  -- Substitute lm₁ = lm₂ into hyp: RHS uses lm₂, Eq.sym lm-eq rewrites it to lm₁,
-  -- giving M₁(tail(G ps)) ≡ M₂(tail(G ps)) on the tail component.
-  tail-agree : ∀ ps → act-nf ih₁ (tail (act [ lm₁ ]ˡᵐ ps))
-                     ≡ act-nf ih₂ (tail (act [ lm₁ ]ˡᵐ ps))
-  tail-agree ps = Eq.cong tail
-    (subst (λ lm' → head (act [ lm₁ ]ˡᵐ ps) ∷ act-nf ih₁ (tail (act [ lm₁ ]ˡᵐ ps))
-                   ≡ head (act [ lm' ]ˡᵐ ps) ∷ act-nf ih₂ (tail (act [ lm' ]ˡᵐ ps)))
-      (Eq.sym lm-eq) (hyp ps))
-
-  ih-act-eq : act-nf ih₁ ≗ act-nf ih₂
-  ih-act-eq qs =
-    let (ps , eq) = lemma-lm-tail-surj lm₁ qs in begin
-      act-nf ih₁ qs                           ≡⟨ Eq.cong (act-nf ih₁) (Eq.sym eq) ⟩
-      act-nf ih₁ (tail (act [ lm₁ ]ˡᵐ ps))   ≡⟨ tail-agree ps ⟩
-      act-nf ih₂ (tail (act [ lm₁ ]ˡᵐ ps))   ≡⟨ Eq.cong (act-nf ih₂) eq ⟩
-      act-nf ih₂ qs                           ∎
-
-  ih-eq : ih₁ ≡ ih₂
-  ih-eq = lemma-nf-inj ih₁ ih₂ ih-act-eq
 
