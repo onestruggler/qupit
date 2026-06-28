@@ -1,0 +1,517 @@
+\documentclass[acmsmall,screen,review,anonymous]{acmart}
+
+\settopmatter{printfolios=true,printccs=false,printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\pagestyle{plain}
+
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xspace}
+
+\ccsdesc[500]{Theory of computation~Program verification}
+\ccsdesc[500]{Theory of computation~Equational logic and rewriting}
+\ccsdesc[300]{Hardware~Quantum computation}
+
+\keywords{Agda, quantum circuits, normal forms, presentations, Clifford group, symplectic group}
+
+\newcommand{\Agda}{Agda\xspace}
+\newcommand{\Zp}{\mathbb{Z}_p}
+\newcommand{\Sp}{\mathrm{Sp}}
+\newcommand{\Pauli}{\mathcal{P}}
+\newcommand{\Cliff}{\mathcal{C}}
+\newcommand{\NF}{\mathsf{NF}}
+\newcommand{\Word}{\mathsf{Word}}
+\newcommand{\Rel}{\mathsf{Rel}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\codepath}[1]{\nolinkurl{#1}}
+\newcommand{\todo}[1]{\textbf{TODO:} #1}
+
+\title{Certified Normal Forms and Complete Relations for Circuit Presentations in Agda}
+
+\author{Anonymous Author(s)}
+\affiliation{\institution{Anonymous Institution}}
+
+\begin{abstract}
+Completeness proofs for circuit rewrite systems often rely on long
+calculations with generators, relations, normal forms, and case analyses over
+families of circuits. These calculations are exactly the sort of argument that
+is easy to get wrong on paper: a single missing commutation case or a mistaken
+field identity can invalidate the claimed presentation. We describe an \Agda
+framework for formalizing circuit presentations as words modulo congruence
+relations, proving normal-form theorems for those presentations, and deriving
+complete rewrite systems by verified normalization.
+
+The central case study is a parameterized formalization of the symplectic group
+\(\Sp(2n,\Zp)\), where \(n\) is arbitrary and \(p\) is an odd prime. We define
+Pauli vectors, the symplectic form, the action of the generators \(S\), \(H\),
+and \(CZ\), an inductive family of normal forms, implementability of every
+symplectic linear map by a normal form, and injectivity of normal forms. We then
+formalize the proof pattern that reduces arbitrary words to normal form by
+pushing generators through normal boxes. This yields a certified route from
+relations to completeness: two words are equal precisely when their normal forms
+coincide.
+
+Beyond the symplectic development, the framework supports semidirect products,
+group extensions, coset normal forms, and amalgamated products. We use these
+constructions to derive Clifford-mod-scalar relations from symplectic and Pauli
+relations, simplify the Clifford presentation, explain how scalar phases can be
+added as a general group extension, and verify several independent
+amalgamation examples. The result is both a mechanized proof of a substantial
+qudit Clifford presentation and a reusable library for certified algebraic
+reasoning about circuit calculi.
+\end{abstract}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+Equational theories for circuits are useful only when their rule sets are
+complete: if two circuits denote the same operation, the equations should be
+able to transform one circuit into the other. Completeness is usually proved by
+choosing a normal form, showing that every circuit reduces to one, and proving
+that equal denotations have equal normal forms. This proof strategy is
+conceptually clean, but in quantum and reversible circuit calculi the actual
+proof is computationally dense. Even for well-structured fragments, the proof
+requires many parameterized relations, many interactions between gates on
+different wires, and many identities in finite rings or fields.
+
+This paper describes a proof-assistant approach to these completeness proofs.
+Instead of performing the relation reductions by hand, we formalize
+presentations, words, normal forms, and proof-generating normalization in
+\Agda~\cite{Agda}. The immediate payoff is reliability: the proof assistant
+checks every algebraic step used to derive a box relation or simplify a
+presentation. The broader payoff is reuse: once presentations and normal forms
+are expressed abstractly, the same proof patterns apply to semidirect products,
+coset normal forms, group extensions, and amalgamated products.
+
+The main mathematical development is a mechanization of normal forms and
+complete relations for \(\Sp(2n,\Zp)\), uniformly in the number of qudits \(n\)
+and the odd prime dimension \(p\). The generators are the symplectic images of
+the qudit Clifford gates \(S\), \(H\), and \(CZ\). The normal forms are built
+from inductively defined boxes. Each box has a semantic action on Pauli vectors,
+and each step of the normal-form proof is checked against the symplectic form.
+The formalization proves that every symplectic linear transformation preserving
+the form is implemented by a normal form, and that normal forms are unique.
+
+The second focus is the path from the symplectic presentation to Clifford
+presentations. The Clifford group modulo scalars decomposes into a Pauli layer
+and a symplectic layer. We express this as a semidirect product presentation:
+the Pauli presentation forms the normal subgroup, the symplectic presentation
+acts by conjugation, and the combined relations specify how symplectic
+generators move past Pauli generators. We then simplify the resulting
+Clifford-mod-scalar relations by pushing Pauli components to canonical
+positions and proving an identity isomorphism between the original and
+simplified presentations. Finally, scalar phases are added using a more general
+group-extension construction: quotient relators may lift with scalar
+corrections, unlike the split semidirect-product case.
+
+\paragraph{Contributions.}
+The paper makes the following contributions.
+
+\begin{itemize}[leftmargin=*]
+\item We give a reusable \Agda representation of circuit presentations as word
+  setoids: binary-tree words over generators, congruence closures of relations,
+  and checked equational reasoning.
+\item We formalize generic normal-form interfaces and construction principles,
+  including direct products, semidirect products, coset normal forms,
+  amalgamation, and group extensions.
+\item We mechanize a normal-form theorem for \(\Sp(2n,\Zp)\), parameterized by
+  \(n\) and an odd prime \(p\), including implementability and uniqueness of
+  normal forms.
+\item We formalize the completeness proof pattern ``push generators through
+  boxes, then merge into normal form'', isolating the reusable normalization
+  induction from the box-specific calculations.
+\item We derive Clifford-mod-scalar relations from Pauli and symplectic
+  relations by semidirect product, prove a simplified presentation equivalent,
+  and explain how to add scalar phases by a general group-extension recipe.
+\item We demonstrate the generality of the framework on amalgamation examples:
+  single-qubit Clifford+\(T\), single-qutrit Clifford+\(T\), and the group of
+  \(3\times3\) unitary matrices over \(\mathbb{Z}[1/2,i]\).
+\end{itemize}
+
+\section{Circuit Presentations in Agda}
+\label{sec:framework}
+
+The framework begins with a deliberately small syntactic representation. For a
+set \(X\) of generators, circuits are words:
+\[
+  w ::= [x] \mid \epsilon \mid w \cdot w.
+\]
+The implementation uses binary trees rather than lists. This is not merely a
+programming convenience: in \Agda, list concatenation forgets the exact operands
+used to build the list, while a binary tree preserves the local shape needed by
+congruence proofs. Associativity and unit laws are then added as relations,
+recovering the usual monoid behavior at the setoid level.
+
+A presentation is a relation \(\Gamma : \Word(X) \to \Word(X) \to \mathsf{Set}\).
+The framework forms its congruence closure \(w \approx_\Gamma v\), generated by
+reflexivity, symmetry, transitivity, congruence for composition, associativity,
+unit laws, and the axioms in \(\Gamma\). This definition appears in
+\code{Presentation/Base.agda}. Standard \Agda setoid reasoning is then used to
+write checked derivations that look like ordinary equational proofs.
+
+\subsection{Normal-Form Interfaces}
+
+The main abstraction is \code{NFProperty}. A presentation has an
+\code{NFProperty} when there is a type \(\NF\), a normalization function
+\(\mathsf{nf} : \Word(X) \to \NF\), a proof that equivalent words have equal
+normal forms, and a proof that equal normal forms imply word equivalence. The
+stronger \code{NFProperty'} additionally stores an inverse map from normal-form
+data back to words. These interfaces turn equality of circuits into equality of
+normal-form data, which is often decidable or structurally simpler.
+
+\todo{Insert a small excerpt of \code{NFProperty} and \code{NFProperty'} from
+\codepath{Presentation/Properties.agda}, simplified for exposition.}
+
+\subsection{Combinators for Presentations}
+
+The library contains construction principles that transport normal-form
+properties across larger presentations. Direct products combine independent
+presentations. Semidirect products add cross-relations expressing an action of
+one presentation on another. Coset normal forms extend a subgroup presentation
+by a finite or structured set of representatives. Amalgamation combines two
+presentations sharing a common subpresentation. Group extensions add a normal
+subgroup presentation, a quotient presentation, corrected lifts of quotient
+relations, and conjugation data.
+
+These constructions are not merely organizational. They are the reason the
+Clifford and example developments do not need to reprove normal-form machinery
+from scratch. Each case supplies the local data required by the generic theorem,
+and \Agda checks that the data respects the defining relations.
+
+\section{The Symplectic Case Study}
+\label{sec:symplectic}
+
+Let \(p\) be an odd prime. The formalization represents a Pauli vector on \(n\)
+qudits as a vector of pairs in \(\Zp \times \Zp\). For a single qudit, the
+symplectic form is
+\[
+  \langle (a,b),(c,d)\rangle = -a d + c b,
+\]
+and the \(n\)-qudit form is the sum of these contributions across the vector.
+The module \code{N.Pauli} defines the Pauli vector type, the form, and basic
+lemmas such as antisymmetry and the behavior of the identity Pauli vector.
+
+The generator set is indexed by arity. The single-qudit generators \(S\) and
+\(H\) live at every positive arity; the two-qudit generator \(CZ\) lives at
+arity at least two; and a lift operation shifts a generator to a higher wire.
+Derived words such as \(CX\), \(SWAP\), and multipliers are defined from these
+basic generators. The presentation \code{N.Symplectic} contains the
+parameterized relations used for the symplectic group.
+
+\subsection{Normal Boxes}
+
+The normal forms are built inductively from boxes. Informally, an \(n\)-qudit
+normal form consists of an \((n-1)\)-qudit normal form lifted to the upper wires
+and an \(LM\) layer acting on the newly exposed wire. The boxes \(A,B,D,E,L,M\)
+encode structured fragments that eliminate or normalize the first nontrivial
+part of a symplectic tableau. In \Agda these boxes are data types indexed by
+arity, with an interpretation as words.
+
+\todo{Add a figure for the inductive normal form, adapted from Figure 3 of
+\codepath{doc/qudit-quantum-June12.pdf} if permissions/attribution are
+settled, or redraw as a simple schematic.}
+
+\subsection{Implementability and Uniqueness}
+
+The semantic action of a word on Pauli vectors is defined generator by
+generator and extended compositionally. The formalization proves that this
+action is linear and preserves the symplectic form. Conversely, for every
+linear function preserving the symplectic form, \code{N.NF} constructs a normal
+form whose action is inverse to that function. Applying this construction to
+the inverse of a word yields a normal form implementing the word itself.
+
+Uniqueness is proved by showing that distinct normal forms have distinct Pauli
+actions. The proof is inductive. At the outer layer, equality of actions implies
+equality of the head behavior of the \(LM\) component; a head-injectivity lemma
+identifies the \(LM\) boxes. Surjectivity of the tail action then reduces the
+problem to the inner normal forms. This is the core of
+\code{N.NF-Inj.agda}.
+
+\begin{theorem}[Normal forms for \(\Sp(2n,\Zp)\), mechanized]
+For every \(n\) and every odd prime \(p\), every word over \(S\), \(H\), and
+\(CZ\) has a normal form with the same Pauli action. Moreover, two normal forms
+with the same action are equal.
+\end{theorem}
+
+\todo{Replace this theorem statement with the exact names and dependencies once
+the trusted artifact slice is finalized.}
+
+\section{Completeness by Pushing Through Boxes}
+\label{sec:completeness}
+
+The completeness proof separates box-specific algebra from a generic
+normalization induction. The box-specific part proves that each generator can be
+pushed through each normal box, producing a new box and some residual word. For
+example, pushing \(S\) through an \(E\)-box updates the parameter:
+\[
+  E_b \cdot S \approx E_{b-1}.
+\]
+The theorem \codepath{BoxRelations.One.E<-S}, backed by
+\codepath{N.BR.One.E.lemma-single-qupit-br-E}, is the smallest example of a
+certified box reduction: it uses the single-qudit \(S\)-power lemma and
+arithmetic in \(\Zp\) to prove
+\[
+  [b]^e \cdot S \approx [b-1]^e.
+\]
+At the other end of the scale, \codepath{BoxRelations.Three.DD<-CZ}, backed by
+\codepath{N.BR.Three.DD-CZ.lemma-dir-and-vd'}, pushes a \(CZ\) through a two-entry
+\(DD\) box:
+\[
+  [vd]^{vd} \cdot CZ \approx dir^\uparrow \cdot [vd']^{vd}.
+\]
+The nonzero/nonzero cases require substantial reassociation, commutation, and
+movement of three-qudit gadgets. These examples illustrate why the proof
+assistant matters: the statement of the box relation is compact, but the checked
+derivation can be long and easy to miscopy by hand.
+
+The generic part is implemented in \code{Symplectic-Completeness.agda}. The
+interface is a single operation:
+\[
+  \mathsf{cosetUpdate}(lm,g)
+    = (lm',w,\; [lm]\cdot[g] \approx w^\uparrow\cdot[lm']).
+\]
+Given this operation, the rest of completeness is structural. To merge a gate
+into a normal form \((nf,lm)\), push the gate through \(lm\), then recursively
+merge the residual word \(w\) into the inner normal form \(nf\). To normalize a
+word, repeat this merge operation over the word structure.
+
+\begin{theorem}[Completeness by normalization, mechanized skeleton]
+Assuming the box-relation chaining operation \(\mathsf{cosetUpdate}\), every
+word appended to a normal form rewrites to a normal form. In particular, every
+word rewrites to a normal form by starting from the identity normal form.
+\end{theorem}
+
+\todo{When \code{N.Completeness.lemma-coset-update} is finished, replace the
+assumption by the completed theorem and state the final completeness corollary:
+words modulo the symplectic relations are isomorphic to \(\Sp(2n,\Zp)\).}
+
+\section{From Symplectic to Clifford-Mod-Scalar}
+\label{sec:clifford}
+
+The project next derives Clifford-mod-scalar relations from two simpler
+presentations: a Pauli presentation and the symplectic presentation. The key
+structure is a semidirect product. The Pauli generators \(X\) and \(Z\) form the
+normal subgroup. The symplectic generators \(S\), \(H\), and \(CZ\) form the
+quotient layer. Cross-relations describe the conjugation action of symplectic
+generators on Pauli generators, for example how \(H\) swaps \(X\) and \(Z\), how
+\(S\) maps \(X\) to \(XZ\), and how \(CZ\) maps an \(X\) on one wire to an
+\(X\) together with a \(Z\) on the other.
+
+This construction is formalized in \code{N.Clifford.SDProduct}. The combined
+generator set is the disjoint union of Pauli generators and symplectic
+generators. The combined relation is built using the generic semidirect-product
+presentation constructor. The embedding of the symplectic presentation into the
+Clifford-mod-scalar presentation is the right injection into this disjoint
+union; the embedding of the Pauli presentation is the left injection. Thus a
+symplectic relation can be reused as a Clifford relation by mapping every
+symplectic generator through the embedding.
+
+The comparison theorem \codepath{N.Clifford.Iso3.M.Theorem-SemiDirect-iso-Clifford}
+proves that the semidirect-product presentation is isomorphic to the
+Clifford-mod-scalar presentation. This theorem is the paper-level bridge
+between the generic algebraic construction and the concrete Clifford relations.
+
+\subsection{Simplifying the Clifford Presentation}
+
+The first Clifford-mod-scalar presentation uses derived words involving
+\(\mathsf{s}=S Z^{1/2}\) and multipliers. This is close to the semidirect-product
+derivation but not ideal as a final rule set. The simplified presentation pushes
+Pauli components to the right, uses basic \(S,H,CZ\) gates where possible, and
+adds explicit \(Z\)-\(CZ\) commutation rules to avoid circular derivations.
+
+The file \code{N.Clifford.Clifford-Mod-Scalars-Simplified} states the simplified
+relations. The file \code{N.Clifford.Iso-Clifford-Simplified} proves that the
+original and simplified presentations are isomorphic by the identity map. The
+proof has two directions: every original relation is derivable in the simplified
+presentation, and every simplified relation is derivable in the original
+presentation.
+
+A simple simplification example is \codepath{N.Clifford.Mg-Simplify.s-collect}:
+for every \(k\), it collects the hidden Pauli part of \(\mathsf{s}^k\) and
+rewrites it as
+\[
+  \mathsf{s}^k \approx S^k \cdot Z^{k/2}.
+\]
+This is the local shape of the entire simplification pass: expose the Pauli
+components, move them to a canonical side, and compare the remaining
+symplectic word. More complicated examples include the \code{final-semi-M*}
+theorems in \code{N.Clifford.Mg-Simplify}, which replace multiplier relations
+involving \(\mathsf{s}\) by collected \(S,H\)-words with rightmost Pauli tails.
+
+\section{Adding Scalars as a General Group Extension}
+\label{sec:scalars}
+
+The semidirect-product construction above is split: quotient relations lift
+without correction. Adding scalar phases requires a more general group-extension
+presentation. Suppose \(N\) is a normal subgroup with presentation
+\(\langle Y \mid S\rangle\), and the quotient \(G/N\) has presentation
+\(\langle \overline{X}\mid\overline{R}\rangle\). Choosing representatives
+\(X\subseteq G\) for the quotient generators gives two kinds of extra data.
+First, each quotient relator may lift to a word in \(N\), giving a correction
+term. Second, each quotient generator conjugates each kernel generator to a word
+in \(N\).
+
+The module \code{Presentation.Group-Extension2} formalizes this recipe. The
+relations consist of kernel relations, corrected quotient relations, and
+conjugation relations. The split semidirect product is recovered as the special
+case where all quotient corrections are \(\epsilon\). Scalar phases are more
+general: quotient equations that hold only up to a scalar become corrected
+relations whose correction word lives in the scalar subgroup.
+
+\todo{Instantiate this section with the scalar subgroup and the exact
+correction words for the Clifford presentation once those files are finalized.}
+
+\section{Other Case Studies}
+\label{sec:examples}
+
+The examples demonstrate that the library is not specialized to qudit Clifford
+circuits.
+
+\begin{table}[tbp]
+\centering
+\begin{tabular}{lll}
+\toprule
+File & Object & Framework feature \\
+\midrule
+\code{Examples/CliffordT1.agda} & one-qubit Clifford+\(T\) & amalgamation \\
+\code{Examples/QutritCliffordT1.agda} & one-qutrit Clifford+\(T\) & amalgamation \\
+\code{Examples/U33Di.agda} & \(U_3(\mathbb{Z}[1/2,i])\) & cosets/amalgamation \\
+\bottomrule
+\end{tabular}
+\caption{Independent case studies using the same presentation machinery.}
+\label{tab:examples}
+\end{table}
+
+Each case builds smaller presentations with normal forms, constructs coset
+representatives or amalgamation data, and concludes with an isomorphism theorem
+between the intended presentation and the presentation generated by the generic
+construction.
+
+The one-qubit Clifford+\(T\) example ends with
+\codepath{Theorem-CliffordT1-iso-B*A**} in the final
+\codepath{Examples.CliffordT1.CliffordT1} module. It builds a direct product of
+cyclic presentations, extends it by coset normal forms, and then uses
+\code{AmalDataNF}/\code{ANF} to obtain the amalgamated product normal form and
+the final star-isomorphism theorem.
+
+The one-qutrit Clifford+\(T\) example has two final isomorphism theorems named
+\codepath{Theorem-CliffordT1-iso-B*A**}, one in
+\codepath{Examples.QutritCliffordT1.CliffordT1} and one in the simplified
+module. Both are built from chained coset normal forms and the same
+amalgamation machinery.
+
+The \(U_3(\mathbb{Z}[1/2,i])\) example ends with
+\codepath{Examples.U33Di.Iso.Theorem-U33Di-iso-B*A**}. This case combines cyclic
+products, \code{SnD}, coset normal forms, direct products, sugar products, and
+amalgamation, making it the strongest evidence that the framework is not tied
+to Clifford-specific syntax.
+
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Circuit presentations and normal forms.}
+Lafont's algebraic theory of Boolean circuits is an early systematic study of
+generators and relations for circuit-like structures~\cite{Lafont2003}. In the
+quantum setting, Selinger gave generators, relations, and normal forms for
+\(n\)-qubit Clifford operators~\cite{Selinger2015}. Amy, Chen, and Ross gave a
+finite presentation for CNOT-dihedral operators using normal forms and rewrite
+systems~\cite{AmyChenRoss2018}. Presentations have also been studied for
+larger exact-synthesis groups such as
+\(U_4(\mathbb{Z}[1/\sqrt{2},i])\)~\cite{Greylyn2014} and for two-qubit
+Clifford+\(T\) operators~\cite{BianSelinger2022}. These works are close in
+proof shape to ours, but their proofs are carried out mathematically rather
+than inside a proof assistant.
+
+\paragraph{Qudit and Clifford completeness.}
+The stabilizer and Clifford structures used here go back through work on
+higher-dimensional fault-tolerant quantum computation and arbitrary-dimensional
+Clifford operations~\cite{Gottesman1999,HostensDehaeneDeMoor2005}, as well as
+structural characterizations of Clifford operators~\cite{Farinholt2014} and
+normal-form decompositions of Clifford circuits~\cite{BravyiMaslov2021}. Recent
+work gives complete and natural rule sets for multi-qutrit Clifford
+circuits~\cite{LiMoscaRossVanDeWeteringZhao2025Qutrit}; the present
+formalization generalizes this style of normal-form reasoning to all odd prime
+dimensions at the symplectic level and mechanizes the algebra in \Agda. The
+companion multi-qudit Clifford development for all odd primes uses the same
+normal boxes and relation-simplification
+strategy~\cite{BianLiRossVandeWeteringZhaoQudit}.
+
+\paragraph{Beyond Clifford.}
+Matsumoto and Amano introduced normal forms for single-qubit Clifford+\(T\)
+circuits~\cite{MatsumotoAmano2008}; Giles and Selinger clarified this normal
+form and its exact-synthesis consequences~\cite{GilesSelinger2013}. Glaudell,
+Ross, and Taylor gave canonical forms for single-qutrit Clifford+\(T\)
+operators~\cite{GlaudellRossTaylor2018}, and Jain, Kalra, and Prakash extended
+normal-form ideas to single-qudit Clifford+\(T\)
+operators~\cite{JainKalraPrakash2020}. Complete equational theories for
+broader circuit fragments include the general quantum-circuit theory of Clement
+et al.~\cite{ClementEtAl2022} and the real-Clifford+\(CH\) theory of
+Clement~\cite{Clement2026RealCH}. These results motivate our future-work goal
+of formalizing the first \(n\)-qubit universal completeness theorem.
+
+\paragraph{Graphical calculi.}
+ZX-calculi provide complete graphical languages for several fragments of
+quantum mechanics, including stabilizer fragments and universal
+fragments~\cite{CoeckeDuncan2011,Backens2014,JeandelPerdrixVilmart2018}. The
+ZX tradition is complementary to our circuit-presentation approach: ZX systems
+reason in a richer graphical language, while this work focuses on syntactic
+presentations of circuit generators and relations. Verified ZX efforts such as
+VyZX show a related proof-assistant direction for graphical languages.
+
+\paragraph{Proof assistants for quantum circuits.}
+QWIRE embeds quantum circuits in Coq as a core circuit
+language~\cite{PaykinRandZdancewic2017QWIRE} and supports formal verification
+of circuit equivalences~\cite{RandPaykinZdancewic2018QWIRE}; ReQWIRE extends
+this style of reasoning to reversible quantum circuits~\cite{RandPaykinLeeZdancewic2019ReQWIRE}.
+SQIR and VOQC develop a Coq-based intermediate representation and verified
+optimizer~\cite{HietalaEtAl2021VOQC}; and VyZX formalizes ZX-calculus reasoning
+in Coq~\cite{LehmannCaldwellRand2022VyZX,LehmannEtAl2023VyZX}. Our work
+differs in its focus on presentations, normal forms, and completeness of
+circuit relations rather than semantic preservation of compiler optimizations.
+
+\paragraph{Circuit languages and interoperability.}
+Quipper, OpenQASM, and Qiskit provide practical circuit description and
+compilation ecosystems~\cite{Selinger2004QPL,GreenEtAl2013Quipper,CrossEtAl2022OpenQASM3,Wille2019Qiskit}.
+Modern high-level languages such as Silq address programming abstractions like
+safe uncomputation~\cite{BichselEtAl2020Silq}.
+Interfacing the \Agda framework with such languages would allow external circuit
+programs to be imported into a certified presentation, normalized, and exported
+with proof-producing rewrites.
+
+\section{Future Work}
+
+First, the most direct extension is a formalization of normal forms and complete
+relations for Galois qudit Clifford circuits. Second, the current examples use
+at most binary gates; extending the framework to ternary and general \(n\)-ary
+gates would make it more suitable for universal circuit families and graphical
+calculi with arbitrary arities. Third, practical impact requires interfaces with
+circuit description languages such as Quipper, Qiskit, and OpenQASM. Finally,
+we plan to formalize the complete equational theory for real-Clifford+\(CH\)
+circuits, the first completeness result for an \(n\)-qubit universal circuit
+fragment without parameterized gates or ancillas.
+
+\section{Artifact Scope}
+\label{sec:artifact}
+
+The repository contains both core developments and exploratory modules. For a
+POPL artifact, the trusted slice should be made explicit. The core slice should
+include the word/presentation framework, the symplectic normal-form modules, the
+box-relation derivations used by completeness, the Clifford-mod-scalar and
+simplified Clifford modules, the group-extension machinery, and the three
+example developments. The final artifact should either complete or exclude the
+\code{Test} modules in \code{Examples/CliffordT1.agda} and
+\code{Examples/QutritCliffordT1.agda}, which currently contain active holes;
+\code{Examples/U33Di.agda} appears clean. Exploratory files with holes,
+archived files, and older dimension-specific prototypes should be excluded from
+the artifact claim unless they are completed and added to the build.
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{popl2027}
+
+\end{document}

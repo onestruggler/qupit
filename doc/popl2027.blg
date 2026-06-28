@@ -1,0 +1,70 @@
+This is BibTeX, Version 0.99d (TeX Live 2025)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: popl2027.aux
+The style file: ACM-Reference-Format.bst
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Database file #1: popl2027.bib
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated glb_str_ptr (elt_size=4) to 20 items from 10.
+Reallocated global_strs (elt_size=200001) to 20 items from 10.
+Reallocated glb_str_end (elt_size=4) to 20 items from 10.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 9000 items from 6000.
+Warning--empty publisher in AmyChenRoss2018
+Warning--empty address in AmyChenRoss2018
+Warning--empty publisher in BichselEtAl2020Silq
+Warning--empty address in BichselEtAl2020Silq
+Warning--empty publisher in GreenEtAl2013Quipper
+Warning--empty address in GreenEtAl2013Quipper
+Warning--empty publisher in JeandelPerdrixVilmart2018
+Warning--empty address in JeandelPerdrixVilmart2018
+Warning--empty publisher in PaykinRandZdancewic2017QWIRE
+Warning--empty address in PaykinRandZdancewic2017QWIRE
+Warning--empty publisher in RandPaykinZdancewic2018QWIRE
+Warning--empty address in RandPaykinZdancewic2018QWIRE
+Warning--empty publisher in Wille2019Qiskit
+Warning--empty address in Wille2019Qiskit
+You've used 32 entries,
+            6056 wiz_defined-function locations,
+            1726 strings with 24492 characters,
+and the built_in function-call counts, 34224 in all, are:
+= -- 4541
+> -- 1034
+< -- 0
++ -- 354
+- -- 358
+* -- 2469
+:= -- 3232
+add.period$ -- 150
+call.type$ -- 32
+change.case$ -- 245
+chr.to.int$ -- 32
+cite$ -- 46
+duplicate$ -- 2997
+empty$ -- 2114
+format.name$ -- 450
+if$ -- 8319
+int.to.chr$ -- 2
+int.to.str$ -- 1
+missing$ -- 81
+newline$ -- 321
+num.names$ -- 224
+pop$ -- 1055
+preamble$ -- 1
+purify$ -- 478
+quote$ -- 0
+skip$ -- 1150
+stack$ -- 0
+substring$ -- 2597
+swap$ -- 291
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 792
+warning$ -- 14
+while$ -- 195
+width$ -- 0
+write$ -- 649
+(There were 14 warnings)

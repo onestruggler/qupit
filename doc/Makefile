@@ -1,9 +1,14 @@
-.PHONY : clean realclean
+.PHONY : clean realclean popl2027
 .PRECIOUS : %.tex
 
 default: Readme.pdf
 
+popl2027: popl2027.pdf
+
 %.pdf : latex/doc/%.tex agda.sty
+	latexmk --pdf -pdflatex="pdflatex -interaction=nonstopmode" -use-make $<
+
+popl2027.pdf : popl2027.tex popl2027.bib
 	latexmk --pdf -pdflatex="pdflatex -interaction=nonstopmode" -use-make $<
 
 latex/doc/%.tex : %.lagda.tex
@@ -14,5 +19,4 @@ clean:
 
 realclean: clean
 	rm -f *.glob *.vo *.bbl latex/doc/* agda.pdf
-
 
