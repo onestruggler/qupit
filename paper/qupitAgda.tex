@@ -1,0 +1,735 @@
+\documentclass[sigplan,screen,review,anonymous]{acmart}
+
+\setcopyright{none}
+\acmConference[POPL 2027]{ACM SIGPLAN Symposium on Principles of Programming Languages}{January 2027}{TBD}
+\acmYear{2027}
+\acmDOI{}
+\acmISBN{}
+
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xspace}
+
+\newcommand{\Agda}{Agda\xspace}
+\newcommand{\Qupit}{\textsc{qupit}\xspace}
+\newcommand{\Zp}{\mathbb{Z}_p}
+\newcommand{\Word}{\mathsf{Word}}
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\NF}{\mathsf{NF}}
+\newcommand{\LM}{\mathsf{LM}}
+\newcommand{\ABox}{\mathsf{A}}
+\newcommand{\BBox}{\mathsf{B}}
+\newcommand{\DBox}{\mathsf{D}}
+\newcommand{\EBox}{\mathsf{E}}
+\newcommand{\LBox}{\mathsf{L}}
+\newcommand{\MBox}{\mathsf{M}}
+\newcommand{\file}[1]{\texttt{#1}}
+
+\lstdefinelanguage{AgdaLite}{
+  morekeywords={module,where,open,import,data,record,let,in,with,private,variable,using,renaming,hiding,public},
+  sensitive=true,
+  morecomment=[l]{--}
+}
+\lstset{
+  language=AgdaLite,
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  keepspaces=true,
+  frame=single,
+  breaklines=true
+}
+
+\begin{document}
+
+\title{A Mechanized Account of the \Qupit Agda Development}
+\subtitle{Deriving Box Relations for Odd-Prime-Dimensional Clifford Circuits}
+
+\author{Anonymous Author(s)}
+\affiliation{%
+  \institution{Anonymous Institution}
+  \country{}
+}
+
+\begin{abstract}
+This paper explains the \Qupit \Agda repository that accompanies the
+paper ``A Complete and Natural Rule Set for Multi-Qudit Clifford
+Circuits in All Odd Prime Dimensions.''  The development formalizes
+Clifford circuit syntax as words over generators, equips these words
+with presentation-generated congruence relations, defines modular
+arithmetic over finite fields \(\Zp\), and uses those ingredients to
+derive box-style rewrite relations for one-, two-, and three-qupit
+fragments.  The repository is not merely a transcription of circuit
+diagrams: its core abstractions separate raw word syntax, presentation
+closure, algebraic normal forms, Pauli action, and checked equational
+derivations.  This separation is what makes the proof scripts usable:
+large circuit equalities are decomposed into finite-field arithmetic,
+associativity normalization, lifting lemmas for extra wires, and
+small reusable Clifford identities.
+
+The paper is written as an artifact-oriented account of the code.  It
+identifies the trusted and untrusted boundaries in the development,
+summarizes the implemented relation sets, explains how boxes are
+encoded and interpreted back into circuits, and maps the public
+box-relation statements in \file{BoxRelations.agda} to their proof
+modules under \file{N/BR}.  Several older or exploratory modules in
+the repository contain unfinished holes; following the artifact itself,
+we treat those modules as outside the described proof spine.
+\end{abstract}
+
+\ccsdesc[500]{Theory of computation~Program verification}
+\ccsdesc[500]{Theory of computation~Equational logic and rewriting}
+\ccsdesc[300]{Hardware~Quantum computation}
+
+\keywords{Agda, Clifford circuits, qudits, presentations, mechanized mathematics, rewriting}
+
+\maketitle
+
+\section{Introduction}
+
+Reasoning about Clifford circuits is algebraic, but the algebra is
+large enough that informal derivations become brittle.  A typical box
+relation states that a primitive gate can be pushed through a
+parameterized circuit pattern, producing another parameterized pattern
+and a residual gate sequence.  Even when the high-level rule is
+conceptually simple, a proof may require case analysis over finite
+field elements, repeated use of modular arithmetic, and long
+associativity rearrangements of circuit words.  The \Qupit repository
+uses \Agda to make these derivations checkable.
+
+The development targets Clifford circuits over odd prime dimensions.
+The prime is represented in the code by parameters
+\texttt{p-2 : Nat} and \texttt{p-prime : Prime (2+ p-2)}; the actual
+dimension is \(p = 2 + \texttt{p-2}\).  The finite field carrier
+\(\Zp\) is implemented with \texttt{Fin p}, and all circuit
+parameters used by the box definitions are elements of this finite
+type.  This choice lets the development use ordinary dependent types
+for field-indexed circuits while keeping the prime assumption explicit
+in every module that depends on it.
+
+At the top level, the README says that the repository accompanies a
+paper on a complete and natural rule set for multi-qudit Clifford
+circuits.  The existing documentation, \file{doc/Readme.pdf}, gives a
+compact explanation of the central proof idea: instead of doing the
+box-relation calculations by hand, define the relevant presentations
+inside \Agda and let the type checker validate the derivations.  This
+paper expands that documentation into a POPL-style artifact paper,
+with an emphasis on the engineering and proof architecture visible in
+the code.
+
+The most important constraint on this account is fidelity to the
+repository.  The code base contains more than one layer of work:
+generic presentation infrastructure, active Clifford and box-relation
+modules, simplified and derived relation sets, and older experiments.
+Some experimental modules contain unfinished holes.  We therefore
+describe the implemented proof spine and explicitly separate it from
+unused or unfinished material.
+
+\paragraph{Contributions.}
+This paper makes four contributions.
+
+\begin{itemize}
+\item It gives a module-by-module account of the \Qupit
+  mechanization, from words and congruence closures to Clifford
+  generators and box relations.
+\item It explains why the repository represents circuits as binary
+  words rather than lists, and how associativity is recovered by a
+  presentation-level congruence and list-based normalization lemmas.
+\item It documents the relation between the comprehensive
+  \file{N/Symplectic.agda} relation set, the simplified
+  \file{N/Symplectic-Simplified.agda} relation set, and the derived
+  relation infrastructure used by Pauli actions.
+\item It maps the public theorem index in \file{BoxRelations.agda} to
+  the one-, two-, and three-qupit proof modules under \file{N/BR}.
+\end{itemize}
+
+\section{Repository Overview}
+
+Table~\ref{tab:modules} summarizes the active parts of the project
+that this paper discusses.  The table follows the structure of the
+repository rather than imposing a separate mathematical organization.
+
+\begin{table*}
+\centering
+\caption{Main modules used by the \Qupit development.}
+\label{tab:modules}
+\begin{tabular}{ll}
+\toprule
+File or directory & Role \\
+\midrule
+\file{Word/Base.agda} & Binary word syntax, powers, word maps, folds, and word relations. \\
+\file{Word/Properties.agda} & Word-map laws and decidable equality for words. \\
+\file{Presentation/Base.agda} & Congruence closure of a relation on words. \\
+\file{Presentation/Properties.agda} & Setoid, magma, semigroup, monoid, and associativity tools. \\
+\file{Presentation/Morphism*.agda} & Morphisms and identity/isomorphism infrastructure for presentations. \\
+\file{Presentation/CosetNF.agda} & Generic coset and Reidemeister-Schreier-style normal-form machinery. \\
+\file{Zp/ModularArithmetic.agda} & Modular arithmetic over \texttt{Fin n}; ring and field-like lemmas. \\
+\file{Zp/Fermats-little-theorem.agda} & Prime-modulus and primitive-root support. \\
+\file{N/Symplectic.agda} & Main generator set and comprehensive Clifford relations. \\
+\file{N/Symplectic-Simplified.agda} & Paper-facing simplified relation set parameterized by a primitive root. \\
+\file{N/Symplectic-Derived.agda} & Derived generators such as parameterized powers of \(H,S,CZ\). \\
+\file{N/Iso-Sym-Derived.agda} & Isomorphism between the basic and derived symplectic presentations. \\
+\file{N/Action.agda}, \file{N/Pauli.agda} & Pauli vectors, symplectic form, and generator action. \\
+\file{N/Boxes.agda}, \file{N/LM-Sym.agda} & Box parameter spaces and interpretation of boxes as circuit words. \\
+\file{N/BR/...} & Concrete box-relation derivations and supporting calculations. \\
+\file{BoxRelations.agda} & Public index of box-relation statements and proof pointers. \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The generic presentation layer is intentionally independent of
+Clifford circuits.  It can be read as a small library for monoid
+presentations: a presentation is a generator type \(X\), a relation
+\(\Gamma : \Word X \to \Word X \to \mathsf{Set}\), and the congruence
+closure of \(\Gamma\).  The Clifford-specific layer instantiates this
+infrastructure with generators \(H\), \(S\), \(CZ\), and lifting
+constructors that move generators to later wires.
+
+\section{Words Rather Than Lists}
+
+The basic syntax of circuits is defined in \file{Word/Base.agda}.
+The definition is small but central:
+
+\begin{lstlisting}
+data Word (X : Set) : Set where
+  [_]w : X -> Word X
+  epsilon : Word X
+  _bullet_ : Word X -> Word X -> Word X
+\end{lstlisting}
+
+In the actual code the constructor names use Unicode:
+\texttt{[\_]\^{}w}, \texttt{epsilon} is written \(\epsilon\), and
+\texttt{\_bullet\_} is written \(\_\bullet\_\).  The paper uses ASCII
+names in listings where that improves portability.
+
+The key design choice is that \(\Word X\) is a binary tree.  A list of
+gates would quotient away the parse tree of composition too early:
+the expression \(u \cdot v\) carries the fact that it was built from
+left operand \(u\) and right operand \(v\), while the flattened list
+of gates does not.  Many equational proofs need to rewrite only the
+left or right side of a product; keeping the tree makes such proof
+steps structurally visible to \Agda.
+
+Associativity is not built into the syntax.  Instead, it is added as
+a proof rule in the congruence closure.  This is a familiar tradeoff
+in mechanized algebra: raw syntax stays simple and inductive, while
+the semantic equality relation supplies associativity, units, and
+domain axioms.
+
+The word module also defines powers:
+\[
+  w^0 = \epsilon,\qquad
+  w^1 = w,\qquad
+  w^{n+2} = w \cdot w^{n+1}.
+\]
+Powers are used throughout the Clifford development for relations
+such as \(S^p = \epsilon\), \(CZ^p = \epsilon\), and \(H^4 =
+\epsilon\), and also for parameterized circuits such as \(S^k\) and
+\(CZ^k\).
+
+\section{Presentation Closure}
+
+The congruence closure is implemented in \file{Presentation/Base.agda}.
+For a relation \(\Gamma\) on words, the module defines an equality
+\(\approx\) generated by reflexivity, symmetry, transitivity,
+congruence, monoid laws, and the axioms in \(\Gamma\):
+
+\begin{lstlisting}
+data _approx_ : WRel X where
+  refl       : w approx w
+  sym        : w approx v -> v approx w
+  trans      : w approx v -> v approx u -> w approx u
+  cong       : w approx w' -> v approx v' ->
+               w bullet v approx w' bullet v'
+  assoc      : (w bullet v) bullet u approx w bullet (v bullet u)
+  left-unit  : epsilon bullet w approx w
+  right-unit : w bullet epsilon approx w
+  axiom      : Gamma w v -> w approx v
+\end{lstlisting}
+
+The closure is the object that most later proofs inhabit.  A theorem
+such as ``pushing \(S\) through an \(\EBox\) box'' is an \Agda term
+whose type is an equality in this closure.  Setoid reasoning then
+provides the readable calculation style.
+
+The module \file{Presentation/Properties.agda} packages the closure
+as an \Agda setoid and proves that word composition forms a magma, a
+semigroup, and a monoid modulo \(\approx\).  It also supplies a
+practical associativity layer.  The functions \texttt{to-list} and
+\texttt{from-list} flatten and rebuild words, and the lemma
+\texttt{by-assoc} proves that equal flattened lists imply equality of
+the original words modulo associativity.  Later proof scripts use this
+infrastructure, directly or through tactics in
+\file{Presentation/Tactics.agda}, to avoid drowning in parenthesis
+management.
+
+\section{Finite Fields}
+
+The finite-field layer lives under \file{Zp}.  The carrier of
+\(\mathbb{Z}/n\mathbb{Z}\) is \texttt{Fin n}:
+
+\begin{lstlisting}
+Z : Nat -> Set
+Z n = Fin n
+\end{lstlisting}
+
+Nonzero elements are represented as dependent pairs:
+
+\begin{lstlisting}
+Z* : Nat -> Set
+Z* zero    = Z zero
+Z* (suc n) = Sigma[ a in Z (suc n) ] (a /= zero)
+\end{lstlisting}
+
+Addition and multiplication are implemented by converting to natural
+numbers, applying ordinary addition or multiplication, and reducing
+modulo the modulus.  The file then proves the expected algebraic laws:
+associativity and commutativity of addition and multiplication,
+identities, additive inverse, distributivity, and additional lemmas
+about powers and inverses.  For the Clifford development, the prime
+modulus modules expose the dimension
+\[
+  p = 2 + \texttt{p-2}
+\]
+and field-specific operations such as inverse on nonzero elements.
+
+This layer matters because the box relations are parameterized by
+field elements.  For example, an \(\ABox\) contains a nonzero pair
+\((a,b)\), an \(\EBox\) contains one field element, and the
+interpretation of boxes uses expressions such as \(-b/a\).  In the
+code, \(-b/a\) is not a partial operation; it is introduced only in
+branches where the denominator is accompanied by a proof that it is
+nonzero.
+
+\section{Clifford Generators}
+
+The main generator type is defined inside the module
+\file{N/Symplectic.agda}.  For \(n\) qupits, generators are indexed by
+the number of wires on which they are well-formed:
+
+\begin{lstlisting}
+data Gen : Nat -> Set where
+  H-gen  : {n : Nat} -> Gen (1+n)
+  S-gen  : {n : Nat} -> Gen (1+n)
+  CZ-gen : {n : Nat} -> Gen (2+n)
+  _lift  : {n : Nat} -> Gen n -> Gen (suc n)
+\end{lstlisting}
+
+The real code writes \texttt{\_lift} as a Unicode up-shift
+constructor.  The lifting constructor shifts a generator onto later
+wires.  Thus the first-wire gates are named directly, and gates on
+later wires are obtained by repeated lifting.  Words are lifted with a
+map:
+\[
+  w^\uparrow = \mathsf{wmap}\;(\_\!\uparrow)\;w.
+\]
+The code also defines a down-shift operation, but in the active
+\file{N/Symplectic.agda} presentation \texttt{\_down} is implemented
+as the identity on words.  Several older comments show a more
+structural down-shift version, but the proof spine described here
+uses the current code.
+
+The primitive circuits are:
+\[
+S = [S\text{-gen}],\quad
+H = [H\text{-gen}],\quad
+CZ = [CZ\text{-gen}].
+\]
+From these, the repository defines common derived circuits:
+\[
+\begin{aligned}
+S^{-1} &= S^{p-1},\\
+CZ^{-1} &= CZ^{p-1},\\
+CX &= H^\downarrow{}^3 \cdot CZ \cdot H^\downarrow,\\
+XC &= H^\uparrow{}^3 \cdot CZ \cdot H^\uparrow.
+\end{aligned}
+\]
+The multiplicative gate \(M(x)\), for \(x \in \Zp^\ast\), is encoded
+as
+\[
+  M(x) = S^x \cdot H \cdot S^{x^{-1}} \cdot H \cdot S^x \cdot H.
+\]
+This definition appears both in the README example and in the main
+symplectic modules.
+
+\section{Comprehensive Relations}
+
+The relation family in \file{N/Symplectic.agda} is called
+\texttt{\_QRel,\_===\_}.  It is indexed by the number of wires and is
+used as the axiom relation for the presentation closure.  The
+implemented constructors include:
+
+\begin{itemize}
+\item one-qupit relations \(S^p = \epsilon\), \(H^4 = \epsilon\),
+  \((S H)^3 = \epsilon\), and \(H H S = S H H\);
+\item multiplicative-gate laws \(M(x)M(y)=M(xy)\) and
+  \(M(x)S = S^{x^2}M(x)\);
+\item two-qupit scaling laws for \(M(x)\) through \(CZ\) on either
+  side;
+\item \(CZ^p=\epsilon\) and commutation of \(CZ\) with lifted
+  \(S\)-gates;
+\item Selinger-style two- and three-qupit relations named
+  \texttt{selinger-c10} through \texttt{selinger-c15};
+\item commutation rules saying sufficiently shifted generators commute
+  with \(H\), \(S\), and \(CZ\);
+\item a congruence-lifting axiom \texttt{cong-up}, written
+  \texttt{cong} followed by an up-arrow in the code, which lifts an
+  equality on \(n\) wires to one on \(n+1\) wires.
+\end{itemize}
+
+The module also proves basic lifting lemmas.  For example, if
+\(w \approx v\) under the \(n\)-wire presentation, then
+\(w^\uparrow \approx v^\uparrow\) under the \((n+1)\)-wire
+presentation.  In the code this is \texttt{lemma-cong-up}, written
+with an up-arrow in the actual identifier, proved by induction on the
+derivation of \(w \approx v\).
+
+\section{Simplified and Derived Presentations}
+
+The repository distinguishes at least three related presentations.
+The comprehensive presentation in \file{N/Symplectic.agda} is
+convenient for proofs because it includes relations such as
+\(M(x)M(y)=M(xy)\) for arbitrary nonzero \(x,y\).  The simplified
+presentation in \file{N/Symplectic-Simplified.agda} is closer to the
+paper-facing axiom set.  It is parameterized by a primitive root
+\(g \in \Zp^\ast\) and a proof that every nonzero element is a power
+of \(g\).  Its one-qupit multiplicative axioms use \(M(g)\) and
+powers of \(M(g)\) rather than arbitrary \(M(x)\).
+
+The simplified relation family contains constructors such as:
+\[
+\begin{aligned}
+S^p &= \epsilon,\\
+H^2 &= M(-1),\\
+M(g)^k &= M(g^k),\\
+M(g)S &= S^{g^2}M(g).
+\end{aligned}
+\]
+It also contains the same two- and three-qupit structural relations
+needed to reason about \(CZ\), lifted gates, and shifted wires.  This
+matches the README's single-ququint example, where the primitive root
+is \(2 \in \mathbb{Z}_5^\ast\), and the simplified axiom set derives
+the box relation for \(\EBox\).
+
+The derived presentation in \file{N/Symplectic-Derived.agda} exposes
+parameterized generators, for example \(H^k\), \(S^k\), and \(CZ^k\),
+as generators rather than only as powers of primitive words.  The
+module \file{N/Iso-Sym-Derived.agda} defines maps between the basic
+and derived presentations:
+\[
+  f : \Gen_{\mathrm{basic}}(n) \to \Gen_{\mathrm{derived}}(n),
+  \qquad
+  g : \Gen_{\mathrm{derived}}(n) \to \Word(\Gen_{\mathrm{basic}}(n)).
+\]
+It then proves well-definedness lemmas for the maps and establishes
+isomorphism infrastructure.  The module \file{N/Action-Sym.agda}
+uses the composition of these maps to define the Pauli action of the
+simplified presentation through the derived one.
+
+\section{Pauli Action}
+
+The semantic side of the development is represented by Pauli vectors.
+In \file{N/Pauli.agda}, a one-qupit Pauli is a pair of field elements:
+\[
+  \mathsf{Pauli1} = \Zp \times \Zp.
+\]
+An \(n\)-qupit Pauli is a vector of \(n\) such pairs.  The symplectic
+form is:
+\[
+  \mathsf{sform1}((a,b),(c,d)) = -a d + c b,
+\]
+extended componentwise over vectors.
+
+The module \file{N/Action.agda} defines the action of derived
+generators on Pauli vectors.  The action of \(S^k\) maps
+\((a,b)\) to \((a,b+a k)\); the action of \(H\) rotates
+\((a,b)\) to \((-b,a)\) for exponent \(1\); and \(CZ^k\) updates the
+two adjacent components by adding cross terms:
+\[
+  (a,b),(a',b') \mapsto (a,b+a'k),(a',b'+ak).
+\]
+Lifted generators act on the tail of the vector, leaving the first
+component unchanged.
+
+This Pauli action is used by the normal-form modules.  It lets the
+development state and prove facts of the form ``there exists a word in
+normal form whose action sends one Pauli vector to another with the
+same symplectic invariant.''  The one-qupit normal-form module
+\file{N/NF1.agda} is the clearest complete example: it contains
+theorems such as \texttt{Theorem-NF1}, \texttt{Theorem-MC}, and
+variants specialized to \(pZ\)-like inputs.
+
+\section{Boxes and Normal Forms}
+
+The box syntax is defined in \file{N/Boxes.agda}.  The definitions are
+small but heavily indexed:
+\[
+\begin{aligned}
+\ABox &= \{(a,b) \in \Zp^2 \mid (a,b) \ne (0,0)\},\\
+\BBox &= \Zp \times \Zp,\\
+\DBox &= \Zp \times \Zp,\\
+\EBox &= \Zp.
+\end{aligned}
+\]
+The wider box families are indexed by arity.  For example,
+\(\LBox(n)\), \(\MBox(n)\), \(\LM(n)\), and \(\NF(n)\) are recursive
+families describing normal-form-shaped circuits over \(n\) wires.  A
+normal form for \(n+1\) wires consists of a normal form on \(n\) wires
+and an \(\LM\) layer on the last wire block:
+\[
+  \NF(0) = \top,\qquad
+  \NF(n+1) = \NF(n) \times \LM(n+1).
+\]
+
+The box syntax itself is not a circuit.  The interpretation appears
+in \file{N/LM-Sym.agda}, which maps boxes to words over the
+symplectic generator set.  Selected definitions are:
+\[
+\begin{aligned}
+[b]^\EBox &= S^{-b},\\
+[(0,b)]^\BBox &= Ex \cdot CX'^{\,b},\\
+[(0,b)]^\DBox &= Ex \cdot CZ^{-b}.
+\end{aligned}
+\]
+For nonzero first components, the interpretations introduce inverses
+in \(\Zp^\ast\).  For instance, a nonzero \(\ABox(a,b)\) is
+interpreted using \(a^{-1}\) and \(-b/a\).  The code enforces the
+side condition by pattern matching on whether the first component is
+zero.
+
+The vector box interpretations are also order-sensitive.  The comment
+in \file{N/LM-Sym.agda} states that a vector of \(\BBox\) boxes is in
+circuit order, while the corresponding matrix multiplication order is
+reversed; the word interpretation accounts for this by recursively
+lifting the tail and then composing the current box.
+
+\section{Box Relations}
+
+The public index of box relations is \file{BoxRelations.agda}.  It is
+parameterized by \(p-2\) and a proof that \(2+p-2\) is prime.  It
+imports the symplectic presentation, the box interpretation, and the
+specific proof modules under \file{N/BR}.  The file is organized into
+one-, two-, and three-qupit modules.
+
+The one-qupit statements are:
+\[
+\begin{aligned}
+[x]^\ABox \cdot H &\approx dir \cdot [x']^\ABox,\\
+[x]^\ABox \cdot S &\approx dir \cdot [x']^\ABox,\\
+[b]^\EBox \cdot S &\approx [b-1]^\EBox.
+\end{aligned}
+\]
+The actual direction word and updated box parameter are computed by
+functions in \file{N/BR/One/A.agda}; the \(\EBox\) rule is proved in
+\file{N/BR/One/E.agda}.
+
+The two-qupit statements are:
+\[
+\begin{aligned}
+[l]^\LBox \cdot CZ &\approx dir \cdot [l']^\LBox,\\
+[b]^\BBox \cdot [g] &\approx dir \cdot [b']^\BBox,\\
+[d]^\DBox \cdot [g] &\approx S^e \cdot dir^\uparrow \cdot [d']^\DBox.
+\end{aligned}
+\]
+Here the \(\BBox\) rule ranges over the gates \(H^\uparrow\),
+\(S^\uparrow\), and \(S\), excluding \(H\) and \(CZ\) by explicit
+inequality hypotheses.  The \(\DBox\) rule ranges over \(H\),
+\(S^\uparrow\), \(S\), and \(CZ\), excluding \(H^\uparrow\).
+
+The three-qupit statements are:
+\[
+\begin{aligned}
+[vb]^{\vec{\BBox}} \cdot CZ^\uparrow
+  &\approx dir^\downarrow \cdot [vb']^{\vec{\BBox}},\\
+[b]^\BBox{}^\uparrow \cdot CZ
+  &\approx dir \cdot [b]^\BBox{}^\uparrow,\\
+[vd]^{\vec{\DBox}} \cdot CZ
+  &\approx dir^\uparrow \cdot [vd']^{\vec{\DBox}}.
+\end{aligned}
+\]
+These are delegated to \file{N/BR/Three/BB-CZ.agda},
+\file{N/BR/Three/B-CZ.agda}, and
+\file{N/BR/Three/DD-CZ.agda}, respectively.
+
+\section{Example: The \(\EBox\) Rule}
+
+The README includes one compact derivation, and it is useful because
+it shows the style of the whole project.  The \(\EBox\) interpretation
+is \( [b]^\EBox = S^{-b}\).  The box relation says:
+\[
+  [b]^\EBox \cdot S \approx [b-1]^\EBox.
+\]
+The proof in \file{N/BR/One/E.agda}, also shown in
+\file{doc/Readme.lagda.tex}, proceeds by unfolding the interpretation
+and using a lemma that combines powers of \(S\):
+\[
+  S^{-b} \cdot S \approx S^{-b+1}.
+\]
+Then finite-field arithmetic rewrites \(-b+1\) into \(-(b-1)\), which
+is exactly the exponent used by \([b-1]^\EBox\).
+
+This example illustrates the division of labor in the repository.  A
+box theorem is not a custom decision procedure.  It is a typed
+calculation in the presentation closure, with proof steps supplied by
+previously proved lemmas about powers, modular arithmetic, and word
+associativity.
+
+\section{Generic Presentation Machinery}
+
+Although the top-level goal is about Clifford circuits, a significant
+part of the repository is generic.  The modules under
+\file{Presentation/Construct} define ways to build larger
+presentations from smaller ones, including direct products,
+semidirect products, and amalgamations.  The modules
+\file{Presentation/CosetNF.agda} and
+\file{Presentation/Reidemeister-Schreier.agda} formalize coset and
+rewriting infrastructure.  The older \file{Presentation/Groups}
+directory contains example and exploratory group presentations such
+as cyclic groups, symmetric groups, and Clifford one- and two-qupit
+fragments.
+
+The Clifford development uses this infrastructure in two ways.  First,
+the basic closure and setoid machinery are used directly throughout
+the proof scripts.  Second, the normal-form and isomorphism modules
+reuse the general idea that a presentation can be related to another
+presentation by a well-defined star extension of a generator map.
+For a map \(f : X \to \Word Y\), the extension \(f^\ast :
+\Word X \to \Word Y\) is implemented by mapping generators to words
+and then concatenating.  Well-definedness means that each axiom of
+the source presentation maps to a derivable equality in the target
+presentation.
+
+\section{Artifact Boundary}
+
+The repository contains unfinished code, visible as \Agda holes
+\texttt{\{!!\}} or \texttt{?} in several older or exploratory files.
+This is important for an artifact paper: the proof claims should be
+scoped to the modules that are intended to constitute the development.
+The README itself tells the reader to start from
+\file{doc/Readme.pdf} and \file{BoxRelations.agda}; the latter is the
+best public index for the box-relation statements.
+
+The distinction is not merely administrative.  Some files such as
+\file{N/Completeness.agda}, \file{N/Symplectic-Alternative.agda}, and
+older group-presentation experiments contain partially developed
+normal-form or alternative-presentation work.  Those modules are
+valuable context, but they should not be cited as completed theorems
+unless they are closed and type checked in the release artifact.  By
+contrast, modules marked \texttt{--safe} and free of holes can be
+treated as checked under \Agda's kernel, subject to the standard
+library and the explicit postulates or options they import.
+
+For a POPL artifact, the natural packaging step is to provide a small
+driver module that imports exactly the intended theorem surface:
+\file{BoxRelations.agda}, the simplified-presentation isomorphism
+modules, and the finite-field modules used by them.  Such a driver
+would make the checked boundary mechanically visible.
+
+\section{Trusted Computing Base}
+
+The trusted base of the development is conventional for an \Agda
+formalization:
+
+\begin{itemize}
+\item the \Agda type checker;
+\item the Agda standard library, tested in the README with Agda 2.8
+  and standard library 2.3, and also with Agda 2.7 and standard
+  library 2.2;
+\item the definitions of the Clifford generators, relation families,
+  and box interpretations;
+\item the mathematical adequacy claim connecting the formal
+  generators and relations to the intended circuit diagrams.
+\end{itemize}
+
+The intended derivations themselves do not rely on an external
+computer algebra system.  Modular arithmetic is proved inside the
+repository using \texttt{Fin}, natural-number modular arithmetic, and
+standard-library algebraic structures.  Associativity normalization
+is also proved inside the presentation layer, by flattening words to
+lists and rebuilding them.
+
+\section{How to Read the Code}
+
+A reader who wants to audit the development can follow this path.
+
+\begin{enumerate}
+\item Read \file{Word/Base.agda} and \file{Presentation/Base.agda}.
+  These define the syntax and equality relation used everywhere else.
+\item Read \file{Zp/ModularArithmetic.agda} enough to understand
+  \(\Zp\), nonzero elements, inverse notation, and ring lemmas.
+\item Read the first half of \file{N/Symplectic.agda}: generators,
+  derived words, \(M(x)\), and the comprehensive relation family.
+\item Read \file{N/Boxes.agda} and the beginning of
+  \file{N/LM-Sym.agda}: these explain what boxes are and how they
+  are interpreted as circuit words.
+\item Read \file{BoxRelations.agda}.  It is short and gives the
+  theorem statements for the box relations.
+\item Follow one proof pointer at a time into \file{N/BR}.  The
+  one-qupit \(\EBox\) proof is the easiest starting point; the
+  two- and three-qupit proofs rely on more associativity and
+  commutation lemmas.
+\item Read \file{N/Symplectic-Simplified.agda},
+  \file{N/Iso-Sym-Derived.agda}, and \file{N/Action-Sym.agda} for
+  the connection between the paper-facing axiom set, derived
+  generators, and semantic Pauli actions.
+\end{enumerate}
+
+\section{Related Work}
+
+The immediate mathematical context is the theory of Clifford circuits
+over qudits of odd prime dimension and finite presentations of their
+symplectic action.  The repository also follows a line of mechanized
+algebra developments in which a proof assistant checks equational
+reasoning over presentations rather than trusting hand calculation.
+The technical style is close to setoid-based algebra in \Agda: raw
+syntax is kept separate from the relation that quotients it, and
+rewriting is expressed as explicit equality evidence.
+
+The existing README cites the \Agda documentation and the Agda
+standard library.  A submission version of this paper should add the
+main Clifford-circuit paper, Selinger-style Clifford presentations
+used by the relation names \texttt{selinger-c10}--\texttt{c15}, and
+prior mechanizations of quantum circuit calculi.  Those citations are
+not present in the repository, so they are not guessed here.
+
+\section{Conclusion}
+
+\Qupit is a mechanized proof development for Clifford-circuit box
+relations over odd prime dimensions.  Its central move is simple and
+effective: define circuit syntax as binary words, define equality as
+the congruence closure of a presentation, and prove each diagrammatic
+rewrite as an \Agda term in that equality.  Around this core, the
+repository builds finite-field arithmetic, Clifford generators,
+simplified and derived relation sets, Pauli actions, box
+interpretations, and a collection of concrete box-relation proof
+scripts.
+
+The current code base also records its own research history.  Some
+older modules are unfinished, and a POPL artifact should make the
+intended checked surface explicit.  The file \file{BoxRelations.agda}
+already provides the right shape for that surface: it states the
+one-, two-, and three-qupit box relations and points to the modules
+where their derivations live.  This paper expands the existing README
+into a structured explanation of how those pieces fit together and
+what must be checked to support the artifact claims.
+
+\begin{acks}
+Omitted for anonymous review.
+\end{acks}
+
+\begin{thebibliography}{9}
+
+\bibitem{Agda}
+The Agda Team.
+\newblock Agda documentation.
+\newblock \url{https://agda.readthedocs.io/}.
+\newblock Accessed 2026-01-15 in the repository documentation.
+
+\bibitem{AgdaStdlib}
+The Agda Standard Library Team.
+\newblock Agda standard library documentation, version 2.3.
+\newblock \url{https://agda.github.io/agda-stdlib/v2.3/}.
+\newblock Accessed 2026-01-15 in the repository documentation.
+
+\end{thebibliography}
+
+\end{document}
