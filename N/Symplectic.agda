@@ -305,18 +305,15 @@ module Symplectic where
 
 module Lemmas-Sym where
   open Symplectic
+  -- Generic structural-rule engine, instantiated for the Clifford gens.
+  open import Circuit.Structure {Gen} _↥ using (comm-along ; comm-along-^ ; lift-closure)
+  import Word.Properties as WP
   lemma-cong↑ : ∀ {n} w v →
     let open PB (n QRel,_===_) using (_≈_) in
     let open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↑_) using () in
     w ≈ v → w ↑ ≈↑ v ↑
-  lemma-cong↑ {n} w v PB.refl = PB.refl
-  lemma-cong↑ {n} w v (PB.sym eq) = PB.sym (lemma-cong↑ v w eq)
-  lemma-cong↑ {n} w v (PB.trans eq eq₁) = PB.trans (lemma-cong↑ _ _ eq) (lemma-cong↑ _ _ eq₁)
-  lemma-cong↑ {n} w v (PB.cong eq eq₁) = PB.cong (lemma-cong↑ _ _ eq) (lemma-cong↑ _ _ eq₁)
-  lemma-cong↑ {n} w v PB.assoc = PB.assoc
-  lemma-cong↑ {n} w v PB.left-unit = PB.left-unit
-  lemma-cong↑ {n} w v PB.right-unit = PB.right-unit
-  lemma-cong↑ {n} w v (PB.axiom x) = PB.axiom (cong↑ x)
+  -- Lifting is generic: delegate to Circuit.Structure.lift-closure.
+  lemma-cong↑ {n} w v = lift-closure (λ m → (m QRel,_===_)) cong↑ w v
 
 
   import Data.Nat.Literals as NL
@@ -558,117 +555,50 @@ module Lemmas-Sym where
     
     S • w ↑ ≈ w ↑ • S
     
-  lemma-comm-S-w↑ {n} [ x ]ʷ = sym (axiom comm-S)
+  -- Whole-word commutation, delegated to Circuit.Structure.comm-along;
+  -- only the one-generator base fact (comm-S) is Clifford-specific.
+  lemma-comm-S-w↑ {n} w = comm-along (λ g → g ↥) ((₂₊ n) QRel,_===_) S (λ g → sym (axiom comm-S)) w
     where
     open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-S-w↑ {n} ε = trans right-unit (sym left-unit)
-    where
-    open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-S-w↑ {n} (w • w₁) = begin
-    S • ((w • w₁) ↑) ≈⟨ refl ⟩
-    S • (w ↑ • w₁ ↑) ≈⟨ sym assoc ⟩
-    (S • w ↑) • w₁ ↑ ≈⟨ cong (lemma-comm-S-w↑ w) refl ⟩
-    (w ↑ • S) • w₁ ↑ ≈⟨ assoc ⟩
-    w ↑ • S • w₁ ↑ ≈⟨ cong refl (lemma-comm-S-w↑ w₁) ⟩
-    w ↑ • w₁ ↑ • S ≈⟨ sym assoc ⟩
-    ((w • w₁) ↑) • S ∎
-    where
-    open PB ((₂₊ n) QRel,_===_)
-    open PP ((₂₊ n) QRel,_===_)
-    open SR word-setoid
 
   lemma-comm-Sᵏ-w↑ : ∀ {n} k w → let open PB ((₂₊ n) QRel,_===_) in
     
     S ^ k • w ↑ ≈ w ↑ • S ^ k
     
-  lemma-comm-Sᵏ-w↑ {n} ₀ w = trans left-unit (sym right-unit)
+  lemma-comm-Sᵏ-w↑ {n} k w = comm-along-^ (λ g → g ↥) ((₂₊ n) QRel,_===_) S (λ g → sym (axiom comm-S)) k w
     where
     open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-Sᵏ-w↑ {n} ₁ w = lemma-comm-S-w↑ w
-    where
-    open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-Sᵏ-w↑ {n} (₂₊ k) w = begin
-    (S • S ^ ₁₊ k) • (w ↑) ≈⟨ assoc ⟩
-    S • S ^ ₁₊ k • (w ↑) ≈⟨ cong refl (lemma-comm-Sᵏ-w↑ (₁₊ k) w) ⟩
-    S • (w ↑) • S ^ ₁₊ k ≈⟨ sym assoc ⟩
-    (S • w ↑) • S ^ ₁₊ k ≈⟨ cong (lemma-comm-S-w↑ w) refl ⟩
-    (w ↑ • S) • S ^ ₁₊ k ≈⟨ assoc ⟩
-    (w ↑) • S • S ^ ₁₊ k ∎
-    where
-    open PB ((₂₊ n) QRel,_===_)
-    open PP ((₂₊ n) QRel,_===_)
-    open SR word-setoid
 
 
   lemma-comm-H-w↑ : ∀ {n} w → let open PB ((₂₊ n) QRel,_===_) in
     
     H • w ↑ ≈ w ↑ • H
     
-  lemma-comm-H-w↑ {n} [ x ]ʷ = sym (axiom comm-H)
+  lemma-comm-H-w↑ {n} w = comm-along (λ g → g ↥) ((₂₊ n) QRel,_===_) H (λ g → sym (axiom comm-H)) w
     where
     open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-H-w↑ {n} ε = trans right-unit (sym left-unit)
-    where
-    open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-H-w↑ {n} (w • w₁) = begin
-    H • ((w • w₁) ↑) ≈⟨ refl ⟩
-    H • (w ↑ • w₁ ↑) ≈⟨ sym assoc ⟩
-    (H • w ↑) • w₁ ↑ ≈⟨ cong (lemma-comm-H-w↑ w) refl ⟩
-    (w ↑ • H) • w₁ ↑ ≈⟨ assoc ⟩
-    w ↑ • H • w₁ ↑ ≈⟨ cong refl (lemma-comm-H-w↑ w₁) ⟩
-    w ↑ • w₁ ↑ • H ≈⟨ sym assoc ⟩
-    ((w • w₁) ↑) • H ∎
-    where
-    open PB ((₂₊ n) QRel,_===_)
-    open PP ((₂₊ n) QRel,_===_)
-    open SR word-setoid
 
 
   lemma-comm-Hᵏ-w↑ : ∀ {n} k w → let open PB ((₂₊ n) QRel,_===_) in
     
     H ^ k • w ↑ ≈ w ↑ • H ^ k
     
-  lemma-comm-Hᵏ-w↑ {n} ₀ w = trans left-unit (sym right-unit)
+  lemma-comm-Hᵏ-w↑ {n} k w = comm-along-^ (λ g → g ↥) ((₂₊ n) QRel,_===_) H (λ g → sym (axiom comm-H)) k w
     where
     open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-Hᵏ-w↑ {n} ₁ w = lemma-comm-H-w↑ w
-    where
-    open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-Hᵏ-w↑ {n} (₂₊ k) w = begin
-    (H • H ^ ₁₊ k) • (w ↑) ≈⟨ assoc ⟩
-    H • H ^ ₁₊ k • (w ↑) ≈⟨ cong refl (lemma-comm-Hᵏ-w↑ (₁₊ k) w) ⟩
-    H • (w ↑) • H ^ ₁₊ k ≈⟨ sym assoc ⟩
-    (H • w ↑) • H ^ ₁₊ k ≈⟨ cong (lemma-comm-H-w↑ w) refl ⟩
-    (w ↑ • H) • H ^ ₁₊ k ≈⟨ assoc ⟩
-    (w ↑) • H • H ^ ₁₊ k ∎
-    where
-    open PB ((₂₊ n) QRel,_===_)
-    open PP ((₂₊ n) QRel,_===_)
-    open SR word-setoid
 
 
   lemma-comm-CZ-w↑ : ∀ {n} w → let open PB ((₃₊ n) QRel,_===_) in
     
     CZ • w ↑ ↑ ≈ w ↑ ↑ • CZ
     
-  lemma-comm-CZ-w↑ {n} [ x ]ʷ = sym (axiom comm-CZ)
+  -- CZ has arity 2, so it commutes past words lifted twice; wmap-∘ bridges
+  -- w ↑ ↑ with the double embedding used by comm-along.
+  lemma-comm-CZ-w↑ {n} w =
+    Eq.subst (λ z → CZ • z ≈ z • CZ) (WP.wmap-∘ {g = _↥} {f = _↥} w)
+             (comm-along (λ g → g ↥ ↥) ((₃₊ n) QRel,_===_) CZ (λ g → sym (axiom comm-CZ)) w)
     where
     open PB ((₃₊ n) QRel,_===_)
-  lemma-comm-CZ-w↑ {n} ε = trans right-unit (sym left-unit)
-    where
-    open PB ((₃₊ n) QRel,_===_)
-  lemma-comm-CZ-w↑ {n} (w • w₁) = begin
-    CZ • ((w • w₁) ↑ ↑) ≈⟨ refl ⟩
-    CZ • (w ↑ ↑ • w₁ ↑ ↑) ≈⟨ sym assoc ⟩
-    (CZ • w ↑ ↑) • w₁ ↑ ↑ ≈⟨ cong (lemma-comm-CZ-w↑ w) refl ⟩
-    (w ↑ ↑ • CZ) • w₁ ↑ ↑ ≈⟨ assoc ⟩
-    w ↑ ↑ • CZ • w₁ ↑ ↑ ≈⟨ cong refl (lemma-comm-CZ-w↑ w₁) ⟩
-    w ↑ ↑ • w₁ ↑ ↑ • CZ ≈⟨ sym assoc ⟩
-    ((w • w₁) ↑ ↑) • CZ ∎
-    where
-    open PB ((₃₊ n) QRel,_===_)
-    open PP ((₃₊ n) QRel,_===_)
-    open SR word-setoid
 
 
 module Symplectic-GroupLike where
@@ -1055,28 +985,16 @@ module Symplectic-Derived-Gen where
     open SR word-setoid
 
 
+  open import Circuit.Structure {Gen} _↥ using (comm-along ; comm-along-^ ; lift-closure)
+  import Word.Properties as WP
+
   lemma-comm-S-w↑ : ∀ {n} w → let open PB ((₂₊ n) QRel,_===_) in
     
     S • w ↑ ≈ w ↑ • S
     
-  lemma-comm-S-w↑ {n} [ x ]ʷ = sym (axiom comm-S)
+  lemma-comm-S-w↑ {n} w = comm-along (λ g → g ↥) ((₂₊ n) QRel,_===_) S (λ g → sym (axiom comm-S)) w
     where
     open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-S-w↑ {n} ε = trans right-unit (sym left-unit)
-    where
-    open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-S-w↑ {n} (w • w₁) = begin
-    S • ((w • w₁) ↑) ≈⟨ refl ⟩
-    S • (w ↑ • w₁ ↑) ≈⟨ sym assoc ⟩
-    (S • w ↑) • w₁ ↑ ≈⟨ cong (lemma-comm-S-w↑ w) refl ⟩
-    (w ↑ • S) • w₁ ↑ ≈⟨ assoc ⟩
-    w ↑ • S • w₁ ↑ ≈⟨ cong refl (lemma-comm-S-w↑ w₁) ⟩
-    w ↑ • w₁ ↑ • S ≈⟨ sym assoc ⟩
-    ((w • w₁) ↑) • S ∎
-    where
-    open PB ((₂₊ n) QRel,_===_)
-    open PP ((₂₊ n) QRel,_===_)
-    open SR word-setoid
 
 
 
@@ -1084,47 +1002,19 @@ module Symplectic-Derived-Gen where
     
     H • w ↑ ≈ w ↑ • H
     
-  lemma-comm-H-w↑ {n} [ x ]ʷ = sym (axiom comm-H)
+  lemma-comm-H-w↑ {n} w = comm-along (λ g → g ↥) ((₂₊ n) QRel,_===_) H (λ g → sym (axiom comm-H)) w
     where
     open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-H-w↑ {n} ε = trans right-unit (sym left-unit)
-    where
-    open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-H-w↑ {n} (w • w₁) = begin
-    H • ((w • w₁) ↑) ≈⟨ refl ⟩
-    H • (w ↑ • w₁ ↑) ≈⟨ sym assoc ⟩
-    (H • w ↑) • w₁ ↑ ≈⟨ cong (lemma-comm-H-w↑ w) refl ⟩
-    (w ↑ • H) • w₁ ↑ ≈⟨ assoc ⟩
-    w ↑ • H • w₁ ↑ ≈⟨ cong refl (lemma-comm-H-w↑ w₁) ⟩
-    w ↑ • w₁ ↑ • H ≈⟨ sym assoc ⟩
-    ((w • w₁) ↑) • H ∎
-    where
-    open PB ((₂₊ n) QRel,_===_)
-    open PP ((₂₊ n) QRel,_===_)
-    open SR word-setoid
 
   lemma-comm-CZ-w↑ : ∀ {n} w → let open PB ((₃₊ n) QRel,_===_) in
     
     CZ • w ↑ ↑ ≈ w ↑ ↑ • CZ
     
-  lemma-comm-CZ-w↑ {n} [ x ]ʷ = sym (axiom comm-CZ)
+  lemma-comm-CZ-w↑ {n} w =
+    Eq.subst (λ z → CZ • z ≈ z • CZ) (WP.wmap-∘ {g = _↥} {f = _↥} w)
+             (comm-along (λ g → g ↥ ↥) ((₃₊ n) QRel,_===_) CZ (λ g → sym (axiom comm-CZ)) w)
     where
     open PB ((₃₊ n) QRel,_===_)
-  lemma-comm-CZ-w↑ {n} ε = trans right-unit (sym left-unit)
-    where
-    open PB ((₃₊ n) QRel,_===_)
-  lemma-comm-CZ-w↑ {n} (w • w₁) = begin
-    CZ • ((w • w₁) ↑ ↑) ≈⟨ refl ⟩
-    CZ • (w ↑ ↑ • w₁ ↑ ↑) ≈⟨ sym assoc ⟩
-    (CZ • w ↑ ↑) • w₁ ↑ ↑ ≈⟨ cong (lemma-comm-CZ-w↑ w) refl ⟩
-    (w ↑ ↑ • CZ) • w₁ ↑ ↑ ≈⟨ assoc ⟩
-    w ↑ ↑ • CZ • w₁ ↑ ↑ ≈⟨ cong refl (lemma-comm-CZ-w↑ w₁) ⟩
-    w ↑ ↑ • w₁ ↑ ↑ • CZ ≈⟨ sym assoc ⟩
-    ((w • w₁) ↑ ↑) • CZ ∎
-    where
-    open PB ((₃₊ n) QRel,_===_)
-    open PP ((₃₊ n) QRel,_===_)
-    open SR word-setoid
 
   -- lemma-comm-H↑-M : ∀ {n} m → let open PB ((₂₊ n) QRel,_===_) in
     
@@ -4021,6 +3911,7 @@ module Lemmas where
     n : ℕ
 
   open Symplectic
+  open import Circuit.Structure {Gen} _↥ using (comm-along ; comm-along-^ ; lift-closure)
   open import Zp.ModularArithmetic
 
 
@@ -4048,46 +3939,17 @@ module Lemmas where
     
     S • w ↑ ≈ w ↑ • S
     
-  lemma-comm-S-w↑ {n} [ x ]ʷ = sym (axiom comm-S)
+  lemma-comm-S-w↑ {n} w = comm-along (λ g → g ↥) ((₂₊ n) QRel,_===_) S (λ g → sym (axiom comm-S)) w
     where
     open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-S-w↑ {n} ε = trans right-unit (sym left-unit)
-    where
-    open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-S-w↑ {n} (w • w₁) = begin
-    S • ((w • w₁) ↑) ≈⟨ refl ⟩
-    S • (w ↑ • w₁ ↑) ≈⟨ sym assoc ⟩
-    (S • w ↑) • w₁ ↑ ≈⟨ cong (lemma-comm-S-w↑ w) refl ⟩
-    (w ↑ • S) • w₁ ↑ ≈⟨ assoc ⟩
-    w ↑ • S • w₁ ↑ ≈⟨ cong refl (lemma-comm-S-w↑ w₁) ⟩
-    w ↑ • w₁ ↑ • S ≈⟨ sym assoc ⟩
-    ((w • w₁) ↑) • S ∎
-    where
-    open PB ((₂₊ n) QRel,_===_)
-    open PP ((₂₊ n) QRel,_===_)
-    open SR word-setoid
 
   lemma-comm-Sᵏ-w↑ : ∀ {n} k w → let open PB ((₂₊ n) QRel,_===_) in
     
     S ^ k • w ↑ ≈ w ↑ • S ^ k
     
-  lemma-comm-Sᵏ-w↑ {n} ₀ w = trans left-unit (sym right-unit)
+  lemma-comm-Sᵏ-w↑ {n} k w = comm-along-^ (λ g → g ↥) ((₂₊ n) QRel,_===_) S (λ g → sym (axiom comm-S)) k w
     where
     open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-Sᵏ-w↑ {n} ₁ w = lemma-comm-S-w↑ w
-    where
-    open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-Sᵏ-w↑ {n} (₂₊ k) w = begin
-    (S • S ^ ₁₊ k) • (w ↑) ≈⟨ assoc ⟩
-    S • S ^ ₁₊ k • (w ↑) ≈⟨ cong refl (lemma-comm-Sᵏ-w↑ (₁₊ k) w) ⟩
-    S • (w ↑) • S ^ ₁₊ k ≈⟨ sym assoc ⟩
-    (S • w ↑) • S ^ ₁₊ k ≈⟨ cong (lemma-comm-S-w↑ w) refl ⟩
-    (w ↑ • S) • S ^ ₁₊ k ≈⟨ assoc ⟩
-    (w ↑) • S • S ^ ₁₊ k ∎
-    where
-    open PB ((₂₊ n) QRel,_===_)
-    open PP ((₂₊ n) QRel,_===_)
-    open SR word-setoid
 
 
 
@@ -4173,24 +4035,9 @@ module Lemmas where
     
     H • w ↑ ≈ w ↑ • H
     
-  lemma-comm-H-w↑ {n} [ x ]ʷ = sym (axiom comm-H)
+  lemma-comm-H-w↑ {n} w = comm-along (λ g → g ↥) ((₂₊ n) QRel,_===_) H (λ g → sym (axiom comm-H)) w
     where
     open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-H-w↑ {n} ε = trans right-unit (sym left-unit)
-    where
-    open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-H-w↑ {n} (w • w₁) = begin
-    H • ((w • w₁) ↑) ≈⟨ refl ⟩
-    H • (w ↑ • w₁ ↑) ≈⟨ sym assoc ⟩
-    (H • w ↑) • w₁ ↑ ≈⟨ cong (lemma-comm-H-w↑ w) refl ⟩
-    (w ↑ • H) • w₁ ↑ ≈⟨ assoc ⟩
-    w ↑ • H • w₁ ↑ ≈⟨ cong refl (lemma-comm-H-w↑ w₁) ⟩
-    w ↑ • w₁ ↑ • H ≈⟨ sym assoc ⟩
-    ((w • w₁) ↑) • H ∎
-    where
-    open PB ((₂₊ n) QRel,_===_)
-    open PP ((₂₊ n) QRel,_===_)
-    open SR word-setoid
 
 
   lemma-comm-CZ-w↑↑ : ∀ {n} w → let open PB ((₂₊ n) QRel,_===_) in
@@ -4266,23 +4113,9 @@ module Lemmas where
     
     H ^ k • w ↑ ≈ w ↑ • H ^ k
     
-  lemma-comm-Hᵏ-w↑ {n} ₀ w = trans left-unit (sym right-unit)
+  lemma-comm-Hᵏ-w↑ {n} k w = comm-along-^ (λ g → g ↥) ((₂₊ n) QRel,_===_) H (λ g → sym (axiom comm-H)) k w
     where
     open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-Hᵏ-w↑ {n} ₁ w = lemma-comm-H-w↑ w
-    where
-    open PB ((₂₊ n) QRel,_===_)
-  lemma-comm-Hᵏ-w↑ {n} (₂₊ k) w = begin
-    (H • H ^ ₁₊ k) • (w ↑) ≈⟨ assoc ⟩
-    H • H ^ ₁₊ k • (w ↑) ≈⟨ cong refl (lemma-comm-Hᵏ-w↑ (₁₊ k) w) ⟩
-    H • (w ↑) • H ^ ₁₊ k ≈⟨ sym assoc ⟩
-    (H • w ↑) • H ^ ₁₊ k ≈⟨ cong (lemma-comm-H-w↑ w) refl ⟩
-    (w ↑ • H) • H ^ ₁₊ k ≈⟨ assoc ⟩
-    (w ↑) • H • H ^ ₁₊ k ∎
-    where
-    open PB ((₂₊ n) QRel,_===_)
-    open PP ((₂₊ n) QRel,_===_)
-    open SR word-setoid
 
 
   lemma-comm-CZᵏ-w↑↑ : ∀ {n} k w → let open PB ((₂₊ n) QRel,_===_) in
