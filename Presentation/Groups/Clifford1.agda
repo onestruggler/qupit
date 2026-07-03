@@ -1,46 +1,34 @@
---{-# OPTIONS --guardedness #-}
+------------------------------------------------------------------------
+-- Presentations of groups
+--
+-- Qubit Clifford group presentations (single-qubit and two-qubit cases).
+------------------------------------------------------------------------
 
-open import Level using (0ℓ)
+{-# OPTIONS --safe #-}
 
-open import Relation.Binary using (Rel)
-open import Relation.Binary.Definitions using (DecidableEquality)
-open import Relation.Binary.Morphism.Definitions using (Homomorphic₂)
-open import Relation.Binary.PropositionalEquality using (_≡_ ; inspect ; setoid ; module ≡-Reasoning) renaming ([_] to [_]')
+open import Relation.Binary.PropositionalEquality using (_≡_)
 import Relation.Binary.Reasoning.Setoid as SR
 import Relation.Binary.PropositionalEquality as Eq
-open import Relation.Nullary.Decidable using (yes ; no)
 
-
-open import Function using (_∘_ ; id)
-open import Function.Definitions using (Injective)
-
-open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; map₁ ; ∃)
+open import Data.Product using (_×_ ; _,_ ; ∃)
 open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
 open import Data.Nat using (ℕ ; zero ; suc)
-import Data.Nat as Nat
-open import Data.Fin
-open import Data.Fin.Induction
 open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_])
 open import Data.Unit using (⊤ ; tt)
-open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base hiding (wfoldl)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
-module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Construct.Base
 import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
 import Presentation.Construct.Properties.DirectProduct as DP
 import Presentation.Groups.Cyclic as Cyclic
-
-
-open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
-import Data.Nat.Properties as NP
+open import Notations
 
 
 module Presentation.Groups.Clifford1 where
@@ -73,7 +61,7 @@ module CliffordWithScalar where
     order-S : S ^ 4 === ε
     order-H : H ^ 2 === ε
     order-SH : (S • H) ^ 3 === ω
-    comm : ∀ {gen} -> ω • [ gen ]ʷ === [ gen ]ʷ • ω
+    comm : ∀ {gen} → ω • [ gen ]ʷ === [ gen ]ʷ • ω
 
 module Clifford where
 
@@ -301,7 +289,7 @@ module Symplectic where
   
   NF = Bool
   
-  nf : Word GenM -> NF
+  nf : Word GenM → NF
   nf [ S-gen ]ʷ = true
   nf ε = false
   nf (x • x₁) = (nf x) xor (nf x₁)
@@ -320,7 +308,7 @@ module Symplectic where
   inv-nf true = Sₘ
   inv-nf false = ε
 
-  inv-nf-homo : ∀ a b -> inv-nf (a xor b) ≈₁ inv-nf a • inv-nf b
+  inv-nf-homo : ∀ a b → inv-nf (a xor b) ≈₁ inv-nf a • inv-nf b
   inv-nf-homo false b = _≈₁_.sym _≈₁_.left-unit
   inv-nf-homo true false = _≈₁_.sym _≈₁_.right-unit
   inv-nf-homo true true = _≈₁_.sym (_≈₁_.axiom order-S)
@@ -387,27 +375,27 @@ module Symplectic where
   [ cHS ]ₒ = H • S
 
 
-  hcme : ∀ c m -> ∃ \ w -> ∃ \ c' -> ((h **) (inj₁ c) (f m)) ≡ (w , inj₁ c')
+  hcme : ∀ c m → ∃ \ w → ∃ \ c' → ((h **) (inj₁ c) (f m)) ≡ (w , inj₁ c')
   hcme cH S-gen = ε , cHS , Eq.refl
   hcme cHS S-gen = ε , cH , Eq.refl
   
-  htme : ∀ m -> ((h **) (inj₂ tt) (f m)) ≡ ([ m ]ʷ , inj₂ tt)
+  htme : ∀ m → ((h **) (inj₂ tt) (f m)) ≡ ([ m ]ʷ , inj₂ tt)
   htme S-gen = Eq.refl
 
   infix 4 _~_
   _~_ = PW.Pointwise _≈₁_ (_≡_ {A = C ⊎ ⊤})
 
-  htme~ : ∀ (m : M) -> ([ m ]ʷ , I) ~ ((h **) I (f m))
+  htme~ : ∀ (m : M) → ([ m ]ʷ , I) ~ ((h **) I (f m))
   htme~ S-gen = refl , Eq.refl
 
   [_]ₓ = f *
 
-  hcme~ : ∀ (c : C) (m : M) -> let (w' , c' , p) = hcme c m in [ c ]ₒ • f m ≈₂ [ w' ]ₓ • [ c' ]ₒ 
+  hcme~ : ∀ (c : C) (m : M) → let (w' , c' , p) = hcme c m in [ c ]ₒ • f m ≈₂ [ w' ]ₓ • [ c' ]ₒ 
   hcme~ cH S-gen = _≈₂_.sym _≈₂_.left-unit
   hcme~ cHS S-gen = trans assoc (trans (_≈₂_.trans (_≈₂_.cong _≈₂_.refl (_≈₂_.axiom order-S))
                                          _≈₂_.right-unit) (sym left-unit))
   
-  h-wd-ax : ∀ (c : C ⊎ ⊤){u t : Word Gen} -> u ===₂ t -> ((h **) c u) ~ ((h **) c t)
+  h-wd-ax : ∀ (c : C ⊎ ⊤){u t : Word Gen} → u ===₂ t → ((h **) c u) ~ ((h **) c t)
   h-wd-ax •H {u} {t} order-S = left-unit , Eq.refl
   h-wd-ax •HS {u} {t} order-S = left-unit , Eq.refl
   h-wd-ax •H {u} {t} order-H = left-unit , Eq.refl
@@ -418,13 +406,13 @@ module Symplectic where
   h-wd-ax •ε {u} {t} order-H = left-unit , Eq.refl
   h-wd-ax •ε {u} {t} order-SH = by-assoc-and₁ (axiom order-S) Eq.refl Eq.refl , Eq.refl
   
-  f-wd-ax : ∀ {w v} -> w ===₁ v -> (f *) w ≈₂ (f *) v
+  f-wd-ax : ∀ {w v} → w ===₁ v → (f *) w ≈₂ (f *) v
   f-wd-ax {w} {v} order-S = axiom order-S
 
-  [_] : C ⊎ ⊤ -> Word Gen
+  [_] : C ⊎ ⊤ → Word Gen
   [_] = [_,_] [_]ₒ (λ v → ε)
 
-  h=ract :  ∀ c y -> let (m' , c') = h c y in
+  h=ract :  ∀ c y → let (m' , c') = h c y in
    ([ c ] • [ y ]ʷ) ≈₂ ([ m' ]ₓ • [ c' ])
   h=ract •H H-gen = trans (axiom order-H) (sym right-unit)
   h=ract •HS H-gen = lemma-HSH=SHS
@@ -506,7 +494,7 @@ module Semidirect where
 
   open import Presentation.Construct.Base
 
-  conj : Symplectic.Gen -> ℤ₂².Gen -> Word ℤ₂².Gen
+  conj : Symplectic.Gen → ℤ₂².Gen → Word ℤ₂².Gen
   conj Symplectic.H-gen ℤ₂².X-gen = ℤ₂².Z
   conj Symplectic.H-gen ℤ₂².Z-gen = ℤ₂².X
   conj Symplectic.S-gen ℤ₂².X-gen = ℤ₂².X • ℤ₂².Z
@@ -536,7 +524,7 @@ module Semidirect where
   open PB ℤ₂²._===_
   open ℤ₂²
 
-  hyph : ∀ {c d} n -> c ===₂ d -> (conj ʰ') c n ≈₁ (conj ʰ') d n
+  hyph : ∀ {c d} n → c ===₂ d → (conj ʰ') c n ≈₁ (conj ʰ') d n
   hyph {c} {d} [ X-gen ]ʷ Symplectic.order-S = trans (trans assoc (cong refl (axiom (right Cyclic.order)))) right-unit
   hyph {c} {d} [ Z-gen ]ʷ Symplectic.order-S = refl
   hyph {c} {d} [ X-gen ]ʷ Symplectic.order-H = refl
@@ -561,7 +549,7 @@ module Semidirect where
   hyph {c} {d} (n • n₁) s@Symplectic.order-H = cong (hyph n s) (hyph n₁ s)
   hyph {c} {d} (n • n₁) s@Symplectic.order-SH = cong (hyph n s) (hyph n₁ s)
 
-  hypn : ∀ c {w v} -> w ===₁ v -> (conj ⁿ') c w ≈₁ (conj ⁿ') c v
+  hypn : ∀ c {w v} → w ===₁ v → (conj ⁿ') c w ≈₁ (conj ⁿ') c v
   hypn Symplectic.H-gen {w} {v} (left Cyclic.order) = axiom (right Cyclic.order)
   hypn Symplectic.H-gen {w} {v} (right Cyclic.order) = axiom (left Cyclic.order)
   hypn Symplectic.H-gen {w} {v} (mid (comm tt tt)) = sym (axiom (mid (comm tt tt)))
@@ -612,11 +600,11 @@ module Iso where
   S' : Word Gen
   S' = Semidirect.S
 
-  f : Clifford.Gen -> Word Gen
+  f : Clifford.Gen → Word Gen
   f Clifford.H-gen = H
   f Clifford.S-gen = X • S'
 
-  g : Gen -> Word Clifford.Gen
+  g : Gen → Word Clifford.Gen
   g ((inj₁ (inj₁ tt))) = Clifford.X
   g ((inj₁ (inj₂ tt))) = Clifford.Z
   g ((inj₂ Symplectic.H-gen)) = Clifford.H
@@ -624,12 +612,12 @@ module Iso where
 
   open PP.NFProperty' ssdp-nfp'
   
-  f-well-defined : ∀ {w v} -> w ===₁ v -> (f *) w ≈₂ (f *) v
+  f-well-defined : ∀ {w v} → w ===₁ v → (f *) w ≈₂ (f *) v
   f-well-defined {w} {v} Clifford.order-S = nf-injective Eq.refl
   f-well-defined {w} {v} Clifford.order-H = nf-injective Eq.refl
   f-well-defined {w} {v} Clifford.order-SH = nf-injective Eq.refl
 
-  g-well-defined : ∀ {w v} -> w ===₂ v -> (g *) w ≈₁ (g *) v
+  g-well-defined : ∀ {w v} → w ===₂ v → (g *) w ≈₁ (g *) v
   g-well-defined {w} {v} (left (left Cyclic.order)) = Clifford.lemma-XX
   g-well-defined {w} {v} (left (right Cyclic.order)) = trans assoc (axiom Clifford.order-S)
   g-well-defined {w} {v} (left (mid (comm tt tt))) = Clifford.lemma-XZ
@@ -641,13 +629,13 @@ module Iso where
   g-well-defined {w} {v} (mid (comm (inj₂ tt) Symplectic.H-gen)) = sym (trans (trans (by-assoc₁ Eq.refl) (cong refl (axiom Clifford.order-H))) right-unit)
   g-well-defined {w} {v} (mid (comm (inj₂ tt) Symplectic.S-gen)) = sym (by-assoc-and₁ Clifford.lemma-ZXS Eq.refl Eq.refl)
 
-  f-left-inv-gen : ∀ x -> [ x ]ʷ ≈₂ (f *) (g x)
+  f-left-inv-gen : ∀ x → [ x ]ʷ ≈₂ (f *) (g x)
   f-left-inv-gen (inj₁ (inj₁ tt)) = nf-injective Eq.refl
   f-left-inv-gen (inj₁ (inj₂ tt)) = nf-injective Eq.refl
   f-left-inv-gen (inj₂ Symplectic.H-gen) = nf-injective Eq.refl
   f-left-inv-gen (inj₂ Symplectic.S-gen) = nf-injective Eq.refl
 
-  g-left-inv-gen : ∀ x -> [ x ]ʷ ≈₁ (g *) (f x)
+  g-left-inv-gen : ∀ x → [ x ]ʷ ≈₁ (g *) (f x)
   g-left-inv-gen Clifford.H-gen = refl
   g-left-inv-gen Clifford.S-gen = begin
     Clifford.S ≈⟨ sym left-unit ⟩
@@ -759,24 +747,24 @@ module Weyl where
     order-X : X ^ 2 === ε
     order-Z : Z ^ 2 === ε
     comm-ZX : X • Z === Z • X • ω ^ 4
-    comm : ∀ g -> ω • [ g ]ʷ === [ g ]ʷ • ω
+    comm : ∀ g → ω • [ g ]ʷ === [ g ]ʷ • ω
 
   open PB _===_ hiding (_===_)
   open PP _===_
   
-  lemma-comm1 : ∀ k g -> [ g ]ʷ • ω ^ k ≈ ω ^ k • [ g ]ʷ
+  lemma-comm1 : ∀ k g → [ g ]ʷ • ω ^ k ≈ ω ^ k • [ g ]ʷ
   lemma-comm1 zero g = _≈_.trans _≈_.right-unit (_≈_.sym _≈_.left-unit)
-  lemma-comm1 (suc zero) g = sym (axiom (comm g))
-  lemma-comm1 (suc (suc k)) g = begin
-    [ g ]ʷ • ω ^ suc (suc k) ≈⟨ sym assoc ⟩
-    ([ g ]ʷ • ω) • ω ^ suc k ≈⟨ cong (sym (axiom (comm g))) refl ⟩
-    (ω • [ g ]ʷ) • ω ^ suc k ≈⟨ assoc ⟩
-    ω • [ g ]ʷ • ω ^ suc k ≈⟨ cong refl (lemma-comm1 (suc k) g) ⟩
-    ω • ω ^ suc k • [ g ]ʷ ≈⟨ sym assoc ⟩
-    ω ^ suc (suc k) • [ g ]ʷ ∎
+  lemma-comm1 (₁₊ zero) g = sym (axiom (comm g))
+  lemma-comm1 (₂₊ k) g = begin
+    [ g ]ʷ • ω ^ ₂₊ k ≈⟨ sym assoc ⟩
+    ([ g ]ʷ • ω) • ω ^ ₁₊ k ≈⟨ cong (sym (axiom (comm g))) refl ⟩
+    (ω • [ g ]ʷ) • ω ^ ₁₊ k ≈⟨ assoc ⟩
+    ω • [ g ]ʷ • ω ^ ₁₊ k ≈⟨ cong refl (lemma-comm1 (₁₊ k) g) ⟩
+    ω • ω ^ ₁₊ k • [ g ]ʷ ≈⟨ sym assoc ⟩
+    ω ^ ₂₊ k • [ g ]ʷ ∎
       where open SR word-setoid
 
-  lemma-comm : ∀ k w -> w • ω ^ k ≈ ω ^ k • w
+  lemma-comm : ∀ k w → w • ω ^ k ≈ ω ^ k • w
   lemma-comm k [ x ]ʷ = lemma-comm1 k x
   lemma-comm k ε = trans left-unit (sym right-unit)
   lemma-comm k (w • w₁) = begin
@@ -837,29 +825,29 @@ module Weyl where
   _*₂_ = mul-ℤ-Mod n2
   _*₈_ = mul-ℤ-Mod n8
 
-  emb : ℤ-Mod n2 -> ℤ-Mod n8
+  emb : ℤ-Mod n2 → ℤ-Mod n8
   emb (inl (inr x)) = ₀
   emb (inr x) = ₄
 
   open import foundation-core.identity-types
   open import Data.Product.Relation.Binary.Pointwise.NonDependent using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
   
-  aux : ∀ {l} {A : Set l} {a b : A} -> a ＝ b -> a ≡ b
+  aux : ∀ {l} {A : Set l} {a b : A} → a ＝ b → a ≡ b
   aux {l} {A} {a} {b} refl = Eq.refl
 
-  emb-+-homo : ∀ a b -> emb (add-ℤ-Mod n2 a b) ≡ add-ℤ-Mod n8 (emb a) (emb b)
+  emb-+-homo : ∀ a b → emb (add-ℤ-Mod n2 a b) ≡ add-ℤ-Mod n8 (emb a) (emb b)
   emb-+-homo (inl (inr star)) (inl (inr star)) = Eq.refl
   emb-+-homo (inl (inr star)) (inr star) = Eq.refl
   emb-+-homo (inr star) (inl (inr star)) = Eq.refl
   emb-+-homo (inr star) (inr star) = Eq.refl
 
-  emb-distrʳ : ∀ a b c -> emb ((a +₂ b) *₂ c) ≡ emb (a *₂ c) +₈ emb (b *₂ c)
+  emb-distrʳ : ∀ a b c → emb ((a +₂ b) *₂ c) ≡ emb (a *₂ c) +₈ emb (b *₂ c)
   emb-distrʳ a b c rewrite aux (right-distributive-mul-add-ℤ-Mod n2 a b c) = emb-+-homo (a *₂ c) (b *₂ c)
 
-  emb-distrˡ : ∀ c a b -> emb (c *₂ (a +₂ b) ) ≡ emb (c *₂ a) +₈ emb (c *₂ b)
+  emb-distrˡ : ∀ c a b → emb (c *₂ (a +₂ b) ) ≡ emb (c *₂ a) +₈ emb (c *₂ b)
   emb-distrˡ c a b rewrite aux (left-distributive-mul-add-ℤ-Mod n2 c a b) = emb-+-homo (c *₂ a) (c *₂ b)
 
-  nf : Word Gen -> NF
+  nf : Word Gen → NF
   nf [ X-gen ]ʷ = ₀ , (₁' ∷ ₀' ∷ [])
   nf [ Z-gen ]ʷ = ₀ , (₀' ∷ ₁' ∷ [])
   nf [ ω-gen ]ʷ = ₁ , (₀' ∷ ₀' ∷ [])
@@ -954,10 +942,10 @@ module ℤ₂² where
   NF = Vec Bool 2
 
   infixr 6 _+₂_
-  _+₂_ : NF -> NF -> NF
+  _+₂_ : NF → NF → NF
   (a ∷ b ∷ []) +₂ (c ∷ d ∷ []) = (a xor c) ∷ (b xor d) ∷ []
   
-  nf : Word Gen -> NF
+  nf : Word Gen → NF
   nf [ X-gen ]ʷ = ¹ ∷ ⁰ ∷ []
   nf [ Z-gen ]ʷ = ⁰ ∷ ¹ ∷ []
   nf ε = ⁰ ∷ ⁰ ∷ []
@@ -978,11 +966,11 @@ module ℤ₂² where
   nf-cong {w} {v} (PB.axiom order-Z) = Eq.refl
   nf-cong {w} {v} (PB.axiom comm-ZX) = Eq.refl
 
-  to-ℕ : Bool -> ℕ
+  to-ℕ : Bool → ℕ
   to-ℕ true = 1
   to-ℕ false = 0
 
-  aux-comm : ∀ w v -> w • v ≈ v • w
+  aux-comm : ∀ w v → w • v ≈ v • w
   aux-comm [ X-gen ]ʷ [ X-gen ]ʷ = refl
   aux-comm [ X-gen ]ʷ [ Z-gen ]ʷ = axiom comm-ZX
   aux-comm [ X-gen ]ʷ ε = trans right-unit (sym left-unit)
@@ -1007,7 +995,7 @@ module ℤ₂² where
     v • w • w₁ ∎
     where open SR word-setoid
 
-  aux-ww : ∀ w -> w • w ≈ ε
+  aux-ww : ∀ w → w • w ≈ ε
   aux-ww [ X-gen ]ʷ = axiom order-X
   aux-ww [ Z-gen ]ʷ = axiom order-Z
   aux-ww ε = left-unit
@@ -1022,15 +1010,15 @@ module ℤ₂² where
       (w • w) • w₁ • w₁ ≈⟨ cong (aux-ww w) (aux-ww w₁) ⟩
       ε • ε ∎
   
-  aux : ∀ b c w -> w ^ to-ℕ (b xor c) ≈ w ^ to-ℕ b • w ^ to-ℕ c
+  aux : ∀ b c w → w ^ to-ℕ (b xor c) ≈ w ^ to-ℕ b • w ^ to-ℕ c
   aux ⁰ c w = sym left-unit
   aux ¹ ⁰ w = sym right-unit
   aux ¹ ¹ w = sym (aux-ww (w ^ to-ℕ ¹))
   
-  inv-nf : NF -> Word Gen
+  inv-nf : NF → Word Gen
   inv-nf (x ∷ x₁ ∷ []) = X ^ to-ℕ x • Z ^ to-ℕ x₁
 
-  inv-nf-homo : ∀ {w v} -> inv-nf (w +₂ v) ≈ inv-nf w • inv-nf v
+  inv-nf-homo : ∀ {w v} → inv-nf (w +₂ v) ≈ inv-nf w • inv-nf v
   inv-nf-homo {a ∷ b ∷ []} {c ∷ d ∷ []} = begin
     X ^ to-ℕ (a xor c) • Z ^ to-ℕ (b xor d) ≈⟨ cong (aux a c X) (aux b d Z) ⟩
     (X ^ to-ℕ a • X ^ to-ℕ c) • (Z ^ to-ℕ b • Z ^ to-ℕ d) ≈⟨ trans assoc (sym (cong refl assoc)) ⟩
@@ -1054,7 +1042,7 @@ module Semidirect where
 
   open import Presentation.Construct.Base
 
-  conj : Symplectic.Gen -> ℤ₂².Gen -> Word ℤ₂².Gen
+  conj : Symplectic.Gen → ℤ₂².Gen → Word ℤ₂².Gen
   conj Symplectic.H-gen ℤ₂².X-gen = ℤ₂².Z
   conj Symplectic.H-gen ℤ₂².Z-gen = ℤ₂².X
   conj Symplectic.S-gen ℤ₂².X-gen = ℤ₂².X • ℤ₂².Z
@@ -1074,7 +1062,7 @@ module Semidirect where
   open PB ℤ₂²._===_
   open ℤ₂²
 
-  hyph : ∀ {c d} n -> c ===₂ d -> (conj ʰ') c n ≈₁ (conj ʰ') d n
+  hyph : ∀ {c d} n → c ===₂ d → (conj ʰ') c n ≈₁ (conj ʰ') d n
   hyph {c} {d} [ X-gen ]ʷ Symplectic.order-S = trans (trans assoc (cong refl (axiom order-Z))) right-unit
   hyph {c} {d} [ Z-gen ]ʷ Symplectic.order-S = refl
   hyph {c} {d} [ X-gen ]ʷ Symplectic.order-H = refl
@@ -1099,7 +1087,7 @@ module Semidirect where
   hyph {c} {d} (n • n₁) s@Symplectic.order-H = cong (hyph n s) (hyph n₁ s)
   hyph {c} {d} (n • n₁) s@Symplectic.order-SH = cong (hyph n s) (hyph n₁ s)
 
-  hypn : ∀ c {w v} -> w ===₁ v -> (conj ⁿ') c w ≈₁ (conj ⁿ') c v
+  hypn : ∀ c {w v} → w ===₁ v → (conj ⁿ') c w ≈₁ (conj ⁿ') c v
   hypn Symplectic.H-gen {w} {v} order-X = axiom order-Z
   hypn Symplectic.H-gen {w} {v} order-Z = axiom order-X
   hypn Symplectic.H-gen {w} {v} comm-ZX = sym (axiom comm-ZX)
@@ -1117,7 +1105,7 @@ module Semidirect' where
 
   open import Presentation.Construct.Base
 
-  conj : Symplectic.Gen -> Weyl.Gen -> Word Weyl.Gen
+  conj : Symplectic.Gen → Weyl.Gen → Word Weyl.Gen
   conj Symplectic.H-gen Weyl.X-gen = Weyl.Z
   conj Symplectic.H-gen Weyl.Z-gen = Weyl.X
   conj Symplectic.S-gen Weyl.X-gen = Weyl.ω ^ 2 • Weyl.Z • Weyl.X
@@ -1138,7 +1126,7 @@ module Semidirect' where
   open PB Weyl._===_
   open Weyl
 
-  hyph : ∀ {c d} n -> c ===₂ d -> (conj ʰ') c n ≈₁ (conj ʰ') d n
+  hyph : ∀ {c d} n → c ===₂ d → (conj ʰ') c n ≈₁ (conj ʰ') d n
   hyph {c} {d} [ Weyl.X-gen ]ʷ Symplectic.order-S = begin
     (conj ʰ') (Symplectic.S ^ 2) [ X-gen ]ʷ ≈⟨ by-assoc Eq.refl ⟩
     ω ^ 6 • (Z • ω ^ 2) • Z • X ≈⟨ cong refl (cong (lemma-comm 2 Z) refl) ⟩
@@ -1194,7 +1182,7 @@ module Semidirect' where
   hyph {c} {d} ε Symplectic.order-SH = _≈₁_.refl
   hyph {c} {d} (n • n₁) Symplectic.order-SH = _≈₁_.cong (hyph n Symplectic.order-SH) (hyph n₁ Symplectic.order-SH)
 
-  hypn : ∀ c {w v} -> w ===₁ v -> (conj ⁿ') c w ≈₁ (conj ⁿ') c v
+  hypn : ∀ c {w v} → w ===₁ v → (conj ⁿ') c w ≈₁ (conj ⁿ') c v
   hypn Symplectic.H-gen {w} {v} order-ω = by-assoc-and (axiom order-ω) Eq.refl Eq.refl
   hypn Symplectic.H-gen {w} {v} order-X = axiom order-Z
   hypn Symplectic.H-gen {w} {v} order-Z = axiom order-X
@@ -1253,7 +1241,7 @@ module Semidirect2 where
 
   open import Presentation.Construct.Base
 
-  conj : Symplectic.Gen -> Weyl.Gen -> Word Weyl.Gen
+  conj : Symplectic.Gen → Weyl.Gen → Word Weyl.Gen
   conj Symplectic.H-gen Weyl.X-gen = Weyl.Z
   conj Symplectic.H-gen Weyl.Z-gen = Weyl.Z
   conj Symplectic.S-gen Weyl.X-gen = Weyl.X • Weyl.Z • Weyl.ω ^ 2
@@ -1273,19 +1261,19 @@ module Semidirect2 where
   open import Algebra.Morphism.Structures using (module MonoidMorphisms)
   open import Presentation.Morphism
 
-  f : Clifford.Gen -> Word (Weyl.Gen ⊎ Symplectic.Gen)
+  f : Clifford.Gen → Word (Weyl.Gen ⊎ Symplectic.Gen)
   f Clifford.H-gen = [ Symplectic.H ]ᵣ
   f Clifford.S-gen = [ Weyl.ω ^ 5 • Weyl.X ]ₗ • [ Symplectic.S ]ᵣ
   f Clifford.ω-gen = [ Weyl.ω ]ₗ
 
-  g : Weyl.Gen ⊎ Symplectic.Gen -> Word Clifford.Gen
+  g : Weyl.Gen ⊎ Symplectic.Gen → Word Clifford.Gen
   g (_⊎_.inj₁ Weyl.X-gen) = Clifford.X
   g (_⊎_.inj₁ Weyl.Z-gen) = Clifford.Z
   g (_⊎_.inj₁ Weyl.ω-gen) = Clifford.ω
   g (_⊎_.inj₂ Symplectic.H-gen) = Clifford.H
   g (_⊎_.inj₂ Symplectic.S-gen) = Clifford.ω ^ 3 • Clifford.X • Clifford.S
 
-  f-well-defined : ∀ {w v} -> w ===₁ v -> (f *) w ≈₂ (f *) v
+  f-well-defined : ∀ {w v} → w ===₁ v → (f *) w ≈₂ (f *) v
   f-well-defined {w} {v} Clifford.order-ω = _≈₂_.axiom (left Weyl.order-ω)
   f-well-defined {w} {v} Clifford.order-S = begin
     (f *) (Clifford.S • Clifford.S • Clifford.S • Clifford.S) ≈⟨ {!!} ⟩
@@ -1297,11 +1285,11 @@ module Semidirect2 where
   f-well-defined {w} {v} (Clifford.comm {Clifford.S-gen}) = {!!}
   f-well-defined {w} {v} (Clifford.comm {Clifford.ω-gen}) = _≈₂_.refl
 
-  g-well-defined : ∀ {w v} -> w ===₂ v -> (g *) w ≈₁ (g *) v
+  g-well-defined : ∀ {w v} → w ===₂ v → (g *) w ≈₁ (g *) v
 
-  f-left-inv-gen : ∀ x -> [ x ]ʷ ≈₂ (f *) (g x)
+  f-left-inv-gen : ∀ x → [ x ]ʷ ≈₂ (f *) (g x)
 
-  g-left-inv-gen : ∀ x -> [ x ]ʷ ≈₁ (g *) (f x)
+  g-left-inv-gen : ∀ x → [ x ]ʷ ≈₁ (g *) (f x)
 
   open MonoidMorphisms 
 
@@ -1357,7 +1345,7 @@ module M where
     order-S : S ^ 4 === ε
     order-X : X ^ 2 === ε
     order-SX : (S • X) ^ 2 === ω ^ 2
-    comm : ∀ {gen} -> ω • [ gen ]ʷ === [ gen ]ʷ • ω
+    comm : ∀ {gen} → ω • [ gen ]ʷ === [ gen ]ʷ • ω
 
   data C : Set where
     X-cr : C
@@ -1371,11 +1359,11 @@ module M where
 
   open _≈_
 
-  f : M0 -> Word M
+  f : M0 → Word M
   f (inj₁ tt) = ω
   f (inj₂ tt) = S
 
-  h : C -> M -> Word M0 × C
+  h : C → M → Word M0 × C
   h X-cr X-gen = ε , ε-cr
   h X-cr S-gen = (M0.ω ^ 2 • M0.S ^ 3) , X-cr
   h X-cr ω-gen = M0.ω , X-cr
@@ -1386,11 +1374,11 @@ module M where
   infix 4 _~_
   _~_ = Pointwise _≈₀_ (_≡_ {A = C})
 
-  h=⁻¹f-gen : ∀ x -> ([ x ]ʷ , ε-cr) ~ ((h **) ε-cr (f x)) 
+  h=⁻¹f-gen : ∀ x → ([ x ]ʷ , ε-cr) ~ ((h **) ε-cr (f x)) 
   h=⁻¹f-gen (inj₁ tt) = _≈₀_.refl , Eq.refl
   h=⁻¹f-gen (inj₂ tt) = _≈₀_.refl , Eq.refl
 
-  h-wd-ax : ∀ c {u t} -> u === t -> (h **) c u ~ (h **) c t
+  h-wd-ax : ∀ c {u t} → u === t → (h **) c u ~ (h **) c t
   h-wd-ax X-cr {u} {t} order-ω = (by-equal-nf Eq.refl) , Eq.refl
   h-wd-ax X-cr {u} {t} order-S = (by-equal-nf Eq.refl) , Eq.refl
   h-wd-ax X-cr {u} {t} order-X = (by-equal-nf Eq.refl) , Eq.refl
@@ -1408,40 +1396,40 @@ module M where
 
   open PP _===_
 
-  f-wd-ax : ∀ {w v} -> w ===₀ v -> (f *) w ≈ (f *) v
+  f-wd-ax : ∀ {w v} → w ===₀ v → (f *) w ≈ (f *) v
   f-wd-ax {w} {v} (left Cyclic.order) = _≈_.trans (by-assoc Eq.refl) (_≈_.axiom order-ω) 
   f-wd-ax {w} {v} (right Cyclic.order) = _≈_.trans _≈_.assoc (_≈_.trans _≈_.assoc (_≈_.axiom order-S))
   f-wd-ax {w} {v} (mid (comm tt tt)) = _≈_.axiom comm
 
-  [_] : C -> Word M
+  [_] : C → Word M
   [ X-cr ] = X
   [ ε-cr ] = ε
 
-  lemma-ω : ∀ w -> w • ω ≈ ω • w
+  lemma-ω : ∀ w → w • ω ≈ ω • w
   lemma-ω [ x ]ʷ = sym (axiom comm)
   lemma-ω ε = trans left-unit (sym right-unit)
   lemma-ω (w • v) = trans assoc (trans (cong refl (lemma-ω v)) (trans (sym assoc) (trans (cong (lemma-ω w) refl) assoc)))
 
-  lemma-ω^n : ∀ n w -> w • ω ^ n ≈ ω ^ n • w
+  lemma-ω^n : ∀ n w → w • ω ^ n ≈ ω ^ n • w
   lemma-ω^n zero w = trans right-unit (sym left-unit)
-  lemma-ω^n (suc n@zero) w = begin
-    w • ω ^ suc n ≈⟨ sym right-unit ⟩
+  lemma-ω^n (₁₊ n@zero) w = begin
+    w • ω ^ ₁₊ n ≈⟨ sym right-unit ⟩
     (w • ω) • ω ^ n ≈⟨ cong (lemma-ω w) refl ⟩
     (ω • w) • ω ^ n ≈⟨ assoc ⟩
     ω • w • ω ^ n ≈⟨ cong refl (lemma-ω^n n w) ⟩
     ω • ω ^ n • w ≈⟨ cong refl left-unit ⟩
-    ω ^ suc n • w ∎
+    ω ^ ₁₊ n • w ∎
     where
     open SR word-setoid
 
-  lemma-ω^n (suc n@(suc n')) w = begin
-    w • ω ^ suc n ≈⟨ sym assoc ⟩
+  lemma-ω^n (₁₊ n@(₁₊ n')) w = begin
+    w • ω ^ ₁₊ n ≈⟨ sym assoc ⟩
     (w • ω) • ω ^ n ≈⟨ cong (lemma-ω w) refl ⟩
     (ω • w) • ω ^ n ≈⟨ assoc ⟩
     ω • w • ω ^ n ≈⟨ cong refl (lemma-ω^n n w) ⟩
     ω • ω ^ n • w ≈⟨ sym assoc ⟩
     (ω • ω ^ n) • w ≈⟨ refl ⟩
-    ω ^ suc n • w ∎
+    ω ^ ₁₊ n • w ∎
     where
     open SR word-setoid
 
@@ -1458,7 +1446,7 @@ module M where
     where
     open SR word-setoid
 
-  h-hyp : ∀ c b -> [ c ] • [ b ]ʷ ≈ (f *) (h c b .proj₁) • [ h c b .proj₂ ]
+  h-hyp : ∀ c b → [ c ] • [ b ]ʷ ≈ (f *) (h c b .proj₁) • [ h c b .proj₂ ]
   h-hyp X-cr X-gen = _≈_.trans (axiom order-X) (_≈_.sym _≈_.left-unit)
   h-hyp X-cr S-gen = lemma-XS
   h-hyp X-cr ω-gen = sym (axiom comm)
@@ -1496,7 +1484,7 @@ module MA where
     order-H : H ^ 2 === ε
     order-SH : (S • H) ^ 3 === ω
     def-X : X === H • S • S • H
-    comm : ∀ {gen} -> ω • [ gen ]ʷ === [ gen ]ʷ • ω
+    comm : ∀ {gen} → ω • [ gen ]ʷ === [ gen ]ʷ • ω
 
 
   open PB (M._===_) renaming (Alphabet to M ; _===_ to _===₀_ ; _≈_ to _≈₀_) using ()
@@ -1505,7 +1493,7 @@ module MA where
 
   open _≈_
 
-  f : M -> Word MA
+  f : M → Word MA
   f M.X-gen = X
   f M.S-gen = S
   f M.ω-gen = ω
@@ -1519,7 +1507,7 @@ module MA where
   I : CT
   I = inj₂ tt
 
-  h : CT -> MA -> Word M × CT
+  h : CT → MA → Word M × CT
   h (inj₁ HS-cr) H-gen = M.ω • M.S ^ 3 • M.X , (inj₁ HS-cr)
   h (inj₁ HS-cr) S-gen = M.X , (inj₁ H-cr)
   h (inj₁ HS-cr) ω-gen = M.ω , (inj₁ HS-cr)
@@ -1536,12 +1524,12 @@ module MA where
   infix 4 _~_
   _~_ = Pointwise _≈₀_ (_≡_ {A = CT})
 
-  h=⁻¹f-gen : ∀ x -> ([ x ]ʷ , I) ~ ((h **) I (f x)) 
+  h=⁻¹f-gen : ∀ x → ([ x ]ʷ , I) ~ ((h **) I (f x)) 
   h=⁻¹f-gen M.X-gen = (by-equal-nf Eq.refl) , Eq.refl
   h=⁻¹f-gen M.S-gen = (by-equal-nf Eq.refl) , Eq.refl
   h=⁻¹f-gen M.ω-gen = (by-equal-nf Eq.refl) , Eq.refl
 
-  h-wd-ax : ∀ c {u t} -> u === t -> (h **) c u ~ (h **) c t
+  h-wd-ax : ∀ c {u t} → u === t → (h **) c u ~ (h **) c t
   h-wd-ax (inj₁ HS-cr) {u} {t} order-ω = (by-equal-nf Eq.refl) , Eq.refl
   h-wd-ax (inj₁ HS-cr) {u} {t} order-S = (by-equal-nf Eq.refl) , Eq.refl
   h-wd-ax (inj₁ HS-cr) {u} {t} order-H = (by-equal-nf Eq.refl) , Eq.refl
@@ -1572,31 +1560,31 @@ module MA where
   
   open PP _===_
 
-  lemma-ω : ∀ w -> w • ω ≈ ω • w
+  lemma-ω : ∀ w → w • ω ≈ ω • w
   lemma-ω [ x ]ʷ = sym (axiom comm)
   lemma-ω ε = trans left-unit (sym right-unit)
   lemma-ω (w • v) = trans assoc (trans (cong refl (lemma-ω v)) (trans (sym assoc) (trans (cong (lemma-ω w) refl) assoc)))
 
-  lemma-ω^n : ∀ n w -> w • ω ^ n ≈ ω ^ n • w
+  lemma-ω^n : ∀ n w → w • ω ^ n ≈ ω ^ n • w
   lemma-ω^n zero w = trans right-unit (sym left-unit)
-  lemma-ω^n (suc n@zero) w = begin
-    w • ω ^ suc n ≈⟨ sym right-unit ⟩
+  lemma-ω^n (₁₊ n@zero) w = begin
+    w • ω ^ ₁₊ n ≈⟨ sym right-unit ⟩
     (w • ω) • ω ^ n ≈⟨ cong (lemma-ω w) refl ⟩
     (ω • w) • ω ^ n ≈⟨ assoc ⟩
     ω • w • ω ^ n ≈⟨ cong refl (lemma-ω^n n w) ⟩
     ω • ω ^ n • w ≈⟨ cong refl left-unit ⟩
-    ω ^ suc n • w ∎
+    ω ^ ₁₊ n • w ∎
     where
     open SR word-setoid
 
-  lemma-ω^n (suc n@(suc n')) w = begin
-    w • ω ^ suc n ≈⟨ sym assoc ⟩
+  lemma-ω^n (₁₊ n@(₁₊ n')) w = begin
+    w • ω ^ ₁₊ n ≈⟨ sym assoc ⟩
     (w • ω) • ω ^ n ≈⟨ cong (lemma-ω w) refl ⟩
     (ω • w) • ω ^ n ≈⟨ assoc ⟩
     ω • w • ω ^ n ≈⟨ cong refl (lemma-ω^n n w) ⟩
     ω • ω ^ n • w ≈⟨ sym assoc ⟩
     (ω • ω ^ n) • w ≈⟨ refl ⟩
-    ω ^ suc n • w ∎
+    ω ^ ₁₊ n • w ∎
     where
     open SR word-setoid
 
@@ -1629,7 +1617,7 @@ module MA where
     where
     open SR word-setoid
 
-  f-wd-ax : ∀ {w v} -> w ===₀ v -> (f *) w ≈ (f *) v
+  f-wd-ax : ∀ {w v} → w ===₀ v → (f *) w ≈ (f *) v
   f-wd-ax {w} {v} M.order-ω = axiom order-ω
   f-wd-ax {w} {v} M.order-S = axiom order-S
   f-wd-ax {w} {v} M.order-X = lemma-X^2
@@ -1638,11 +1626,11 @@ module MA where
   f-wd-ax {w} {v} (M.comm {M.S-gen}) = axiom comm
   f-wd-ax {w} {v} (M.comm {M.ω-gen}) = refl
 
-  [_]ₒ : C -> Word MA
+  [_]ₒ : C → Word MA
   [ HS-cr ]ₒ = H • S
   [ H-cr ]ₒ = H
 
-  [_] : C ⊎ ⊤ -> Word MA
+  [_] : C ⊎ ⊤ → Word MA
   [_] = [_,_] [_]ₒ (λ v → ε)
 
   lemma-HS : H • S ≈ ω • S ^ 3 • H • S ^ 3 • H
@@ -1734,7 +1722,7 @@ module MA where
     where
     open SR word-setoid
 
-  h-hyp : ∀ c b -> [ c ] • [ b ]ʷ ≈ (f *) (h c b .proj₁) • [ h c b .proj₂ ]
+  h-hyp : ∀ c b → [ c ] • [ b ]ʷ ≈ (f *) (h c b .proj₁) • [ h c b .proj₂ ]
   h-hyp (inj₁ HS-cr) H-gen = lemma-HSH'
   h-hyp (inj₁ HS-cr) S-gen = lemma-HSS
   h-hyp (inj₁ HS-cr) ω-gen = lemma-ω [ inj₁ HS-cr ]
@@ -1754,7 +1742,7 @@ module MA where
   
   open PP.NFProperty (nfp (M.nfp M0.nfp)) renaming (by-equal-nf to by-nf) using ()
 
-  hcme : ∀ c m -> ∃ \ w -> ∃ \ c' -> ((h **) (inj₁ c) (f m)) ≡ (w , inj₁ c')
+  hcme : ∀ c m → ∃ \ w → ∃ \ c' → ((h **) (inj₁ c) (f m)) ≡ (w , inj₁ c')
   hcme HS-cr M.X-gen = M.ω ^ 2 • M.S ^ 2 • M.X , HS-cr , Eq.refl
   hcme HS-cr M.S-gen = M.X , H-cr , Eq.refl
   hcme HS-cr M.ω-gen = M.ω , HS-cr , Eq.refl
@@ -1762,19 +1750,19 @@ module MA where
   hcme H-cr M.S-gen = ε , HS-cr , Eq.refl
   hcme H-cr M.ω-gen = M.ω , H-cr , Eq.refl
   
-  htme : ∀ m -> ((h **) (inj₂ tt) (f m)) ≡ ([ m ]ʷ , inj₂ tt)
+  htme : ∀ m → ((h **) (inj₂ tt) (f m)) ≡ ([ m ]ʷ , inj₂ tt)
   htme M.X-gen = Eq.refl
   htme M.S-gen = Eq.refl
   htme M.ω-gen = Eq.refl
 
-  htme~ : ∀ (m : M) -> ([ m ]ʷ , I) ~ ((h **) I (f m))
+  htme~ : ∀ (m : M) → ([ m ]ʷ , I) ~ ((h **) I (f m))
   htme~ M.X-gen = _≈₀_.refl , Eq.refl
   htme~ M.S-gen = _≈₀_.refl , Eq.refl
   htme~ M.ω-gen = _≈₀_.refl , Eq.refl
 
   [_]ₓ = f *
 
-  hcme~ : ∀ (c : C) (m : M) -> let (w' , c' , p) = hcme c m in ([ c ]ₒ • f m) ≈ ([ w' ]ₓ • [ c' ]ₒ)
+  hcme~ : ∀ (c : C) (m : M) → let (w' , c' , p) = hcme c m in ([ c ]ₒ • f m) ≈ ([ w' ]ₓ • [ c' ]ₒ)
   hcme~ HS-cr M.X-gen = by-nf Eq.refl
   hcme~ HS-cr M.S-gen = by-nf Eq.refl
   hcme~ HS-cr M.ω-gen = by-nf Eq.refl

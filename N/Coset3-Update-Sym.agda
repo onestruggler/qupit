@@ -33,7 +33,7 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _*)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA

@@ -1,44 +1,28 @@
-open import Level using (0ℓ)
+------------------------------------------------------------------------
+-- Presentations of groups
+--
+-- Two-qubit Clifford group presentation, built on top of the
+-- single-qubit Clifford group (Clifford1).
+------------------------------------------------------------------------
 
-open import Relation.Binary using (Rel)
-open import Relation.Binary.Definitions using (DecidableEquality)
-open import Relation.Binary.Morphism.Definitions using (Homomorphic₂)
-open import Relation.Binary.PropositionalEquality using (_≡_ ; inspect ; setoid ; module ≡-Reasoning) renaming ([_] to [_]')
-import Relation.Binary.Reasoning.Setoid as SR
+{-# OPTIONS --safe #-}
+
+open import Relation.Binary.PropositionalEquality using (_≡_)
 import Relation.Binary.PropositionalEquality as Eq
-open import Relation.Nullary.Decidable using (yes ; no)
 
-
-open import Function using (_∘_ ; id)
-open import Function.Definitions using (Injective)
-
-open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; map₁ ; ∃)
-open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
-open import Data.Nat using (ℕ ; zero ; suc)
-import Data.Nat as Nat
-open import Data.Fin
-open import Data.Fin.Induction
-open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_])
-open import Data.Unit using (⊤ ; tt)
-open import Data.Empty using (⊥ ; ⊥-elim)
+open import Data.Sum using (inj₁ ; inj₂)
+open import Data.Unit using (tt)
 
 open import Word.Base hiding (wfoldl)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
-open PP using (NFProperty ; NFProperty')
-import Presentation.CosetNF as CA
-import Presentation.Reidemeister-Schreier as RS
-module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
+open PP using (NFProperty')
 
 open import Presentation.Construct.Base
 import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
 import Presentation.Construct.Properties.DirectProduct as DP
 import Presentation.Groups.Cyclic as Cyclic
-
-
-open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
-import Data.Nat.Properties as NP
 import Presentation.Groups.Clifford1 as C1
 
 module Presentation.Groups.Clifford2 where
@@ -100,7 +84,7 @@ module CliffordWithScalar where
     order-S1H1 : (S1 • H1) ^ 3 === W
     order-CZ : CZ ^ 2 === ε
     
-    comm-W : ∀ {gen} -> W • [ gen ]ʷ === [ gen ]ʷ • W
+    comm-W : ∀ {gen} → W • [ gen ]ʷ === [ gen ]ʷ • W
     comm-H0H1 : H0 • H1 === H1 • H0
     comm-H0S1 : H0 • S1 === S1 • H0
     comm-S0H1 : S0 • H1 === H1 • S0
@@ -155,7 +139,7 @@ module Semidirect where
   open import Presentation.Construct.Base
   open ℤ₂⁴ hiding (Gen ; _===_)
   
-  conj : Symplectic.Gen -> ℤ₂⁴.Gen -> Word ℤ₂⁴.Gen
+  conj : Symplectic.Gen → ℤ₂⁴.Gen → Word ℤ₂⁴.Gen
   conj Symplectic.H0-gen X0-gen = Z0
   conj Symplectic.H0-gen X1-gen = X1
   conj Symplectic.H0-gen Z0-gen = X0
@@ -238,7 +222,7 @@ module Semidirect where
   open NFProperty' nfp'-ℤ₂⁴
 
 
-  hyph : ∀ {c d} n -> c ===₂ d -> (conj ʰ') c n ≈₁ (conj ʰ') d n
+  hyph : ∀ {c d} n → c ===₂ d → (conj ʰ') c n ≈₁ (conj ʰ') d n
   hyph {c} {d} [ X0-gen ]ʷ Symplectic.order-S0 = by-equal-nf auto
   hyph {c} {d} [ Z0-gen ]ʷ Symplectic.order-S0 = by-equal-nf auto
   hyph {c} {d} [ X1-gen ]ʷ Symplectic.order-S0 = by-equal-nf auto
@@ -331,7 +315,7 @@ module Semidirect where
   hyph {c} {d} (n • n₁) eq@Symplectic.rel-CZ-H1-CZ = cong (hyph n eq) (hyph n₁ eq)
 
 
-  hypn : ∀ c {w v} -> w ===₁ v -> (conj ⁿ') c w ≈₁ (conj ⁿ') c v
+  hypn : ∀ c {w v} → w ===₁ v → (conj ⁿ') c w ≈₁ (conj ⁿ') c v
   hypn Symplectic.H0-gen {w} {v} (left (left Cyclic.order)) = by-equal-nf auto
   hypn Symplectic.H0-gen {w} {v} (left (right Cyclic.order)) = by-equal-nf auto
   hypn Symplectic.H0-gen {w} {v} (left (mid (comm tt tt))) = by-equal-nf auto
@@ -409,7 +393,7 @@ module Iso where
   open import Presentation.Morphism
 
 
-  f : Clifford.Gen -> Word Gen
+  f : Clifford.Gen → Word Gen
   f Clifford.H0-gen = Semidirect.H0
   f Clifford.S0-gen = Semidirect.X0' • Semidirect.S0
   f Clifford.H1-gen = Semidirect.H1
@@ -419,7 +403,7 @@ module Iso where
   open Semidirect using (H0-gen ; H1-gen ; S0-gen ; S1-gen ; CZ-gen)
     renaming (X0'-gen to X0-gen ; X1'-gen to X1-gen ; Z0'-gen to Z0-gen ; Z1'-gen to Z1-gen)
 
-  g : Gen -> Word Clifford.Gen
+  g : Gen → Word Clifford.Gen
   g X0-gen = Clifford.X0
   g Z0-gen = Clifford.Z0
   g H0-gen = Clifford.H0
@@ -432,7 +416,7 @@ module Iso where
 
   open PP.NFProperty' sdp-nfp'
 
-  f-well-defined : ∀ {w v} -> w ===₁ v -> (f *) w ≈₂ (f *) v
+  f-well-defined : ∀ {w v} → w ===₁ v → (f *) w ≈₂ (f *) v
   f-well-defined {w} {v} Clifford.order-S0 = by-equal-nf Eq.refl
   f-well-defined {w} {v} Clifford.order-H0 = by-equal-nf Eq.refl
   f-well-defined {w} {v} Clifford.order-S0H0 = by-equal-nf Eq.refl
@@ -453,7 +437,7 @@ module Iso where
 
   open import Presentation.Groups.Symplectic2-Lemmas
 
-  g-well-defined : ∀ {w v} -> w ===₂ v -> (g *) w ≈₁ (g *) v
+  g-well-defined : ∀ {w v} → w ===₂ v → (g *) w ≈₁ (g *) v
   g-well-defined {w} {v} (left (left (left Cyclic.order))) = rewrite-clifford 20 auto
   g-well-defined {w} {v} (left (left (right Cyclic.order))) = rewrite-clifford 20 auto
   g-well-defined {w} {v} (left (left (mid (comm tt tt)))) = rewrite-clifford 20 auto
@@ -502,13 +486,13 @@ module Iso where
 
   
 {-
-  f-left-inv-gen : ∀ x -> [ x ]ʷ ≈₂ (f *) (g x)
+  f-left-inv-gen : ∀ x → [ x ]ʷ ≈₂ (f *) (g x)
   f-left-inv-gen (inj₁ (inj₁ tt)) = by-equal-nf Eq.refl
   f-left-inv-gen (inj₁ (inj₂ tt)) = by-equal-nf Eq.refl
   f-left-inv-gen (inj₂ Symplectic.H0-gen) = by-equal-nf Eq.refl
   f-left-inv-gen (inj₂ Symplectic.S0-gen) = by-equal-nf Eq.refl
 
-  g-left-inv-gen : ∀ x -> [ x ]ʷ ≈₁ (g *) (f x)
+  g-left-inv-gen : ∀ x → [ x ]ʷ ≈₁ (g *) (f x)
   g-left-inv-gen Clifford.H0-gen = refl
   g-left-inv-gen Clifford.S0-gen = begin
     Clifford.S0 ≈⟨ sym left-unit ⟩

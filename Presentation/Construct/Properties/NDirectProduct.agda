@@ -1,3 +1,11 @@
+------------------------------------------------------------------------
+-- Presentations of groups
+--
+-- Normal-form properties for N-fold direct products of group presentations.
+------------------------------------------------------------------------
+
+{-# OPTIONS --safe #-}
+
 open import Relation.Binary using (Rel ; REL)
 
 open import Level using (0ℓ)
@@ -13,7 +21,7 @@ import Relation.Binary.Reasoning.Setoid as SR
 
 open import Word.Base
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open import Presentation.Properties
 
@@ -21,6 +29,7 @@ open import Presentation.Reidemeister-Schreier
 open import Presentation.Construct.Base
 import Presentation.Construct.Properties.DirectProduct as DP
 import Presentation.Groups.Trivial as Trivial
+open import Notations
 
 module Presentation.Construct.Properties.NDirectProduct
   {A : Set}
@@ -30,12 +39,12 @@ module Presentation.Construct.Properties.NDirectProduct
 open PB Γ renaming (_===_ to _===₁_ ; _≈_ to _≈₁_) using ()
 open PP Γ renaming (•-ε-monoid to m₁ ; word-setoid to word-setoid₁) using ()
 
-nfp : (n : ℕ) -> NFProperty Γ -> NFProperty (Γ ⊕^ n)
+nfp : (n : ℕ) → NFProperty Γ → NFProperty (Γ ⊕^ n)
 nfp zero nfpg = Trivial.P1.nfp
-nfp (suc zero) nfpg = nfpg
-nfp (suc (suc n)) nfpg = DP.NFP.nfp Γ (Γ ⊕^ suc n) nfpg (nfp (suc n) nfpg)
+nfp (₁₊ zero) nfpg = nfpg
+nfp (₂₊ n) nfpg = DP.NFP.nfp Γ (Γ ⊕^ ₁₊ n) nfpg (nfp (₁₊ n) nfpg)
 
-nfp' : (n : ℕ) -> NFProperty' Γ -> NFProperty' (Γ ⊕^ n)
+nfp' : (n : ℕ) → NFProperty' Γ → NFProperty' (Γ ⊕^ n)
 nfp' zero nfp'g = Trivial.P1.nfp'
-nfp' (suc zero) nfp'g = nfp'g
-nfp' (suc (suc n)) nfp'g = DP.NFP'.nfp' Γ (Γ ⊕^ suc n) nfp'g (nfp' (suc n) nfp'g)
+nfp' (₁₊ zero) nfp'g = nfp'g
+nfp' (₂₊ n) nfp'g = DP.NFP'.nfp' Γ (Γ ⊕^ ₁₊ n) nfp'g (nfp' (₁₊ n) nfp'g)

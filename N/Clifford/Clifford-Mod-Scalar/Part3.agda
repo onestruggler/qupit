@@ -35,11 +35,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 open import Presentation.Tactics
 
@@ -63,8 +64,8 @@ open import Zp.Fermats-little-theorem
 
 module N.Clifford.Clifford-Mod-Scalar.Part3
   (p-3 : ℕ)
-  (let p-2 = suc p-3)
-  (p-prime : Prime (suc (suc p-2)))
+  (let p-2 = ₁₊ p-3)
+  (p-prime : Prime (suc (₁₊ p-2)))
   (let open PrimeModulus' p-2 p-prime)
   (g*@(g , g≠0) : ℤ* ₚ)
   (g-gen : ∀ ((x , _) : ℤ* ₚ) -> ∃ \ (k : ℤ ₚ-₁) -> x ≡ g ^′ toℕ k )
@@ -73,15 +74,11 @@ module N.Clifford.Clifford-Mod-Scalar.Part3
 
 pattern auto = Eq.refl
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
-pattern ₄ = suc ₃
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
+pattern ₄ = ₁₊ ₃
 
-pattern ₁₊ n = suc n
-pattern ₂₊ n = suc (suc n)
-pattern ₃₊ n = suc (₂₊ n)
-pattern ₄₊ n = suc (₃₊ n)
 
 open Primitive-Root-Modp' g* g-gen
 
@@ -174,13 +171,13 @@ module CommData-Sim where
   commute {n} (S-gen ↥) CZ-gen = just (PB.sym (PB.axiom comm-CZ-S↑))
   commute {n} CZ-gen (S-gen ↥) = just (PB.axiom comm-CZ-S↑)
   
-  commute {n@(suc n')} CZ-gen (CZ-gen ↥) = just (PB.sym (PB.axiom selinger-c12))
+  commute {n@(₁₊ n')} CZ-gen (CZ-gen ↥) = just (PB.sym (PB.axiom selinger-c12))
   commute {n} (CZ-gen ↥) CZ-gen = just (PB.axiom selinger-c12)
   
-  commute {n@(suc n')} CZ-gen ((y ↥) ↥) = just (PB.sym (PB.axiom comm-CZ))
-  commute {n@(suc n')} ((x ↥) ↥) CZ-gen = just (PB.axiom comm-CZ)
+  commute {n@(₁₊ n')} CZ-gen ((y ↥) ↥) = just (PB.sym (PB.axiom comm-CZ))
+  commute {n@(₁₊ n')} ((x ↥) ↥) CZ-gen = just (PB.axiom comm-CZ)
   
-  commute {n@(suc n')} (x ↥) (y ↥) with commute x y
+  commute {n@(₁₊ n')} (x ↥) (y ↥) with commute x y
   ... | nothing = nothing
   ... | just eq = just (lemma-cong↑ ([ x ]ʷ • [ y ]ʷ) ([ y ]ʷ • [ x ]ʷ) eq)
 
@@ -191,8 +188,8 @@ module CommData-Sim where
   ord : Gen (₁₊ n) → ℕ
   ord {n}(S-gen) = 0
   ord {n} (H-gen) = 1
-  ord {suc n} (CZ-gen) = 2
-  ord {suc n} (g ↥) = 3 Nat.+ ord g
+  ord {₁₊ n} (CZ-gen) = 2
+  ord {₁₊ n} (g ↥) = 3 Nat.+ ord g
 
 
   -- Ordering of generators.

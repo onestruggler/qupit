@@ -9,7 +9,7 @@
 open import Data.Nat hiding (_^_ ; _+_ ; _*_)
 open import Data.Nat.Primality
 
-module BoxRelations (p-2 : ℕ) (p-prime : Prime (2+ p-2)) where
+module Examples.Groups.Clifford.Qupit.BoxRelations (p-2 : ℕ) (p-prime : Prime (2+ p-2)) where
 
 open import Data.Product using (_×_ ; _,_)
 open import Data.Unit using (tt)
@@ -17,7 +17,7 @@ open import Data.Vec
 
 open import Relation.Binary.PropositionalEquality using (_≡_ ; _≢_)
 
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 open import Word.Base as WB
 
 open import Zp.ModularArithmetic

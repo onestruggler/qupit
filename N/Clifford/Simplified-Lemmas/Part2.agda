@@ -10,7 +10,7 @@ open import Data.Nat hiding (_^_ ; _+_ ; _*_ ; _%_ ; _/_)
 import Data.Nat as Nat
 open import Data.Fin hiding (_+_ ; _-_)
 open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open import Presentation.Construct.Base hiding (_*_)
 open import Presentation.GroupLike
@@ -21,11 +21,12 @@ open import Data.Fin.Properties using (toℕ-inject₁ ; toℕ-fromℕ ; toℕ-f
 open import Data.Nat.Primality
 open import Zp.ModularArithmetic
 open import Zp.Fermats-little-theorem
+open import Notations
 
 module N.Clifford.Simplified-Lemmas.Part2
   (p-3 : ℕ)
-  (let p-2 = suc p-3)
-  (p-prime : Prime (suc (suc p-2)))
+  (let p-2 = ₁₊ p-3)
+  (p-prime : Prime (suc (₁₊ p-2)))
   (let open PrimeModulus' p-2 p-prime)
   (g*@(g , g≠0) : ℤ* ₚ)
   (g-gen : ∀ ((x , _) : ℤ* ₚ) -> ∃ \ (k : ℤ ₚ-₁) -> x ≡ g ^′ toℕ k )
@@ -51,7 +52,7 @@ module Lemmas-Clifford-S where
 
   lemma-cong↑ : ∀ {n} w v →
     let open PB (n QRel,_===_) using (_≈_) in
-    let open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↑_) using () in
+    let open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↑_) using () in
     w ≈ v → w ↑ ≈↑ v ↑
   lemma-cong↑ {n} w v PB.refl = PB.refl
   lemma-cong↑ {n} w v (PB.sym eq) = PB.sym (lemma-cong↑ v w eq)
@@ -67,7 +68,7 @@ module Lemmas-Clifford-S where
   lemma-^-↑ w ₀ = auto
   lemma-^-↑ w ₁ = auto
   lemma-^-↑ w (₂₊ k) = begin
-    (w ↑) • (w ↑) ^ ₁₊ k ≡⟨ Eq.cong ((w ↑) •_) (lemma-^-↑ w (suc k)) ⟩
+    (w ↑) • (w ↑) ^ ₁₊ k ≡⟨ Eq.cong ((w ↑) •_) (lemma-^-↑ w (₁₊ k)) ⟩
     (w ↑) • (w ^ ₁₊ k) ↑ ≡⟨ auto ⟩
     ((w • w ^ ₁₊ k) ↑) ∎
     where open ≡-Reasoning

@@ -32,13 +32,14 @@
 
 open import Data.Nat hiding (_^_ ; _+_ ; _*_)
 open import Data.Nat.Primality
+open import Notations
 
 module Symplectic-Completeness (p-2 : ℕ) (p-prime : Prime (2+ p-2)) where
 
 open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; ∃)
 open import Data.Unit using (⊤ ; tt)
 
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 import Relation.Binary.Reasoning.Setoid as SR
 
@@ -54,7 +55,6 @@ open Lemmas-Sym using (lemma-cong↑)
 open import N.LM-Sym p-2 p-prime
 
 pattern ₀ = zero
-pattern ₁₊ ⱼ = suc ⱼ
 
 ------------------------------------------------------------------------
 -- (1) Pushing a gate through an LM box.

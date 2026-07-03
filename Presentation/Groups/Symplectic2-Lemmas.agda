@@ -1,3 +1,4 @@
+﻿{-# OPTIONS --safe #-}
 -- This module implements 'rewrite-clifford', a complete decision
 -- procedure for equality of 2-qubit Clifford operators.
 --
@@ -35,7 +36,7 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base hiding (wfoldl)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
@@ -149,7 +150,7 @@ module CommData where
   open PB _===_
   
   -- Commutativity.
-  comm~ : (x y : Gen) -> Maybe (([ x ]ʷ • [ y ]ʷ) ≈ ([ y ]ʷ • [ x ]ʷ))
+  comm~ : (x y : Gen) → Maybe (([ x ]ʷ • [ y ]ʷ) ≈ ([ y ]ʷ • [ x ]ʷ))
   comm~ H0-gen H1-gen = just (axiom comm-H0H1)
   comm~ H0-gen S1-gen = just (axiom comm-H0S1)
   comm~ S0-gen H1-gen = just (axiom comm-S0H1)
@@ -168,7 +169,7 @@ module CommData where
 
 
   -- We number the generators for the purpose of ordering them.
-  ord : Gen -> ℕ
+  ord : Gen → ℕ
   ord S0-gen = 0
   ord S1-gen = 1
   ord H0-gen = 2
@@ -176,7 +177,7 @@ module CommData where
   ord CZ-gen = 4
 
   -- Ordering of generators.
-  les : Gen -> Gen -> Bool
+  les : Gen → Gen → Bool
   les x y with ord x Nat.<? ord y
   les x y | yes _ = true
   les x y | no _ = false
@@ -194,11 +195,11 @@ module Symplectic-Duality where
 
   open Symplectic
   open PB Symplectic._===_
-  gen : Gen -> Word Gen
+  gen : Gen → Word Gen
   gen = [_]ʷ
   
   -- Each generator has a dual, obtained by swapping the two qubits.
-  dual-gen : Gen -> Gen
+  dual-gen : Gen → Gen
   dual-gen H0-gen = H1-gen
   dual-gen H1-gen = H0-gen
   dual-gen S0-gen = S1-gen
@@ -206,13 +207,13 @@ module Symplectic-Duality where
   dual-gen CZ-gen = CZ-gen
 
   -- Compute the dual of a word.
-  dual : Word Gen -> Word Gen
+  dual : Word Gen → Word Gen
   dual ([ x ]ʷ) = gen (dual-gen x)
   dual ε = ε
   dual (w • u) = dual w • dual u
 
   -- Lemma: duality is an involution.
-  lemma-double-dual : ∀ w -> w ≡ dual (dual w)
+  lemma-double-dual : ∀ w → w ≡ dual (dual w)
   lemma-double-dual ([ H0-gen ]ʷ) = Eq.refl
   lemma-double-dual ([ H1-gen ]ʷ) = Eq.refl
   lemma-double-dual ([ S0-gen ]ʷ) = Eq.refl
@@ -225,7 +226,7 @@ module Symplectic-Duality where
   -- prove the duals of axioms rel-A, rel-B, and rel-C until much
   -- later. Therefore, we work only with Symplectic relations for the
   -- time being.
-  lemma-dual : ∀ {w u} -> w ≈ u -> dual w ≈ dual u
+  lemma-dual : ∀ {w u} → w ≈ u → dual w ≈ dual u
   lemma-dual (axiom comm-H0H1) = axiom comm-H0H1 reversed
   lemma-dual (axiom comm-H0S1) = axiom comm-S0H1 reversed
   lemma-dual (axiom comm-S0H1) = axiom comm-H0S1 reversed
@@ -250,7 +251,7 @@ module Symplectic-Duality where
   lemma-dual right-unit = right-unit
 
   -- A proof principle for duality.
-  by-duality : ∀ {w u} -> w ≈ u -> dual w ≈ dual u
+  by-duality : ∀ {w u} → w ≈ u → dual w ≈ dual u
   by-duality = lemma-dual
 
 -- ----------------------------------------------------------------------
@@ -781,7 +782,7 @@ module Symplectic-Rewriting where
   -- relations, and turn it into a tactic that works on Symplectic+T
   -- relations. It works ≈⟨ ignoring T-generators. ⟩
 
-  rewrite-symplectic : (n : ℕ) -> {w u : Word Gen} -> symplectic-multistep n (to-list w) ≡ symplectic-multistep n (to-list u) -> w ≈ u
+  rewrite-symplectic : (n : ℕ) → {w u : Word Gen} → symplectic-multistep n (to-list w) ≡ symplectic-multistep n (to-list u) → w ≈ u
   rewrite-symplectic n eq = (rewrite-symplectic-aux n eq)
 
 
@@ -797,16 +798,16 @@ module Symplectic-Rewriting where
   -- of the cleft-hand side (starting at position 3 and having length 2),
   -- and to the corresponding subword C • D • E of the cright-hand
   -- side, and checks whether a common normal form is reached.
-  symplectic-tactic : ∀ {s t pre post s2 t2} -> (n m k : ℕ) ->
+  symplectic-tactic : ∀ {s t pre post s2 t2} → (n m k : ℕ) →
              let s' = to-list2 s
                  t' = to-list2 t
                  m' = m + length t' - length s'
              in (mysplit n m s' , mysplit n m' t' , symplectic-multistep k (to-list s2)) ≡ 
-                ((pre , s2 , post) , (pre , t2 , post) , symplectic-multistep k (to-list t2)) ->
+                ((pre , s2 , post) , (pre , t2 , post) , symplectic-multistep k (to-list t2)) →
                 s ≈ t
   symplectic-tactic = rewrite-in-context symplectic-multistep lemma-symplectic-multistep-inclusion
     where
-      lemma-symplectic-multistep-inclusion : (n : ℕ) (xs : List Gen) ->  from-list xs ≈ from-list (symplectic-multistep n xs)
+      lemma-symplectic-multistep-inclusion : (n : ℕ) (xs : List Gen) →  from-list xs ≈ from-list (symplectic-multistep n xs)
       lemma-symplectic-multistep-inclusion n xs = (lemma-symplectic-multistep n xs)
 
 open Symplectic-Rewriting using (rewrite-symplectic) public
@@ -936,13 +937,13 @@ module Ex where
   [_]ₒ : C → Word Gen
   [ cEx ]ₒ = Ex
 
-  hcme : ∀ c m -> ∃ \ w -> ∃ \ c' -> ((h **) (inj₁ c) (f m)) ≡ (w , inj₁ c')
+  hcme : ∀ c m → ∃ \ w → ∃ \ c' → ((h **) (inj₁ c) (f m)) ≡ (w , inj₁ c')
   hcme cEx (inj₁ Sym.H-gen) = [ Sym.H ]ᵣ , cEx , Eq.refl
   hcme cEx (inj₁ Sym.S-gen) = [ Sym.S ]ᵣ , cEx , Eq.refl
   hcme cEx (inj₂ Sym.H-gen) = [ Sym.H ]ₗ , cEx , Eq.refl
   hcme cEx (inj₂ Sym.S-gen) = [ Sym.S ]ₗ , cEx , Eq.refl
   
-  htme : ∀ m -> ((h **) (inj₂ tt) (f m)) ≡ ([ m ]ʷ , inj₂ tt)
+  htme : ∀ m → ((h **) (inj₂ tt) (f m)) ≡ ([ m ]ʷ , inj₂ tt)
   htme (inj₁ Sym.H-gen) = Eq.refl
   htme (inj₁ Sym.S-gen) = Eq.refl
   htme (inj₂ Sym.H-gen) = Eq.refl
@@ -951,7 +952,7 @@ module Ex where
   infix 4 _~_
   _~_ = PW.Pointwise _≈₁_ (_≡_ {A = C ⊎ ⊤})
 
-  htme~ : ∀ (m : GenM) -> ([ m ]ʷ , I) ~ ((h **) I (f m))
+  htme~ : ∀ (m : GenM) → ([ m ]ʷ , I) ~ ((h **) I (f m))
   htme~ (inj₁ Sym.H-gen) = refl , Eq.refl
   htme~ (inj₁ Sym.S-gen) = refl , Eq.refl
   htme~ (inj₂ Sym.H-gen) = refl , Eq.refl
@@ -959,13 +960,13 @@ module Ex where
 
   [_]ₓ = f *
 
-  hcme~ : ∀ (c : C) (m : GenM) -> let (w' , c' , p) = hcme c m in [ c ]ₒ • f m ≈₂ [ w' ]ₓ • [ c' ]ₒ 
+  hcme~ : ∀ (c : C) (m : GenM) → let (w' , c' , p) = hcme c m in [ c ]ₒ • f m ≈₂ [ w' ]ₓ • [ c' ]ₒ 
   hcme~ cEx (inj₁ Sym.H-gen) = _≈₂_.sym lemma-comm-ExH1
   hcme~ cEx (inj₁ Sym.S-gen) = _≈₂_.sym lemma-comm-ExS1
   hcme~ cEx (inj₂ Sym.H-gen) = sym (axiom comm-H0Ex)
   hcme~ cEx (inj₂ Sym.S-gen) = _≈₂_.sym (_≈₂_.axiom comm-S0Ex)
   
-  h-wd-ax : ∀ (c : C ⊎ ⊤){u t : Word Gen} -> u ===₂ t -> ((h **) c u) ~ ((h **) c t)
+  h-wd-ax : ∀ (c : C ⊎ ⊤){u t : Word Gen} → u ===₂ t → ((h **) c u) ~ ((h **) c t)
   h-wd-ax •Ex {u} {t} order-S0 = (by-assoc-and₁ (axiom (right Sym.order-S)) auto auto) , auto --axiom (right Sym.order-S) , Eq.refl
   h-wd-ax •Ex {u} {t} order-H0 = axiom (right Sym.order-H) , Eq.refl
   h-wd-ax •Ex {u} {t} order-S0H0 = axiom (right Sym.order-SH) , Eq.refl
@@ -994,7 +995,7 @@ module Ex where
   h-wd-ax •ε comm-S0S1 = axiom (mid (comm Sym.S-gen Sym.S-gen)) , Eq.refl
 
 
-  f-wd-ax : ∀ {w v} -> w ===₁ v -> (f *) w ≈₂ (f *) v
+  f-wd-ax : ∀ {w v} → w ===₁ v → (f *) w ≈₂ (f *) v
   f-wd-ax {w} {v} (left Sym.order-S) = axiom order-S0
   f-wd-ax {w} {v} (left Sym.order-H) = axiom order-H0
   f-wd-ax {w} {v} (left Sym.order-SH) = axiom order-S0H0
@@ -1006,10 +1007,10 @@ module Ex where
   f-wd-ax {w} {v} (mid (comm Sym.S-gen Sym.H-gen)) = axiom comm-S0H1
   f-wd-ax {w} {v} (mid (comm Sym.S-gen Sym.S-gen)) = axiom comm-S0S1
 
-  [_] : C ⊎ ⊤ -> Word Gen
+  [_] : C ⊎ ⊤ → Word Gen
   [_] = [_,_] [_]ₒ (λ v → ε)
 
-  h=ract :  ∀ c y -> let (m' , c') = h c y in
+  h=ract :  ∀ c y → let (m' , c') = h c y in
    ([ c ] • [ y ]ʷ) ≈₂ ([ m' ]ₓ • [ c' ])
   h=ract •Ex H0-gen = sym lemma-comm-ExH1
   h=ract •Ex S0-gen = sym lemma-comm-ExS1
@@ -1069,7 +1070,7 @@ module Sym2 where
   module Comm where
 
     -- Commutativity.
-    comm~ : (x y : Gen) -> Maybe (([ x ]ʷ • [ y ]ʷ) ≈₂ ([ y ]ʷ • [ x ]ʷ))
+    comm~ : (x y : Gen) → Maybe (([ x ]ʷ • [ y ]ʷ) ≈₂ ([ y ]ʷ • [ x ]ʷ))
     comm~ H0-gen H1-gen = just (_≈₂_.axiom comm-H0H1)
     comm~ H0-gen S1-gen = just (_≈₂_.axiom comm-H0S1)
     comm~ S0-gen H1-gen = just (_≈₂_.axiom comm-S0H1)
@@ -1088,7 +1089,7 @@ module Sym2 where
 
 
     -- We number the generators for the purpose of ordering them.
-    ord : Gen -> ℕ
+    ord : Gen → ℕ
     ord S0-gen = 0
     ord S1-gen = 1
     ord H0-gen = 2
@@ -1096,7 +1097,7 @@ module Sym2 where
     ord CZ-gen = 4
 
     -- Ordering of generators.
-    les : Gen -> Gen -> Bool
+    les : Gen → Gen → Bool
     les x y with ord x Nat.<? ord y
     les x y | yes _ = true
     les x y | no _ = false
@@ -1206,7 +1207,7 @@ module Sym2 where
   [_]ₓ = f *
 
 
-  hcme : ∀ c m -> ∃ \ w -> ∃ \ c' -> ((h **) (inj₁ c) (f m)) ≡ (w , inj₁ c')
+  hcme : ∀ c m → ∃ \ w → ∃ \ c' → ((h **) (inj₁ c) (f m)) ≡ (w , inj₁ c')
   hcme cCZ Ex.H0-gen = ε , cCZH0 , auto
   hcme cCZ Ex.S0-gen = Ex.S0 , cCZ , auto
   hcme cCZ Ex.H1-gen = ε , cCZH1 , auto
@@ -1275,7 +1276,7 @@ module Sym2 where
 
   open  NFProperty' ExM-nfp' renaming (by-equal-nf to by-ex-nf)
 
-  htme~ : ∀ (m : GenM) -> ([ m ]ʷ , I) ~ ((h **) I (f m))
+  htme~ : ∀ (m : GenM) → ([ m ]ʷ , I) ~ ((h **) I (f m))
   htme~ Ex.H0-gen = refl , Eq.refl
   htme~ Ex.S0-gen = by-ex-nf auto , auto
   htme~ Ex.H1-gen = refl , Eq.refl
@@ -1283,7 +1284,7 @@ module Sym2 where
   htme~ Ex.Ex-gen = by-ex-nf auto , Eq.refl
 
 
-  hcme~ : ∀ (c : C) (m : GenM) -> let (w' , c' , p) = hcme c m in [ c ]ₒ • f m ≈₂ [ w' ]ₓ • [ c' ]ₒ 
+  hcme~ : ∀ (c : C) (m : GenM) → let (w' , c' , p) = hcme c m in [ c ]ₒ • f m ≈₂ [ w' ]ₓ • [ c' ]ₒ 
   hcme~ cCZ Ex.H0-gen = rewrite-symplectic 100 Eq.refl
   hcme~ cCZ Ex.S0-gen = rewrite-symplectic 100 Eq.refl
   hcme~ cCZ Ex.H1-gen = rewrite-symplectic 100 Eq.refl
@@ -1332,7 +1333,7 @@ module Sym2 where
 
   open NFProperty' ExM-nfp'
   
-  h-wd-ax : ∀ (c : C ⊎ ⊤){u t : Word Gen} -> u ===₂ t -> ((h **) c u) ~ ((h **) c t)
+  h-wd-ax : ∀ (c : C ⊎ ⊤){u t : Word Gen} → u ===₂ t → ((h **) c u) ~ ((h **) c t)
   h-wd-ax •CZ {u} {t} order-S0 = by-equal-nf Eq.refl , Eq.refl
   h-wd-ax •CZH0 {u} {t} order-S0 = by-equal-nf Eq.refl , Eq.refl
   h-wd-ax •CZH0S0 {u} {t} order-S0 = by-equal-nf Eq.refl , Eq.refl
@@ -1523,7 +1524,7 @@ module Sym2 where
     Ex • H1 ∎
     where open SR ws₂
 
-  f-wd-ax : ∀ {w v} -> w ===₁ v -> (f *) w ≈₂ (f *) v
+  f-wd-ax : ∀ {w v} → w ===₁ v → (f *) w ≈₂ (f *) v
   f-wd-ax {w} {v} Ex.order-S0 = axiom order-S0
   f-wd-ax {w} {v} Ex.order-H0 = axiom order-H0
   f-wd-ax {w} {v} Ex.order-S0H0 = axiom order-S0H0
@@ -1538,14 +1539,14 @@ module Sym2 where
   f-wd-ax {w} {v} Ex.comm-H0Ex = lemma-order-H0Ex
   f-wd-ax {w} {v} Ex.comm-S0Ex = rewrite-symplectic 100 Eq.refl
 
-  [_] : C ⊎ ⊤ -> Word Gen
+  [_] : C ⊎ ⊤ → Word Gen
   [_] = [_,_] [_]ₒ (λ v → ε)
 
   open SR ws₂
   open import Presentation.Tactics hiding ([_])
   open Commuting  _===_ Comm.comm~ Comm.les
   
-  h=ract :  ∀ c y -> let (m' , c') = h c y in
+  h=ract :  ∀ c y → let (m' , c') = h c y in
    ([ c ] • [ y ]ʷ) ≈₂ ([ m' ]ₓ • [ c' ])
   h=ract •CZ H0-gen = _≈₂_.sym _≈₂_.left-unit
   h=ract •CZH0 H0-gen = trans (trans assoc (trans (cong refl (axiom order-H0)) _≈₂_.right-unit)) (sym left-unit)

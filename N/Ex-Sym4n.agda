@@ -32,11 +32,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _*)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
@@ -59,9 +60,9 @@ module N.Ex-Sym4n (p-2 : ℕ) (p-prime : Prime (2+ p-2)) where
 pattern auto = Eq.refl
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
 pattern ₄ = 4
 pattern ₅ = 5
 pattern ₆ = 6
@@ -75,9 +76,6 @@ pattern ₁₃ = 13
 pattern ₁₄ = 14
 pattern ₁₅ = 15
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
 
 private
   variable
@@ -134,7 +132,7 @@ lemma-yang-baxter {n} = begin
   open PP ((₃₊ n) QRel,_===_)
   open SR word-setoid
   open Rewriting-Powers (₂₊ n)
-  open Commuting-Symplectic (suc n)
+  open Commuting-Symplectic (₁₊ n)
   open Sym0-Rewriting (₂₊ n)
   open Rewriting-Swap0 (₂₊ n)
 
@@ -346,7 +344,7 @@ lemma-comm-CZ↑-CZ02 {n} = begin
   open PP ((₃₊ n) QRel,_===_)
   open SR word-setoid
   open Rewriting-Powers (₂₊ n)
-  open Commuting-Symplectic (suc n)
+  open Commuting-Symplectic (₁₊ n)
   open Sym0-Rewriting (₂₊ n)
   open Rewriting-Swap (₂₊ n)
   open Basis-Change _ ((₃₊ n) QRel,_===_) grouplike
@@ -368,7 +366,7 @@ lemma-comm-CZ-CZ02 {n} = begin
   open PP ((₃₊ n) QRel,_===_)
   open SR word-setoid
   open Rewriting-Powers (₂₊ n)
-  open Commuting-Symplectic (suc n)
+  open Commuting-Symplectic (₁₊ n)
   open Sym0-Rewriting (₂₊ n)
   open Rewriting-Swap (₂₊ n)
   open Basis-Change _ ((₃₊ n) QRel,_===_) grouplike
@@ -586,11 +584,11 @@ lemma-C18-CX-CZ' {n@0} = begin
   open PP ((₃₊ n) QRel,_===_)
   open SR word-setoid
   open Rewriting-Powers (₂₊ n)
-  open Commuting-Symplectic (suc n)
+  open Commuting-Symplectic (₁₊ n)
   open Sym0-Rewriting (₂₊ n)
   open Rewriting-Swap (₂₊ n)
   open Lemmas-2Q (₁₊ n)
-lemma-C18-CX-CZ' {n@(suc _)} = begin
+lemma-C18-CX-CZ' {n@(₁₊ _)} = begin
   CZ • CX ↑ ≈⟨ by-assoc auto ⟩
   (CZ • H ↑ ^ 2) • ₕ|ₕ ↑ ≈⟨ (cleft lemma-semi-CZ-HH↑) ⟩
   (H ↑ ^ 2 • CZ^ ₋₁) • ₕ|ₕ ↑ ≈⟨ by-assoc auto ⟩
@@ -605,7 +603,7 @@ lemma-C18-CX-CZ' {n@(suc _)} = begin
   open PP ((₃₊ n) QRel,_===_)
   open SR word-setoid
   open Rewriting-Powers (₂₊ n)
-  open Commuting-Symplectic (suc n)
+  open Commuting-Symplectic (₁₊ n)
   open Sym0-Rewriting (₂₊ n)
   open Rewriting-Swap (₂₊ n)
   open Lemmas-2Q (₁₊ n)
@@ -632,12 +630,12 @@ lemma-C18-CX-CZ {n@0} = begin
   open PP ((₃₊ n) QRel,_===_)
   open SR word-setoid
   open Rewriting-Powers (₂₊ n)
-  open Commuting-Symplectic (suc n)
+  open Commuting-Symplectic (₁₊ n)
   open Sym0-Rewriting (₂₊ n)
   open Rewriting-Swap (₁₊ n)
 
 
-lemma-C18-CX-CZ {n@(suc _)} = begin
+lemma-C18-CX-CZ {n@(₁₊ _)} = begin
   CZ • CX ↑ ≈⟨ lemma-C18-CX-CZ' ⟩
   CX ↑ • CZ • CZ02 ≈⟨ (cright cright sym lemma-Ex-Ex↑-CZ') ⟩
   CX ↑ • CZ • Ex ↑ • CZ • Ex ↑ ≈⟨ (cright cright lemma-Ex-Ex↑-CZ'a) ⟩
@@ -655,7 +653,7 @@ lemma-C18-CX-CZ {n@(suc _)} = begin
   open PP ((₃₊ n) QRel,_===_)
   open SR word-setoid
   open Rewriting-Powers (₂₊ n)
-  open Commuting-Symplectic (suc n)
+  open Commuting-Symplectic (₁₊ n)
   open Sym0-Rewriting (₂₊ n)
   open Rewriting-Swap (₁₊ n)
 
@@ -675,7 +673,7 @@ aux-CZ02-CZ02⁻¹ {n} = begin
   open PP ((₃₊ n) QRel,_===_)
   open SR word-setoid
   open Rewriting-Powers (₂₊ n)
-  open Commuting-Symplectic (suc n)
+  open Commuting-Symplectic (₁₊ n)
   open Sym0-Rewriting (₂₊ n)
   open Rewriting-Swap (₁₊ n)
   module B1 = PB ((₂₊ n) QRel,_===_)
@@ -689,7 +687,7 @@ lemma-CX↑-CZ {n} = bbc CZ02 ε aux
   open SR word-setoid
   open Pattern-Assoc
   open Rewriting-Powers (₂₊ n)
-  open Commuting-Symplectic (suc n)
+  open Commuting-Symplectic (₁₊ n)
   open Sym0-Rewriting (₂₊ n)
   open Rewriting-Swap (₁₊ n)
   open Basis-Change _ ((₃₊ n) QRel,_===_) grouplike
@@ -728,7 +726,7 @@ lemma-CX↑-CZ^k {n} k@(₁₊ k'@(₁₊ k'')) = begin
   open SR word-setoid
   open Pattern-Assoc
   open Rewriting-Powers (₂₊ n)
-  open Commuting-Symplectic (suc n)
+  open Commuting-Symplectic (₁₊ n)
   open Sym0-Rewriting (₂₊ n)
   open Rewriting-Swap (₁₊ n)
   open Basis-Change _ ((₃₊ n) QRel,_===_) grouplike

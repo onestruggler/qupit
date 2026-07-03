@@ -32,11 +32,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Construct.Base hiding (_*_)
@@ -57,8 +58,8 @@ open import Zp.Fermats-little-theorem
 
 module N.Clifford.Iso2
   (p-3 : ℕ)
-  (let p-2 = suc p-3)
-  (p-prime : Prime (suc (suc p-2)))
+  (let p-2 = ₁₊ p-3)
+  (p-prime : Prime (suc (₁₊ p-2)))
   (let open PrimeModulus' p-2 p-prime)
   (g*@(g , g≠0) : ℤ* ₚ)
   (g-gen : ∀ ((x , _) : ℤ* ₚ) -> ∃ \ (k : ℤ ₚ-₁) -> x ≡ g ^′ toℕ k )
@@ -70,12 +71,9 @@ open import N.Clifford.Iso p-3 p-prime g* g-gen
 open import N.Clifford.Clifford-Lemmas p-3 p-prime g* g-gen hiding (module CL ; module CLb)
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
 
 import N.Symplectic p-2 p-prime as NSym
 import N.Symplectic-Simplified p-2 p-prime g* g-gen as NSim

@@ -1,4 +1,4 @@
-{-# OPTIONS  --safe #-}
+﻿{-# OPTIONS  --safe #-}
 --{-# OPTIONS --termination-depth=5 #-}
 open import Level using (0ℓ)
 
@@ -32,11 +32,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl) renaming( _* to _*ʷ)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
@@ -59,9 +60,9 @@ module N.Embeding-1n (p-2 : ℕ) (p-prime : Prime (2+ p-2)) (n : ℕ)  where
 pattern auto = Eq.refl
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
 pattern ₄ = 4
 pattern ₅ = 5
 pattern ₆ = 6
@@ -75,9 +76,6 @@ pattern ₁₃ = 13
 pattern ₁₄ = 14
 pattern ₁₅ = 15
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
 
 
 open import Zp.ModularArithmetic
@@ -154,23 +152,24 @@ lemma-f*-M m = begin
 
 
 f-wd-ax : ∀ {w v} -> w ===₀ v -> (f*) w ≈ (f*) v
-f-wd-ax order-S = begin
+f-wd-ax (srel Base.order-S) = begin
   f* (S ^ p) ≈⟨ lemma-f* S p ⟩
   f* S ^ p ≈⟨ axiom order-S ⟩
   f* ε ∎
-f-wd-ax order-H = axiom order-H
-f-wd-ax order-SH = axiom order-SH
-f-wd-ax comm-HHS = axiom comm-HHS
-f-wd-ax (M-mul x y) = begin
+f-wd-ax (srel Base.order-H) = axiom order-H
+f-wd-ax (srel Base.order-SH) = axiom order-SH
+f-wd-ax (srel Base.comm-HHS) = axiom comm-HHS
+f-wd-ax (srel (Base.M-mul x y)) = begin
   f* (M x • M y) ≈⟨ cong (lemma-f*-M x) (lemma-f*-M y) ⟩
   (M x • M y) ≈⟨ axiom (M-mul x y) ⟩
   (M (x *' y)) ≈⟨ sym (lemma-f*-M (x *' y)) ⟩
   f* (M (x *' y)) ∎
-f-wd-ax (semi-MS x) = begin
+f-wd-ax (srel (Base.semi-MS x)) = begin
   f* (M x • S) ≈⟨ cleft lemma-f*-M x ⟩
   (M x • S) ≈⟨ axiom (semi-MS x) ⟩
   (S^ (x ^2) • M x) ≈⟨ sym (cong (lemma-f* S (toℕ (x ^2))) (lemma-f*-M x )) ⟩
   f* (S^ (x ^2) • M x) ∎
+f-wd-ax (cong↑ (srel ()))
 
 
 open import Presentation.Morphism _===₀_ ((₁₊ n) QRel,_===_)

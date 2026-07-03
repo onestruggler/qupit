@@ -32,11 +32,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Construct.Base hiding (_*_)
@@ -56,8 +57,8 @@ open import Zp.Fermats-little-theorem
 
 module N.Clifford.SDProduct
   (p-3 : ℕ)
-  (let p-2 = suc p-3)
-  (p-prime : Prime (suc (suc p-2)))
+  (let p-2 = ₁₊ p-3)
+  (p-prime : Prime (suc (₁₊ p-2)))
   (let open PrimeModulus' p-2 p-prime)
   (g*@(g , g≠0) : ℤ* ₚ)
   (g-gen : ∀ ((x , _) : ℤ* ₚ) -> ∃ \ (k : ℤ ₚ-₁) -> x ≡ g ^′ toℕ k )
@@ -67,12 +68,9 @@ module N.Clifford.SDProduct
 
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
 
 import N.Symplectic p-2 p-prime as NSym
 import N.Symplectic-Simplified p-2 p-prime g* g-gen as NSim
@@ -100,7 +98,7 @@ module SemiDirect where
   _↓ : ∀ {n} → Word (Gen n) → Word (Gen ( n))
   _↓ {n} x = x 
 
-  _↑ : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  _↑ : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
   [ inj₁ x ]ʷ ↑ = [ inj₁ (x XZ.↥) ]ʷ
   [ inj₂ y ]ʷ ↑ = [ inj₂ (y Sym.↥) ]ʷ
   ε ↑ = ε
@@ -351,7 +349,7 @@ module SemiDirect where
   lemma-cong↑ : ∀ {n} w v →
     let
     open PB (n QRel,_===_) using (_≈_)
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↑_) using ()
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↑_) using ()
     in
     w ≈ v → w ↑ ≈↑ v ↑
   lemma-cong↑ {n} w v PB.refl = PB.refl
@@ -373,8 +371,8 @@ module SemiDirect where
     ([ conj Sym.H-gen XZ.Z-gen ]ₗ ↑) • H ↑ ∎
     where
     open PB (n QRel,_===_) using (_≈_)
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↑_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↑_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
     
   lemma-cong↑ {n} w v (PB.axiom (mid (comm XZ.Z-gen Sym.S-gen))) = PB.axiom (mid (comm (XZ.Z-gen XZ.↥) (Sym.Gen.S-gen Sym.↥)))
@@ -385,16 +383,16 @@ module SemiDirect where
   lemma-cong↑ {n} w v (PB.axiom (mid (comm (XZ.X-gen XZ.↥) Sym.CZ-gen))) = PB.axiom (mid (comm ((XZ.X-gen XZ.↥) XZ.↥) (Sym.Gen.CZ-gen Sym.↥)))
   lemma-cong↑ {n} w v (PB.axiom (mid (comm (XZ.Z-gen XZ.↥) Sym.CZ-gen))) = PB.axiom (mid (comm ((XZ.Z-gen XZ.↥) XZ.↥) (Sym.Gen.CZ-gen Sym.↥)))
   lemma-cong↑ {n} w v (PB.axiom (mid (comm ((a XZ.↥) XZ.↥) Sym.CZ-gen))) = PB.axiom (mid (comm (((a XZ.↥) XZ.↥) XZ.↥) (Sym.Gen.CZ-gen Sym.↥)))
-  lemma-cong↑ {suc n@(suc n')} w v (PB.axiom (mid (comm (a XZ.↥) (b Sym.↥)))) = begin
+  lemma-cong↑ {₁₊ n@(₁₊ n')} w v (PB.axiom (mid (comm (a XZ.↥) (b Sym.↥)))) = begin
     [ inj₂ (b Sym.↥ Sym.↥) ]ʷ • [ inj₁ (a XZ.↥ XZ.↥) ]ʷ ≈⟨ refl ⟩
     [ inj₂ (b Sym.↥) ]ʷ ↑ • [ inj₁ (a XZ.↥) ]ʷ ↑ ≈⟨ PB.axiom (mid (comm ((a XZ.↥) XZ.↥) ((b Sym.↥) Sym.↥))) ⟩
     [ conj b a XZ.↑ XZ.↑ ]ₗ • [ inj₂ (b Sym.↥) ]ʷ ↑ ≡⟨ Eq.cong (\ xx -> xx • [ inj₂ (b Sym.↥) ]ʷ ↑) (Eq.sym (lemma-[]ₗ-↑ (conj b a XZ.↑))) ⟩
     ([ conj b a XZ.↑ ]ₗ ↑) • [ inj₂ (b Sym.↥ Sym.↥) ]ʷ ∎
     where
-    open PB ((suc n) QRel,_===_) using (_≈_)
-    module PB1 = PB ( (suc n) QRel,_===_)
-    open PB ((suc (suc n)) QRel,_===_) renaming (_≈_ to _≈↑_)
-    open PP ((suc (suc n)) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) using (_≈_)
+    module PB1 = PB ( (₁₊ n) QRel,_===_)
+    open PB ((₂₊ n) QRel,_===_) renaming (_≈_ to _≈↑_)
+    open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
 -- lemma-cong↑ _ _ (PB.axiom (mid (comm (a XZ.↥) (b Sym.Gen.↥))))
 

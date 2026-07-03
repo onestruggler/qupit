@@ -1,3 +1,4 @@
+﻿{-# OPTIONS --safe #-}
 open import Level using (0ℓ)
 
 open import Relation.Binary using (Rel)
@@ -22,12 +23,13 @@ open import Data.Unit using (⊤ ; tt)
 
 open import Word.Base
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Groups.Sn
@@ -42,11 +44,11 @@ module Presentation.Groups.S16hwd2 where
   open PB (pres 1) renaming (Alphabet to S2) using ()
 
   
-  embed : ∀ {n} -> C n -> C (suc (suc n))
+  embed : ∀ {n} → C n → C (₂₊ n)
   embed {n} ε = ε
   embed {n} (swap• c) = swap• embed c
 
-  aux2 : ∀ {n} -> C n -> C (suc n) -> Bool × (C n × C (suc n))
+  aux2 : ∀ {n} → C n → C (₁₊ n) → Bool × (C n × C (₁₊ n))
   aux2 {n} ε ε = false , ε , ε
   aux2 {n} ε (swap• b) = true , b , ε
   aux2 {n} (swap• a) ε = false , ((swap• a) , ε)
@@ -57,64 +59,64 @@ module Presentation.Groups.S16hwd2 where
     variable
       m : ℕ
 
-  toℕ : C m -> ℕ
+  toℕ : C m → ℕ
   toℕ ε = 0
   toℕ (swap• c) = suc (toℕ c)
 
-  df : C m -> Set
+  df : C m → Set
   df c = C (toℕ c)
 
-  CC : ℕ -> Set
+  CC : ℕ → Set
   CC m = Σ (C m) df
 
-  aux2' : ∀ {n} -> C n -> C (suc n) -> Bool × CC n
+  aux2' : ∀ {n} → C n → C (₁₊ n) → Bool × CC n
   aux2' {n} ε ε = false , ε , ε
   aux2' {n} ε (swap• d) = true , d , ε
   aux2' {n} (swap• c) ε = false , ((swap• c) , ε)
   aux2' {n} (swap• c) (swap• d) with aux2' c d
   ... | bl , c' , d' = bl , (swap• c') , (swap• d')
 
-  eval-bool : ∀ {n} -> Bool ->
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+  eval-bool : ∀ {n} → Bool →
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     Word Sₙ₊₂
   eval-bool {n} true = [ swap ]ʷ
   eval-bool {n} false = ε
 
-  eval-bool₁ : Bool -> Word S2
+  eval-bool₁ : Bool → Word S2
   eval-bool₁ true = [ swap ]ʷ
   eval-bool₁ false = ε
 
-  inject : ∀ {n} {i : C n} -> df i -> C n
+  inject : ∀ {n} {i : C n} → df i → C n
   inject {n} {ε} ε = ε
   inject {n} {swap• i} ε = ε
   inject {n} {swap•_ {n₁} i} (swap• x) = swap• (inject x)
   
-  inject₁ : ∀ {n} (i : C n) -> C (suc n)
+  inject₁ : ∀ {n} (i : C n) → C (₁₊ n)
   inject₁ {n} ε = ε
   inject₁ {n} (swap• i) = swap• (inject₁ i)
 
 
-  ract' : ∀ {n} -> C (suc n) × C (suc (suc n)) -> X (suc (suc n)) ->
+  ract' : ∀ {n} → C (₁₊ n) × C (₂₊ n) → X (₂₊ n) →
     let open PB (pres n) renaming (Alphabet to Sn) using () in
     let A = S2 ⊎ Sn in
-    Word A × C (suc n) × C (suc (suc n))
+    Word A × C (₁₊ n) × C (₂₊ n)
   ract' {n} (c , d) x with ract d x
   ... | (ws , d') with racts c ws
   ... | (ws' , c') with aux2 c' d'
   ... | false , c'' , d'' = [ ws' ]ᵣ , c'' , d''
   ... | true , c'' , d'' = [ ws' ]ᵣ • [ [ swap ]ʷ ]ₗ , c'' , d''
 
-  racts' : ∀ {n} -> C (suc n) × C (suc (suc n)) -> Word (X (suc (suc n))) ->
+  racts' : ∀ {n} → C (₁₊ n) × C (₂₊ n) → Word (X (₂₊ n)) →
     let open PB (pres n) renaming (Alphabet to Sn) using () in
     let A = S2 ⊎ Sn in
-    Word A × C (suc n) × C (suc (suc n))
+    Word A × C (₁₊ n) × C (₂₊ n)
   racts' {n} = ract' {n} **
 
 
-  ract'' : ∀ {n} -> CC (suc n) -> X (suc (suc n)) ->
+  ract'' : ∀ {n} → CC (₁₊ n) → X (₂₊ n) →
     let open PB (pres n) renaming (Alphabet to Sn) using () in
     let A = S2 ⊎ Sn in
-    Word A × CC (suc n)
+    Word A × CC (₁₊ n)
   ract'' {n} (c , d) x with ract (inject₁ (inject d)) x
   ... | (ws , d') with racts c ws
   ... | (ws' , c') with aux2' c' d'
@@ -125,16 +127,16 @@ module Presentation.Groups.S16hwd2 where
   ... | true , c'' , d'' = [ ws' ]ᵣ • [ [ swap ]ʷ ]ₗ , c'' , d''
 -}
 
-  racts'' : ∀ {n} -> CC (suc n) -> Word (X (suc (suc n))) ->
+  racts'' : ∀ {n} → CC (₁₊ n) → Word (X (₂₊ n)) →
     let open PB (pres n) renaming (Alphabet to Sn) using () in
     let A = S2 ⊎ Sn in
-    Word A × CC (suc n)
+    Word A × CC (₁₊ n)
   racts'' {n} = ract'' {n} **
 
-  racts2 : ∀ {n} -> CC (suc n) -> Word (X (suc (suc n))) ->
+  racts2 : ∀ {n} → CC (₁₊ n) → Word (X (₂₊ n)) →
     let open PB (pres n) renaming (Alphabet to Sn) using () in
     let A = S2 ⊎ Sn in
-    Word A × CC (suc n)
+    Word A × CC (₁₊ n)
   racts2 {n} (c , d) w with racts (inject₁ (inject d)) w
   ... | (ws , d') with racts c ws
   ... | (ws' , c') with aux2' c' d'
@@ -142,29 +144,29 @@ module Presentation.Groups.S16hwd2 where
 
 
   
-  lemma-rss : ∀ {n} (d : C (suc n)) g -> racts d [ g ]ʷ ≡ ract d g
+  lemma-rss : ∀ {n} (d : C (₁₊ n)) g → racts d [ g ]ʷ ≡ ract d g
   lemma-rss {n} d g = Eq.refl
 
-  lemma-rss2 : ∀ {n} (d : C (suc n)) -> racts d ε ≡ (ε , d)
+  lemma-rss2 : ∀ {n} (d : C (₁₊ n)) → racts d ε ≡ (ε , d)
   lemma-rss2 {n} d = Eq.refl
 
-  lemma-aa : ∀ {n} ((c , d) : (CC n)) -> aux2' c (inject₁ (inject d)) ≡ (false , c , d)
+  lemma-aa : ∀ {n} ((c , d) : (CC n)) → aux2' c (inject₁ (inject d)) ≡ (false , c , d)
   lemma-aa {zero} (ε , ε) = Eq.refl
-  lemma-aa {suc n} (ε , ε) = Eq.refl
-  lemma-aa {suc n} (swap• c , ε) = Eq.refl
-  lemma-aa {suc n} (swap• c , swap• d) with aux2' (swap• c) (inject₁ (inject (swap• d))) | aux2' c (inject₁ (inject d)) | lemma-aa (c , d)
+  lemma-aa {₁₊ n} (ε , ε) = Eq.refl
+  lemma-aa {₁₊ n} (swap• c , ε) = Eq.refl
+  lemma-aa {₁₊ n} (swap• c , swap• d) with aux2' (swap• c) (inject₁ (inject (swap• d))) | aux2' c (inject₁ (inject d)) | lemma-aa (c , d)
   ... | (b1 , c1 , d1) | (b2 , c2 , d2) | ih rewrite (Eq.cong proj₁ ih) = ≡×≡⇒≡ (Eq.refl , Eq.cong (λ { (fst , snd) → swap• fst , swap• snd}) (Eq.cong proj₂ ih))
 
 
 {-
   mutual 
-    lemma-hom : ∀ {n} -> (c : CC (suc n)) -> (w v : Word (X (suc (suc n)))) ->
+    lemma-hom : ∀ {n} → (c : CC (₁₊ n)) → (w v : Word (X (₂₊ n))) →
       let open PB (pres n) renaming (Alphabet to Sn) using () in
       let A = S2 ⊎ Sn in
       let (w' , c') = racts2 c w in
       let (v' , c'') = racts2 c' v in
       let open PB (pres 1 ⊕ pres n) renaming ( _≈_ to _≈₁_ ; _===_ to _===₁_) using () in
-      let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (suc n)}) in
+      let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (₁₊ n)}) in
       racts2 c (w • v) ~ (w' • v' , c'')
     lemma-hom {n} (c , d) w v with racts (inject₁ (inject d)) w
     ... | (w1 , d1) with racts d1 v | racts c w1
@@ -173,11 +175,11 @@ module Presentation.Groups.S16hwd2 where
     ... | (iv , id2) with racts c2 iv
     ... | (iv2 , ic3) = {!!} , {!!}
 
-    lemma-ss : ∀ {n} -> (c : CC (suc n)) -> (w : Word (X (suc (suc n)))) ->
+    lemma-ss : ∀ {n} → (c : CC (₁₊ n)) → (w : Word (X (₂₊ n))) →
       let open PB (pres n) renaming (Alphabet to Sn) using () in
       let A = S2 ⊎ Sn in
       let open PB (pres 1 ⊕ pres n) renaming ( _≈_ to _≈₁_ ; _===_ to _===₁_) using () in
-      let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (suc n)}) in
+      let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (₁₊ n)}) in
       racts'' c w ~ racts2 c w
     lemma-ss {n} (c , d) [ x ]ʷ = PB.refl , Eq.refl
     lemma-ss {n} (c , d) ε rewrite lemma-aa (c , d) = PB.sym PB.left-unit , Eq.refl
@@ -194,34 +196,34 @@ module Presentation.Groups.S16hwd2 where
       {![ wv5 ]ᵣ • [ eval-bool₁ b6 ]ₗ , ?!} ∎
       where
         open PP (pres 1 ⊕ pres n) using (word-setoid)
-        ts = ×-setoid word-setoid (setoid (CC (suc n)))
+        ts = ×-setoid word-setoid (setoid (CC (₁₊ n)))
         open SR ts
         
 -}
 
-  [_]' : ∀ {n} -> C (suc n) × C (suc (suc n)) -> 
+  [_]' : ∀ {n} → C (₁₊ n) × C (₂₊ n) → 
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     Word Sₙ₊₂
   [_]' {n} (c , d) = [ [ c ] ⇑] • [ d ]
 
-  [_]'' : ∀ {n} -> CC (suc n) -> 
+  [_]'' : ∀ {n} → CC (₁₊ n) → 
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     Word Sₙ₊₂
   [_]'' {n} (c , d) = [ [ c ] ⇑] • [ inject₁ (inject d) ]
 
 
   open PB hiding (_≈_)
 
-  lemma-aux2 : ∀ {n} -> (c : C (suc n)) -> (d : C (suc (suc n))) ->
-    let (b , c' , d') = aux2 {suc n} c d in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+  lemma-aux2 : ∀ {n} → (c : C (₁₊ n)) → (d : C (₂₊ n)) →
+    let (b , c' , d') = aux2 {₁₊ n} c d in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     [ c , d ]' ≈ eval-bool b • [ c' , d' ]'
   lemma-aux2 {n} ε ε = _≈_.sym _≈_.left-unit
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to ws) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to ws) using ()
       open SR ws
   lemma-aux2 {n} ε (swap• d) = begin
     [ ε , swap• d ]' ≈⟨ _≈_.refl ⟩
@@ -229,13 +231,13 @@ module Presentation.Groups.S16hwd2 where
     [ swap ]ʷ • wconcat (wmap (λ x → [ x ₛ ]ʷ) [ d ]) ≈⟨ _≈_.cong _≈_.refl (_≈_.sym _≈_.right-unit) ⟩
     [ swap ]ʷ • [ d , ε ]' ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to ws) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to ws) using ()
       open SR ws
   lemma-aux2 {n} (swap• c) ε = _≈_.sym _≈_.left-unit
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to ws) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to ws) using ()
       open SR ws
   lemma-aux2 {zero} (swap• ε) (swap• ε) = PB.sym PB.left-unit
   lemma-aux2 {n@zero} (swap• ε) (swap• swap• ε) = begin
@@ -246,10 +248,10 @@ module Presentation.Groups.S16hwd2 where
     ([ swap ]ʷ) • ([ swap ₛ ]ʷ • [ swap ]ʷ) ≈⟨ cong refl (_≈_.sym (_≈_.cong _≈_.right-unit _≈_.right-unit)) ⟩
     [ swap ]ʷ • [ swap• ε , swap• ε ]' ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to ws) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to ws) using ()
       open SR ws
-  lemma-aux2 {n'@(suc n)} (swap• c) (swap• d) with aux2 (c) (d) | lemma-aux2 c d
+  lemma-aux2 {n'@(₁₊ n)} (swap• c) (swap• d) with aux2 (c) (d) | lemma-aux2 c d
   ... | (b'@false , c'' , d'') | ih = let b = b' in let c' = swap• c'' in let d' = swap• d'' in begin
     [ swap• c , swap• d ]' ≈⟨ _≈_.refl ⟩
     [ [ swap• c ] ⇑] • [ swap• d ] ≈⟨ _≈_.assoc ⟩
@@ -272,8 +274,8 @@ module Presentation.Groups.S16hwd2 where
     ε • [ c' , d' ]' ≈⟨ _≈_.refl ⟩
     eval-bool b • [ c' , d' ]' ∎
     where
-      open PB (pres (suc (suc n'))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n'))) renaming (word-setoid to ws) using ()
+      open PB (pres (₂₊ n')) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n')) renaming (word-setoid to ws) using ()
       open SR ws
   ... | (b'@true , c'' , d'') | ih = let b = b' in let c' = swap• c'' in let d' = swap• d'' in begin
     [ swap• c , swap• d ]' ≈⟨ _≈_.refl ⟩
@@ -300,29 +302,29 @@ module Presentation.Groups.S16hwd2 where
     [ swap ]ʷ • [ c' , d' ]' ≈⟨ _≈_.refl ⟩
     eval-bool b • [ c' , d' ]' ∎
     where
-      open PB (pres (suc (suc n'))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n'))) renaming (word-setoid to ws) using ()
+      open PB (pres (₂₊ n')) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n')) renaming (word-setoid to ws) using ()
       open SR ws
 
-  lemma-aux2-aux2' : ∀ {n} -> (c : C (suc n)) -> (d : C (suc (suc n))) ->
-    let (b , cd') = aux2' {suc n} c d in
-    let (b1 , c1 , d1) = aux2 {suc n} c d in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+  lemma-aux2-aux2' : ∀ {n} → (c : C (₁₊ n)) → (d : C (₂₊ n)) →
+    let (b , cd') = aux2' {₁₊ n} c d in
+    let (b1 , c1 , d1) = aux2 {₁₊ n} c d in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     b1 ≡ b × [ c1 , d1 ]' ≈ [ cd' ]''
   lemma-aux2-aux2' {n} ε ε = Eq.refl , refl
   lemma-aux2-aux2' {zero} ε (swap• ε) = Eq.refl , refl
   lemma-aux2-aux2' {zero} ε (swap• swap• d') = Eq.refl , refl
-  lemma-aux2-aux2' {(suc n')} ε (swap• ε) = Eq.refl , refl
-  lemma-aux2-aux2' {(suc n')} ε (swap• swap• d') = Eq.refl , refl
+  lemma-aux2-aux2' {(₁₊ n')} ε (swap• ε) = Eq.refl , refl
+  lemma-aux2-aux2' {(₁₊ n')} ε (swap• swap• d') = Eq.refl , refl
   lemma-aux2-aux2' {n} (swap• c) ε = Eq.refl , refl
   lemma-aux2-aux2' {zero} (swap• ε) (swap• ε) = Eq.refl , refl
   lemma-aux2-aux2' {zero} (swap• ε) (swap• swap• ε) = Eq.refl , refl
-  lemma-aux2-aux2' {n@(suc n')} (swap• c) (swap• d) with aux2' c d | aux2 c d | lemma-aux2-aux2' c d
+  lemma-aux2-aux2' {n@(₁₊ n')} (swap• c) (swap• d) with aux2' c d | aux2 c d | lemma-aux2-aux2' c d
   ... | (b , c' , d') | (b1 , c1 , d1) | (h1 , h2) = h1 , claim2
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PB (pres (suc (suc n'))) renaming (Alphabet to Sₙ₊₂ ; _≈_ to _≈₀_) using ()
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PB (pres (₂₊ n')) renaming (Alphabet to Sₙ₊₂ ; _≈_ to _≈₀_) using ()
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
       claim : [ c1 , d1 ]' ≈₀ [ c' , d' ]''
       claim = h2
@@ -343,9 +345,9 @@ module Presentation.Groups.S16hwd2 where
         ([ swap ₛ ]ʷ • [ [ [ c' ] ⇑] ⇑]) • [ swap ]ʷ • [ [ inject₁ (inject d') ] ⇑] ≈⟨ refl ⟩
         [ swap• c' , swap• d' ]'' ∎
 
-  lemma-aux2' : ∀ {n} -> (c : C (suc n)) -> (d : C (suc (suc n))) ->
-    let (b , cd') = aux2' {suc n} c d in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+  lemma-aux2' : ∀ {n} → (c : C (₁₊ n)) → (d : C (₂₊ n)) →
+    let (b , cd') = aux2' {₁₊ n} c d in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     [ c , d ]' ≈ eval-bool b • [ cd' ]''
   lemma-aux2' {n} c d with aux2' c d | aux2 c d | lemma-aux2-aux2' c d | lemma-aux2 c d
   ... | (b , cd') | (b1 , c1 , d1) | (h1 , h2) | h3 = begin
@@ -353,35 +355,35 @@ module Presentation.Groups.S16hwd2 where
     eval-bool b1 • [ c1 , d1 ]' ≈⟨ (cong (refl' _ (Eq.cong _ h1)) h2) ⟩
     eval-bool b • [ cd' ]'' ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
 
-  emb2 : ∀ {n} -> 
+  emb2 : ∀ {n} → 
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let A = S2 ⊎ Sn in
-    A -> Sₙ₊₂
+    A → Sₙ₊₂
   emb2 {n} (inj₁ x) = swap
-  emb2 {suc n} (inj₂ y) = y ₛ ₛ
+  emb2 {₁₊ n} (inj₂ y) = y ₛ ₛ
 
-  emb2' : ∀ {n} -> 
+  emb2' : ∀ {n} → 
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let A = S2 ⊎ Sn in
-    A -> Word Sₙ₊₂
+    A → Word Sₙ₊₂
   emb2' {n} (inj₁ x) = [ swap ]ʷ
-  emb2' {suc n} (inj₂ y) = [ y ₛ ₛ ]ʷ
+  emb2' {₁₊ n} (inj₂ y) = [ y ₛ ₛ ]ʷ
 
-  [_⇑]'' : ∀ {n} -> 
+  [_⇑]'' : ∀ {n} → 
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let A = S2 ⊎ Sn in
-    Word A -> Word Sₙ₊₂
+    Word A → Word Sₙ₊₂
   [_⇑]'' {n} w = ((emb2' {n}) *) w -- wmap (emb2 {n}) w
 
-  aux-a : ∀ {n} ws ->
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+  aux-a : ∀ {n} ws →
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     [ [ ws ⇑] ⇑] ≈ [ [ ws ]ᵣ ⇑]''
   aux-a [ swap ]ʷ = refl
   aux-a [ x ₛ ]ʷ = refl
@@ -389,9 +391,9 @@ module Presentation.Groups.S16hwd2 where
   aux-a (ws • ws₁) = cong (aux-a ws) (aux-a ws₁)
 
 
-  lemma-ract' : ∀ {n} c x ->
+  lemma-ract' : ∀ {n} c x →
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let (x' , c') = ract' {n} c x in ([ c ]' • [ x ]ʷ) ≈ ([ x' ⇑]'' • [ c' ]')
   lemma-ract' {n} (c , d) x with ract d x | lemma-ract d x
   ... | (ws , d') | hyp1 with racts c ws | lemma-racts c ws
@@ -410,8 +412,8 @@ module Presentation.Groups.S16hwd2 where
     [ [ ws' ⇑] ⇑] • [ c'' , d'' ]' ≈⟨ cong (aux-a ws') refl  ⟩
     ([ [ ws' ]ᵣ ⇑]'' • [ c'' , d'' ]') ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
   ... | b@true , c'' , d'' | ih  = begin
     ([ c , d ]' • [ x ]ʷ) ≈⟨ _≈_.assoc ⟩
@@ -427,14 +429,14 @@ module Presentation.Groups.S16hwd2 where
     [ [ ws' ]ᵣ ⇑]'' • [ [ [ swap ]ʷ ]ₗ ⇑]'' • [ c'' , d'' ]' ≈⟨ _≈_.sym _≈_.assoc ⟩
     [ [ ws' ]ᵣ • [ [ swap ]ʷ ]ₗ ⇑]'' • [ c'' , d'' ]' ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
 
 
-  lemma-ract'' : ∀ {n} c x ->
+  lemma-ract'' : ∀ {n} c x →
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let (x' , c') = ract'' {n} c x in ([ c ]'' • [ x ]ʷ) ≈ ([ x' ⇑]'' • [ c' ]'')
   lemma-ract'' {n} (c , d) x with ract (inject₁ (inject d)) x | lemma-ract (inject₁ (inject d)) x
   ... | (ws , d') | hyp1 with racts c ws | lemma-racts c ws
@@ -457,8 +459,8 @@ module Presentation.Groups.S16hwd2 where
     ([ [ ws' ]ᵣ ⇑]'' • [ c'' , iid'' ]') ≈⟨ _≈_.cong (_≈_.sym _≈_.right-unit) _≈_.refl ⟩
     ([ [ ws' ]ᵣ • [ eval-bool₁ b ]ₗ ⇑]'' • [ c'' , iid'' ]') ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
   ... | b@true , c'' , d'' | ih  =
     let iid = inject₁ (inject d) in
@@ -477,19 +479,19 @@ module Presentation.Groups.S16hwd2 where
     [ [ ws' ]ᵣ ⇑]'' • [ [ [ swap ]ʷ ]ₗ ⇑]'' • [ c'' , iid'' ]' ≈⟨ _≈_.sym _≈_.assoc ⟩
     [ [ ws' ]ᵣ • [ [ swap ]ʷ ]ₗ ⇑]'' • [ c'' , iid'' ]' ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
 
-  lemma-racts' : ∀ {n} c bs ->
+  lemma-racts' : ∀ {n} c bs →
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let (x' , c') = racts' {n} c bs in ([ c ]' • bs) ≈ ([ x' ⇑]'' • [ c' ]') 
   lemma-racts' {n} c [ x ]ʷ = lemma-ract' c x
   lemma-racts' {n} c ε = _≈_.trans _≈_.right-unit (_≈_.sym _≈_.left-unit)
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
   lemma-racts' {n} c (bs • as) with racts' c bs | inspect (racts' c) bs | lemma-racts' c bs
   ... | (bs' , c') | [ eq1 ]ₑ | ih1 with racts' c' as | inspect (racts' c') as | lemma-racts' c' as
@@ -501,21 +503,21 @@ module Presentation.Groups.S16hwd2 where
     [ bs' ⇑]'' • [ as' ⇑]'' • [ c'' ]' ≈⟨ _≈_.sym _≈_.assoc ⟩
     [ bs' • as' ⇑]'' • [ c'' ]' ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
 
 
 
-  lemma-racts'' : ∀ {n} c bs ->
+  lemma-racts'' : ∀ {n} c bs →
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let (x' , c') = racts'' {n} c bs in ([ c ]'' • bs) ≈ ([ x' ⇑]'' • [ c' ]'') 
   lemma-racts'' {n} c [ x ]ʷ = lemma-ract'' c x
   lemma-racts'' {n} c ε = _≈_.trans _≈_.right-unit (_≈_.sym _≈_.left-unit)
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
   lemma-racts'' {n} c (bs • as) with racts'' c bs | inspect (racts'' c) bs | lemma-racts'' c bs
   ... | (bs' , c') | [ eq1 ]ₑ | ih1 with racts'' c' as | inspect (racts'' c') as | lemma-racts'' c' as
@@ -527,11 +529,11 @@ module Presentation.Groups.S16hwd2 where
     [ bs' ⇑]'' • [ as' ⇑]'' • [ c'' ]'' ≈⟨ _≈_.sym _≈_.assoc ⟩
     [ bs' • as' ⇑]'' • [ c'' ]'' ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
 
-  aux-c : ∀ {n} w ->
+  aux-c : ∀ {n} w →
     let f = emb2' {n} in
     (f *) [ w ]ᵣ ≡ [ [ w ⇑] ⇑]
   aux-c {n} [ swap ]ʷ = Eq.refl
@@ -540,23 +542,23 @@ module Presentation.Groups.S16hwd2 where
   aux-c {n} (w • w₁) rewrite aux-c w | aux-c w₁ = Eq.refl
 
 {-
-  aux-3 : ∀ {n} (c : C n) -> (d : df c) -> ract'' (swap• swap• swap• c , swap• swap• swap• d) swap ≡ ([ [ swap ]ʷ ]ᵣ , (swap• swap• swap• c , swap• swap• swap• d))
+  aux-3 : ∀ {n} (c : C n) → (d : df c) → ract'' (swap• swap• swap• c , swap• swap• swap• d) swap ≡ ([ [ swap ]ʷ ]ᵣ , (swap• swap• swap• c , swap• swap• swap• d))
   aux-3 {n} ε ε = {!!}
   aux-3 {n} (swap• c) ε = {!!}
   aux-3 {n} (swap• c) (swap• d) with aux-3 c d
-  aux-3 {.(suc _)} (swap• c) (swap• d) | ih = {!!} --Eq.cong (λ { (fst , fst₁ , snd) → {!!} , ({!swap• fst₁!} , {!!}) }) ih
+  aux-3 {.(₁₊ _)} (swap• c) (swap• d) | ih = {!!} --Eq.cong (λ { (fst , fst₁ , snd) → {!!} , ({!swap• fst₁!} , {!!}) }) ih
 -}
 
   open import Presentation.CosetNF as CNF
 
 
-  module myData (n : ℕ) = Data (pres 1 ⊕ pres n) (pres (suc (suc n))) (CC (suc n)) (ε , ε) emb2' ract'' [_]''
+  module myData (n : ℕ) = Data (pres 1 ⊕ pres n) (pres (₂₊ n)) (CC (₁₊ n)) (ε , ε) emb2' ract'' [_]''
     
   import Presentation.Construct.Properties.DirectProduct as DP
 
-  lemma-ract''-suc' : ∀ {n} w ->
+  lemma-ract''-suc' : ∀ {n} w →
     let open PB (pres 1 ⊕ pres n) renaming ( _≈_ to _≈₁_ ; _===_ to _===₁_) using () in
-    let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (suc n)}) in
+    let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (₁₊ n)}) in
     ((ract'' {n}) **) (ε , ε) [ [ w ⇑] ⇑] ~ ([ w ]ᵣ , (ε , ε))
   lemma-ract''-suc' {n} [ x ]ʷ = right-unit , Eq.refl
   lemma-ract''-suc' {n} ε = refl , Eq.refl
@@ -565,10 +567,10 @@ module Presentation.Groups.S16hwd2 where
   ... | (w2 , cd2) | (h2l , h2r) = cong h1l h2l , h2r
 
 
-  lemma-ract''-suc'' : ∀ {n} w ->
-    let open PB (pres 1 ⊕ pres (suc n)) renaming ( _≈_ to _≈₁_ ; _===_ to _===₁_) using () in
-    let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (suc (suc n))}) in
-    ((ract'' {suc n}) **) (swap• ε , ε) [ [ [ w ⇑] ⇑] ⇑] ~ ([ [ w ⇑] ]ᵣ , (swap• ε , ε))
+  lemma-ract''-suc'' : ∀ {n} w →
+    let open PB (pres 1 ⊕ pres (₁₊ n)) renaming ( _≈_ to _≈₁_ ; _===_ to _===₁_) using () in
+    let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (₂₊ n)}) in
+    ((ract'' {₁₊ n}) **) (swap• ε , ε) [ [ [ w ⇑] ⇑] ⇑] ~ ([ [ w ⇑] ]ᵣ , (swap• ε , ε))
   lemma-ract''-suc'' {n} [ x ]ʷ = right-unit , Eq.refl
   lemma-ract''-suc'' {n} ε = refl , Eq.refl
   lemma-ract''-suc'' {n} (w • w₁) with racts'' (swap• ε , ε) [ [ [ w ⇑] ⇑] ⇑] | (lemma-ract''-suc'' w)
@@ -579,12 +581,12 @@ module Presentation.Groups.S16hwd2 where
 
   open NFProperty (DP.NFP.nfp (pres 1) (pres 13) (nfp 1) (nfp 13)) renaming (by-equal-nf to bef) using ()
 
-  h-wd-ax : let n = 13 in (c : CC (suc n)) -> 
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂ ; _≈_ to _≈₂_ ; _===_ to _===₂_) using () in
+  h-wd-ax : let n = 13 in (c : CC (₁₊ n)) → 
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂ ; _≈_ to _≈₂_ ; _===_ to _===₂_) using () in
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
     let open PB (pres 1 ⊕ pres n) renaming ( _≈_ to _≈₁_ ; _===_ to _===₁_) using () in
-    let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (suc n)}) in
-    {u t : Word (Sₙ₊₂)} ->  u ===₂ t -> ((ract'' **) c u) ~ ((ract'' **) c t)
+    let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (₁₊ n)}) in
+    {u t : Word (Sₙ₊₂)} →  u ===₂ t → ((ract'' **) c u) ~ ((ract'' **) c t)
 
   h-wd-ax (ε , ε) {u} {t} order = bef Eq.refl , Eq.refl
   h-wd-ax (ε , ε) {u} {t} yang-baxter = bef Eq.refl , Eq.refl
@@ -15204,161 +15206,161 @@ module Presentation.Groups.S16hwd2 where
   h-wd-ax {n@zero} (swap• ε , swap• ε) {u} {t} (congₛ order) = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (ε , ε) {u} {t} order = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (ε , ε) {u} {t} order = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (ε , ε) {u} {t} comm = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (ε , ε) {u} {t} comm = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (ε , ε) {u} {t} yang-baxter = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (ε , ε) {u} {t} yang-baxter = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (ε , ε) {u} {t} (congₛ order) = bef₁ Eq.refl , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (ε , ε) {u} {t} (congₛ order) = bef₁ Eq.refl , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (ε , ε) {u} {t} (congₛ comm) = bef₁ Eq.refl , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (ε , ε) {u} {t} (congₛ comm) = bef₁ Eq.refl , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (ε , ε) {u} {t} (congₛ yang-baxter) = bef₁ Eq.refl , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (ε , ε) {u} {t} (congₛ yang-baxter) = bef₁ Eq.refl , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (ε , ε) {u} {t} (congₛ (congₛ {w = w} {v} eq)) rewrite lemma-ract''-suc' w | lemma-ract''-suc' v = axiom (right eq) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (ε , ε) {u} {t} (congₛ (congₛ {w = w} {v} eq)) rewrite lemma-ract''-suc' w | lemma-ract''-suc' v = axiom (right eq) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• ε , ε) {u} {t} order = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• ε , ε) {u} {t} order = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• c , ε) {u} {t} order = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• c , ε) {u} {t} order = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• ε , ε) {u} {t} (comm {a = swap}) = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• ε , ε) {u} {t} (comm {a = swap}) = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• ε , ε) {u} {t} (comm {a = a ₛ}) = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• ε , ε) {u} {t} (comm {a = a ₛ}) = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• ε , ε) {u} {t} (comm {a = swap}) = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• ε , ε) {u} {t} (comm {a = swap}) = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• swap• c , ε) {u} {t} (comm {a = swap}) = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• swap• c , ε) {u} {t} (comm {a = swap}) = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• ε , ε) {u} {t} (comm {a = swap ₛ}) = refl , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• ε , ε) {u} {t} (comm {a = swap ₛ}) = refl , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• ε , ε) {u} {t} (comm {a = (a ₛ) ₛ}) = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• ε , ε) {u} {t} (comm {a = (a ₛ) ₛ}) = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• swap• c , ε) {u} {t} (comm {a = a ₛ}) = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• swap• c , ε) {u} {t} (comm {a = a ₛ}) = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• ε , ε) {u} {t} yang-baxter = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• ε , ε) {u} {t} yang-baxter = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• ε , ε) {u} {t} yang-baxter = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• ε , ε) {u} {t} yang-baxter = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• swap• c , ε) {u} {t} yang-baxter = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• swap• c , ε) {u} {t} yang-baxter = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
      
-  h-wd-ax {n@(suc n')} (swap• ε , ε) {u} {t} (congₛ order) = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• ε , ε) {u} {t} (congₛ order) = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• ε , ε) {u} {t} (congₛ comm) = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• ε , ε) {u} {t} (congₛ comm) = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• ε , ε) {u} {t} (congₛ yang-baxter) = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• ε , ε) {u} {t} (congₛ yang-baxter) = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• ε , ε) {u} {t} (congₛ (congₛ order)) = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• ε , ε) {u} {t} (congₛ (congₛ order)) = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• ε , ε) {u} {t} (congₛ (congₛ comm)) = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• ε , ε) {u} {t} (congₛ (congₛ comm)) = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• ε , ε) {u} {t} (congₛ (congₛ yang-baxter)) = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• ε , ε) {u} {t} (congₛ (congₛ yang-baxter)) = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• ε , ε) {u} {t} (congₛ (congₛ (congₛ {w = w} {v} eq))) rewrite lemma-ract''-suc'' w | lemma-ract''-suc'' v = LR.rights ([⇑]-cong _ _ (axiom eq)) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• ε , ε) {u} {t} (congₛ (congₛ (congₛ {w = w} {v} eq))) rewrite lemma-ract''-suc'' w | lemma-ract''-suc'' v = LR.rights ([⇑]-cong _ _ (axiom eq)) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
      module LR = LeftRightCongruence (pres 1) (pres n) Γₓ
      
-  h-wd-ax {n@(suc n')} (swap• swap• ε , ε) {u} {t} (congₛ order) = axiom (right order) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• ε , ε) {u} {t} (congₛ order) = axiom (right order) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• swap• c , ε) {u} {t} (congₛ order) = (axiom (right order)) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• swap• c , ε) {u} {t} (congₛ order) = (axiom (right order)) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• ε , ε) {u} {t} (congₛ (comm {a = swap})) = (trans right-unit (sym left-unit)) , Eq.refl
-  h-wd-ax {n@(suc n')} (swap• swap• ε , ε) {u} {t} (congₛ (comm {a = a ₛ})) = axiom (right comm) , Eq.refl
-  h-wd-ax {n@(suc n')} (swap• swap• swap• c , ε) {u} {t} (congₛ (comm {a = swap})) = {!!} , Eq.refl
-  h-wd-ax {n@(suc n')} (swap• swap• swap• c , ε) {u} {t} (congₛ (comm {a = a ₛ})) = {!!}
+  h-wd-ax {n@(₁₊ n')} (swap• swap• ε , ε) {u} {t} (congₛ (comm {a = swap})) = (trans right-unit (sym left-unit)) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• ε , ε) {u} {t} (congₛ (comm {a = a ₛ})) = axiom (right comm) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• swap• c , ε) {u} {t} (congₛ (comm {a = swap})) = {!!} , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• swap• c , ε) {u} {t} (congₛ (comm {a = a ₛ})) = {!!}
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• ε , ε) {u} {t} (congₛ yang-baxter) = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• ε , ε) {u} {t} (congₛ yang-baxter) = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• swap• c , ε) {u} {t} (congₛ yang-baxter) = (bef₁ Eq.refl) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• swap• c , ε) {u} {t} (congₛ yang-baxter) = (bef₁ Eq.refl) , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• c , ε) {u} {t} (congₛ (congₛ eq)) = {!!}
+  h-wd-ax {n@(₁₊ n')} (swap• swap• c , ε) {u} {t} (congₛ (congₛ eq)) = {!!}
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• ε , swap• ε) {u} {t} order = left-unit , Eq.refl
-  h-wd-ax {n@(suc n')} (swap• swap• c , swap• ε) {u} {t} order = left-unit , Eq.refl
-  h-wd-ax {n@(suc n')} (swap• swap• ε , swap• swap• ε) {u} {t} order = axiom (right order) , Eq.refl
-  h-wd-ax {n@(suc n')} (swap• swap• swap• c , swap• swap• ε) {u} {t} order = axiom (right order) , Eq.refl
-  h-wd-ax {n@(suc n')} (swap• swap• swap• ε , swap• swap• swap• ε) {u} {t} order = axiom (right order) , Eq.refl
-  h-wd-ax {n@(suc n')} (swap• swap• swap• swap• c , swap• swap• swap• d) {u} {t} order = {!!}
+  h-wd-ax {n@(₁₊ n')} (swap• ε , swap• ε) {u} {t} order = left-unit , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• c , swap• ε) {u} {t} order = left-unit , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• ε , swap• swap• ε) {u} {t} order = axiom (right order) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• swap• c , swap• swap• ε) {u} {t} order = axiom (right order) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• swap• ε , swap• swap• swap• ε) {u} {t} order = axiom (right order) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• swap• swap• c , swap• swap• swap• d) {u} {t} order = {!!}
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• ε , swap• ε) {u} {t} (comm {a = swap}) = refl , Eq.refl
-  h-wd-ax {n@(suc n')} (swap• ε , swap• ε) {u} {t} (comm {a = a ₛ}) = trans left-unit (sym right-unit) , Eq.refl
-  h-wd-ax {n@(suc n')} (swap• swap• ε , swap• ε) {u} {t} (comm {a = swap}) = refl , Eq.refl
-  h-wd-ax {n@(suc n')} (swap• swap• swap• c , swap• ε) {u} {t} (comm {a = swap}) = trans left-unit (sym right-unit) , Eq.refl
-  h-wd-ax {n@(suc n')} (swap• swap• ε , swap• ε) {u} {t} (comm {a = a ₛ}) = {!!}
-  h-wd-ax {n@(suc n')} (swap• swap• swap• c , swap• ε) {u} {t} (comm {a = a ₛ}) = trans left-unit (sym right-unit) , Eq.refl
-  h-wd-ax {n@(suc n')} (swap• swap• ε , swap• swap• ε) {u} {t} (comm {a = swap}) = bef₁ Eq.refl , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• ε , swap• ε) {u} {t} (comm {a = swap}) = refl , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• ε , swap• ε) {u} {t} (comm {a = a ₛ}) = trans left-unit (sym right-unit) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• ε , swap• ε) {u} {t} (comm {a = swap}) = refl , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• swap• c , swap• ε) {u} {t} (comm {a = swap}) = trans left-unit (sym right-unit) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• ε , swap• ε) {u} {t} (comm {a = a ₛ}) = {!!}
+  h-wd-ax {n@(₁₊ n')} (swap• swap• swap• c , swap• ε) {u} {t} (comm {a = a ₛ}) = trans left-unit (sym right-unit) , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• ε , swap• swap• ε) {u} {t} (comm {a = swap}) = bef₁ Eq.refl , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• ε , swap• ε) {u} {t} yang-baxter = bef₁ Eq.refl , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• ε , swap• ε) {u} {t} yang-baxter = bef₁ Eq.refl , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• ε , swap• ε) {u} {t} yang-baxter = refl , Eq.refl
-  h-wd-ax {n@(suc n')} (swap• swap• swap• c , swap• ε) {u} {t} yang-baxter = bef₁ Eq.refl , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• ε , swap• ε) {u} {t} yang-baxter = refl , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• swap• c , swap• ε) {u} {t} yang-baxter = bef₁ Eq.refl , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
 
 -}
-  h-wd-ax {n@(suc n')} (swap• swap• ε , swap• swap• ε) {u} {t} yang-baxter = bef₁ Eq.refl , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• ε , swap• swap• ε) {u} {t} yang-baxter = bef₁ Eq.refl , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• swap• c , swap• swap• ε) {u} {t} yang-baxter = bef₁ Eq.refl , Eq.refl
+  h-wd-ax {n@(₁₊ n')} (swap• swap• swap• c , swap• swap• ε) {u} {t} yang-baxter = bef₁ Eq.refl , Eq.refl
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• swap• c , swap• swap• swap• d) {u} {t} yang-baxter = {!bef₁ Eq.refl , Eq.refl!}
+  h-wd-ax {n@(₁₊ n')} (swap• swap• swap• c , swap• swap• swap• d) {u} {t} yang-baxter = {!bef₁ Eq.refl , Eq.refl!}
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• swap• swap• c , swap• swap• d) {u} {t} (comm {a = swap}) = {!!}
-  h-wd-ax {n@(suc n')} (swap• swap• c , swap• swap• d) {u} {t} (comm {a = a ₛ}) = {!!}
+  h-wd-ax {n@(₁₊ n')} (swap• swap• swap• c , swap• swap• d) {u} {t} (comm {a = swap}) = {!!}
+  h-wd-ax {n@(₁₊ n')} (swap• swap• c , swap• swap• d) {u} {t} (comm {a = a ₛ}) = {!!}
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• c , swap• d) {u} {t} yang-baxter = {!!}
+  h-wd-ax {n@(₁₊ n')} (swap• c , swap• d) {u} {t} yang-baxter = {!!}
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
-  h-wd-ax {n@(suc n')} (swap• c , swap• d) {u} {t} (congₛ eq) with h-wd-ax (c , d) eq
+  h-wd-ax {n@(₁₊ n')} (swap• c , swap• d) {u} {t} (congₛ eq) with h-wd-ax (c , d) eq
   ... | fst , snd = {!!} , (Eq.cong (λ { (fs , sn) → {!swap• sn!} , {!swap•_!}}) snd)
     where
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
 
 
-  nfp-n+2 : (n : ℕ) -> NFProperty (pres (suc (suc n)))
+  nfp-n+2 : (n : ℕ) → NFProperty (pres (₂₊ n))
   nfp-n+2 n = AAT.nfp h=⁻¹f-gen' {!!} f-wd-ax left-unit lemma-ract'' (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n))
    where
      open myData n renaming (module Assumptions-And-Theorems to AAT)
-     open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂ ; _≈_ to _≈₂_ ; _===_ to _===₂_) using ()
+     open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂ ; _≈_ to _≈₂_ ; _===_ to _===₂_) using ()
      open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using ()
      open PB (pres 1 ⊕ pres n) renaming ( _≈_ to _≈₁_ ; _===_ to _===₁_) using ()
      open NFProperty (DP.NFP.nfp (pres 1) (pres n) (nfp 1) (nfp n)) renaming (by-equal-nf to bef₁)
@@ -15367,13 +15369,13 @@ module Presentation.Groups.S16hwd2 where
      h = ract''
      
    
-     h=⁻¹f-gen' : ∀ (x : S2 ⊎ Sn) -> ([ x ]ʷ , (ε , ε)) ~ ((ract'' **) (ε , ε) (f x))
+     h=⁻¹f-gen' : ∀ (x : S2 ⊎ Sn) → ([ x ]ʷ , (ε , ε)) ~ ((ract'' **) (ε , ε) (f x))
      h=⁻¹f-gen' (inj₁ swap) = (sym left-unit) , Eq.refl
      h=⁻¹f-gen' (inj₂ swap) = refl , Eq.refl
      h=⁻¹f-gen' (inj₂ (y ₛ)) = refl , Eq.refl
 
      
-     f-wd-ax : ∀ {w v} -> w ===₁ v -> (f *) w ≈₂ (f *) v
+     f-wd-ax : ∀ {w v} → w ===₁ v → (f *) w ≈₂ (f *) v
      f-wd-ax {w} {v} (left order) = axiom order
      f-wd-ax {w} {v} (right order) = axiom (congₛ (congₛ order))
      f-wd-ax {w} {v} (right comm) = axiom (congₛ (congₛ comm))

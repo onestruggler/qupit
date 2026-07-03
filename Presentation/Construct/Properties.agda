@@ -1,4 +1,11 @@
-{-# OPTIONS  --safe #-}
+------------------------------------------------------------------------
+-- Presentations of groups
+--
+-- Re-exports of all presentation-combinator property modules.
+------------------------------------------------------------------------
+
+{-# OPTIONS --safe #-}
+
 open import Relation.Binary using (Rel ; REL)
 
 open import Level using (0ℓ)
@@ -16,23 +23,24 @@ import Relation.Binary.Reasoning.Setoid as SR
 
 open import Word.Base
 open import Word.Properties
-open import Presentation.Base
+open import Presentation.Horizontal-Syntactics
 open import Presentation.Construct.Base
 open import Presentation.Reidemeister-Schreier
 
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
+open import Notations
 
 
 module Presentation.Construct.Properties where
 
-lemma-[w^n]ₗ=[w]ₗ^n : ∀ {A B : Set} (w : Word A) (n : ℕ) -> [_]ₗ {B = B} (w ^ n) ≡ [ w ]ₗ ^ n
+lemma-[w^n]ₗ=[w]ₗ^n : ∀ {A B : Set} (w : Word A) (n : ℕ) → [_]ₗ {B = B} (w ^ n) ≡ [ w ]ₗ ^ n
 lemma-[w^n]ₗ=[w]ₗ^n {A} {B} w zero = Eq.refl
-lemma-[w^n]ₗ=[w]ₗ^n {A} {B} w (suc zero) = Eq.refl
-lemma-[w^n]ₗ=[w]ₗ^n {A} {B} w (suc (suc n)) = Eq.cong₂ _•_ Eq.refl (lemma-[w^n]ₗ=[w]ₗ^n {A} {B} w (suc n))
+lemma-[w^n]ₗ=[w]ₗ^n {A} {B} w (₁₊ zero) = Eq.refl
+lemma-[w^n]ₗ=[w]ₗ^n {A} {B} w (₂₊ n) = Eq.cong₂ _•_ Eq.refl (lemma-[w^n]ₗ=[w]ₗ^n {A} {B} w (₁₊ n))
 
-lemma-[w^n]ᵣ=[w]ᵣ^n : ∀ {A B : Set} (w : Word B) (n : ℕ) -> [_]ᵣ {A = A} (w ^ n) ≡ [ w ]ᵣ ^ n
+lemma-[w^n]ᵣ=[w]ᵣ^n : ∀ {A B : Set} (w : Word B) (n : ℕ) → [_]ᵣ {A = A} (w ^ n) ≡ [ w ]ᵣ ^ n
 lemma-[w^n]ᵣ=[w]ᵣ^n {A} {B} w zero = Eq.refl
-lemma-[w^n]ᵣ=[w]ᵣ^n {A} {B} w (suc zero) = Eq.refl
-lemma-[w^n]ᵣ=[w]ᵣ^n {A} {B} w (suc (suc n)) = Eq.cong₂ _•_ Eq.refl (lemma-[w^n]ᵣ=[w]ᵣ^n {A} {B} w (suc n))
+lemma-[w^n]ᵣ=[w]ᵣ^n {A} {B} w (₁₊ zero) = Eq.refl
+lemma-[w^n]ᵣ=[w]ᵣ^n {A} {B} w (₂₊ n) = Eq.cong₂ _•_ Eq.refl (lemma-[w^n]ᵣ=[w]ᵣ^n {A} {B} w (₁₊ n))
 

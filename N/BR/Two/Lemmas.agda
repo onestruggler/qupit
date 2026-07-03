@@ -33,11 +33,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
@@ -63,9 +64,9 @@ n = 0
 pattern auto = Eq.refl
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
 pattern ₅ = 5
 pattern ₆ = 6
 pattern ₇ = 7
@@ -78,10 +79,6 @@ pattern ₁₃ = 13
 pattern ₁₄ = 14
 pattern ₁₅ = 15
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
-pattern ₄₊ ⱼ = suc (suc (suc (suc ⱼ)))
 
 
 open import Zp.ModularArithmetic
@@ -482,7 +479,7 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
@@ -512,9 +509,9 @@ n = 0
 pattern auto = Eq.refl
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
 pattern ₅ = 5
 pattern ₆ = 6
 pattern ₇ = 7
@@ -527,10 +524,6 @@ pattern ₁₃ = 13
 pattern ₁₄ = 14
 pattern ₁₅ = 15
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
-pattern ₄₊ ⱼ = suc (suc (suc (suc ⱼ)))
 
 
 open import Zp.ModularArithmetic
@@ -638,13 +631,13 @@ lemma-CZ^k*l k l = begin
 lemma-^^ᵖ : ∀ w a b -> w ^ p 
   (w ^ᵖ a) ^ᵖ b ≈ w ^ᵖ (a * b)
 lemma-^^ᵖ w zero zero = refl
-lemma-^^ᵖ w zero (suc zero) = PB.refl
-lemma-^^ᵖ w zero (suc (suc b)) = trans left-unit (lemma-^^ᵖ w zero (suc b))
-lemma-^^ᵖ w (suc zero) b = refl' (Eq.cong (w ^_) (Eq.sym (NP.+-identityʳ b)))
-lemma-^^ᵖ w (suc (suc a)) b = begin
-  (w • w ^ suc a) ^ b ≈⟨ lemma-^-• w (w ^ suc a) b (lemma-comm-wᵃwᵇ w 1 (suc a)) ⟩
-  w ^ b • (w ^ suc a) ^ b ≈⟨ (cong refl (lemma-^^ᵖ w (suc a) b))  ⟩
-  w ^ b • w ^ (suc a Nat.* b) ≈⟨ sym (lemma-^-+ w b (suc a Nat.* b)) ⟩
+lemma-^^ᵖ w zero (₁₊ zero) = PB.refl
+lemma-^^ᵖ w zero (₂₊ b) = trans left-unit (lemma-^^ᵖ w zero (₁₊ b))
+lemma-^^ᵖ w (₁₊ zero) b = refl' (Eq.cong (w ^_) (Eq.sym (NP.+-identityʳ b)))
+lemma-^^ᵖ w (₂₊ a) b = begin
+  (w • w ^ ₁₊ a) ^ b ≈⟨ lemma-^-• w (w ^ ₁₊ a) b (lemma-comm-wᵃwᵇ w 1 (₁₊ a)) ⟩
+  w ^ b • (w ^ ₁₊ a) ^ b ≈⟨ (cong refl (lemma-^^ᵖ w (₁₊ a) b))  ⟩
+  w ^ b • w ^ (₁₊ a Nat.* b) ≈⟨ sym (lemma-^-+ w b (₁₊ a Nat.* b)) ⟩
   w ^ (b Nat.+ (b Nat.+ a Nat.* b)) ∎
 
 -}

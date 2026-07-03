@@ -27,11 +27,12 @@ open import Data.Fin hiding (_+_ ; _-_)
 open import Data.Nat.Primality
 open import Zp.ModularArithmetic
 open import Zp.Fermats-little-theorem
+open import Notations
 
 module N.Clifford.Simplified-Lemmas
   (p-3 : ℕ)
-  (let p-2 = suc p-3)
-  (p-prime : Prime (suc (suc p-2)))
+  (let p-2 = ₁₊ p-3)
+  (p-prime : Prime (suc (₁₊ p-2)))
   (let open PrimeModulus' p-2 p-prime)
   (g*@(g , g≠0) : ℤ* ₚ)
   (g-gen : ∀ ((x , _) : ℤ* ₚ) -> ∃ \ (k : ℤ ₚ-₁) -> x ≡ g ^′ toℕ k )

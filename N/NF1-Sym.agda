@@ -32,7 +32,7 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _*)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
@@ -51,7 +51,7 @@ import Data.Nat.Properties as NP
 open import Presentation.GroupLike
 open import Presentation.Tactics hiding ([_])
 open import Data.Nat.Primality
-
+open import Notations
 
 open import Zp.ModularArithmetic
 module N.NF1-Sym (p-2 : ℕ) (p-prime : Prime (2+ p-2))

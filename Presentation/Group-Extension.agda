@@ -30,7 +30,7 @@ open import Data.Product using (∃)
 open import Data.Sum using (_⊎_ ; inj₁ ; inj₂)
 
 open import Word.Base
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 open import Presentation.Construct.Base using ([_]ₗ ; [_]ᵣ)
 
 module Presentation.Group-Extension where

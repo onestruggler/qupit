@@ -20,7 +20,7 @@ open import Data.Fin hiding (_+_ ; _-_)
 open import Data.Fin.Properties using (toℕ-inject₁ ; toℕ-fromℕ ; toℕ<n ; toℕ-fromℕ<)
 import Data.Nat.Properties as NP
 open import Word.Base as WB hiding (wfoldl)
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open import Presentation.Construct.Base hiding (_*_)
 open import Presentation.GroupLike
@@ -28,19 +28,18 @@ open import Presentation.Tactics
 open import Data.Nat.Primality
 open import Zp.ModularArithmetic
 open import Zp.Fermats-little-theorem
+open import Notations
 
 module N.Clifford.Mg-Simplify
   (p-3 : ℕ)
-  (let p-2 = suc p-3)
-  (p-prime : Prime (suc (suc p-2)))
+  (let p-2 = ₁₊ p-3)
+  (p-prime : Prime (suc (₁₊ p-2)))
   (let open PrimeModulus' p-2 p-prime)
   (g*@(g , g≠0) : ℤ* ₚ)
   (g-gen : ∀ ((x , _) : ℤ* ₚ) -> ∃ \ (k : ℤ ₚ-₁) -> x ≡ g ^′ toℕ k )
   where
 
 pattern auto = Eq.refl
-pattern ₁₊ n = suc n
-pattern ₂₊ n = suc (suc n)
 
 open Primitive-Root-Modp' g* g-gen
 open import N.Clifford.Clifford-Mod-Scalar p-3 p-prime g* g-gen
@@ -175,8 +174,8 @@ module Push (n : ℕ) where
     ε • X ^ k                       ≈⟨ sym right-unit ⟩
     (ε • X ^ k) • ε                 ≈⟨ assoc ⟩
     ε • X ^ k • ε ∎
-  SpushKM k (suc m') = begin
-    X ^ k • S ^ suc m'                       ≈⟨ cright (lemma-^-+ S 1 m') ⟩
+  SpushKM k (₁₊ m') = begin
+    X ^ k • S ^ ₁₊ m'                       ≈⟨ cright (lemma-^-+ S 1 m') ⟩
     X ^ k • (S • S ^ m')                     ≈⟨ sym assoc ⟩
     (X ^ k • S) • S ^ m'                     ≈⟨ cleft (SpushK k) ⟩
     (S • X ^ k • Z ^ N) • S ^ m'             ≈⟨ assoc ⟩
@@ -192,11 +191,11 @@ module Push (n : ℕ) where
                                              ≈⟨ cright (cright (cright (sym (lemma-^-+ Z (m' Nat.* N) N)))) ⟩
     S • S ^ m' • X ^ k • Z ^ (m' Nat.* N Nat.+ N)
                                              ≈⟨ cright (cright (cright (refl' (Eq.cong (Z ^_) (NP.+-comm (m' Nat.* N) N))))) ⟩
-    S • S ^ m' • X ^ k • Z ^ (suc m' Nat.* N)
+    S • S ^ m' • X ^ k • Z ^ (₁₊ m' Nat.* N)
                                              ≈⟨ sym assoc ⟩
-    (S • S ^ m') • (X ^ k • Z ^ (suc m' Nat.* N))
+    (S • S ^ m') • (X ^ k • Z ^ (₁₊ m' Nat.* N))
                                              ≈⟨ cleft (sym (lemma-^-+ S 1 m')) ⟩
-    S ^ suc m' • X ^ k • Z ^ (suc m' Nat.* N) ∎
+    S ^ ₁₊ m' • X ^ k • Z ^ (₁₊ m' Nat.* N) ∎
     where N = p-1 Nat.* k
 
   -- (p-1)² ≡ 1 (mod p)

@@ -1,4 +1,4 @@
-{-# OPTIONS  --safe #-}
+{-# OPTIONS --safe #-}
 open import Relation.Nullary.Decidable using (via-injection)
 open import Relation.Binary.PropositionalEquality as Eq renaming ([_] to [_]') using ( _≡_ ; inspect)
 open import Relation.Binary using (IsEquivalence ; Setoid ; Rel)
@@ -24,8 +24,9 @@ open import Word.Base
 open import Word.Properties
 open import Presentation.Reidemeister-Schreier
 
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
+open import Notations
 open PP using (NFProperty ; NFProperty')
 
 module Presentation.ListNF where
@@ -72,8 +73,8 @@ open import Relation.Unary
 
 mynf' : ∀ {A} {Γ : WRel A} {ℓ} {P : Pred A ℓ} -> (p : Decidable P) -> ℕ -> List A -> List A
 mynf' {A} {Γ} {ℓ} {P} p zero xs = xs
-mynf' {A} {Γ} {ℓ} {P} p (suc n) [] = []
-mynf' {A} {Γ} {ℓ} {P} p (suc n) (x ∷ xs) with does (p x)
+mynf' {A} {Γ} {ℓ} {P} p (₁₊ n) [] = []
+mynf' {A} {Γ} {ℓ} {P} p (₁₊ n) (x ∷ xs) with does (p x)
 ... | false = x ∷ mynf' {A} {Γ} {ℓ} {P} p n xs
 ... | true with span p (x ∷ xs)
 ... | (l , r) = l ++ mynf' {A} {Γ} {ℓ} {P} p n r
@@ -82,9 +83,9 @@ lemma-mynf' : ∀ {A} {Γ : WRel A} {ℓ} {P : Pred A ℓ} -> let open PP Γ in 
   (p : Decidable P) -> (n : ℕ) -> (xs : List A) -> from-list xs ≈ from-list (mynf' {A} {Γ} {ℓ} {P} p n xs)
 lemma-mynf' {A} {Γ} {ℓ} {P} p zero xs = refl
   where open PB Γ
-lemma-mynf' {A} {Γ} {ℓ} {P} p (suc n) [] = refl
+lemma-mynf' {A} {Γ} {ℓ} {P} p (₁₊ n) [] = refl
   where open PB Γ
-lemma-mynf' {A} {Γ} {ℓ} {P} p (suc n) (x ∷ xs) with does (p x)
+lemma-mynf' {A} {Γ} {ℓ} {P} p (₁₊ n) (x ∷ xs) with does (p x)
 ... | false = cright lemma-mynf' {A} {Γ} {ℓ} {P} p n xs
   where
     open PB Γ
@@ -144,8 +145,8 @@ extend-nfw {A} {B} {Γ} {Δ} {P} f finv f-wd-ax lem-finv p record { listnf = nf 
     
     mynf : ℕ -> List A -> List A
     mynf zero xs = xs
-    mynf (suc n) [] = []
-    mynf (suc n) (x ∷ xs) with does (p x)
+    mynf (₁₊ n) [] = []
+    mynf (₁₊ n) (x ∷ xs) with does (p x)
     ... | false = x ∷ mynf n xs
     ... | true = let (l , r) = span p (x ∷ xs) in
       to-list (((f *)) ( (from-list₀ ∘' nf ∘' to-list₀) (finv (from-list l , lemma-span (x ∷ xs))))) ++ mynf n r
@@ -162,8 +163,8 @@ extend-nfw {A} {B} {Γ} {Δ} {P} f finv f-wd-ax lem-finv p record { listnf = nf 
 
     lemma-mynf : (n : ℕ) -> (xs : List A) -> from-list xs ≈ from-list (mynf n xs)
     lemma-mynf zero xs = refl
-    lemma-mynf (suc n) [] = refl
-    lemma-mynf (suc n) (x ∷ xs) with does (p x)
+    lemma-mynf (₁₊ n) [] = refl
+    lemma-mynf (₁₊ n) (x ∷ xs) with does (p x)
     ... | false = cright lemma-mynf n xs
     ... | true = let (l , r) = span p (x ∷ xs) in let pr = span-defn p (x ∷ xs) in begin
           [ x ]ʷ • from-list xs ≈⟨ refl ⟩
@@ -211,8 +212,8 @@ extend-nf' {A} {B} {Γ} {Δ} {P} f finv f-wd lem-finv p record { listnf = nf ; l
     
     mynf : ℕ -> List A -> List A
     mynf zero xs = xs
-    mynf (suc n) [] = []
-    mynf (suc n) (x ∷ xs) with does (p x)
+    mynf (₁₊ n) [] = []
+    mynf (₁₊ n) (x ∷ xs) with does (p x)
     ... | false = x ∷ mynf n xs
     ... | true = let (l , r) = span p (x ∷ xs) in
       to-list (((f *)) (from-list (finv (l , lemma-span (x ∷ xs))))) ++ mynf n r
@@ -223,8 +224,8 @@ extend-nf' {A} {B} {Γ} {Δ} {P} f finv f-wd lem-finv p record { listnf = nf ; l
 
     lemma-mynf : (n : ℕ) -> (xs : List A) -> from-list xs ≈ from-list (mynf n xs)
     lemma-mynf zero xs = refl
-    lemma-mynf (suc n) [] = refl
-    lemma-mynf (suc n) (x ∷ xs) with does (p x)
+    lemma-mynf (₁₊ n) [] = refl
+    lemma-mynf (₁₊ n) (x ∷ xs) with does (p x)
     ... | false = cright lemma-mynf n xs
     ... | true = let (l , r) = span p (x ∷ xs) in let pr = span-defn p (x ∷ xs) in begin
           [ x ]ʷ • from-list xs ≈⟨ refl ⟩
@@ -261,16 +262,16 @@ extend-nf {A} {Γ} p record { listnf = nf ; lemma-listnf = lemma-nf } = record {
 
     mynf : ℕ -> List A -> List A
     mynf zero xs = xs
-    mynf (suc n) [] = []
-    mynf (suc n) (x ∷ xs) with does (p x)
+    mynf (₁₊ n) [] = []
+    mynf (₁₊ n) (x ∷ xs) with does (p x)
     ... | false = x ∷ mynf n xs
     ... | true with span p (x ∷ xs)
     ... | (l , r) = nf l ++ mynf n r
 
     lemma-mynf : (n : ℕ) -> (xs : List A) -> from-list xs ≈ from-list (mynf n xs)
     lemma-mynf zero xs = refl
-    lemma-mynf (suc n) [] = refl
-    lemma-mynf (suc n) (x ∷ xs) with does (p x)
+    lemma-mynf (₁₊ n) [] = refl
+    lemma-mynf (₁₊ n) (x ∷ xs) with does (p x)
     ... | false = cright lemma-mynf n xs
     ... | true with span p (x ∷ xs) | span-defn p (x ∷ xs)
     ... | (l , r) | pr = d
@@ -304,7 +305,7 @@ _∘_ {A} {Γ} record { listnf = listnf₁ ; lemma-listnf = lemma-listnf₁ } re
 
 rep : ∀ {A} {Γ : WRel A} -> ℕ -> ListNF Γ -> ListNF Γ
 rep zero nf = nf
-rep (suc n) nf = nf ∘ rep n nf
+rep (₁₊ n) nf = nf ∘ rep n nf
 
 
 module Translation where 

@@ -33,11 +33,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
@@ -60,9 +61,9 @@ module N.NF (p-2 : ℕ) (p-prime : Prime (2+ p-2))  where
 pattern auto = Eq.refl
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
 pattern ₅ = 5
 pattern ₆ = 6
 pattern ₇ = 7
@@ -75,10 +76,6 @@ pattern ₁₃ = 13
 pattern ₁₄ = 14
 pattern ₁₅ = 15
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
-pattern ₄₊ ⱼ = suc (suc (suc (suc ⱼ)))
 
 
 open import Zp.ModularArithmetic
@@ -209,9 +206,9 @@ lemma-actw-linear-+ {₀} (w • w₁) ps qs = begin
    act w (act w₁ ps +ₚ act w₁ qs) ≡⟨ lemma-actw-linear-+ w (act w₁ ps) (act w₁ qs) ⟩
    act w (act w₁ ps) +ₚ act w (act w₁ qs) ∎
    where open ≡-Reasoning
-lemma-actw-linear-+ {suc n} [ x ]ʷ ps qs = lemma-actw-linear-+-gen x ps qs
-lemma-actw-linear-+ {suc n} ε ps qs = auto
-lemma-actw-linear-+ {suc n} (w • w₁) ps qs = begin
+lemma-actw-linear-+ {₁₊ n} [ x ]ʷ ps qs = lemma-actw-linear-+-gen x ps qs
+lemma-actw-linear-+ {₁₊ n} ε ps qs = auto
+lemma-actw-linear-+ {₁₊ n} (w • w₁) ps qs = begin
   act w (act w₁ (ps +ₚ qs)) ≡⟨ Eq.cong (act w) (lemma-actw-linear-+ w₁ ps qs) ⟩
   act w (act w₁ ps +ₚ act w₁ qs) ≡⟨ lemma-actw-linear-+ w (act w₁ ps) (act w₁ qs) ⟩
   act w (act w₁ ps) +ₚ act w (act w₁ qs) ∎
@@ -236,9 +233,9 @@ lemma-actw-linear-* {₀} (w • w₁) k ps = begin
    act w (k *ₚ act w₁ ps) ≡⟨ lemma-actw-linear-* w k (act w₁ ps)  ⟩
    k *ₚ act w (act w₁ ps) ∎
    where open ≡-Reasoning
-lemma-actw-linear-* {suc n} [ x ]ʷ ps qs = lemma-actw-linear-*-gen x ps qs
-lemma-actw-linear-* {suc n} ε ps qs = auto
-lemma-actw-linear-* {suc n} (w • w₁) k qs = begin
+lemma-actw-linear-* {₁₊ n} [ x ]ʷ ps qs = lemma-actw-linear-*-gen x ps qs
+lemma-actw-linear-* {₁₊ n} ε ps qs = auto
+lemma-actw-linear-* {₁₊ n} (w • w₁) k qs = begin
   act w (act w₁ (k *ₚ qs)) ≡⟨ Eq.cong (act w) (lemma-actw-linear-* w₁ k qs) ⟩
   act w (k *ₚ act w₁ (qs)) ≡⟨ lemma-actw-linear-* w k (act w₁ qs) ⟩
   k *ₚ act w (act w₁ qs) ∎
@@ -610,10 +607,10 @@ Symplectic : ∀ {n} (f : Pauli n → Pauli n) → Set
 Symplectic {n} f = ∀ ps qs → sform (f ps) (f qs) ≡ sform ps qs
 
 
-Fix-P₀ : ∀ {n} (f : Pauli (suc n) → Pauli (suc n)) → Set
+Fix-P₀ : ∀ {n} (f : Pauli (₁₊ n) → Pauli (₁₊ n)) → Set
 Fix-P₀ {n} f = ∀ p ps → f (p ∷ ps) ≡ p ∷ tail (f (pI ∷ ps))
 
-Fix-Z₀-X₀ : ∀ {n} (f : Pauli (suc n) → Pauli (suc n)) → Set
+Fix-Z₀-X₀ : ∀ {n} (f : Pauli (₁₊ n) → Pauli (₁₊ n)) → Set
 Fix-Z₀-X₀ {n} f = f pZ₀ ≡ pZ₀ × f pX₀ ≡ pX₀
 
 lemma-symplectic-compose : ∀ {n} (f h : Pauli n → Pauli n) → Symplectic f → Symplectic h → Symplectic (h ∘ f)
@@ -644,16 +641,16 @@ lemma-linear-compose f h (p , m) (gp , gm) = c1 , c2
     (k *ₚ h (f (ps))) ≡⟨ auto ⟩
     k *ₚ g ps ∎
 
-lemma-tail-linear-+ : ∀ {n} → (ps qs : Pauli (suc n)) → tail (ps +ₚ qs) ≡ tail ps +ₚ tail qs
+lemma-tail-linear-+ : ∀ {n} → (ps qs : Pauli (₁₊ n)) → tail (ps +ₚ qs) ≡ tail ps +ₚ tail qs
 lemma-tail-linear-+ {n} (x ∷ ps) (x₁ ∷ qs) = auto
 
-lemma-tail-linear-* : ∀ {n} k → (ps : Pauli (suc n)) → tail (k *ₚ ps) ≡ k *ₚ tail ps
+lemma-tail-linear-* : ∀ {n} k → (ps : Pauli (₁₊ n)) → tail (k *ₚ ps) ≡ k *ₚ tail ps
 lemma-tail-linear-* {n} k (x ∷ ps) = auto
 
 lemma-actw-linear : ∀ {n} (w : Word (Gen n)) → IsLinear (act w)
 lemma-actw-linear {n} w = lemma-actw-linear-+ w , lemma-actw-linear-* w
 
-lemma-sub :  ∀ {n} (f : Pauli (₁₊ n) → Pauli (suc n)) →
+lemma-sub :  ∀ {n} (f : Pauli (₁₊ n) → Pauli (₁₊ n)) →
   IsLinear f → let g = \ ps → tail (f (pI ∷ ps)) in IsLinear g
 lemma-sub {n} f (p , m) = c1 , c2
   where
@@ -679,7 +676,7 @@ lemma-sub {n} f (p , m) = c1 , c2
     (k *ₚ tail (f (pI ∷ ps))) ≡⟨ auto ⟩
     k *ₚ g ps ∎
 
-lemma-actw-linear0' : ∀ {n} (f : Pauli (suc n) → Pauli (suc n)) →
+lemma-actw-linear0' : ∀ {n} (f : Pauli (₁₊ n) → Pauli (₁₊ n)) →
   IsLinear f → 
   Fix-Z₀-X₀ f →
   ∀ p → (f (p ∷ pIₙ)) ≡ p ∷ pIₙ
@@ -705,7 +702,7 @@ lemma-actw-linear0' f (fp , fm) (eqz , eqx) p = let ps = pIₙ in begin
   eq = pab .proj₂ .proj₂
 
 
-Linear-Symp-FixZX⇒FixP : ∀ {n} (f : Pauli (suc n) → Pauli (suc n)) →
+Linear-Symp-FixZX⇒FixP : ∀ {n} (f : Pauli (₁₊ n) → Pauli (₁₊ n)) →
 
   IsLinear f →
   Symplectic f →
@@ -765,7 +762,7 @@ Linear-Symp-FixZX⇒FixP {n} f (fp , fm) symp (eqz , eqx) p ps = begin
   aux9 : let ps' = f (pI ∷ ps) in (head ps') ≡ pI
   aux9 = let ps' = f (pI ∷ ps) in lemma-sform1-XZ (head ps') (aux8 , aux7)
 
--- lemma-fix-subform : ∀ {n} (f : Pauli (suc n) → Pauli (suc n)) → IsLinear f → Symplectic f →
+-- lemma-fix-subform : ∀ {n} (f : Pauli (₁₊ n) → Pauli (₁₊ n)) → IsLinear f → Symplectic f →
 --   f pZ₀ ≡ pZ₀ × f pX₀ ≡ pX₀ →
 --   ∀ ps qs → sform (f (pI ∷ ps)) (f (pI ∷ qs)) ≡ sform {n} (tail (f (pI ∷ ps))) (tail (f (pI ∷ qs)))
 -- lemma-fix1' {n} w (eqz , eqx) ps qs = begin
@@ -776,7 +773,7 @@ Linear-Symp-FixZX⇒FixP {n} f (fp , fm) symp (eqz , eqx) p ps = begin
 --   open ≡-Reasoning
 
 
-Linear-Symp-⇒FixP⇒ : ∀ {n} (f : Pauli (suc n) → Pauli (suc n)) → let g = \ ps → tail (f (pI ∷ ps)) in
+Linear-Symp-⇒FixP⇒ : ∀ {n} (f : Pauli (₁₊ n) → Pauli (₁₊ n)) → let g = \ ps → tail (f (pI ∷ ps)) in
 
   IsLinear f →
   Symplectic f →

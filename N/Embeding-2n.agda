@@ -1,4 +1,4 @@
-{-# OPTIONS  --safe #-}
+﻿{-# OPTIONS  --safe #-}
 --{-# OPTIONS --termination-depth=5 #-}
 open import Level using (0ℓ)
 
@@ -32,11 +32,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl) renaming( _* to _*ʷ)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
@@ -59,9 +60,9 @@ module N.Embeding-2n (p-2 : ℕ) (p-prime : Prime (2+ p-2)) (n : ℕ)  where
 pattern auto = Eq.refl
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
 pattern ₄ = 4
 pattern ₅ = 5
 pattern ₆ = 6
@@ -75,9 +76,6 @@ pattern ₁₃ = 13
 pattern ₁₄ = 14
 pattern ₁₅ = 15
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
 
 
 open import Zp.ModularArithmetic
@@ -181,68 +179,71 @@ lemma-f*-M↑ m = begin
 f-wd-ax : ∀ {w v} -> w ===₀ v -> (f*) w ≈ (f*) v
 -- f-wd-ax def-EX = axiom def-EX
 -- f-wd-ax order-EX = axiom order-EX
-f-wd-ax order-S = begin
+f-wd-ax (srel Base.order-S) = begin
   f* (S ^ p) ≈⟨ lemma-f* S p ⟩
   f* S ^ p ≈⟨ axiom order-S ⟩
   f* ε ∎
-f-wd-ax order-H = axiom order-H
-f-wd-ax order-SH = axiom order-SH
-f-wd-ax comm-HHS = axiom comm-HHS
-f-wd-ax (M-mul x y) = begin
+f-wd-ax (srel Base.order-H) = axiom order-H
+f-wd-ax (srel Base.order-SH) = axiom order-SH
+f-wd-ax (srel Base.comm-HHS) = axiom comm-HHS
+f-wd-ax (srel (Base.M-mul x y)) = begin
   f* (M x • M y) ≈⟨ cong (lemma-f*-M x) (lemma-f*-M y) ⟩
   (M x • M y) ≈⟨ axiom (M-mul x y) ⟩
   (M (x *' y)) ≈⟨ sym (lemma-f*-M (x *' y)) ⟩
   f* (M (x *' y)) ∎
-f-wd-ax (semi-MS x) = begin
+f-wd-ax (srel (Base.semi-MS x)) = begin
   f* (M x • S) ≈⟨ cleft lemma-f*-M x ⟩
   (M x • S) ≈⟨ axiom (semi-MS x) ⟩
   (S^ (x ^2) • M x) ≈⟨ sym (cong (lemma-f* S (toℕ (x ^2))) (lemma-f*-M x )) ⟩
   f* (S^ (x ^2) • M x) ∎
-f-wd-ax (semi-M↑CZ x) = begin
+f-wd-ax (srel (Base.semi-M↑CZ x)) = begin
   f* ((M x ↑) • CZ) ≈⟨ cleft lemma-f*-M↑ x ⟩
   ((M x ↑) • CZ) ≈⟨ axiom (semi-M↑CZ x) ⟩
   (CZ^ (x ^1) • (M x ↑)) ≈⟨ sym (cong (lemma-f* CZ (toℕ (x ^1))) (lemma-f*-M↑ x)) ⟩
   f* (CZ^ (x ^1) • (M x ↑)) ∎
-f-wd-ax (semi-M↓CZ x) = begin
+f-wd-ax (srel (Base.semi-M↓CZ x)) = begin
   f* ((M x ↓) • CZ) ≈⟨ cleft lemma-f*-M x ⟩
   ((M x ↓) • CZ) ≈⟨ axiom (semi-M↓CZ x) ⟩
   (CZ^ (x ^1) • (M x ↓)) ≈⟨ sym (cong (lemma-f* CZ (toℕ (x ^1))) (lemma-f*-M x)) ⟩
   f* (CZ^ (x ^1) • (M x ↓)) ∎
-f-wd-ax order-CZ = begin
+f-wd-ax (srel Base.order-CZ) = begin
   f* (CZ ^ p) ≈⟨ lemma-f* CZ p ⟩
   f* CZ ^ p ≈⟨ axiom order-CZ ⟩
   f* ε ∎
-f-wd-ax comm-CZ-S↓ = axiom comm-CZ-S↓
-f-wd-ax comm-CZ-S↑ = axiom comm-CZ-S↑
-f-wd-ax selinger-c10 = begin
+f-wd-ax (srel Base.comm-CZ-S↓) = axiom comm-CZ-S↓
+f-wd-ax (srel Base.comm-CZ-S↑) = axiom comm-CZ-S↑
+f-wd-ax (srel Base.selinger-c10) = begin
   f* (CZ • (H ↑) • CZ) ≈⟨ axiom selinger-c10 ⟩
   ((S⁻¹ ↑) • (H ↑) • (S⁻¹ ↑) • CZ • (H ↑) • (S⁻¹ ↑) • (S⁻¹ ↓)) ≈⟨ sym (cong (lemma-f*-Sᵏ↑ p-1) (cright cong (lemma-f*-Sᵏ↑ p-1) (cright (cright cong (lemma-f*-Sᵏ↑ p-1) (lemma-f* S p-1))))) ⟩
   f* ((S⁻¹ ↑) • (H ↑) • (S⁻¹ ↑) • CZ • (H ↑) • (S⁻¹ ↑) • (S⁻¹ ↓)) ∎
-f-wd-ax selinger-c11 = begin
+f-wd-ax (srel Base.selinger-c11) = begin
   f* (CZ • (H ↓) • CZ) ≈⟨ axiom selinger-c11 ⟩
   ((S⁻¹ ↓) • (H ↓) • (S⁻¹ ↓) • CZ • (H ↓) • (S⁻¹ ↓) • (S⁻¹ ↑)) ≈⟨ sym (cong (lemma-f* S p-1) (cright cong (lemma-f* S p-1) (cright (cright cong (lemma-f* S p-1) (lemma-f*-Sᵏ↑ p-1))))) ⟩
   f* ((S⁻¹ ↓) • (H ↓) • (S⁻¹ ↓) • CZ • (H ↓) • (S⁻¹ ↓) • (S⁻¹ ↑)) ∎
-f-wd-ax (comm-H {g = H-gen}) = axiom comm-H
-f-wd-ax (comm-H {g = S-gen}) = axiom comm-H
-f-wd-ax (comm-S {g = H-gen}) = axiom comm-S
-f-wd-ax (comm-S {g = S-gen}) = axiom comm-S
-f-wd-ax (cong↑ order-S) = begin
+f-wd-ax (comm₁ H-gate H-gen) = axiom comm-H
+f-wd-ax (comm₁ H-gate S-gen) = axiom comm-H
+f-wd-ax (comm₁ S-gate H-gen) = axiom comm-S
+f-wd-ax (comm₁ S-gate S-gen) = axiom comm-S
+f-wd-ax (comm₂ _ ())
+f-wd-ax (cong↑ (srel Base.order-S)) = begin
   f* ((S • S ^ ₁₊ p-2) ↑) ≈⟨  lemma-f*-Sᵏ↑ p ⟩
   ((S • S ^ ₁₊ p-2) ↑) ≈⟨ axiom (cong↑ order-S) ⟩
   f* (ε ↑) ∎
-f-wd-ax (cong↑ order-H) = axiom (cong↑ order-H)
-f-wd-ax (cong↑ order-SH) = axiom (cong↑ order-SH)
-f-wd-ax (cong↑ comm-HHS) = axiom (cong↑ comm-HHS)
-f-wd-ax (cong↑ (M-mul x y)) = begin
+f-wd-ax (cong↑ (srel Base.order-H)) = axiom (cong↑ order-H)
+f-wd-ax (cong↑ (srel Base.order-SH)) = axiom (cong↑ order-SH)
+f-wd-ax (cong↑ (srel Base.comm-HHS)) = axiom (cong↑ comm-HHS)
+f-wd-ax (cong↑ (srel (Base.M-mul x y))) = begin
   f* ((M x • M y) ↑) ≈⟨ cong (lemma-f*-M↑ x) (lemma-f*-M↑ y) ⟩
   (M x • M y) ↑ ≈⟨ axiom (cong↑ (M-mul x y)) ⟩
   (M (x *' y)) ↑ ≈⟨ sym (lemma-f*-M↑ (x *' y)) ⟩
   f* (M (x *' y) ↑) ∎
-f-wd-ax (cong↑ (semi-MS x)) = begin
+f-wd-ax (cong↑ (srel (Base.semi-MS x))) = begin
   f* ((M x • S) ↑) ≈⟨ cong (lemma-f*-M↑ x) (lemma-f*-Sᵏ↑ 1) ⟩
   (M x • S) ↑ ≈⟨ axiom (cong↑ (semi-MS x)) ⟩
   (S^ (x ^2) • M x) ↑ ≈⟨ sym (cong (lemma-f*-Sᵏ↑ (toℕ (x ^2))) (lemma-f*-M↑ x )) ⟩
   f* ((S^ (x ^2) • M x) ↑) ∎
+f-wd-ax (cong↑ (comm₁ _ ()))
+f-wd-ax (cong↑ (cong↑ (srel ())))
 
 
 open import Presentation.Morphism _===₀_ ((₂₊ n) QRel,_===_)

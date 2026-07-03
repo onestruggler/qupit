@@ -1,3 +1,11 @@
+------------------------------------------------------------------------
+-- Presentations of groups
+--
+-- Alternative amalgamated products of three group presentations.
+------------------------------------------------------------------------
+
+{-# OPTIONS --safe #-}
+
 open import Relation.Binary using (Rel ; REL)
 
 open import Level using (0ℓ)
@@ -15,7 +23,7 @@ import Relation.Binary.Reasoning.Setoid as SR
 
 open import Word.Base
 open import Word.Properties
-open import Presentation.Base
+open import Presentation.Horizontal-Syntactics
 open import Presentation.Reidemeister-Schreier
 
 open import Presentation.Construct.Base
@@ -23,7 +31,7 @@ open import Presentation.Construct.Properties.Amalgamation
 open import Presentation.Morphism as Morphism
 open import Presentation.MorphismId as MorphismId
 
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 
 open import Algebra.Morphism.Structures using (module MonoidMorphisms)

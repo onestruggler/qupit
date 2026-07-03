@@ -33,11 +33,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
@@ -65,9 +66,9 @@ private
 pattern auto = Eq.refl
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
 pattern ₅ = 5
 pattern ₆ = 6
 pattern ₇ = 7
@@ -80,10 +81,6 @@ pattern ₁₃ = 13
 pattern ₁₄ = 14
 pattern ₁₅ = 15
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
-pattern ₄₊ ⱼ = suc (suc (suc (suc ⱼ)))
 
 
 open import Zp.ModularArithmetic
@@ -251,17 +248,17 @@ lemma-coset-update {n@_} lm@(case-I d@(a@(₁₊ a-1) , b) c2@(case-Ex-| nf1 mc@
   m' = m .proj₁
   k = ( toℕ (m' * a))
   k' : ℤ ₚ
-  k' = fromℕ< (m%n<n (suc k) p)
+  k' = fromℕ< (m%n<n (₁₊ k) p)
 
   nzk : k' ≢ ₀
-  nzk with k' | inspect (\ k -> fromℕ< (m%n<n (suc k) p)) k
+  nzk with k' | inspect (\ k -> fromℕ< (m%n<n (₁₊ k) p)) k
   ... | ₀ | [ eq2 ]' = ⊥-elim (NP.0≢1+n aux-0=1)
     where
     aux-0=1 : ₀ ≡ ₁₊ k-1
     aux-0=1 = begin
       ₀ ≡⟨ Eq.cong toℕ (Eq.sym eq2) ⟩
-      toℕ k' ≡⟨ toℕ-fromℕ< (m%n<n (suc k) p) ⟩
-      (suc k) Nat.% p ≡⟨ eq ⟩
+      toℕ k' ≡⟨ toℕ-fromℕ< (m%n<n (₁₊ k) p) ⟩
+      (₁₊ k) Nat.% p ≡⟨ eq ⟩
       ₁₊ k-1 ∎
       where
       open ≡-Reasoning
@@ -289,7 +286,7 @@ lemma-coset-update {n@_} lm@(case-I d@(a@(₁₊ a-1) , b) c2@(case-Ex-| nf1 mc@
   claim = begin
     [ lm ]ˡᵐ' • CZ ≈⟨ lemma-coset-update-I-Ex-| a-1 b nf1 m ⟩
     (H ↑ • CZ ↑ ^ k • H ↑ ^ 3) • [ d ]ᵈ • Ex ↑ • ((CZ ^ ₁₊ k) ↑) • ⟦ nf1 ⟧₁ ↑ ↑ • ⟦ m ⟧ₘ ↑ • ε ≈⟨ (cright cright cright cleft lemma-cong↑ _ _ (lemma-CZ^k-% ((₁₊ k)))) ⟩
-    (H ↑ • CZ ↑ ^ k • H ↑ ^ 3) • [ d ]ᵈ • Ex ↑ • ((CZ ^ ((₁₊ k) Nat.% p)) ↑) • ⟦ nf1 ⟧₁ ↑ ↑ • ⟦ m ⟧ₘ ↑ • ε ≈⟨ (cright cright cright cleft (lemma-cong↑ _ _ (B1.refl' (Eq.cong (CZ ^_) (Eq.sym (toℕ-fromℕ< (m%n<n (suc k) p))))))) ⟩
+    (H ↑ • CZ ↑ ^ k • H ↑ ^ 3) • [ d ]ᵈ • Ex ↑ • ((CZ ^ ((₁₊ k) Nat.% p)) ↑) • ⟦ nf1 ⟧₁ ↑ ↑ • ⟦ m ⟧ₘ ↑ • ε ≈⟨ (cright cright cright cleft (lemma-cong↑ _ _ (B1.refl' (Eq.cong (CZ ^_) (Eq.sym (toℕ-fromℕ< (m%n<n (₁₊ k) p))))))) ⟩
     (H ↑ • CZ ↑ ^ k • H ↑ ^ 3) • [ d ]ᵈ • Ex ↑ • ((CZ^ k') ↑) • ⟦ nf1 ⟧₁ ↑ ↑ • ⟦ m ⟧ₘ ↑ • ε ≈⟨ (cright cright cright sym (cleft left-unit) ) ⟩
     (H ↑ • CZ ↑ ^ k • H ↑ ^ 3) • [ d ]ᵈ • Ex ↑ • (ε • (CZ^ k') ↑) • ⟦ nf1 ⟧₁ ↑ ↑ • ⟦ m ⟧ₘ ↑ • ε ≈⟨ (cright cright cright (cleft cleft sym (lemma-cong↑ _ _ (aux-M-mul ((k' , nzk))))) ) ⟩
     (H ↑ • CZ ↑ ^ k • H ↑ ^ 3) • [ d ]ᵈ • Ex ↑ • ((ZM (k' , nzk) • ZM ((k' , nzk)⁻¹)) • (CZ^ k')) ↑ • ⟦ nf1 ⟧₁ ↑ ↑ • ⟦ m ⟧ₘ ↑ • ε ≈⟨ (cright cright cright (cleft assoc) ) ⟩

@@ -33,12 +33,13 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 
 open import Presentation.GroupLike
 
 open import Data.Nat.Primality
+open import Notations
 
 module N.BR.Two.B (p-2 : ℕ) (p-prime : Prime (2+ p-2)) where
 
@@ -48,9 +49,9 @@ n = 0
 pattern auto = Eq.refl
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
 pattern ₅ = 5
 pattern ₆ = 6
 pattern ₇ = 7
@@ -63,10 +64,6 @@ pattern ₁₃ = 13
 pattern ₁₄ = 14
 pattern ₁₅ = 15
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
-pattern ₄₊ ⱼ = suc (suc (suc (suc ⱼ)))
 
 
 open import Zp.ModularArithmetic

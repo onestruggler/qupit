@@ -32,11 +32,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _*)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
@@ -59,9 +60,9 @@ module N.Symplectic-Derived (p-2 : ℕ) (p-prime : Prime (2+ p-2))  where
 pattern auto = Eq.refl
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
 pattern ₅ = 5
 pattern ₆ = 6
 pattern ₇ = 7
@@ -74,9 +75,6 @@ pattern ₁₃ = 13
 pattern ₁₄ = 14
 pattern ₁₅ = 15
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
 
 
 open import Zp.ModularArithmetic
@@ -91,25 +89,25 @@ module Symplectic-Derived-Gen where
     CZ-gen : ∀ {n} → ℤ ₚ -> Gen (₂₊ n)
     -- lift a generator from Gen n to Gen (₁₊ n). E.g., in a two
     -- qupit circut H-gen = H 0, and H-gen ↥ = H 1.
-    _↥ : ∀ {n} → Gen n → Gen (suc n)
+    _↥ : ∀ {n} → Gen n → Gen (₁₊ n)
 
-  [_⇑] : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  [_⇑] : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
   [_⇑] {n} = ([_]ʷ ∘ _↥) WB.*
 
-  [_⇑]' : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  [_⇑]' : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
   [_⇑]' {n} = wmap _↥
 
-  _↑ : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  _↑ : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
   _↑ = wmap _↥
 
-  _↓-gen : ∀ {n} → Gen n → Gen (suc n)
+  _↓-gen : ∀ {n} → Gen n → Gen (₁₊ n)
   _↓-gen {zero} ()
   _↓-gen {₁₊ n} (H-gen k) = (H-gen k)
   _↓-gen {₁₊ n} (S-gen k) = S-gen k
   _↓-gen {₁₊ .(₁₊ _)} (CZ-gen k) = CZ-gen k
   _↓-gen {₁₊ n} (g ↥) = (g ↓-gen) ↥
 
-  -- _↓ : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  -- _↓ : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
   -- _↓ {n} = wmap _↓-gen
 
   _↓ : ∀ {n} → Word (Gen n) → Word (Gen ( n))
@@ -238,7 +236,7 @@ module Symplectic-Derived-Gen where
 
   lemma-cong↑ : ∀ {n} w v →
     let open PB (n QRel,_===_) using (_≈_) in
-    let open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↑_) using () in
+    let open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↑_) using () in
     w ≈ v → w ↑ ≈↑ v ↑
   lemma-cong↑ {n} w v PB.refl = PB.refl
   lemma-cong↑ {n} w v (PB.sym eq) = PB.sym (lemma-cong↑ v w eq)
@@ -301,7 +299,7 @@ module Symplectic-Derived-Gen where
 {-
   lemma-cong↓ : ∀ {n} w v →
     let open PB (n QRel,_===_) using (_≈_) in
-    let open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_) using () in
+    let open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_) using () in
     w ≈ v → w ↓ ≈↓ v ↓
   lemma-cong↓ {n} w v PB.refl = PB.refl
   lemma-cong↓ {n} w v (PB.sym eq) = PB.sym (lemma-cong↓ v w eq)
@@ -315,8 +313,8 @@ module Symplectic-Derived-Gen where
     ((S • S ^ ₁₊ p-2)) ≈⟨ axiom order-S ⟩
     (ε ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom order-H) = PB.axiom order-H
   lemma-cong↓ {n} w v (PB.axiom order-SH) = PB.axiom order-SH
@@ -330,8 +328,8 @@ module Symplectic-Derived-Gen where
     ((CZ • CZ ^ ₁₊ p-2)) ≈⟨ axiom order-CZ ⟩
     (ε ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom comm-CZ-S↓) = PB.axiom comm-CZ-S↓
   lemma-cong↓ {n} w v (PB.axiom comm-CZ-S↑) = PB.axiom comm-CZ-S↑
@@ -343,8 +341,8 @@ module Symplectic-Derived-Gen where
     ((S⁻¹ ↑ ↓) • (H ↑ ↓) • (S⁻¹ ↑ ↓) • CZ ↓ • (H ↑ ↓) • (S⁻¹ ↑ ↓) • (S⁻¹ ↓ ↓)) ≈⟨ refl ⟩
     (((S⁻¹ ↑) • (H ↑) • (S⁻¹ ↑) • CZ • (H ↑) • (S⁻¹ ↑) • (S⁻¹ ↓)) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom selinger-c11) = begin
     ((CZ • (H ↓) • CZ) ↓) ≈⟨ refl ⟩
@@ -353,8 +351,8 @@ module Symplectic-Derived-Gen where
     ((S⁻¹ ↓ ↓) • (H ↓) • (S⁻¹ ↓ ↓) • CZ • (H ↓) • (S⁻¹ ↓ ↓) • (S⁻¹ ↑ ↓)) ≈⟨ refl ⟩
     (((S⁻¹ ↓) • (H ↓) • (S⁻¹ ↓) • CZ • (H ↓) • (S⁻¹ ↓) • (S⁻¹ ↑)) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom selinger-c12) = PB.axiom selinger-c12
   lemma-cong↓ {n} w v (PB.axiom selinger-c13) = PB.axiom selinger-c13
@@ -369,8 +367,8 @@ module Symplectic-Derived-Gen where
     ((S ^ toℕ k)) ≈⟨ sym (lemma-cong↓-S^ (toℕ k)) ⟩
     ((S ^ toℕ k) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom (derived-H k)) = begin
     ([ H-gen k ]ʷ ↓) ≈⟨ refl ⟩
@@ -378,8 +376,8 @@ module Symplectic-Derived-Gen where
     ((H ^ toℕ k)) ≈⟨ sym (lemma-cong↓-H^ (toℕ k)) ⟩
     ((H ^ toℕ k) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom (derived-CZ k)) =  begin
     ([ CZ-gen k ]ʷ ↓) ≈⟨ refl ⟩
@@ -387,8 +385,8 @@ module Symplectic-Derived-Gen where
     ((CZ ^ toℕ k)) ≈⟨ sym (lemma-cong↓-CZ^ (toℕ k)) ⟩
     ((CZ ^ toℕ k) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom (cong↑ {w = w₁} {v = v₁} x)) = begin
     ((w₁ ↑) ↓) ≡⟨  lemma-↑↓ w₁ ⟩
@@ -396,8 +394,8 @@ module Symplectic-Derived-Gen where
     ((v₁ ↓) ↑) ≡⟨ Eq.sym (lemma-↑↓ v₁) ⟩
     ((v₁ ↑) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
 -}
 
@@ -636,7 +634,7 @@ module Symplectic-Derived-GroupLike where
   [_]ᵇ {n} (₀ , ₀) = Ex
   [_]ᵇ {n} (₀ , ₁) = H ↑ ^ 3 • CZ • H ↑ • Ex
   [_]ᵇ {n} (a@₀ , b@(₂)) = [ ₀ , ₁ ]ᵇ • [ (a , b) , (λ ()) ]ᵃ ↑
-  [_]ᵇ {n} (a@(suc a') , b) = [ ₀ , ₁ ]ᵇ • [ (a , b) , (λ ()) ]ᵃ ↑
+  [_]ᵇ {n} (a@(₁₊ a') , b) = [ ₀ , ₁ ]ᵇ • [ (a , b) , (λ ()) ]ᵃ ↑
 
 
 {- Sarah's B box
@@ -644,7 +642,7 @@ module Symplectic-Derived-GroupLike where
   [_]ᵇ {n} (₀ , ₀) = Ex • CZ
   [_]ᵇ {n} (₀ , ₁) = H ↑ ^ 3 • CZ • H ↑ • CZ • CZ • Ex
   [_]ᵇ {n} (a@₀ , b@(₂)) = [ ₀ , ₁ ]ᵇ • CZ • [ (a , b) , (λ ()) ]ᵃ ↑
-  [_]ᵇ {n} (a@(suc a') , b) = [ ₀ , ₁ ]ᵇ • CZ • CZ • [ (a , b) , (λ ()) ]ᵃ ↑
+  [_]ᵇ {n} (a@(₁₊ a') , b) = [ ₀ , ₁ ]ᵇ • CZ • CZ • [ (a , b) , (λ ()) ]ᵃ ↑
 -}
 
 
@@ -695,11 +693,11 @@ module Symplectic-Derived-GroupLike where
 
   [_]ᵛᵇ : ∀ {n} → Vec B n → Word (Gen (₁₊ n))
   [_]ᵛᵇ {₀} [] = ε
-  [_]ᵛᵇ {suc n} (x ∷ v) = [ v ]ᵛᵇ ↑ • [ x ]ᵇ
+  [_]ᵛᵇ {₁₊ n} (x ∷ v) = [ v ]ᵛᵇ ↑ • [ x ]ᵇ
 
   [_]ᵛᵈ : ∀ {n} → Vec D n → Word (Gen (₁₊ n))
   [_]ᵛᵈ {₀} [] = ε
-  [_]ᵛᵈ {suc n} (x ∷ v) = [ x ]ᵈ • [ v ]ᵛᵈ ↑
+  [_]ᵛᵈ {₁₊ n} (x ∷ v) = [ x ]ᵈ • [ v ]ᵛᵈ ↑
 
   [_]ᵐ : ∀ {n} → M n → Word (Gen (₁₊ n))
   [_]ᵐ {n} (e , ds) = [ e ]ᵉ • [ ds ]ᵛᵈ
@@ -1096,7 +1094,7 @@ module Symplectic-Derived-GroupLike where
 
   prop-∃-M : ∀ {n} {e} (ps : Pauli (₁₊ n)) (eqX : last ps ≡ (₁ , e)) → ∃ \ m → act [ m ]ᵐ ps ≡ pX₀
   prop-∃-M {0} {e} (x ∷ []) eqX rewrite eqX = (- e , []) , prop-ebox e []
-  prop-∃-M {n@(suc m)} {e} ps eqX = (- e , proj₁ vdp) , (begin
+  prop-∃-M {n@(₁₊ m)} {e} ps eqX = (- e , proj₁ vdp) , (begin
     act [ - e ]ᵉ (act [ proj₁ vdp ]ᵛᵈ ps) ≡⟨ Eq.cong (act [ - e ]ᵉ) (proj₂ vdp) ⟩
     act [ - e ]ᵉ (pX₀Z₀ e) ≡⟨ prop-ebox e pIₙ ⟩
     pX₀ ∎)
@@ -1214,7 +1212,7 @@ module Symplectic-Derived-GroupLike where
 
   prop-∃-L' : ∀ {n} (ps : Pauli n) (p : Pauli1) (p≢I : p ≢ pI) → ∃ \ l → act [ l ]ˡ (p ∷ ps) ≡ pZₙ
   prop-∃-L' {0} [] p neq = ((0 , [] , p , neq) , z≤n) , prop-abox p neq []
-  prop-∃-L' {n@(suc n')} ps@(q ∷ qs) p neq =
+  prop-∃-L' {n@(₁₊ n')} ps@(q ∷ qs) p neq =
     let le = NP.≤-reflexive auto in
     let (vb , prf) = prop-∃-bboxes (pZ ∷ q ∷ qs) auto in
     ((n , vb , p , neq), le) , (begin

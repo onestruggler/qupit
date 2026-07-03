@@ -33,11 +33,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 open import Presentation.Tactics
 
@@ -60,7 +61,7 @@ open import Zp.ModularArithmetic
 
 module One.SymplecticZp-Simplified2
   (p-3 : ℕ)
-  (p-prime : Prime (suc (suc (suc p-3))))
+  (p-prime : Prime (suc (suc (₁₊ p-3))))
   (let open PrimeModulus' p-3 p-prime)
   (g : ℤ ₚ)
   (g-gen : ∀ ((x , _) : ℤ* ₚ) -> ∃ \ (k : ℤ ₚ-₁) -> x ≡ g ^′ toℕ k )
@@ -69,15 +70,11 @@ module One.SymplecticZp-Simplified2
 
 pattern auto = Eq.refl
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
-pattern ₄ = suc ₃
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
+pattern ₄ = ₁₊ ₃
 
-pattern ₁₊ n = suc n
-pattern ₂₊ n = suc (suc n)
-pattern ₃₊ n = suc (₂₊ n)
-pattern ₄₊ n = suc (₃₊ n)
 
 open Primitive-Root-Modp g g-gen Zp.Fermats-little-theorem
 

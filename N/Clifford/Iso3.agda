@@ -16,7 +16,7 @@ open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_])
 
 open import Word.Base as WB hiding (wfoldl)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 
 open import Presentation.Construct.Base hiding (_*_)
@@ -33,12 +33,13 @@ open import Zp.Fermats-little-theorem
 
 open import Algebra.Bundles using (Group)
 open import Algebra.Morphism.Structures using (module GroupMorphisms)
+open import Notations
 
 
 module N.Clifford.Iso3
   (p-3 : ℕ)
-  (let p-2 = suc p-3)
-  (p-prime : Prime (suc (suc p-2)))
+  (let p-2 = ₁₊ p-3)
+  (p-prime : Prime (suc (₁₊ p-2)))
   (let open PrimeModulus' p-2 p-prime)
   (g*@(g , g≠0) : ℤ* ₚ)
   (g-gen : ∀ ((x , _) : ℤ* ₚ) -> ∃ \ (k : ℤ ₚ-₁) -> x ≡ g ^′ toℕ k )
@@ -51,10 +52,8 @@ import N.Clifford.Iso p-3 p-prime g* g-gen as ISO
 import N.Clifford.Iso2 p-3 p-prime g* g-gen as ISO2
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
 
 import N.Symplectic p-2 p-prime as NSym
 import N.XZ p-2 p-prime as XZ

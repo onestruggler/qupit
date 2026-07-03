@@ -8,10 +8,11 @@ import Relation.Binary.PropositionalEquality as Eq
 import Relation.Binary.Reasoning.Setoid as SR
 
 open import Word.Base
+open import Notations
 
 module Presentation.Tactics where
 
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 
 open import Relation.Binary.Definitions using (DecidableEquality ; Decidable)
@@ -60,7 +61,7 @@ module Commuting
        (less : X -> X -> Bool)
   where
 
-  open import Presentation.Base Γ
+  open import Presentation.Horizontal-Syntactics Γ
   open import Presentation.Properties Γ
 
   -- This module provides some tactics for proving equations between
@@ -175,13 +176,13 @@ module Commuting
   nth : {X : Set} -> ℕ -> List X -> Maybe X
   nth n [] = nothing
   nth zero (x ∷ xs) = just x
-  nth (suc n) (x ∷ xs) = nth n xs
+  nth (₁₊ n) (x ∷ xs) = nth n xs
 
   -- Lemma: The nth member of a list is a member!
   lemma-mem-nth : ∀ {X : Set} {x : X} {xs : List X} (n : ℕ) -> nth n xs ≡ just x -> mem x xs
   lemma-mem-nth {xs = []} n ()
   lemma-mem-nth {xs = x ∷ xs} zero Eq.refl = mem-head
-  lemma-mem-nth {xs = x ∷ xs} (suc n) hyp = mem-tail (lemma-mem-nth n hyp)
+  lemma-mem-nth {xs = x ∷ xs} (₁₊ n) hyp = mem-tail (lemma-mem-nth n hyp)
   
   -- The All-elimination rule.
   All-elim : ∀ {X} {x : X} {xs P} -> mem x xs -> All P xs -> P x
@@ -380,16 +381,16 @@ module Rewriting
     -- ensure termination.
     multistep : (n : ℕ) -> List X -> List X
     multistep zero xs = xs
-    multistep (suc n) xs with strict xs step
-    multistep (suc n) xs | nothing = xs
-    multistep (suc n) xs | just (xs' , _) = multistep n xs'
+    multistep (₁₊ n) xs with strict xs step
+    multistep (₁₊ n) xs | nothing = xs
+    multistep (₁₊ n) xs | just (xs' , _) = multistep n xs'
 
     -- Lemma: multistep rewriting returns an equivalent word.
     lemma-multistep : (n : ℕ) -> (xs : List X) -> from-list xs ≈ from-list (multistep n xs)
     lemma-multistep zero xs = refl
-    lemma-multistep (suc n) xs with strict xs step | inspect (strict xs) step
-    lemma-multistep (suc n) xs | nothing | _ = refl
-    lemma-multistep (suc n) xs | just (xs' , hyp) | [ eq ] =
+    lemma-multistep (₁₊ n) xs with strict xs step | inspect (strict xs) step
+    lemma-multistep (₁₊ n) xs | nothing | _ = refl
+    lemma-multistep (₁₊ n) xs | just (xs' , hyp) | [ eq ] =
       begin from-list xs
               ≈⟨ hyp ⟩
           from-list xs'
@@ -400,9 +401,9 @@ module Rewriting
     -- debugging rewriting strategies.
     multistep-trace : (n : ℕ) -> List X -> List (List X)
     multistep-trace zero xs = xs ∷ []
-    multistep-trace (suc n) xs with step xs
-    multistep-trace (suc n) xs | nothing = xs ∷ []
-    multistep-trace (suc n) xs | just (xs' , _) = xs ∷ multistep-trace n xs'
+    multistep-trace (₁₊ n) xs with step xs
+    multistep-trace (₁₊ n) xs | nothing = xs ∷ []
+    multistep-trace (₁₊ n) xs | just (xs' , _) = xs ∷ multistep-trace n xs'
 
     -- A tactic for proving equality of ground words based on a
     -- rewrite relation. The parameter n limits the number of rewrite
@@ -469,9 +470,9 @@ module Rewriting
       -- already standardized.
       multistep-st : (n : ℕ) -> List X -> List X
       multistep-st zero xs = xs
-      multistep-st (suc n) xs with strict xs step
-      multistep-st (suc n) xs | nothing = xs
-      multistep-st (suc n) xs | just (xs' , _) = multistep n xs'
+      multistep-st (₁₊ n) xs with strict xs step
+      multistep-st (₁₊ n) xs | nothing = xs
+      multistep-st (₁₊ n) xs | just (xs' , _) = multistep n xs'
 
     mutual
       -- Lemma: multistep rewriting returns an equivalent word.
@@ -489,9 +490,9 @@ module Rewriting
 
       lemma-multistep-st : (n : ℕ) -> (xs : List X) -> from-list xs ≈ from-list (multistep-st n xs)
       lemma-multistep-st zero xs = refl
-      lemma-multistep-st (suc n) xs with strict xs step | inspect (strict xs) step
-      lemma-multistep-st (suc n) xs | nothing | _ = refl
-      lemma-multistep-st (suc n) xs | just (xs' , hyp) | [ eq ] =
+      lemma-multistep-st (₁₊ n) xs with strict xs step | inspect (strict xs) step
+      lemma-multistep-st (₁₊ n) xs | nothing | _ = refl
+      lemma-multistep-st (₁₊ n) xs | just (xs' , hyp) | [ eq ] =
         begin from-list xs
                 ≈⟨ hyp ⟩
             from-list xs'
@@ -508,9 +509,9 @@ module Rewriting
 
       multistep-trace-st : (n : ℕ) -> List X -> List (List X)
       multistep-trace-st zero xs = xs ∷ []
-      multistep-trace-st (suc n) xs with step xs
-      multistep-trace-st (suc n) xs | nothing = xs ∷ []
-      multistep-trace-st (suc n) xs | just (xs' , _) = xs ∷ multistep-trace n xs'
+      multistep-trace-st (₁₊ n) xs with step xs
+      multistep-trace-st (₁₊ n) xs | nothing = xs ∷ []
+      multistep-trace-st (₁₊ n) xs | just (xs' , _) = xs ∷ multistep-trace n xs'
   
     -- A tactic for proving equality of ground words based on a
     -- rewrite relation and a standardization function. The parameter

@@ -13,7 +13,7 @@ open import Data.Sum using (_⊎_)
 open import Data.Unit using (⊤)
 open import Data.Vec
 open import Relation.Binary.PropositionalEquality using (_≢_)
-
+open import Notations
 
 open import Zp.ModularArithmetic
 

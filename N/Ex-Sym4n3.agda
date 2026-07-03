@@ -32,11 +32,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _*)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
@@ -59,9 +60,9 @@ module N.Ex-Sym4n3 (p-2 : ℕ) (p-prime : Prime (2+ p-2)) (n : ℕ)  where
 pattern auto = Eq.refl
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
 pattern ₄ = 4
 pattern ₅ = 5
 pattern ₆ = 6
@@ -75,9 +76,6 @@ pattern ₁₃ = 13
 pattern ₁₄ = 14
 pattern ₁₅ = 15
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
 
 
 open import Zp.ModularArithmetic
@@ -185,7 +183,7 @@ lemma-XC-CZ^k k@(₁₊ k'@(₁₊ k'')) = begin
   CZ ↑ ^ ₂₊ k'' • CZ02⁻ᵏ (₂₊ k'') • (XC) ∎
   where
   open Rewriting-Powers (₂₊ n)
-  open Commuting-Symplectic (suc n)
+  open Commuting-Symplectic (₁₊ n)
   open Sym0-Rewriting (₂₊ n)
   open Rewriting-Swap (₁₊ n)
   open Basis-Change _ ((₃₊ n) QRel,_===_) grouplike
@@ -260,7 +258,7 @@ lemma-XC⁻¹-CZ^k : ∀ k ->
 lemma-XC⁻¹-CZ^k k = bbc XC XC aux
   where
   open Rewriting-Powers (₂₊ n)
-  open Commuting-Symplectic (suc n)
+  open Commuting-Symplectic (₁₊ n)
   open Sym0-Rewriting (₂₊ n)
   open Rewriting-Swap (₁₊ n)
   open Lemmas-2Q (₁₊ n)

@@ -14,7 +14,7 @@ open import Function using (_∘_)
 
 open import Word.Base
 import Presentation.Properties as PP
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 
 import Presentation.Construct.Properties.DirectProduct as DP
 import Presentation.Construct.Properties.NDirectProduct as NDP
@@ -23,14 +23,14 @@ import Presentation.Reidemeister-Schreier as RS
 open import Presentation.Groups.SnD
 
 import Presentation.Groups.Sn as Sn
+open import Notations
 
-open import CliffordCCS.Index
 
 -- ----------------------------------------------------------------------
 -- * Generators and relations for U₈(ℤ[1/2, i])
 
 
-module U33Di where
+module Examples.Amalgamations.U33Di where
 
 
 module TwoLevel-Simplified-Amal where
@@ -382,14 +382,14 @@ module TwoLevel-Simplified-Amal where
 
     lemma-KI : (k : ℕ) -> K₀₁ • (i₀ • i₁) ^ k ≈₂ (i₀ • i₁) ^ k • K₀₁
     lemma-KI zero = trans (right-unit) (sym left-unit)
-    lemma-KI (suc zero) = trans (axiom [S12]) (sym assoc)
-    lemma-KI (suc (suc k)) = begin
-      K₀₁ • (i₀ • i₁) • (i₀ • i₁) ^ suc k ≈⟨ by-assoc₂ Eq.refl ⟩
-      (K₀₁ • i₀ • i₁) • (i₀ • i₁) ^ suc k ≈⟨ cong (axiom [S12]) refl ⟩
-      (i₀ • i₁ • K₀₁) • (i₀ • i₁) ^ suc k ≈⟨ by-assoc₂ Eq.refl ⟩
-      (i₀ • i₁) • K₀₁ • (i₀ • i₁) ^ suc k ≈⟨ cong refl (lemma-KI (suc k)) ⟩
-      (i₀ • i₁) • (i₀ • i₁) ^ suc k • K₀₁ ≈⟨ by-assoc₂ Eq.refl ⟩
-      ((i₀ • i₁) • (i₀ • i₁) ^ suc k) • K₀₁ ∎
+    lemma-KI (₁₊ zero) = trans (axiom [S12]) (sym assoc)
+    lemma-KI (₂₊ k) = begin
+      K₀₁ • (i₀ • i₁) • (i₀ • i₁) ^ ₁₊ k ≈⟨ by-assoc₂ Eq.refl ⟩
+      (K₀₁ • i₀ • i₁) • (i₀ • i₁) ^ ₁₊ k ≈⟨ cong (axiom [S12]) refl ⟩
+      (i₀ • i₁ • K₀₁) • (i₀ • i₁) ^ ₁₊ k ≈⟨ by-assoc₂ Eq.refl ⟩
+      (i₀ • i₁) • K₀₁ • (i₀ • i₁) ^ ₁₊ k ≈⟨ cong refl (lemma-KI (₁₊ k)) ⟩
+      (i₀ • i₁) • (i₀ • i₁) ^ ₁₊ k • K₀₁ ≈⟨ by-assoc₂ Eq.refl ⟩
+      ((i₀ • i₁) • (i₀ • i₁) ^ ₁₊ k) • K₀₁ ∎
 
     lemma-KiiiK : K₀₁ • i₁ ^ 3 • K₀₁ • i₀ • i₁ ≈₂ i₁ • K₀₁ • i₁
     lemma-KiiiK = begin
@@ -1236,14 +1236,14 @@ module TwoLevel-Simplified-Amal where
       
       comm-aux : ∀ {a b} -> a • b ≈₁ b • a -> (n : ℕ) -> a • b ^ n ≈₁ b ^ n • a
       comm-aux {a} {b} eq zero = trans right-unit (sym left-unit)
-      comm-aux {a} {b} eq (suc zero) = eq
-      comm-aux {a} {b} eq (suc (suc n)) = begin
-        a • b • b ^ suc n ≈⟨ sym assoc ⟩
-        (a • b) • b ^ suc n ≈⟨ cong eq refl ⟩
-        (b • a) • b ^ suc n ≈⟨ assoc ⟩
-        b • a • b ^ suc n ≈⟨ cong refl (comm-aux eq (suc n)) ⟩
-        b • b ^ suc n • a ≈⟨ sym assoc ⟩
-        (b • b ^ suc n) • a ∎
+      comm-aux {a} {b} eq (₁₊ zero) = eq
+      comm-aux {a} {b} eq (₂₊ n) = begin
+        a • b • b ^ ₁₊ n ≈⟨ sym assoc ⟩
+        (a • b) • b ^ ₁₊ n ≈⟨ cong eq refl ⟩
+        (b • a) • b ^ ₁₊ n ≈⟨ assoc ⟩
+        b • a • b ^ ₁₊ n ≈⟨ cong refl (comm-aux eq (₁₊ n)) ⟩
+        b • b ^ ₁₊ n • a ≈⟨ sym assoc ⟩
+        (b • b ^ ₁₊ n) • a ∎
 
       claim0 : (g *) [ [ [ Ki.K₀₁ • Ki.i₀ • Ki.i₀ • Ki.K₀₁ • Ki.i₁ ]ₗ ]ᵣ ]ᵣ ≈₁ (g *) [ [ [ Ki.i₀ • Ki.K₀₁ • Ki.i₀ • Ki.i₀ • Ki.K₀₁ ]ₗ ]ᵣ ]ᵣ
       claim0 = begin
@@ -1295,14 +1295,14 @@ module TwoLevel-Simplified-Amal where
       
       comm-aux : ∀ {a b} -> a • b ≈₁ b • a -> (n : ℕ) -> a • b ^ n ≈₁ b ^ n • a
       comm-aux {a} {b} eq zero = trans right-unit (sym left-unit)
-      comm-aux {a} {b} eq (suc zero) = eq
-      comm-aux {a} {b} eq (suc (suc n)) = begin
-        a • b • b ^ suc n ≈⟨ sym assoc ⟩
-        (a • b) • b ^ suc n ≈⟨ cong eq refl ⟩
-        (b • a) • b ^ suc n ≈⟨ assoc ⟩
-        b • a • b ^ suc n ≈⟨ cong refl (comm-aux eq (suc n)) ⟩
-        b • b ^ suc n • a ≈⟨ sym assoc ⟩
-        (b • b ^ suc n) • a ∎
+      comm-aux {a} {b} eq (₁₊ zero) = eq
+      comm-aux {a} {b} eq (₂₊ n) = begin
+        a • b • b ^ ₁₊ n ≈⟨ sym assoc ⟩
+        (a • b) • b ^ ₁₊ n ≈⟨ cong eq refl ⟩
+        (b • a) • b ^ ₁₊ n ≈⟨ assoc ⟩
+        b • a • b ^ ₁₊ n ≈⟨ cong refl (comm-aux eq (₁₊ n)) ⟩
+        b • b ^ ₁₊ n • a ≈⟨ sym assoc ⟩
+        (b • b ^ ₁₊ n) • a ∎
 
       claim0 : (g *) [ [ [ Ki.K₀₁ • Ki.i₀ • Ki.i₀ • Ki.K₀₁ • Ki.i₀ ]ₗ ]ᵣ ]ᵣ ≈₁ (g *) [ [ [ Ki.i₁ • Ki.K₀₁ • Ki.i₀ • Ki.i₀ • Ki.K₀₁ ]ₗ ]ᵣ ]ᵣ
       claim0 = begin

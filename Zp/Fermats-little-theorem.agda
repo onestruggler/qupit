@@ -1,9 +1,14 @@
-{-# OPTIONS  --safe #-}
-{-# OPTIONS  --call-by-name #-}
+﻿------------------------------------------------------------------------
+-- The Agda standard library
+--
+-- Fermat's little theorem for prime modulus
+------------------------------------------------------------------------
+
+{-# OPTIONS --safe #-}
+{-# OPTIONS --call-by-name #-}
 {-# OPTIONS --termination-depth=5 #-}
 
-import Data.Integer as Integer
-
+open import Notations
 module Zp.Fermats-little-theorem where
 
 open import Algebra.Structures
@@ -67,20 +72,20 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
   1--p-1 : Vector (ℤ ₚ) (p-1)
   1--p-1 = drop 1 (allFin p)
 
-  a*1--p-1 : ∀ (a : ℤ ₚ) -> Vector (ℤ ₚ) (p-1)
+  a*1--p-1 : ∀ (a : ℤ ₚ) → Vector (ℤ ₚ) (p-1)
   a*1--p-1 a = a *ᵥ 1--p-1
 
-  1--n-1 : ∀ n-2 -> let n = ₂₊ n-2 in Vector (ℤ n) (₁₊ n-2)
+  1--n-1 : ∀ n-2 → let n = ₂₊ n-2 in Vector (ℤ n) (₁₊ n-2)
   1--n-1 n-2 = drop 1 (allFin (₂₊ n-2))
 
 
-  a*1--n-1 : ∀ n-2 -> let n = ₂₊ n-2 in (a : ℤ n) -> Vector (ℤ n) (₁₊ n-2)
+  a*1--n-1 : ∀ n-2 → let n = ₂₊ n-2 in (a : ℤ n) → Vector (ℤ n) (₁₊ n-2)
   a*1--n-1 n-2 a = V.map (a *_) (1--n-1 n-2)
 
 -}
 
 
-  *-perm : ∀ (a : ℤ* ₚ) -> Permutation p p
+  *-perm : ∀ (a : ℤ* ₚ) → Permutation p p
   *-perm a*@(a , nz) =
     record { to = a *_ ; from = a⁻¹ *_ ; to-cong = cong (a *_) ; from-cong = cong (a⁻¹ *_) ; inverse = invl , invr }
     where
@@ -105,29 +110,29 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       where open ≡-Reasoning
 
 
-  *-perm* : ∀ (a : ℤ* ₚ) -> Permutation p-1 p-1
+  *-perm* : ∀ (a : ℤ* ₚ) → Permutation p-1 p-1
   *-perm* a = F.remove ₀ $ *-perm a
 
 
-  *-perm-n : ∀ (a : ℤ* ₚ) -> Vector (ℤ ₚ) n -> Vector (ℤ ₚ) n
+  *-perm-n : ∀ (a : ℤ* ₚ) → Vector (ℤ ₚ) n → Vector (ℤ ₚ) n
   *-perm-n a*@(a , nz) v = (a *_) ∘ v
 
 
-  product : ∀ {n} -> Vector (ℤ ₚ) n -> ℤ ₚ
+  product : ∀ {n} → Vector (ℤ ₚ) n → ℤ ₚ
   product = foldr _*_ ₁
 
-  perm₀ : ∀ (perm : Permutation 1 1) -> perm ⟨$⟩ʳ ₀ ≡ ₀
+  perm₀ : ∀ (perm : Permutation 1 1) → perm ⟨$⟩ʳ ₀ ≡ ₀
   perm₀ perm with perm ⟨$⟩ʳ ₀
   ... | ₀ = auto
 
-  lemma-product : ∀ ((a , nz) : ℤ* ₚ) (v : Vector (ℤ ₚ) n) -> product ((a *_) ∘ v) ≡ a ^′ n * product  v
+  lemma-product : ∀ ((a , nz) : ℤ* ₚ) (v : Vector (ℤ ₚ) n) → product ((a *_) ∘ v) ≡ a ^′ n * product  v
   lemma-product {₀} a v = auto
   lemma-product {n@(₁₊ n')} a*@(a , nz) v = begin
     product ((a *_) ∘ v) ≡⟨ auto ⟩
     (a * v ₀) * product ((a *_) ∘ v ∘ suc) ≡⟨ cong ((a * v ₀) *_) (lemma-product a* (v ∘ suc)) ⟩
     a * v ₀ * (a ^′ n' * product (v ∘ suc)) ≡⟨  *-assoc a (v ₀) (a ^′ n' * product (v ∘ suc)) ⟩
     a * (v ₀ * (a ^′ n' * product (v ∘ suc))) ≡⟨ cong (a *_) (sym ( *-assoc  (v ₀) (a ^′ n') (product (v ∘ suc)))) ⟩
-    a * (v ₀ * a ^′ n' * product (v ∘ suc)) ≡⟨ cong (\ xx ->  a * (xx * product (v ∘ suc))) (*-comm (v ₀) (a ^′ n')) ⟩
+    a * (v ₀ * a ^′ n' * product (v ∘ suc)) ≡⟨ cong (\ xx →  a * (xx * product (v ∘ suc))) (*-comm (v ₀) (a ^′ n')) ⟩
     a * (a ^′ n' * v ₀ * product (v ∘ suc)) ≡⟨ cong (a *_) (*-assoc (a ^′ n') (v ₀) (product (v ∘ suc))) ⟩
     a * (a ^′ n' * (v ₀ * product (v ∘ suc))) ≡⟨ sym (*-assoc a (a ^′ n') (v ₀ * product (v ∘ suc))) ⟩
     a * a ^′ n' * (v ₀ * product (v ∘ suc)) ≡⟨ auto ⟩
@@ -136,22 +141,22 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
 
 
 
-  lemma-π∘suc : ∀ {n-1} -> let n = ₁₊ n-1 in
+  lemma-π∘suc : ∀ {n-1} → let n = ₁₊ n-1 in
 
-    ∀ (p : Permutation n n) -> let π = p ⟨$⟩ʳ_ in
-    π ₀ ≡ ₀ -> π ∘ suc ≗ suc ∘ (F.remove ₀ p ⟨$⟩ʳ_)
+    ∀ (p : Permutation n n) → let π = p ⟨$⟩ʳ_ in
+    π ₀ ≡ ₀ → π ∘ suc ≗ suc ∘ (F.remove ₀ p ⟨$⟩ʳ_)
 
   lemma-π∘suc {n-1} p eq0 i = begin
      (π ∘ suc) i ≡⟨ auto ⟩
-     π (suc i) ≡⟨ sym (lift₀-remove p eq0 (₁₊ i)) ⟩
-     lift₀ (F.remove ₀ p) ⟨$⟩ʳ (suc i) ≡⟨ auto ⟩
+     π (₁₊ i) ≡⟨ sym (lift₀-remove p eq0 (₁₊ i)) ⟩
+     lift₀ (F.remove ₀ p) ⟨$⟩ʳ (₁₊ i) ≡⟨ auto ⟩
      suc (F.remove ₀ p ⟨$⟩ʳ i) ≡⟨ auto ⟩
      (suc ∘ (F.remove ₀ p ⟨$⟩ʳ_)) i ∎
     where
     open ≡-Reasoning
     π = p ⟨$⟩ʳ_
 
-  product-perm-cong : ∀ {n} (p q : Permutation n n) (v : Vector (ℤ ₚ) n) -> p ≈ q -> product {n} (v ∘ (p ⟨$⟩ʳ_)) ≡ product {n} (v ∘ (q ⟨$⟩ʳ_))
+  product-perm-cong : ∀ {n} (p q : Permutation n n) (v : Vector (ℤ ₚ) n) → p ≈ q → product {n} (v ∘ (p ⟨$⟩ʳ_)) ≡ product {n} (v ∘ (q ⟨$⟩ʳ_))
   product-perm-cong {n} p q v eq = PW.foldr-cong {R = _≡_ {A = ℤ ₚ}} {S = _≡_ {A = ℤ ₚ}} {f = _*_}  {g = _*_} (cong₂ _*_) (refl {x = ₁}) pwe
     where
     pwe : Pointwise _≡_ (v ∘ (p ⟨$⟩ʳ_)) (v ∘ (q ⟨$⟩ʳ_))
@@ -160,7 +165,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
 
   open import Presentation.Groups.Sn
 
-  act : ∀ {n} -> X n -> Fin (₁₊ n) -> Fin (₁₊ n)
+  act : ∀ {n} → X n → Fin (₁₊ n) → Fin (₁₊ n)
   act {₀} () i
   act {₁₊ n} X.swap ₀ = ₁
   act {₁₊ n} X.swap ₁ = ₀
@@ -170,8 +175,8 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
 
 
 
-  aex : ∀ {n} -> Fin n -> Permutation (₁₊ n) (₁₊ n)
-  aex {n} i = F.transpose (inject₁ i) (suc i)
+  aex : ∀ {n} → Fin n → Permutation (₁₊ n) (₁₊ n)
+  aex {n} i = F.transpose (inject₁ i) (₁₊ i)
 
 
   open import Relation.Nullary using (does; _because_; yes; no)
@@ -179,14 +184,14 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
 
 
 
-  pwet'' : ∀ {n} (i : X n) -> (act (i ₛ) ∘ suc) ≗ (suc ∘ act i)
+  pwet'' : ∀ {n} (i : X n) → (act (i ₛ) ∘ suc) ≗ (suc ∘ act i)
   pwet'' {₀} () x
   pwet'' {₁₊ n} X.swap ₀ = auto
   pwet'' {₁₊ n} X.swap (₁₊ x) = auto
   pwet'' {₁₊ n} (i ₛ) ₀ = auto
   pwet'' {₁₊ n} (i ₛ) (₁₊ x) = auto
 
-  pwet' : ∀ {n} (i : Fin n) -> (_⟨$⟩ʳ_ (aex (₁₊ i)) ∘ suc) ≗ (suc ∘ _⟨$⟩ʳ_ (aex i))
+  pwet' : ∀ {n} (i : Fin n) → (_⟨$⟩ʳ_ (aex (₁₊ i)) ∘ suc) ≗ (suc ∘ _⟨$⟩ʳ_ (aex i))
   pwet' {n} i x with does (₁₊ x FP.≟ inject₁ (₁₊ i))
   ... | true = auto
   ... | false with does (₁₊ x FP.≟ ₂₊ i)
@@ -194,13 +199,13 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
   ... | false = auto
 
 
-  pwet-x : ∀ {n} (i : X n) (v : Vector (ℤ ₚ) (₂₊ n)) -> Pointwise _≡_ (v ∘ act (i ₛ) ∘ suc) (v ∘ suc ∘ act i)
+  pwet-x : ∀ {n} (i : X n) (v : Vector (ℤ ₚ) (₂₊ n)) → Pointwise _≡_ (v ∘ act (i ₛ) ∘ suc) (v ∘ suc ∘ act i)
   pwet-x {n} i v x rewrite pwet'' i x = auto
 
 
 
 
-  product∘etranspose=product : ∀ {n} (i : X n) v ->  product {₁₊ n} (v ∘ act i) ≡ product {₁₊ n} v
+  product∘etranspose=product : ∀ {n} (i : X n) v →  product {₁₊ n} (v ∘ act i) ≡ product {₁₊ n} v
   product∘etranspose=product {₀} () v
   product∘etranspose=product {₁₊ n} swap v = begin
     product (v ∘ _⟨$⟩ʳ_ (F.transpose ₀ ₁)) ≡⟨ auto ⟩
@@ -230,18 +235,18 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
 
   open import Data.Unit
   open import Function.Construct.Composition
-  import Presentation.Base as PB
+  import Presentation.Horizontal-Syntactics as PB
   import Presentation.Properties as PP
   open import Presentation.GroupLike
 
 
-  c-of-fin : ∀ {n} -> Fin (₁₊ n) -> C n
+  c-of-fin : ∀ {n} → Fin (₁₊ n) → C n
   c-of-fin {₀} ₀ = ε
   c-of-fin {₁₊ n} ₀ = ε
   c-of-fin {₁₊ n} (₁₊ x) = swap• (c-of-fin x)
 
 
-  act-inv : ∀ {n} x y -> act {n} x (act x y) ≡ y
+  act-inv : ∀ {n} x y → act {n} x (act x y) ≡ y
   act-inv {₀} () y
   act-inv {₁₊ n} X.swap ₀ = auto
   act-inv {₁₊ n} X.swap ₁ = auto
@@ -262,7 +267,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
   wact' ε = F.id
   wact' (w • w₁) = (wact' w₁) ∘ₚ (wact' w)
 
-  lemma-wact-⇑₀ : ∀ {n} w -> wact' {₁₊ n} [ w ⇑] ⟨$⟩ʳ ₀ ≡ ₀
+  lemma-wact-⇑₀ : ∀ {n} w → wact' {₁₊ n} [ w ⇑] ⟨$⟩ʳ ₀ ≡ ₀
   lemma-wact-⇑₀ {n} [ X.swap ]ʷ = auto
   lemma-wact-⇑₀ {n} [ x ₛ ]ʷ = auto
   lemma-wact-⇑₀ {n} ε = auto
@@ -275,21 +280,21 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     where
     open ≡-Reasoning
 
-  lemma-wact-⇑ : ∀ {n} w x -> wact' {₁₊ n} [ w ⇑] ⟨$⟩ʳ (suc x) ≡ suc (wact' {n} w ⟨$⟩ʳ x)
+  lemma-wact-⇑ : ∀ {n} w x → wact' {₁₊ n} [ w ⇑] ⟨$⟩ʳ (₁₊ x) ≡ suc (wact' {n} w ⟨$⟩ʳ x)
   lemma-wact-⇑ {n} [ x₁ ]ʷ x = auto
   lemma-wact-⇑ {n} ε x = auto
   lemma-wact-⇑ {n} (w • v) x = begin
-    wact' {₁₊ n} [ (w • v) ⇑] ⟨$⟩ʳ (suc x) ≡⟨  auto ⟩
-    wact' {₁₊ n} ([ w ⇑] • [ v ⇑]) ⟨$⟩ʳ (suc x) ≡⟨  auto ⟩
-    wact' {₁₊ n} [ w ⇑] ⟨$⟩ʳ (wact' [ v ⇑] ⟨$⟩ʳ (suc x)) ≡⟨  cong (wact' {₁₊ n} [ w ⇑] ⟨$⟩ʳ_) (lemma-wact-⇑ v x) ⟩
+    wact' {₁₊ n} [ (w • v) ⇑] ⟨$⟩ʳ (₁₊ x) ≡⟨  auto ⟩
+    wact' {₁₊ n} ([ w ⇑] • [ v ⇑]) ⟨$⟩ʳ (₁₊ x) ≡⟨  auto ⟩
+    wact' {₁₊ n} [ w ⇑] ⟨$⟩ʳ (wact' [ v ⇑] ⟨$⟩ʳ (₁₊ x)) ≡⟨  cong (wact' {₁₊ n} [ w ⇑] ⟨$⟩ʳ_) (lemma-wact-⇑ v x) ⟩
     wact' {₁₊ n} [ w ⇑] ⟨$⟩ʳ suc (wact' v ⟨$⟩ʳ x) ≡⟨  lemma-wact-⇑ w ((wact' v ⟨$⟩ʳ x)) ⟩
     suc (wact' {n} (w • v) ⟨$⟩ʳ x) ∎
     where
     open ≡-Reasoning
 
 
-  lemma-wact-cong-ax : ∀ {n} w v x -> let open PB (rel n) renaming (_≈_ to _≈ʷ_) in
-    w === v -> wact' {n} w ⟨$⟩ʳ x ≡ wact' {n} v ⟨$⟩ʳ x 
+  lemma-wact-cong-ax : ∀ {n} w v x → let open PB (rel n) renaming (_≈_ to _≈ʷ_) in
+    w === v → wact' {n} w ⟨$⟩ʳ x ≡ wact' {n} v ⟨$⟩ʳ x 
   lemma-wact-cong-ax {₀} w v x ()
   lemma-wact-cong-ax {₁₊ n} w v ₀ order = auto
   lemma-wact-cong-ax {₁} w v ₁ order = auto
@@ -315,8 +320,8 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     where
     open ≡-Reasoning
 
-  lemma-wact-cong : ∀ {n} w v x -> let open PB (rel n) renaming (_≈_ to _≈ʷ_) in
-    w ≈ʷ v -> wact' {n} w ⟨$⟩ʳ x ≡ wact' {n} v ⟨$⟩ʳ x 
+  lemma-wact-cong : ∀ {n} w v x → let open PB (rel n) renaming (_≈_ to _≈ʷ_) in
+    w ≈ʷ v → wact' {n} w ⟨$⟩ʳ x ≡ wact' {n} v ⟨$⟩ʳ x 
   lemma-wact-cong {n} w v x PB.refl = auto
   lemma-wact-cong {n} w v x (PB.sym eq) = sym (lemma-wact-cong v w x eq)
   lemma-wact-cong {n} w v x (PB.trans eq eq₁) = trans (lemma-wact-cong w _ x eq) (lemma-wact-cong _ v x eq₁)
@@ -334,7 +339,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
   lemma-wact-cong {n} w v x (PB.axiom x₁) = lemma-wact-cong-ax _ _ x x₁
 
 
-  lemma-wact-inv-⇑ : ∀ {n} w ->
+  lemma-wact-inv-⇑ : ∀ {n} w →
     let
     open Group-Lemmas _ _ (grouplike {n}) renaming (_⁻¹ to _⁻¹ʷ)
     open Group-Lemmas _ _ (grouplike {₁₊ n}) renaming (_⁻¹ to _⁻¹ʷ')
@@ -355,7 +360,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     open SR word-setoid
 
 
-  lemma-wact-inv : ∀ {n} w x -> let open Group-Lemmas _ _ (grouplike {n}) renaming (_⁻¹ to _⁻¹ʷ) in
+  lemma-wact-inv : ∀ {n} w x → let open Group-Lemmas _ _ (grouplike {n}) renaming (_⁻¹ to _⁻¹ʷ) in
     wact' {n} w ⟨$⟩ʳ (wact' (w ⁻¹ʷ) ⟨$⟩ʳ x) ≡ x
   lemma-wact-inv {n} w x = begin
     wact' w ⟨$⟩ʳ (wact' (w ⁻¹ʷ) ⟨$⟩ʳ x) ≡⟨ auto ⟩
@@ -366,7 +371,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     open Group-Lemmas _ _ (grouplike {n}) renaming (_⁻¹ to _⁻¹ʷ) 
     open ≡-Reasoning
 
-  lemma-wact-invˡ : ∀ {n} w x -> let open Group-Lemmas _ _ (grouplike {n}) renaming (_⁻¹ to _⁻¹ʷ) in
+  lemma-wact-invˡ : ∀ {n} w x → let open Group-Lemmas _ _ (grouplike {n}) renaming (_⁻¹ to _⁻¹ʷ) in
     wact' {n}  (w ⁻¹ʷ) ⟨$⟩ʳ (wact' w ⟨$⟩ʳ x) ≡ x
   lemma-wact-invˡ {n} w x = begin
     wact'  (w ⁻¹ʷ) ⟨$⟩ʳ (wact' w ⟨$⟩ʳ x) ≡⟨ auto ⟩
@@ -378,19 +383,19 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     open ≡-Reasoning
 
 
-  lemma-wact₀ : ∀ {n} c -> wact' {n} [ c-of-fin c ] ⟨$⟩ʳ c ≡ ₀
+  lemma-wact₀ : ∀ {n} c → wact' {n} [ c-of-fin c ] ⟨$⟩ʳ c ≡ ₀
   lemma-wact₀ {₀} ₀ = auto
   lemma-wact₀ {₁₊ n} c@₀ = auto
   lemma-wact₀ {₁₊ n} c@(₁₊ x) = begin
     (act' X.swap) ⟨$⟩ʳ (wact' [ [ c-of-fin x ] ⇑] ⟨$⟩ʳ c) ≡⟨ cong ((act' X.swap) ⟨$⟩ʳ_) (lemma-wact-⇑ [ c-of-fin x ] x) ⟩
     (act' X.swap) ⟨$⟩ʳ suc (wact' [ c-of-fin x ] ⟨$⟩ʳ x) ≡⟨ cong (act' X.swap ⟨$⟩ʳ_) (cong suc (lemma-wact₀ x)) ⟩
-    (act' X.swap) ⟨$⟩ʳ suc ₀ ≡⟨ auto ⟩
+    (act' X.swap) ⟨$⟩ʳ ₁₊ ₀ ≡⟨ auto ⟩
     ₀ ∎
     where
     open ≡-Reasoning
 
 
-  lemma-wact₀' : ∀ {n} c -> let open Group-Lemmas _ _ (grouplike {n}) renaming (_⁻¹ to _⁻¹ʷ) in
+  lemma-wact₀' : ∀ {n} c → let open Group-Lemmas _ _ (grouplike {n}) renaming (_⁻¹ to _⁻¹ʷ) in
     wact' {n} ([ c-of-fin c ] ⁻¹ʷ) ⟨$⟩ʳ ₀ ≡ c
   lemma-wact₀' {n} c = begin
     wact' {n} ([ c-of-fin c ] ⁻¹ʷ) ⟨$⟩ʳ ₀ ≡⟨ cong (wact' {n} ([ c-of-fin c ] ⁻¹ʷ) ⟨$⟩ʳ_) (sym (lemma-wact₀ c)) ⟩
@@ -400,46 +405,46 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     open Group-Lemmas _ _ (grouplike {n}) renaming (_⁻¹ to _⁻¹ʷ) 
     open ≡-Reasoning
 
-  wact : Word (X n) -> Fin (₁₊ n) -> Fin (₁₊ n)
+  wact : Word (X n) → Fin (₁₊ n) → Fin (₁₊ n)
   wact [ x ]ʷ i = act x i
   wact ε i = i
   wact (w • w₁) i = wact w (wact w₁ i)
 
-  decompose : ∀ {n} -> Permutation′ (₁₊ n) -> NF n
+  decompose : ∀ {n} → Permutation′ (₁₊ n) → NF n
   decompose {₀} p = tt
   decompose {₁₊ n} p = let x = p ⟨$⟩ʳ ₀ in decompose (F.remove ₀ (p ∘ₚ wact' ([ c-of-fin x ]))) , c-of-fin x
 
-  decompose' : ∀ {n} -> Permutation′ (₁₊ n) -> NF n
+  decompose' : ∀ {n} → Permutation′ (₁₊ n) → NF n
   decompose' {₀} p = tt
   decompose' {₁₊ n} p = let x = p ⟨$⟩ʳ ₀ in decompose' (F.remove ₀ (wact' ([ c-of-fin x ] ⁻¹ʷ) ∘ₚ p)) , c-of-fin x
     where
     open Group-Lemmas _ _ (grouplike {₁₊ n}) renaming (_⁻¹ to _⁻¹ʷ)
 
 
-  eval : ∀ {n} -> NF n -> Permutation′ (₁₊ n)
+  eval : ∀ {n} → NF n → Permutation′ (₁₊ n)
   eval {₀} tt = F.id
   eval {₁₊ n} (nf' , c) = (lift₀ (eval nf')) ∘ₚ wact' ([ c ] ⁻¹ʷ)
     where
     open Group-Lemmas _ _ (grouplike {₁₊ n}) renaming (_⁻¹ to _⁻¹ʷ)
 
-  eval' : ∀ {n} -> NF n -> Permutation′ (₁₊ n)
+  eval' : ∀ {n} → NF n → Permutation′ (₁₊ n)
   eval' {n} nf = wact' (inv-f n nf)
 
-  eval'' : ∀ {n} -> NF n -> Permutation′ (₁₊ n)
+  eval'' : ∀ {n} → NF n → Permutation′ (₁₊ n)
   eval'' {n} nf = wact' ((inv-f n nf) ⁻¹ʷ)
     where
     open Group-Lemmas _ _ (grouplike {n}) renaming (_⁻¹ to _⁻¹ʷ)
 
 
-  lift0 : ∀ {n} -> (Fin n -> Fin n) -> Fin (₁₊ n) -> Fin (₁₊ n)
+  lift0 : ∀ {n} → (Fin n → Fin n) → Fin (₁₊ n) → Fin (₁₊ n)
   lift0 {n} f ₀ = ₀
   lift0 {n} f (₁₊ i) = suc (f i)
 
-  nf-act : ∀ {n} -> NF n -> Fin (₁₊ n) -> Fin (₁₊ n)
+  nf-act : ∀ {n} → NF n → Fin (₁₊ n) → Fin (₁₊ n)
   nf-act {₀} tt i = i
   nf-act {₁₊ n} (nf , c) i = lift0 (nf-act nf) (wact [ c ] i)
 
-  lemma-fix₀ : ∀ (p : Permutation′ (₁₊ n)) -> p ∘ₚ wact' {n} [ c-of-fin (p ⟨$⟩ʳ ₀) ] ⟨$⟩ʳ ₀ ≡ ₀
+  lemma-fix₀ : ∀ (p : Permutation′ (₁₊ n)) → p ∘ₚ wact' {n} [ c-of-fin (p ⟨$⟩ʳ ₀) ] ⟨$⟩ʳ ₀ ≡ ₀
   lemma-fix₀ {n} p = begin
     p ∘ₚ wact' {n} [ c-of-fin (p ⟨$⟩ʳ ₀) ] ⟨$⟩ʳ ₀ ≡⟨ auto ⟩
     wact' {n} [ c-of-fin (p ⟨$⟩ʳ ₀) ] ⟨$⟩ʳ (p ⟨$⟩ʳ ₀) ≡⟨ lemma-wact₀ (p ⟨$⟩ʳ ₀) ⟩
@@ -448,7 +453,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     open ≡-Reasoning
 
 
-  eval-decompose : ∀ {n} (p : Permutation′ (₁₊ n)) -> eval (decompose p) ≈ p
+  eval-decompose : ∀ {n} (p : Permutation′ (₁₊ n)) → eval (decompose p) ≈ p
   eval-decompose {₀} p ₀ with p ⟨$⟩ʳ ₀
   ... | ₀ = auto
   eval-decompose {₁₊ n} p i = begin
@@ -462,7 +467,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     open Group-Lemmas _ _ (grouplike {₁₊ n}) renaming (_⁻¹ to _⁻¹ʷ)
 
 
-  eval-decompose''-aux' : ∀ {n} nf ->
+  eval-decompose''-aux' : ∀ {n} nf →
     let
     open Group-Lemmas _ _ (grouplike {₁₊ n}) renaming (_⁻¹ to _⁻¹ʷ)
     open Group-Lemmas _ _ (grouplike {n}) renaming (_⁻¹ to _⁻¹ʷ')
@@ -498,7 +503,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
 
 
 
-  eval-decompose'' : ∀ {n} (p : Permutation′ (₁₊ n)) -> eval'' (decompose p) ≈ p
+  eval-decompose'' : ∀ {n} (p : Permutation′ (₁₊ n)) → eval'' (decompose p) ≈ p
   eval-decompose'' {₀} p ₀ with p ⟨$⟩ʳ ₀
   ... | ₀ = auto
   eval-decompose'' {₁₊ n} p i = begin
@@ -520,7 +525,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
 
 
 {-
-  eval-decompose' : ∀ {n} (p : Permutation′ (₁₊ n)) -> eval' (decompose' p) ≈ p
+  eval-decompose' : ∀ {n} (p : Permutation′ (₁₊ n)) → eval' (decompose' p) ≈ p
   eval-decompose' {₀} p ₀ with p ⟨$⟩ʳ ₀
   ... | ₀ = auto
   eval-decompose' {₁₊ n} p i = begin
@@ -533,7 +538,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     open Group-Lemmas _ _ (grouplike {₁₊ n}) renaming (_⁻¹ to _⁻¹ʷ)
 -}
 
-  product∘p=product'-ax : ∀ {n} w (v : Vector (ℤ ₚ) (₁₊ n)) -> let p = act' {n} w in product {₁₊ n} (v ∘ (p ⟨$⟩ʳ_)) ≡ product v
+  product∘p=product'-ax : ∀ {n} w (v : Vector (ℤ ₚ) (₁₊ n)) → let p = act' {n} w in product {₁₊ n} (v ∘ (p ⟨$⟩ʳ_)) ≡ product v
   product∘p=product'-ax {₀} () v
   product∘p=product'-ax {₁₊ n} X.swap v = begin
     product (v ∘ _⟨$⟩ʳ_ (act' X.swap)) ≡⟨ auto ⟩
@@ -554,7 +559,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     open ≡-Reasoning
 
 
-  product∘p=product' : ∀ {n} w (v : Vector (ℤ ₚ) (₁₊ n)) -> let p = wact' {n} w in product {₁₊ n} (v ∘ (p ⟨$⟩ʳ_)) ≡ product v
+  product∘p=product' : ∀ {n} w (v : Vector (ℤ ₚ) (₁₊ n)) → let p = wact' {n} w in product {₁₊ n} (v ∘ (p ⟨$⟩ʳ_)) ≡ product v
   product∘p=product' {n} [ x ]ʷ v = product∘p=product'-ax x v
   product∘p=product' {n} ε v = auto
   product∘p=product' {n} (w • w₁) v = begin
@@ -567,7 +572,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
 
 
 
-  product∘p=product : ∀ {n} (p : Permutation n n) v -> product {n} (v ∘ (p ⟨$⟩ʳ_)) ≡ product {n} v
+  product∘p=product : ∀ {n} (p : Permutation n n) v → product {n} (v ∘ (p ⟨$⟩ʳ_)) ≡ product {n} v
   product∘p=product {n@(₀)} p v = auto
   product∘p=product {n@(₁₊ n')} p v = begin
     product {n} (v ∘ (p ⟨$⟩ʳ_)) ≡⟨ PW.foldr-cong {R = _≡_ {A = ℤ ₚ}} {S = _≡_ {A = ℤ ₚ}} {f = _*_}  {g = _*_} (cong₂ _*_) (refl {x = ₁}) pwe ⟩
@@ -580,10 +585,10 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     pwe i rewrite eval-decompose'' p i = auto
 
 
-  aux-decompose : ∀ (p : Permutation′ (₂₊ n)) → p ⟨$⟩ʳ ₀ ≡ ₀ -> decompose p .proj₂ ≡ ε
+  aux-decompose : ∀ (p : Permutation′ (₂₊ n)) → p ⟨$⟩ʳ ₀ ≡ ₀ → decompose p .proj₂ ≡ ε
   aux-decompose {n} p eq rewrite eq = auto
 
-  fix0⇒∃w : ∀ (p : Permutation′ (₂₊ n)) → p ⟨$⟩ʳ ₀ ≡ ₀ -> ∃ \ w -> p ≈ wact' [ w ⇑]
+  fix0⇒∃w : ∀ (p : Permutation′ (₂₊ n)) → p ⟨$⟩ʳ ₀ ≡ ₀ → ∃ \ w → p ≈ wact' [ w ⇑]
   fix0⇒∃w {n} p eq = ((inv-f n nf) ⁻¹ʷ') , claim
     where
     open ≡-Reasoning
@@ -594,7 +599,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     claim : p ≈ wact' [ (inv-f n nf) ⁻¹ʷ' ⇑]
     claim i = begin
       p ⟨$⟩ʳ i ≡⟨ sym (eval-decompose'' p i) ⟩
-      eval'' (decompose p) ⟨$⟩ʳ i ≡⟨ cong (\ xx -> eval'' (nf , xx) ⟨$⟩ʳ i) (aux-decompose p eq) ⟩
+      eval'' (decompose p) ⟨$⟩ʳ i ≡⟨ cong (\ xx → eval'' (nf , xx) ⟨$⟩ʳ i) (aux-decompose p eq) ⟩
       eval'' (nf , ε) ⟨$⟩ʳ i ≡⟨ auto ⟩
       wact' (([ (inv-f n nf) ⇑] • ε) ⁻¹ʷ) ⟨$⟩ʳ i ≡⟨ lemma-wact-cong (([ (inv-f n nf) ⇑] • ε) ⁻¹ʷ) (((ε) ⁻¹ʷ • [ (inv-f n nf) ⇑] ⁻¹ʷ )) i PB.refl ⟩
       wact' ((ε) ⁻¹ʷ • [ (inv-f n nf) ⇑] ⁻¹ʷ ) ⟨$⟩ʳ i ≡⟨ lemma-wact-cong (((ε) ⁻¹ʷ • [ (inv-f n nf) ⇑] ⁻¹ʷ )) (([ (inv-f n nf) ⇑] ⁻¹ʷ )) i (PB.trans (PB.cong PB.refl PB.refl) PB.left-unit) ⟩
@@ -610,11 +615,11 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
   0--p-1 : Vector (ℤ ₚ) p
   0--p-1 = Fun.id
 
-  a*1--p-1 : ∀ (a : ℤ* ₚ) -> Vector (ℤ ₚ) (p-1)
+  a*1--p-1 : ∀ (a : ℤ* ₚ) → Vector (ℤ ₚ) (p-1)
   a*1--p-1 a*@(a , nz) = (a *_) ∘ 1--p-1
 
 
-  lemma-*-perm' : ∀ ((a , nz) : ℤ* ₚ) -> let v = 1--p-1 in ∃ \ w ->  (a *_) ∘ v ≗ v ∘ (wact' w ⟨$⟩ʳ_)
+  lemma-*-perm' : ∀ ((a , nz) : ℤ* ₚ) → let v = 1--p-1 in ∃ \ w →  (a *_) ∘ v ≗ v ∘ (wact' w ⟨$⟩ʳ_)
   lemma-*-perm' a*@(a , nz) = w , claim
     where
     open ≡-Reasoning
@@ -623,13 +628,13 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     v = 1--p-1
     claim : (a *_) ∘ v ≗ v ∘ (wact' w ⟨$⟩ʳ_)
     claim i = begin
-      a * suc i ≡⟨ auto ⟩
-      (*-perm a* ⟨$⟩ʳ (suc i)) ≡⟨ hyp .proj₂ (suc i) ⟩
-      (wact' [ w ⇑] ⟨$⟩ʳ (suc i)) ≡⟨ lemma-wact-⇑ w i ⟩
+      a * ₁₊ i ≡⟨ auto ⟩
+      (*-perm a* ⟨$⟩ʳ (₁₊ i)) ≡⟨ hyp .proj₂ (₁₊ i) ⟩
+      (wact' [ w ⇑] ⟨$⟩ʳ (₁₊ i)) ≡⟨ lemma-wact-⇑ w i ⟩
       suc (wact' w ⟨$⟩ʳ i) ∎
 
 
-  prod-a*1--p-1 : ∀ (a : ℤ* ₚ) -> product (a*1--p-1 a) ≡ product 1--p-1
+  prod-a*1--p-1 : ∀ (a : ℤ* ₚ) → product (a*1--p-1 a) ≡ product 1--p-1
   prod-a*1--p-1 a*@(a , nz) = begin
     product (a*1--p-1 a*) ≡⟨ PW.foldr-cong {R = _≡_ {A = ℤ ₚ}} {S = _≡_ {A = ℤ ₚ}} {f = _*_}  {g = _*_} (cong₂ _*_) (refl {x = ₁}) pwe' ⟩
     product (v ∘ (wact' w ⟨$⟩ʳ_)) ≡⟨ product∘p=product' w v ⟩
@@ -644,11 +649,11 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     pwe' i = hyp .proj₂ i
 
 
-  prod-a*1--p-1' : ∀ (a*@(a , nz) : ℤ* ₚ) -> product (a*1--p-1 a*) ≡ a ^′ p-1 * product 1--p-1
+  prod-a*1--p-1' : ∀ (a*@(a , nz) : ℤ* ₚ) → product (a*1--p-1 a*) ≡ a ^′ p-1 * product 1--p-1
   prod-a*1--p-1' a = lemma-product a 1--p-1
 
 
-  lemma-nz : ∀ (v : Vector (ℤ ₚ) n) -> (∀ i -> v i ≢ ₀) -> product v ≢ ₀
+  lemma-nz : ∀ (v : Vector (ℤ ₚ) n) → (∀ i → v i ≢ ₀) → product v ≢ ₀
   lemma-nz {₀} v nz = λ ()
   lemma-nz {₁₊ n} v nz nzp = lemma-nz (v ∘ suc) (nz ∘ suc) claim
     where
@@ -656,7 +661,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     claim : product (v ∘ suc) ≡ ₀
     claim = begin
       product (v ∘ suc) ≡⟨ sym (*-identityˡ (product (v ∘ suc))) ⟩
-      ₁ * product (v ∘ suc) ≡⟨ cong (\ xx -> xx * (product (v ∘ suc))) (sym (lemma-⁻¹ˡ (v ₀) {{nztoℕ {y = v ₀} {neq0 = nz ₀}}} )) ⟩
+      ₁ * product (v ∘ suc) ≡⟨ cong (\ xx → xx * (product (v ∘ suc))) (sym (lemma-⁻¹ˡ (v ₀) {{nztoℕ {y = v ₀} {neq0 = nz ₀}}} )) ⟩
       v₀⁻¹ * v ₀ * product (v ∘ suc) ≡⟨ *-assoc v₀⁻¹ (v ₀) (product (v ∘ suc)) ⟩
       v₀⁻¹ * (v ₀ * product (v ∘ suc)) ≡⟨ cong (v₀⁻¹ *_) nzp ⟩
       v₀⁻¹ * ₀ ≡⟨ *-zeroʳ v₀⁻¹ ⟩
@@ -664,12 +669,12 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       where
       v₀⁻¹ = ((v ₀ , nz ₀) ⁻¹) .proj₁
 
-  Fermat's-little-theorem : ∀ (a*@(a , nz) : ℤ* ₚ) -> a ^′ p-1 ≡ ₁
+  Fermat's-little-theorem : ∀ (a*@(a , nz) : ℤ* ₚ) → a ^′ p-1 ≡ ₁
   Fermat's-little-theorem a*@(a , nz) = begin
     a ^′ p-1 ≡⟨ sym (*-identityʳ (a ^′ p-1 ))  ⟩
-    a ^′ p-1 * ₁ ≡⟨ cong (\ xx -> a ^′ p-1 * xx) (sym (lemma-⁻¹ʳ x {{nztoℕ {y = x} {neq0 = lemma-nz 1--p-1 λ i ()}}})) ⟩
+    a ^′ p-1 * ₁ ≡⟨ cong (\ xx → a ^′ p-1 * xx) (sym (lemma-⁻¹ʳ x {{nztoℕ {y = x} {neq0 = lemma-nz 1--p-1 λ i ()}}})) ⟩
     a ^′ p-1 * (x * x⁻¹) ≡⟨ sym (*-assoc (a ^′ p-1) x x⁻¹) ⟩
-    a ^′ p-1 * x * x⁻¹ ≡⟨ cong (\ xx ->  xx * x⁻¹) (trans (sym ( prod-a*1--p-1' a*)) (prod-a*1--p-1 a*)) ⟩
+    a ^′ p-1 * x * x⁻¹ ≡⟨ cong (\ xx →  xx * x⁻¹) (trans (sym ( prod-a*1--p-1' a*)) (prod-a*1--p-1 a*)) ⟩
     x * x⁻¹ ≡⟨ lemma-⁻¹ʳ x {{nztoℕ {y = x} {neq0 = lemma-nz 1--p-1 λ i ()}}} ⟩
     ₁ ∎
     where
@@ -683,19 +688,19 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
 
   module Primitive-Root-Modp
     (g : ℤ ₚ)
-    (g-gen : ∀ ((x , _) : ℤ* ₚ) -> ∃ \ (k : ℤ ₚ-₁) -> x ≡ g ^′ toℕ k )
+    (g-gen : ∀ ((x , _) : ℤ* ₚ) → ∃ \ (k : ℤ ₚ-₁) → x ≡ g ^′ toℕ k )
     where
 
     g-gen1 = g-gen (₁ , λ ())
     g-gen2 = g-gen (₂ , λ ())
     g≠0 : g ≢ ₀
     g≠0 eq0 with g-gen2
-    g≠0 eq0 | (suc k , eq) rewrite eq0 | lemma-0^′k {p-2} (toℕ k) with eq
-    g≠0 eq0 | (suc k , eq) | ()
+    g≠0 eq0 | (₁₊ k , eq) rewrite eq0 | lemma-0^′k {p-2} (toℕ k) with eq
+    g≠0 eq0 | (₁₊ k , eq) | ()
     g≠0 eq0 | (₀ , eq) with eq
     g≠0 eq0 | (₀ , eq) | ()
 
-    lemma-g^′k≠0 : ∀ k -> g ^′ k ≢ 0ₚ
+    lemma-g^′k≠0 : ∀ k → g ^′ k ≢ 0ₚ
     lemma-g^′k≠0 k = lemma-x^′k≠0 g k g≠0
 
 
@@ -706,23 +711,23 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     g′ : ℤ* ₚ
     g′ = (g , g≠0)
 
-    g^_ : ∀ (k : ℤ ₚ) -> ℤ* ₚ
+    g^_ : ∀ (k : ℤ ₚ) → ℤ* ₚ
     g^_ k = (g ^′ toℕ k , lemma-g^′k≠0 (toℕ k))
 
-    g^′_ : ∀ k -> ℤ* ₚ
+    g^′_ : ∀ k → ℤ* ₚ
     g^′_ k = (g ^′ k , lemma-g^′k≠0 k)
 
 
     open import Algebra.Properties.Ring (+-*-ring p-2)
 
-    aux-g^′-% : ∀ k -> g ^′ k ≡ g ^′ (k ℕ.% p-1)
+    aux-g^′-% : ∀ k → g ^′ k ≡ g ^′ (k ℕ.% p-1)
     aux-g^′-% k = begin
       g ^′ k ≡⟨ Eq.cong (g ^′_) ( m≡m%n+[m/n]*n k p-1) ⟩
       g ^′ (k%p-1 ℕ.+ k/p-1 ℕ.* p-1) ≡⟨ Eq.sym (+-^′-distribʳ g k%p-1 ((k/p-1 ℕ.* p-1))) ⟩
-      g ^′ k%p-1 * g ^′ (k/p-1 ℕ.* p-1) ≡⟨ Eq.cong (\ xx -> g ^′ k%p-1 * g ^′ xx) (NP.*-comm k/p-1 p-1) ⟩
+      g ^′ k%p-1 * g ^′ (k/p-1 ℕ.* p-1) ≡⟨ Eq.cong (\ xx → g ^′ k%p-1 * g ^′ xx) (NP.*-comm k/p-1 p-1) ⟩
       g ^′ k%p-1 * g ^′ (p-1 ℕ.* k/p-1) ≡⟨ Eq.cong (g ^′ k%p-1 *_) ( (lemma-^^-* g p-1 k/p-1)) ⟩
-      g ^′ k%p-1 * (g ^′ p-1) ^′ k/p-1 ≡⟨ Eq.cong (\ xx -> g ^′ k%p-1 * xx ^′ k/p-1) (Fermat's-little-theorem (g , g≠0)) ⟩
-      g ^′ k%p-1 * 1ₚ ^′ k/p-1 ≡⟨ Eq.cong (\ xx -> g ^′ k%p-1 * xx) (1^k=1 k/p-1) ⟩
+      g ^′ k%p-1 * (g ^′ p-1) ^′ k/p-1 ≡⟨ Eq.cong (\ xx → g ^′ k%p-1 * xx ^′ k/p-1) (Fermat's-little-theorem (g , g≠0)) ⟩
+      g ^′ k%p-1 * 1ₚ ^′ k/p-1 ≡⟨ Eq.cong (\ xx → g ^′ k%p-1 * xx) (1^k=1 k/p-1) ⟩
       g ^′ k%p-1 * 1ₚ ≡⟨ *-identityʳ (g ^′ k%p-1) ⟩
       g ^′ k%p-1 ≡⟨ auto ⟩
       g ^′ (k ℕ.% p-1) ∎
@@ -732,11 +737,11 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       k/p-1 = k ℕ./ p-1
 
 
-    log : ℤ* ₚ -> ℤ ₚ-₁
+    log : ℤ* ₚ → ℤ ₚ-₁
     log  x = g-gen x .proj₁
 
 
-    lemma-inject : ∀ (x : ℤ ₚ-₁) -> g ^′ toℕ x ≡ (g^ (inject₁ x)) .proj₁
+    lemma-inject : ∀ (x : ℤ ₚ-₁) → g ^′ toℕ x ≡ (g^ (inject₁ x)) .proj₁
     lemma-inject  x = begin
       g ^′ toℕ x ≡⟨ Eq.cong (g ^′_) (Eq.sym (toℕ-inject₁ x) ) ⟩
       g ^′ toℕ (inject₁ x) ≡⟨ auto ⟩
@@ -744,7 +749,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       where
       open ≡-Reasoning
 
-    lemma-log-inject : ∀ (x : ℤ* ₚ) -> (g^ (inject₁ (log x))) .proj₁ ≡ x .proj₁
+    lemma-log-inject : ∀ (x : ℤ* ₚ) → (g^ (inject₁ (log x))) .proj₁ ≡ x .proj₁
     lemma-log-inject x = begin
       (g^ (inject₁ (log x))) .proj₁ ≡⟨ Eq.sym (lemma-inject (log x)) ⟩
       g ^′ toℕ (log x) ≡⟨ Eq.sym (g-gen x .proj₂) ⟩
@@ -752,7 +757,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       where
       open ≡-Reasoning
 
-    choose : ∀ (n k : ℕ)-> ℕ
+    choose : ∀ (n k : ℕ)→ ℕ
     choose n ₀ = ₁
     choose ₀ (₁₊ _) = ₀
     choose (₁₊ n) (₁₊ k) = choose n k ℕ.+ choose n (₁₊ k)
@@ -768,12 +773,12 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
 
   module Primitive-Root-Modp'
     (g*@(g , g≠0) : ℤ* ₚ)
-    (g-gen : ∀ ((x , _) : ℤ* ₚ) -> ∃ \ (k : ℤ ₚ-₁) -> x ≡ g ^′ toℕ k )
+    (g-gen : ∀ ((x , _) : ℤ* ₚ) → ∃ \ (k : ℤ ₚ-₁) → x ≡ g ^′ toℕ k )
     where
 
     g-gen1 = g-gen (₁ , λ ())
 
-    lemma-g^′k≠0 : ∀ k -> g ^′ k ≢ 0ₚ
+    lemma-g^′k≠0 : ∀ k → g ^′ k ≢ 0ₚ
     lemma-g^′k≠0 k = lemma-x^′k≠0 g k g≠0
 
 
@@ -784,23 +789,23 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     g′ : ℤ* ₚ
     g′ = (g , g≠0)
 
-    g^_ : ∀ (k : ℤ ₚ) -> ℤ* ₚ
+    g^_ : ∀ (k : ℤ ₚ) → ℤ* ₚ
     g^_ k = (g ^′ toℕ k , lemma-g^′k≠0 (toℕ k))
 
-    g^′_ : ∀ k -> ℤ* ₚ
+    g^′_ : ∀ k → ℤ* ₚ
     g^′_ k = (g ^′ k , lemma-g^′k≠0 k)
 
 
     open import Algebra.Properties.Ring (+-*-ring p-2)
 
-    aux-g^′-% : ∀ k -> g ^′ k ≡ g ^′ (k ℕ.% p-1)
+    aux-g^′-% : ∀ k → g ^′ k ≡ g ^′ (k ℕ.% p-1)
     aux-g^′-% k = begin
       g ^′ k ≡⟨ Eq.cong (g ^′_) ( m≡m%n+[m/n]*n k p-1) ⟩
       g ^′ (k%p-1 ℕ.+ k/p-1 ℕ.* p-1) ≡⟨ Eq.sym (+-^′-distribʳ g k%p-1 ((k/p-1 ℕ.* p-1))) ⟩
-      g ^′ k%p-1 * g ^′ (k/p-1 ℕ.* p-1) ≡⟨ Eq.cong (\ xx -> g ^′ k%p-1 * g ^′ xx) (NP.*-comm k/p-1 p-1) ⟩
+      g ^′ k%p-1 * g ^′ (k/p-1 ℕ.* p-1) ≡⟨ Eq.cong (\ xx → g ^′ k%p-1 * g ^′ xx) (NP.*-comm k/p-1 p-1) ⟩
       g ^′ k%p-1 * g ^′ (p-1 ℕ.* k/p-1) ≡⟨ Eq.cong (g ^′ k%p-1 *_) ( (lemma-^^-* g p-1 k/p-1)) ⟩
-      g ^′ k%p-1 * (g ^′ p-1) ^′ k/p-1 ≡⟨ Eq.cong (\ xx -> g ^′ k%p-1 * xx ^′ k/p-1) (Fermat's-little-theorem (g , g≠0)) ⟩
-      g ^′ k%p-1 * 1ₚ ^′ k/p-1 ≡⟨ Eq.cong (\ xx -> g ^′ k%p-1 * xx) (1^k=1 k/p-1) ⟩
+      g ^′ k%p-1 * (g ^′ p-1) ^′ k/p-1 ≡⟨ Eq.cong (\ xx → g ^′ k%p-1 * xx ^′ k/p-1) (Fermat's-little-theorem (g , g≠0)) ⟩
+      g ^′ k%p-1 * 1ₚ ^′ k/p-1 ≡⟨ Eq.cong (\ xx → g ^′ k%p-1 * xx) (1^k=1 k/p-1) ⟩
       g ^′ k%p-1 * 1ₚ ≡⟨ *-identityʳ (g ^′ k%p-1) ⟩
       g ^′ k%p-1 ≡⟨ auto ⟩
       g ^′ (k ℕ.% p-1) ∎
@@ -810,11 +815,11 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       k/p-1 = k ℕ./ p-1
 
 
-    log : ℤ* ₚ -> ℤ ₚ-₁
+    log : ℤ* ₚ → ℤ ₚ-₁
     log  x = g-gen x .proj₁
 
 
-    lemma-inject : ∀ (x : ℤ ₚ-₁) -> g ^′ toℕ x ≡ (g^ (inject₁ x)) .proj₁
+    lemma-inject : ∀ (x : ℤ ₚ-₁) → g ^′ toℕ x ≡ (g^ (inject₁ x)) .proj₁
     lemma-inject  x = begin
       g ^′ toℕ x ≡⟨ Eq.cong (g ^′_) (Eq.sym (toℕ-inject₁ x) ) ⟩
       g ^′ toℕ (inject₁ x) ≡⟨ auto ⟩
@@ -822,7 +827,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       where
       open ≡-Reasoning
 
-    lemma-log-inject : ∀ (x : ℤ* ₚ) -> (g^ (inject₁ (log x))) .proj₁ ≡ x .proj₁
+    lemma-log-inject : ∀ (x : ℤ* ₚ) → (g^ (inject₁ (log x))) .proj₁ ≡ x .proj₁
     lemma-log-inject x = begin
       (g^ (inject₁ (log x))) .proj₁ ≡⟨ Eq.sym (lemma-inject (log x)) ⟩
       g ^′ toℕ (log x) ≡⟨ Eq.sym (g-gen x .proj₂) ⟩
@@ -830,7 +835,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       where
       open ≡-Reasoning
 
-    choose : ∀ (n k : ℕ)-> ℕ
+    choose : ∀ (n k : ℕ)→ ℕ
     choose n ₀ = ₁
     choose ₀ (₁₊ _) = ₀
     choose (₁₊ n) (₁₊ k) = choose n k ℕ.+ choose n (₁₊ k)
@@ -866,31 +871,31 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     open import Function
     
     sum : ℤ ₚ ′^ n → ℤ ₚ
-    sum {n} = foldr 0ₚ id (\ n a s -> a + s) n
+    sum {n} = foldr 0ₚ id (\ n a s → a + s) n
 
     infix 7 _*ᵥ_ _*ᵢ_ _ᵥ*_
     infix 6 _+ᵢ_
     infix 5 _*ₛ_
     
-    _*ᵥ_ : ℤ ₚ -> ℤ ₚ ′^ n -> ℤ ₚ ′^ n
+    _*ᵥ_ : ℤ ₚ → ℤ ₚ ′^ n → ℤ ₚ ′^ n
     _*ᵥ_ {n} x = V.map (x *_) n
 
-    _ᵥ*_ : ℤ ₚ -> ℤ ₚ ′^ n -> ℤ ₚ ′^ n
+    _ᵥ*_ : ℤ ₚ → ℤ ₚ ′^ n → ℤ ₚ ′^ n
     _ᵥ*_ {n} x = V.map (_* x) n
 
-    _*ᵢ_ : ℤ ₚ ′^ n -> ℤ ₚ ′^ n -> ℤ ₚ ′^ n
+    _*ᵢ_ : ℤ ₚ ′^ n → ℤ ₚ ′^ n → ℤ ₚ ′^ n
     _*ᵢ_ {n} = V.zipWith _*_ n
 
-    _*ₛ_ : ℕ ′^ n -> ℤ ₚ ′^ n -> ℤ ₚ ′^ n
+    _*ₛ_ : ℕ ′^ n → ℤ ₚ ′^ n → ℤ ₚ ′^ n
     _*ₛ_ {n} = V.zipWith _＊_ n
 
-    _ +ᵢ_ : ℤ ₚ ′^ n -> ℤ ₚ ′^ n -> ℤ ₚ ′^ n
+    _ +ᵢ_ : ℤ ₚ ′^ n → ℤ ₚ ′^ n → ℤ ₚ ′^ n
     _+ᵢ_ {n} = V.zipWith _+_ n
 
     open import Data.Unit.Base
     
 
-    *-distribˡ-sum : ∀ x (vs : ℤ ₚ ′^ n) -> x * sum vs ≡ sum (x *ᵥ vs)
+    *-distribˡ-sum : ∀ x (vs : ℤ ₚ ′^ n) → x * sum vs ≡ sum (x *ᵥ vs)
     *-distribˡ-sum {1} x vs = auto
     *-distribˡ-sum {0} x vs = begin
       x * sum vs ≡⟨ auto ⟩
@@ -909,7 +914,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       open ≡-Reasoning
 
 
-    +-sum-comm : ∀ (v1 v2 : ℤ ₚ ′^ n) -> sum v1 + sum v2 ≡ sum (v1 +ᵢ v2)
+    +-sum-comm : ∀ (v1 v2 : ℤ ₚ ′^ n) → sum v1 + sum v2 ≡ sum (v1 +ᵢ v2)
     +-sum-comm {1} v1 v2 = auto
     +-sum-comm {0} v1 v2 = auto
     +-sum-comm {₂₊ n} v1@(x , t) v2@(y , t2) = begin
@@ -926,35 +931,35 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       open ≡-Reasoning
 
 
-    add-adj : ℕ ′^ (₁₊ n) -> ℕ ′^ n
+    add-adj : ℕ ′^ (₁₊ n) → ℕ ′^ n
     add-adj {₀} _ = []
     add-adj {₁} (x , v) = x ℕ.+ v
     add-adj {₂₊ n} (x , x₁ , v) = x ℕ.+ x₁ , add-adj (x₁ , v)
 
     infixr 5 _,ʳ_
-    _,ʳ_ : ∀ {a}{A : Set a} -> A ′^ n -> A -> A ′^ (₁₊ n) 
+    _,ʳ_ : ∀ {a}{A : Set a} → A ′^ n → A → A ′^ (₁₊ n) 
     _,ʳ_ {0} {a}{A} xs x = x
     _,ʳ_ {1} {a}{A} xs x = xs , x
     _,ʳ_ {₂₊ n} {a}{A} xs@(h , t) x = h , t ,ʳ x
 
-    pascal-row : ∀ (n : ℕ) -> ℕ ′^ (₁₊ n)
+    pascal-row : ∀ (n : ℕ) → ℕ ′^ (₁₊ n)
     pascal-row ₀ = ₁
     pascal-row ₁ = ₁ , ₁
     pascal-row (₂₊ n) = ₁ , (add-adj {₁₊ n} (pascal-row (₁₊ n)) ,ʳ 1)
 
-    x^k : (a : ℤ ₚ) (k : ℕ) -> ℤ ₚ ′^ (₁₊ k)
+    x^k : (a : ℤ ₚ) (k : ℕ) → ℤ ₚ ′^ (₁₊ k)
     x^k a ₀ = (a ^′ ₀)
     x^k a (₁₊ k) = (a ^′ (₁₊ k)) , (x^k a k)
 
-    x^kʳ : (a : ℤ ₚ) (k : ℕ) -> ℤ ₚ ′^ (₁₊ k)
+    x^kʳ : (a : ℤ ₚ) (k : ℕ) → ℤ ₚ ′^ (₁₊ k)
     x^kʳ a ₀ = [] ,ʳ a ^′ ₀
     x^kʳ a (₁₊ k) = x^kʳ a k ,ʳ a ^′ (₁₊ k)
 
-    lemma-*ᵥ-,ʳ : ∀ a (as : ℤ ₚ ′^ n) l -> a *ᵥ (as ,ʳ l) ≡ a *ᵥ as ,ʳ a * l
+    lemma-*ᵥ-,ʳ : ∀ a (as : ℤ ₚ ′^ n) l → a *ᵥ (as ,ʳ l) ≡ a *ᵥ as ,ʳ a * l
     lemma-*ᵥ-,ʳ {0} a as l = auto
     lemma-*ᵥ-,ʳ {1} a as l = auto
     lemma-*ᵥ-,ʳ {₂₊ n} a as l = begin
-      a *ᵥ (as ,ʳ l) ≡⟨ cong (\ xx -> a *ᵥ (xx ,ʳ l)) (sym (cons-head-tail-identity (₁₊ n) as)) ⟩
+      a *ᵥ (as ,ʳ l) ≡⟨ cong (\ xx → a *ᵥ (xx ,ʳ l)) (sym (cons-head-tail-identity (₁₊ n) as)) ⟩
       a *ᵥ (cons (₁₊ n) (head (₁₊ n) as) (tail (₁₊ n) as) ,ʳ l) ≡⟨ auto ⟩
       a * head (₁₊ n) as , a *ᵥ (tail (₁₊ n) as ,ʳ l) ≡⟨ cong (a * head (₁₊ n) as ,_) (lemma-*ᵥ-,ʳ a (tail (₁₊ n) as) l) ⟩
       a * head (₁₊ n) as , a *ᵥ tail (₁₊ n) as ,ʳ a * l ≡⟨ auto ⟩
@@ -963,12 +968,12 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       where
       open ≡-Reasoning
 
-    lemma-head : (v : ℤ ₚ ′^ (₁₊ n)) (a : ℤ ₚ) -> head (₁₊ n) (v ,ʳ a) ≡ head n v
+    lemma-head : (v : ℤ ₚ ′^ (₁₊ n)) (a : ℤ ₚ) → head (₁₊ n) (v ,ʳ a) ≡ head n v
     lemma-head {0} v a = auto
     lemma-head {1} v a = auto
     lemma-head {₂₊ n} v a = auto
 
-    head-x^kʳ : ∀ a k -> head k (x^kʳ a k) ≡ ₁
+    head-x^kʳ : ∀ a k → head k (x^kʳ a k) ≡ ₁
     head-x^kʳ a k@₀ = auto
     head-x^kʳ a k@(₁) = auto
     head-x^kʳ a k@(₂₊ k-2) = let k-1 = ₁₊ k-2 in begin
@@ -979,7 +984,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       where
       open ≡-Reasoning
     
-    tail-x^kʳ : ∀ a k-1 -> let k = ₁₊ k-1 in tail k (x^kʳ a k) ≡ a *ᵥ x^kʳ a k-1
+    tail-x^kʳ : ∀ a k-1 → let k = ₁₊ k-1 in tail k (x^kʳ a k) ≡ a *ᵥ x^kʳ a k-1
     tail-x^kʳ a k-1@0 = auto
     tail-x^kʳ a k-1@1 = auto
     tail-x^kʳ a k-1@(₂₊ k-3) = let k = ₁₊ k-1 in let k-2 = ₁₊ k-3 in begin
@@ -993,7 +998,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       open ≡-Reasoning
 
 
-    *ᵥ-*ᵢ-assoc : ∀ a (xs ys : ℤ ₚ ′^ n) -> (a *ᵥ xs) *ᵢ ys ≡ a *ᵥ (xs *ᵢ ys)
+    *ᵥ-*ᵢ-assoc : ∀ a (xs ys : ℤ ₚ ′^ n) → (a *ᵥ xs) *ᵢ ys ≡ a *ᵥ (xs *ᵢ ys)
     *ᵥ-*ᵢ-assoc {0} a xs ys = auto
     *ᵥ-*ᵢ-assoc {1} a xs ys = *-assoc a xs ys
     *ᵥ-*ᵢ-assoc {₂₊ n-2} a xs@(x , xt) ys@(y , yt) = begin
@@ -1005,14 +1010,14 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       where
       open ≡-Reasoning
 
-    lemma-x^k : ∀ (a b : ℤ ₚ) (k-1 : ℕ) -> let k = ₁₊ k-1 in
+    lemma-x^k : ∀ (a b : ℤ ₚ) (k-1 : ℕ) → let k = ₁₊ k-1 in
     
       (x^kʳ a k) *ᵢ (x^k b k) ≡ (b ^′ k , a *ᵥ (x^kʳ a k-1 *ᵢ x^k b k-1))
       
     lemma-x^k a b k-1 = let k = ₁₊ k-1 in begin
       (x^kʳ a k) *ᵢ (x^k b k) ≡⟨ cong (_*ᵢ (x^k b k)) (sym (cons-head-tail-identity k (x^kʳ a k))) ⟩
-      cons k (head k (x^kʳ a k)) (tail k (x^kʳ a k)) *ᵢ (x^k b k) ≡⟨ cong (\ xx -> cons k xx (tail k (x^kʳ a k)) *ᵢ (x^k b k)) (head-x^kʳ a k) ⟩
-      cons k ₁ (tail k (x^kʳ a k)) *ᵢ x^k b k ≡⟨ cong (\ xx -> cons k ₁ xx *ᵢ (x^k b k)) (tail-x^kʳ a k-1) ⟩
+      cons k (head k (x^kʳ a k)) (tail k (x^kʳ a k)) *ᵢ (x^k b k) ≡⟨ cong (\ xx → cons k xx (tail k (x^kʳ a k)) *ᵢ (x^k b k)) (head-x^kʳ a k) ⟩
+      cons k ₁ (tail k (x^kʳ a k)) *ᵢ x^k b k ≡⟨ cong (\ xx → cons k ₁ xx *ᵢ (x^k b k)) (tail-x^kʳ a k-1) ⟩
       cons k ₁ (a *ᵥ x^kʳ a k-1) *ᵢ x^k b k ≡⟨ auto ⟩
       ₁ * b ^′ k , (a *ᵥ x^kʳ a k-1) *ᵢ x^k b k-1 ≡⟨ cong₂ _,_ (*-identityˡ (b ^′ k)) (*ᵥ-*ᵢ-assoc a (x^kʳ a k-1) (x^k b k-1)) ⟩
       b ^′ k , a *ᵥ (x^kʳ a k-1 *ᵢ x^k b k-1) ∎
@@ -1020,10 +1025,10 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       open ≡-Reasoning
 
 
-    binomial-terms : ∀ (a b : ℤ ₚ) (k : ℕ) -> ℤ ₚ ′^ (₁₊ k)
+    binomial-terms : ∀ (a b : ℤ ₚ) (k : ℕ) → ℤ ₚ ′^ (₁₊ k)
     binomial-terms a b k = pascal-row k *ₛ (x^kʳ a k) *ᵢ (x^k b k)
 
-    lemma-binomia-terms' : ∀ (a b : ℤ ₚ) (k-1 : ℕ) -> let k = ₁₊ k-1 in
+    lemma-binomia-terms' : ∀ (a b : ℤ ₚ) (k-1 : ℕ) → let k = ₁₊ k-1 in
     
       binomial-terms a b k ≡ (b ^′ k , (add-adj (pascal-row k-1) ,ʳ 1) *ₛ a *ᵥ (x^kʳ a k-1 *ᵢ x^k b k-1))
       
@@ -1044,22 +1049,22 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
 -}
 
 {-
-    lemma-binomia-terms : ∀ (a b : ℤ ₚ) (k-1 : ℕ) -> let k = ₁₊ k-1 in
+    lemma-binomia-terms : ∀ (a b : ℤ ₚ) (k-1 : ℕ) → let k = ₁₊ k-1 in
     
       binomial-terms a b k ≡ (₀ , a *ᵥ binomial-terms a b k-1) +ᵢ (b *ᵥ binomial-terms a b k-1 ,ʳ ₀)
       
     lemma-binomia-terms a b k-1@₀ = let k = ₁₊ k-1 in begin
       binomial-terms a b k ≡⟨ auto ⟩
       pascal-row k *ₛ (x^kʳ a k) *ᵢ (x^k b k) ≡⟨ auto ⟩
-      (₁ ＊ a ^′ ₀ * b ^′ k) , (₁ ＊ a ^′ ₁ * b ^′ ₀ , []) ≡⟨ cong₂ (\ xx yy -> xx , yy , []) (1＊x=x (₁ * b ^′ ₁)) (1＊x=x (a ^′ ₁ * ₁)) ⟩
-      (₁ * b ^′ ₁) , (a ^′ ₁ * ₁ , []) ≡⟨ cong₂ (\ xx yy -> xx , yy , []) (*-identityˡ (b ^′ ₁)) (*-identityʳ (a ^′ ₁)) ⟩
+      (₁ ＊ a ^′ ₀ * b ^′ k) , (₁ ＊ a ^′ ₁ * b ^′ ₀ , []) ≡⟨ cong₂ (\ xx yy → xx , yy , []) (1＊x=x (₁ * b ^′ ₁)) (1＊x=x (a ^′ ₁ * ₁)) ⟩
+      (₁ * b ^′ ₁) , (a ^′ ₁ * ₁ , []) ≡⟨ cong₂ (\ xx yy → xx , yy , []) (*-identityˡ (b ^′ ₁)) (*-identityʳ (a ^′ ₁)) ⟩
       b ^′ ₁ , a ^′ ₁ , [] ≡⟨ cong₂ (λ xx yy → xx , (yy , [])) (*-identityʳ b) (*-identityʳ a) ⟩
       b , a , [] ≡⟨ sym (cong₂ (λ xx yy → xx , (yy , [])) (*-identityʳ b) (*-identityʳ a)) ⟩
       b * ₁ , a * ₁ , [] ≡⟨ sym (cong₂ (λ xx yy → xx , (yy , [])) (*-identityˡ (b * ₁)) (*-identityʳ (a * ₁))) ⟩
       ₁ * (b * ₁) , a * ₁ * ₁ , [] ≡⟨ cong₂ (λ xx yy → xx , (yy , [])) (trans (*-identityˡ (b * ₁)) (*-identityʳ b)) (trans (*-identityʳ (a * ₁)) (*-identityʳ a)) ⟩
       b , a , [] ≡⟨ cong₂ (λ xx yy → xx , (yy , [])) (sym (+-identityˡ b)) (sym (+-identityʳ a)) ⟩
       ₀ + b , a + ₀ , [] ≡⟨ auto ⟩
-      (₀ , a , []) +ᵢ ((b , []) ,ʳ ₀) ≡⟨ cong₂ (\ xx yy -> (₀ , xx , []) +ᵢ ((yy , []) ,ʳ ₀)) (sym (*-identityʳ a)) (sym (*-identityʳ b)) ⟩
+      (₀ , a , []) +ᵢ ((b , []) ,ʳ ₀) ≡⟨ cong₂ (\ xx yy → (₀ , xx , []) +ᵢ ((yy , []) ,ʳ ₀)) (sym (*-identityʳ a)) (sym (*-identityʳ b)) ⟩
       (₀ , (a * ₁ , [])) +ᵢ ((b * ₁ , []) ,ʳ ₀) ≡⟨ auto ⟩
       (₀ , a *ᵥ binomial-terms a b k-1) +ᵢ (b *ᵥ binomial-terms a b k-1 ,ʳ ₀) ∎
       where
@@ -1072,10 +1077,10 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       where
       open ≡-Reasoning
 
-    binomial-formula : ∀ (a b : ℤ ₚ) (k : ℕ) -> ℤ ₚ
+    binomial-formula : ∀ (a b : ℤ ₚ) (k : ℕ) → ℤ ₚ
     binomial-formula a b k = sum $ binomial-terms a b k
 
-    binomial-theorem : ∀ (a b : ℤ ₚ) (k : ℕ) -> (a + b) ^′ k ≡ binomial-formula a b k
+    binomial-theorem : ∀ (a b : ℤ ₚ) (k : ℕ) → (a + b) ^′ k ≡ binomial-formula a b k
     binomial-theorem a b 0 = auto
     binomial-theorem a b k@(₁₊ k-1) = begin
       (a + b) ^′ k ≡⟨ auto ⟩
@@ -1090,7 +1095,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
 
   {-
 
-    freshman's-dream : ∀ (a b : ℤ ₚ) (k-1 : ℕ) -> let k = ₁₊ k-1 in (a + b) ^′ k ≡ a ^′ k + b ^′ k
+    freshman's-dream : ∀ (a b : ℤ ₚ) (k-1 : ℕ) → let k = ₁₊ k-1 in (a + b) ^′ k ≡ a ^′ k + b ^′ k
     freshman's-dream a b 0 = {!!}
     freshman's-dream a b k-1@(₁₊ k-2) = let k = ₁₊ k-1 in begin
       (a + b) ^′ k ≡⟨ auto ⟩
@@ -1118,7 +1123,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       open ≡-Reasoning
       aux-1 : g ^′ p-1 + - (g ^′ toℕ k) ≡ 0ₚ
       aux-1 = begin
-        g ^′ p-1 + - (g ^′ toℕ k) ≡⟨ Eq.cong (\ xx -> g ^′ p-1 + - (xx)) (Eq.sym eq) ⟩
+        g ^′ p-1 + - (g ^′ toℕ k) ≡⟨ Eq.cong (\ xx → g ^′ p-1 + - (xx)) (Eq.sym eq) ⟩
         g ^′ p-1 + - (g ^′ p-1) ≡⟨ +-inverseʳ (g ^′ p-1) ⟩
         0ₚ ∎
       l = toℕ k
@@ -1126,8 +1131,8 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       aux-2 = begin
         (g ^′ (p-1 ∸ l)  + - 1ₚ) * (g ^′ l) ≡⟨ *-distribʳ-+ (g ^′ l) (g ^′ (p-1 ∸ l)) (- 1ₚ) ⟩
         g ^′ (p-1 ∸ l) * (g ^′ l)  + - 1ₚ * (g ^′ l) ≡⟨ Eq.cong₂ _+_ (+-^′-distribʳ g (p-1 ∸ l) l) (-1*x≈-x (g ^′ l)) ⟩
-        g ^′ ((p-1 ∸ l) ℕ.+ l)  + - ((g ^′ l)) ≡⟨ Eq.cong (\ xx -> g ^′ xx  + - ((g ^′ l))) (Eq.sym (NP.+-∸-comm l (FP.toℕ≤n k))) ⟩
-        g ^′ ((p-1 ℕ.+ l) ∸ l )  + - ((g ^′ l)) ≡⟨ Eq.cong (\ xx -> g ^′ xx  + - ((g ^′ l))) (NP.m+n∸n≡m p-1 l) ⟩
+        g ^′ ((p-1 ∸ l) ℕ.+ l)  + - ((g ^′ l)) ≡⟨ Eq.cong (\ xx → g ^′ xx  + - ((g ^′ l))) (Eq.sym (NP.+-∸-comm l (FP.toℕ≤n k))) ⟩
+        g ^′ ((p-1 ℕ.+ l) ∸ l )  + - ((g ^′ l)) ≡⟨ Eq.cong (\ xx → g ^′ xx  + - ((g ^′ l))) (NP.m+n∸n≡m p-1 l) ⟩
         g ^′ (p-1) + - ((g ^′ l)) ≡⟨ aux-1 ⟩
         0ₚ ∎
       aux-3 : (g ^′ (p-1 ∸ l)  + - 1ₚ)  ≡ 0ₚ
@@ -1192,22 +1197,22 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     infix 6 _+ᵢ_
     infix 5 _*ₛ_
     
-    _*ᵥ_ : ℤ ₚ -> Vec (ℤ ₚ) n -> Vec (ℤ ₚ) n
+    _*ᵥ_ : ℤ ₚ → Vec (ℤ ₚ) n → Vec (ℤ ₚ) n
     _*ᵥ_ x = V.map (x *_)
 
-    _ᵥ*_ : ℤ ₚ -> Vec (ℤ ₚ) n -> Vec (ℤ ₚ) n
+    _ᵥ*_ : ℤ ₚ → Vec (ℤ ₚ) n → Vec (ℤ ₚ) n
     _ᵥ*_ x = V.map (_* x)
 
-    _*ᵢ_ : Vec (ℤ ₚ) n -> Vec (ℤ ₚ) n -> Vec (ℤ ₚ) n
+    _*ᵢ_ : Vec (ℤ ₚ) n → Vec (ℤ ₚ) n → Vec (ℤ ₚ) n
     _*ᵢ_ = V.zipWith _*_
 
-    _*ₛ_ : Vec ℕ n -> Vec (ℤ ₚ) n -> Vec (ℤ ₚ) n
+    _*ₛ_ : Vec ℕ n → Vec (ℤ ₚ) n → Vec (ℤ ₚ) n
     _*ₛ_ = V.zipWith _＊_
 
-    _+ᵢ_ : Vec (ℤ ₚ) n -> Vec (ℤ ₚ) n -> Vec (ℤ ₚ) n
+    _+ᵢ_ : Vec (ℤ ₚ) n → Vec (ℤ ₚ) n → Vec (ℤ ₚ) n
     _+ᵢ_ = V.zipWith _+_
 
-    *-distribˡ-sum : ∀ x (vs : Vec (ℤ ₚ) n) -> x * sum vs ≡ sum (x *ᵥ vs)
+    *-distribˡ-sum : ∀ x (vs : Vec (ℤ ₚ) n) → x * sum vs ≡ sum (x *ᵥ vs)
     *-distribˡ-sum x vs@[] = begin
       x * sum vs ≡⟨ auto ⟩
       x * ₀ ≡⟨ *-zeroʳ x ⟩
@@ -1225,7 +1230,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       open ≡-Reasoning
 
 
-    +-sum-comm : ∀ (v1 v2 : Vec (ℤ ₚ) n) -> sum v1 + sum v2 ≡ sum (v1 +ᵢ v2)
+    +-sum-comm : ∀ (v1 v2 : Vec (ℤ ₚ) n) → sum v1 + sum v2 ≡ sum (v1 +ᵢ v2)
     +-sum-comm [] [] = auto
     +-sum-comm v1@(x ∷ t) v2@(y ∷ t2) = begin
       sum v1 + sum v2 ≡⟨ auto ⟩
@@ -1240,32 +1245,32 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       where
       open ≡-Reasoning
 
-    add-adj : Vec ℕ (₁₊ n) -> Vec ℕ n
+    add-adj : Vec ℕ (₁₊ n) → Vec ℕ n
     add-adj {₀} (x ∷ v) = []
     add-adj {₁₊ n} (x ∷ x₁ ∷ v) = x ℕ.+ x₁ ∷ add-adj (x₁ ∷ v)
     
-    pascal-row : ∀ (n : ℕ) -> Vec ℕ (₁₊ n)
+    pascal-row : ∀ (n : ℕ) → Vec ℕ (₁₊ n)
     pascal-row ₀ = ₁ ∷ []
     pascal-row (₁₊ n) = ₁ ∷ (add-adj (pascal-row n) ∷ʳ ₁)
 
-    x^k : (a : ℤ ₚ) (k : ℕ) -> Vec (ℤ ₚ) (₁₊ k)
+    x^k : (a : ℤ ₚ) (k : ℕ) → Vec (ℤ ₚ) (₁₊ k)
     x^k a ₀ = (a ^′ ₀) ∷ []
     x^k a (₁₊ k) = (a ^′ (₁₊ k)) ∷ (x^k a k)
 
-    x^kʳ : (a : ℤ ₚ) (k : ℕ) -> Vec (ℤ ₚ) (₁₊ k)
+    x^kʳ : (a : ℤ ₚ) (k : ℕ) → Vec (ℤ ₚ) (₁₊ k)
     x^kʳ a ₀ = [] ∷ʳ a ^′ ₀
     x^kʳ a (₁₊ k) = x^k a k ∷ʳ a ^′ (₁₊ k)
 
 
-    xy^k : (a b : ℤ ₚ) (k : ℕ) -> Vec (ℤ ₚ) (₁₊ k)
+    xy^k : (a b : ℤ ₚ) (k : ℕ) → Vec (ℤ ₚ) (₁₊ k)
     xy^k a b ₀ = (a ^′ ₀ * b ^′ ₀) ∷ []
     xy^k a b ₁ = (a ^′ ₁ * b ^′ ₀) ∷ (a ^′ ₀ * b ^′ ₁) ∷ []
     xy^k a b k@(₂₊ k-2) = (a ^′ k * b ^′ ₀) ∷ (xy^k a b k-2 ∷ʳ (a ^′ ₀ * b ^′ k))
 
-    lemma-*ᵢ-tail : ∀ (v1 v2 : Vec (ℤ ₚ) (₁₊ n)) -> tail (v1 *ᵢ v2) ≡ tail (v1 *ᵢ v2)
+    lemma-*ᵢ-tail : ∀ (v1 v2 : Vec (ℤ ₚ) (₁₊ n)) → tail (v1 *ᵢ v2) ≡ tail (v1 *ᵢ v2)
     lemma-*ᵢ-tail (x ∷ v1) (x₁ ∷ v2) = auto
 
-    head-x^kʳ : ∀ b k -> head (x^kʳ b k) ≡ ₁
+    head-x^kʳ : ∀ b k → head (x^kʳ b k) ≡ ₁
     head-x^kʳ b k@₀ = auto
     head-x^kʳ b k@(₁) = begin
       head (x^kʳ b k) ≡⟨ auto ⟩
@@ -1281,7 +1286,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       open ≡-Reasoning
     
 
-    lemma-x^k : ∀ (a b : ℤ ₚ) (k-1 : ℕ) -> let k = ₁₊ k-1 in
+    lemma-x^k : ∀ (a b : ℤ ₚ) (k-1 : ℕ) → let k = ₁₊ k-1 in
       (x^kʳ a k) *ᵢ (x^k b k) ≡ b ^′ k ∷ a *ᵥ (x^kʳ a k-1 *ᵢ x^k b k-1)
     lemma-x^k a b k-1@₀ = let k = ₁₊ k-1 in begin
       (x^kʳ a k) *ᵢ (x^k b k) ≡⟨ auto ⟩
@@ -1301,32 +1306,32 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       where
       open ≡-Reasoning
 
-    binomial-terms : ∀ (a b : ℤ ₚ) (k : ℕ) -> Vec (ℤ ₚ) (₁₊ k)
+    binomial-terms : ∀ (a b : ℤ ₚ) (k : ℕ) → Vec (ℤ ₚ) (₁₊ k)
     binomial-terms a b k = pascal-row k *ₛ (x^kʳ a k) *ᵢ (x^k b k)
 
-    lemma-binomia-terms' : ∀ (a b : ℤ ₚ) (k-1 : ℕ) -> let k = ₁₊ k-1 in
+    lemma-binomia-terms' : ∀ (a b : ℤ ₚ) (k-1 : ℕ) → let k = ₁₊ k-1 in
     
       binomial-terms a b k ≡ ₁ ＊ a ^′ ₀ * b ^′ k ∷ ((add-adj (pascal-row k-1) ∷ʳ ₁) *ₛ (x^kʳ a k-1) *ᵢ (x^k b k-1))
       
     lemma-binomia-terms' a b k-1 = let k = ₁₊ k-1 in {!!}
 
 
-    lemma-binomia-terms : ∀ (a b : ℤ ₚ) (k-1 : ℕ) -> let k = ₁₊ k-1 in
+    lemma-binomia-terms : ∀ (a b : ℤ ₚ) (k-1 : ℕ) → let k = ₁₊ k-1 in
     
       binomial-terms a b k ≡ (₀ ∷ a *ᵥ binomial-terms a b k-1) +ᵢ (b *ᵥ binomial-terms a b k-1 ∷ʳ ₀)
       
     lemma-binomia-terms a b k-1@₀ = let k = ₁₊ k-1 in begin
       binomial-terms a b k ≡⟨ auto ⟩
       pascal-row k *ₛ (x^kʳ a k) *ᵢ (x^k b k) ≡⟨ auto ⟩
-      (₁ ＊ a ^′ ₀ * b ^′ k) ∷ (₁ ＊ a ^′ ₁ * b ^′ ₀ ∷ []) ≡⟨ cong₂ (\ xx yy -> xx ∷ yy ∷ []) (1＊x=x (₁ * b ^′ ₁)) (1＊x=x (a ^′ ₁ * ₁)) ⟩
-      (₁ * b ^′ ₁) ∷ (a ^′ ₁ * ₁ ∷ []) ≡⟨ cong₂ (\ xx yy -> xx ∷ yy ∷ []) (*-identityˡ (b ^′ ₁)) (*-identityʳ (a ^′ ₁)) ⟩
+      (₁ ＊ a ^′ ₀ * b ^′ k) ∷ (₁ ＊ a ^′ ₁ * b ^′ ₀ ∷ []) ≡⟨ cong₂ (\ xx yy → xx ∷ yy ∷ []) (1＊x=x (₁ * b ^′ ₁)) (1＊x=x (a ^′ ₁ * ₁)) ⟩
+      (₁ * b ^′ ₁) ∷ (a ^′ ₁ * ₁ ∷ []) ≡⟨ cong₂ (\ xx yy → xx ∷ yy ∷ []) (*-identityˡ (b ^′ ₁)) (*-identityʳ (a ^′ ₁)) ⟩
       b ^′ ₁ ∷ a ^′ ₁ ∷ [] ≡⟨ cong₂ (λ xx yy → xx ∷ (yy ∷ [])) (*-identityʳ b) (*-identityʳ a) ⟩
       b ∷ a ∷ [] ≡⟨ sym (cong₂ (λ xx yy → xx ∷ (yy ∷ [])) (*-identityʳ b) (*-identityʳ a)) ⟩
       b * ₁ ∷ a * ₁ ∷ [] ≡⟨ sym (cong₂ (λ xx yy → xx ∷ (yy ∷ [])) (*-identityˡ (b * ₁)) (*-identityʳ (a * ₁))) ⟩
       ₁ * (b * ₁) ∷ a * ₁ * ₁ ∷ [] ≡⟨ cong₂ (λ xx yy → xx ∷ (yy ∷ [])) (trans (*-identityˡ (b * ₁)) (*-identityʳ b)) (trans (*-identityʳ (a * ₁)) (*-identityʳ a)) ⟩
       b ∷ a ∷ [] ≡⟨ cong₂ (λ xx yy → xx ∷ (yy ∷ [])) (sym (+-identityˡ b)) (sym (+-identityʳ a)) ⟩
       ₀ + b ∷ a + ₀ ∷ [] ≡⟨ auto ⟩
-      (₀ ∷ a ∷ []) +ᵢ ((b ∷ []) ∷ʳ ₀) ≡⟨ cong₂ (\ xx yy -> (₀ ∷ xx ∷ []) +ᵢ ((yy ∷ []) ∷ʳ ₀)) (sym (*-identityʳ a)) (sym (*-identityʳ b)) ⟩
+      (₀ ∷ a ∷ []) +ᵢ ((b ∷ []) ∷ʳ ₀) ≡⟨ cong₂ (\ xx yy → (₀ ∷ xx ∷ []) +ᵢ ((yy ∷ []) ∷ʳ ₀)) (sym (*-identityʳ a)) (sym (*-identityʳ b)) ⟩
       (₀ ∷ (a * ₁ ∷ [])) +ᵢ ((b * ₁ ∷ []) ∷ʳ ₀) ≡⟨ auto ⟩
       (₀ ∷ a *ᵥ binomial-terms a b k-1) +ᵢ (b *ᵥ binomial-terms a b k-1 ∷ʳ ₀) ∎
       where
@@ -1339,10 +1344,10 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       where
       open ≡-Reasoning
 
-    binomial-formula : ∀ (a b : ℤ ₚ) (k : ℕ) -> ℤ ₚ
+    binomial-formula : ∀ (a b : ℤ ₚ) (k : ℕ) → ℤ ₚ
     binomial-formula a b k = sum $ binomial-terms a b k
 
-    binomial-theorem : ∀ (a b : ℤ ₚ) (k : ℕ) -> (a + b) ^′ k ≡ binomial-formula a b k
+    binomial-theorem : ∀ (a b : ℤ ₚ) (k : ℕ) → (a + b) ^′ k ≡ binomial-formula a b k
     binomial-theorem a b 0 = auto
     binomial-theorem a b k@(₁₊ k-1) = begin
       (a + b) ^′ k ≡⟨ auto ⟩
@@ -1373,22 +1378,22 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
     infix 6 _+ᵢ_
     infix 5 _*ₛ_
     
-    _*ᵥ_ : ℤ ₚ -> Vec (ℤ ₚ) n -> Vec (ℤ ₚ) n
+    _*ᵥ_ : ℤ ₚ → Vec (ℤ ₚ) n → Vec (ℤ ₚ) n
     _*ᵥ_ x = V.map (x *_)
 
-    _ᵥ*_ : ℤ ₚ -> Vec (ℤ ₚ) n -> Vec (ℤ ₚ) n
+    _ᵥ*_ : ℤ ₚ → Vec (ℤ ₚ) n → Vec (ℤ ₚ) n
     _ᵥ*_ x = V.map (_* x)
 
-    _*ᵢ_ : Vec (ℤ ₚ) n -> Vec (ℤ ₚ) n -> Vec (ℤ ₚ) n
+    _*ᵢ_ : Vec (ℤ ₚ) n → Vec (ℤ ₚ) n → Vec (ℤ ₚ) n
     _*ᵢ_ = V.zipWith _*_
 
-    _*ₛ_ : Vec ℕ n -> Vec (ℤ ₚ) n -> Vec (ℤ ₚ) n
+    _*ₛ_ : Vec ℕ n → Vec (ℤ ₚ) n → Vec (ℤ ₚ) n
     _*ₛ_ = V.zipWith _＊_
 
-    _+ᵢ_ : Vec (ℤ ₚ) n -> Vec (ℤ ₚ) n -> Vec (ℤ ₚ) n
+    _+ᵢ_ : Vec (ℤ ₚ) n → Vec (ℤ ₚ) n → Vec (ℤ ₚ) n
     _+ᵢ_ = V.zipWith _+_
 
-    *-distribˡ-sum : ∀ x (vs : Vec (ℤ ₚ) n) -> x * sum vs ≡ sum (x *ᵥ vs)
+    *-distribˡ-sum : ∀ x (vs : Vec (ℤ ₚ) n) → x * sum vs ≡ sum (x *ᵥ vs)
     *-distribˡ-sum x vs@[] = begin
       x * sum vs ≡⟨ auto ⟩
       x * ₀ ≡⟨ *-zeroʳ x ⟩
@@ -1406,7 +1411,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
       open ≡-Reasoning
 
 
-    +-sum-comm : ∀ (v1 v2 : Vec (ℤ ₚ) n) -> sum v1 + sum v2 ≡ sum (v1 +ᵢ v2)
+    +-sum-comm : ∀ (v1 v2 : Vec (ℤ ₚ) n) → sum v1 + sum v2 ≡ sum (v1 +ᵢ v2)
     +-sum-comm [] [] = auto
     +-sum-comm v1@(x ∷ t) v2@(y ∷ t2) = begin
       sum v1 + sum v2 ≡⟨ auto ⟩

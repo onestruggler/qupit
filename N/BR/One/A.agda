@@ -33,11 +33,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 
@@ -56,9 +57,9 @@ module N.BR.One.A (p-2 : ℕ) (p-prime : Prime (2+ p-2)) (n : ℕ)  where
 pattern auto = Eq.refl
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
 pattern ₅ = 5
 pattern ₆ = 6
 pattern ₇ = 7
@@ -71,10 +72,6 @@ pattern ₁₃ = 13
 pattern ₁₄ = 14
 pattern ₁₅ = 15
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
-pattern ₄₊ ⱼ = suc (suc (suc (suc ⱼ)))
 
 
 open import Zp.ModularArithmetic
@@ -316,6 +313,7 @@ dir-and-A'-of x@((a@₀ , b@(₁₊ _)) , nz) S-gen bws          =     S^ b⁻²
 dir-and-A'-of x@((a@(₁₊ _) , b) , nz) S-gen bws            =     ε          ,     (a , b + - a) , nz'
   where
   nz' = aux-a≠0⇒ab≠0 a (b + - a) λ ()
+dir-and-A'-of _ CZ-gen ()
 
 
 lemma-single-qupit-br-A : ∀ (x : A) (g : Gen (₁₊ n)) (bws : Bottom-Wire-Single g) ->
@@ -329,7 +327,8 @@ lemma-single-qupit-br-A x@((a@(₁₊ _) , b@₀) , nz) S-gen bws = trans (fig-2
 lemma-single-qupit-br-A x@((a@(₁₊ _) , b@(₁₊ _)) , nz) S-gen bws = trans (fig-25-2 (a , (λ ())) b) (sym left-unit)
 lemma-single-qupit-br-A x@((a@₀ , b@(₁₊ _)) , nz) H-gen bws = trans (fig-24-1 (b , (λ ()))) (sym left-unit)
 lemma-single-qupit-br-A x@((a@(₁₊ _) , b@₀) , nz) H-gen bws = trans (fig-24-2 (a , (λ ()))) (sym left-unit)
-lemma-single-qupit-br-A x@((a@(₁₊ _) , b@(₁₊ _)) , nz) H-gen bws = fig-24-3 (a , (λ ())) (b , λ ()) 
+lemma-single-qupit-br-A x@((a@(₁₊ _) , b@(₁₊ _)) , nz) H-gen bws = fig-24-3 (a , (λ ())) (b , λ ())
+lemma-single-qupit-br-A _ CZ-gen ()
 
 
 

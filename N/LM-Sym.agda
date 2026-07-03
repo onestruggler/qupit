@@ -33,11 +33,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
@@ -60,9 +61,9 @@ module N.LM-Sym (p-2 : ℕ) (p-prime : Prime (2+ p-2))  where
 pattern auto = Eq.refl
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
 pattern ₅ = 5
 pattern ₆ = 6
 pattern ₇ = 7
@@ -75,10 +76,6 @@ pattern ₁₃ = 13
 pattern ₁₄ = 14
 pattern ₁₅ = 15
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
-pattern ₄₊ ⱼ = suc (suc (suc (suc ⱼ)))
 
 
 open import Zp.ModularArithmetic
@@ -162,11 +159,11 @@ B' = B
 -- B1. A reversion is needed for it to be interpreted as words.
 [_]ᵛᵇ : ∀ {n} → Vec B n → Word (Gen (₁₊ n))
 [_]ᵛᵇ {₀} [] = ε
-[_]ᵛᵇ {suc n} (x ∷ v) = [ v ]ᵛᵇ ↑ • [ x ]ᵇ
+[_]ᵛᵇ {₁₊ n} (x ∷ v) = [ v ]ᵛᵇ ↑ • [ x ]ᵇ
 
 [_]ᵛᵈ : ∀ {n} → Vec D n → Word (Gen (₁₊ n))
 [_]ᵛᵈ {₀} [] = ε
-[_]ᵛᵈ {suc n} (x ∷ v) = [ x ]ᵈ • [ v ]ᵛᵈ ↑
+[_]ᵛᵈ {₁₊ n} (x ∷ v) = [ x ]ᵈ • [ v ]ᵛᵈ ↑
 
 [_]ᵐ : ∀ {n} → M n → Word (Gen n)
 [_]ᵐ {0} _ = ε

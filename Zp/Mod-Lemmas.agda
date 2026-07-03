@@ -1,56 +1,20 @@
-{-# OPTIONS  --safe #-}
+﻿------------------------------------------------------------------------
+-- The Agda standard library
+--
+-- Additional algebraic lemmas for ℤ/pℤ
+------------------------------------------------------------------------
+
+{-# OPTIONS --safe #-}
 {-# OPTIONS --termination-depth=2 #-}
-open import Level using (0ℓ)
 
-open import Relation.Binary using (Rel)
-open import Relation.Binary.Definitions using (DecidableEquality)
-open import Relation.Binary.Morphism.Definitions using (Homomorphic₂)
-open import Relation.Binary.PropositionalEquality using (_≡_ ; _≢_ ; inspect ; setoid ; module ≡-Reasoning ; _≗_) renaming ([_] to [_]')
-import Relation.Binary.Reasoning.Setoid as SR
+open import Relation.Binary.PropositionalEquality using (_≡_ ; _≢_)
 import Relation.Binary.PropositionalEquality as Eq
-open import Relation.Nullary.Decidable using (yes ; no)
 
-
-open import Function using (_∘_ ; id)
-open import Function.Definitions using (Injective)
-
-open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; map₁ ; ∃ ; Σ ; Σ-syntax)
-open import Data.Product.Relation.Binary.Pointwise.NonDependent as PW using (≡×≡⇒≡ ; Pointwise ; ≡⇒≡×≡)
+open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂)
 open import Data.Nat hiding (_^_ ; _+_ ; _*_)
-open import Agda.Builtin.Nat using (_-_)
-import Data.Nat as Nat
-open import Data.Bool hiding (_<_ ; _≤_)
-open import Data.List hiding ([_] ; _++_ ; last ; head ; tail ; _∷ʳ_)
-open import Data.Vec hiding ([_])
-import Data.Vec as Vec
 open import Data.Fin hiding (_+_ ; _-_)
-
-open import Data.Maybe
-open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_] ; [_,_]′)
-open import Data.Unit using (⊤ ; tt)
-open import Data.Empty using (⊥ ; ⊥-elim)
-
-open import Word.Base as WB hiding (wfoldl ; _*)
-open import Word.Properties
-import Presentation.Base as PB
-import Presentation.Properties as PP
-open PP using (NFProperty ; NFProperty')
-import Presentation.CosetNF as CA
-import Presentation.Reidemeister-Schreier as RS
-module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
-
-open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
-import Presentation.Construct.Properties.SemiDirectProduct2 as SDP2
-import Presentation.Construct.Properties.DirectProduct as DP
-import Presentation.Groups.Cyclic as Cyclic
-
-
-open import Data.Fin using (Fin ; toℕ ; suc ; zero ; fromℕ)
-open import Data.Fin.Properties using (suc-injective ; toℕ-inject₁ ; toℕ-fromℕ)
-import Data.Nat.Properties as NP
-open import Presentation.GroupLike
-open import Presentation.Tactics hiding ([_])
 open import Data.Nat.Primality
+open import Notations
 
 
 
@@ -59,9 +23,9 @@ module Zp.Mod-Lemmas (p-2 : ℕ) (p-prime : Prime (2+ p-2))  where
 pattern auto = Eq.refl
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
 pattern ₄ = 4
 pattern ₅ = 5
 pattern ₆ = 6
@@ -75,9 +39,6 @@ pattern ₁₃ = 13
 pattern ₁₄ = 14
 pattern ₁₅ = 15
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
 
 
 open import Zp.ModularArithmetic
@@ -87,12 +48,12 @@ open import Algebra.Properties.Ring (+-*-ring p-2)
 
 open Eq.≡-Reasoning
 
-aux4a : ∀ (k* : ℤ* ₚ) ->
+aux4a : ∀ (k* : ℤ* ₚ) →
   let
   k = k* .proj₁
   k⁻¹ = (k* ⁻¹) .proj₁
   in
-  k ≢ ₁ -> k⁻¹ ≢ ₁
+  k ≢ ₁ → k⁻¹ ≢ ₁
 aux4a k* hyp h2 = hyp step1
   where
   k = k* .proj₁
@@ -104,12 +65,12 @@ aux4a k* hyp h2 = hyp step1
     k * k⁻¹ ≡⟨ lemma-⁻¹ʳ k {{nztoℕ {y = k} {neq0 = k* .proj₂}}} ⟩
     ₁ ∎
 
-aux4a' : ∀ (k* : ℤ* ₚ) ->
+aux4a' : ∀ (k* : ℤ* ₚ) →
   let
   k = k* .proj₁
   k⁻¹ = (k* ⁻¹) .proj₁
   in
-  k ≢ ₁ -> k⁻¹ + - ₁ ≢ ₀
+  k ≢ ₁ → k⁻¹ + - ₁ ≢ ₀
 aux4a' k* hyp h2 = aux4a k* hyp step1
   where
   k = k* .proj₁
@@ -124,8 +85,8 @@ aux4a' k* hyp h2 = aux4a k* hyp step1
     ₁ ∎
 
 
-aux4a'' : ∀ (k*@(k , nz) : ℤ* ₚ) ->
-  k ≢ ₁ -> k + - ₁ ≢ ₀
+aux4a'' : ∀ (k*@(k , nz) : ℤ* ₚ) →
+  k ≢ ₁ → k + - ₁ ≢ ₀
 aux4a'' k*@(k , nz) hyp h2 = hyp claim
   where
   claim : k ≡ ₁
@@ -139,7 +100,7 @@ aux4a'' k*@(k , nz) hyp h2 = hyp claim
 
 open Eq
 
-aux-ob1 : ∀ (b*@(b , nz) : ℤ* ₚ) (neq1 : b ≢ ₁) ->
+aux-ob1 : ∀ (b*@(b , nz) : ℤ* ₚ) (neq1 : b ≢ ₁) →
   let
   b⁻¹ = (b* ⁻¹) .proj₁
   ob* : ℤ* ₚ
@@ -174,7 +135,7 @@ aux-ob1 b*@(b , nz) neq1 = claim1 , claim2
     b + - ₁ ∎
 
 
-aux5a : ∀ (k* l* : ℤ* ₚ) ->
+aux5a : ∀ (k* l* : ℤ* ₚ) →
   let
   k = k* .proj₁
   k⁻¹ = (k* ⁻¹) .proj₁
@@ -182,7 +143,7 @@ aux5a : ∀ (k* l* : ℤ* ₚ) ->
   l⁻¹ = (l* ⁻¹) .proj₁
   -l⁻¹ = - (l* ⁻¹) .proj₁
   in
-  k ≢ ₁ -> [kl]⁻¹ + -l⁻¹ ≢ ₀
+  k ≢ ₁ → [kl]⁻¹ + -l⁻¹ ≢ ₀
 aux5a k* l* hyp h2 = (((k⁻¹ + - ₁ , aux4a' k* hyp) *' l* ⁻¹) .proj₂) claim
   where
   k = k* .proj₁
@@ -196,22 +157,22 @@ aux5a k* l* hyp h2 = (((k⁻¹ + - ₁ , aux4a' k* hyp) *' l* ⁻¹) .proj₂) c
   claim = Eq.trans (Eq.sym (absurd)) h2
     
 {-
-lemma-[k⁻¹-1]⁻¹ : ∀ (k* : ℤ* ₚ) ->
+lemma-[k⁻¹-1]⁻¹ : ∀ (k* : ℤ* ₚ) →
   let
   k = k* .proj₁
   k⁻¹ = (k* ⁻¹) .proj₁
   k⁻¹-₁* : ℤ* ₚ
   k⁻¹-₁* = (k⁻¹ + - ₁ , ?)
-  in k ≢ ₁ ->
+  in k ≢ ₁ →
   (k⁻¹-₁* ⁻¹) .proj₁ ≡ ((₁ + - k) ⁻¹) .proj₁ * k
 -}
 
-prede : ℤ* ₚ -> ℤ ₚ
+prede : ℤ* ₚ → ℤ ₚ
 prede (₀ , nz) with nz auto
 ... | ()
 prede (₁₊ x , nz) = inject₁ x
 
-aux-k*≠1 : ∀ (k* : ℤ* ₚ) -> let k = k* .proj₁ in k ≢ ₁ -> prede k* ≢ ₀
+aux-k*≠1 : ∀ (k* : ℤ* ₚ) → let k = k* .proj₁ in k ≢ ₁ → prede k* ≢ ₀
 aux-k*≠1 k*@(₀ , snd) eq1 eq0 with snd auto
 ... | ()
 aux-k*≠1 k*@(₁ , snd) eq1 eq0 with eq1 auto
@@ -221,12 +182,12 @@ aux-k*≠1 k*@(₂₊ fst , snd) eq1 eq0 = 0≢1+n (Eq.sym eq0)
   k = k* .proj₁
   open import Data.Fin.Properties
 
-aux-k*≠1⇒k⁻¹≠1 : ∀ (k* : ℤ* ₚ) ->
+aux-k*≠1⇒k⁻¹≠1 : ∀ (k* : ℤ* ₚ) →
   let
   k = k* .proj₁
   k⁻¹ = (k* ⁻¹) .proj₁
   in
-  k ≢ ₁ -> k⁻¹ ≢ ₁
+  k ≢ ₁ → k⁻¹ ≢ ₁
 
 aux-k*≠1⇒k⁻¹≠1 k* eq1 eq1' = eq1 aux
   where
@@ -239,7 +200,7 @@ aux-k*≠1⇒k⁻¹≠1 k* eq1 eq1' = eq1 aux
     k* .proj₁ * k⁻¹ ≡⟨ lemma-⁻¹ʳ k {{nztoℕ {y = k} {neq0 = k* .proj₂}}} ⟩
     ₁ ∎
 
-b-c=0⇒b=c : ∀ (b c : ℤ ₚ) (eq0 : b + - c ≡ ₀) -> b ≡ c
+b-c=0⇒b=c : ∀ (b c : ℤ ₚ) (eq0 : b + - c ≡ ₀) → b ≡ c
 b-c=0⇒b=c b c eq0 = begin
   b ≡⟨ sym (+-identityʳ b) ⟩
   b + ₀ ≡⟨ cong (b +_) (sym (+-inverseˡ c)) ⟩

@@ -32,11 +32,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Construct.Base hiding (_*_)
@@ -57,8 +58,8 @@ open import Zp.Fermats-little-theorem
 
 module N.Clifford.Iso
   (p-3 : ℕ)
-  (let p-2 = suc p-3)
-  (p-prime : Prime (suc (suc p-2)))
+  (let p-2 = ₁₊ p-3)
+  (p-prime : Prime (suc (₁₊ p-2)))
   (let open PrimeModulus' p-2 p-prime)
   (g*@(g , g≠0) : ℤ* ₚ)
   (g-gen : ∀ ((x , _) : ℤ* ₚ) -> ∃ \ (k : ℤ ₚ-₁) -> x ≡ g ^′ toℕ k )
@@ -68,12 +69,9 @@ module N.Clifford.Iso
 open import N.Clifford.SDProduct p-3 p-prime g* g-gen
 open import N.Clifford.Clifford-Lemmas p-3 p-prime g* g-gen hiding (module CL ; module CLb)
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
 
 import N.Symplectic p-2 p-prime as NSym
 import N.Symplectic-Simplified p-2 p-prime g* g-gen as NSim
@@ -260,7 +258,7 @@ module Iso (n : ℕ) where
   lemma-f*-[w]ᵣ {n} {ε} = auto
   lemma-f*-[w]ᵣ {n} {w • w₁} rewrite lemma-f*-[w]ᵣ {w = w} | lemma-f*-[w]ᵣ {w = w₁} = auto
 
-  lemma-[]ₗ-↑' : ∀ {n} (w : Word (XZ.Gen n)) -> SD._↑ {n} ([_]ₗ {B = Sym.Gen n} w) ≡ [_]ₗ {B = Sym.Gen (suc n)} (w XZ.↑)
+  lemma-[]ₗ-↑' : ∀ {n} (w : Word (XZ.Gen n)) -> SD._↑ {n} ([_]ₗ {B = Sym.Gen n} w) ≡ [_]ₗ {B = Sym.Gen (₁₊ n)} (w XZ.↑)
   lemma-[]ₗ-↑' {n} [ x ]ʷ = auto
   lemma-[]ₗ-↑' {n} ε = auto
   lemma-[]ₗ-↑' {n} (w • w₁) rewrite lemma-[]ₗ-↑' w | lemma-[]ₗ-↑' w₁ = auto
@@ -294,7 +292,7 @@ module Iso (n : ℕ) where
     in
     w ===₁ v -> (f *) w ≈₂ (f *) v
 
-  f-well-defined {n@(suc n')} (SD.order-X) = begin
+  f-well-defined {n@(₁₊ n')} (SD.order-X) = begin
     (f *) ([ XZ.X ^ p ]ₗ) ≡⟨ Eq.cong (f *) (lemma-[w^n]ₗ=[w]ₗ^n XZ.X p) ⟩
     (f *) ([ XZ.X ]ₗ ^ p) ≡⟨ lemma-f*-w^n p ⟩
     ((f *) [ XZ.X ]ₗ) ^ p ≈⟨ CL.lemma-order-X n' ⟩
@@ -304,7 +302,7 @@ module Iso (n : ℕ) where
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
 
-  f-well-defined {n@(suc n')} (SD.order-Z) = begin
+  f-well-defined {n@(₁₊ n')} (SD.order-Z) = begin
     (f *) ([ XZ.Z ^ p ]ₗ) ≡⟨ Eq.cong (f *) (lemma-[w^n]ₗ=[w]ₗ^n XZ.Z p) ⟩
     (f *) ([ XZ.Z ]ₗ ^ p) ≡⟨ lemma-f*-w^n p ⟩
     ((f *) [ XZ.Z ]ₗ) ^ p ≈⟨ CL.lemma-order-Z n' ⟩
@@ -314,7 +312,7 @@ module Iso (n : ℕ) where
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
   f-well-defined (SD.comm-Z-X) = PB.sym (PB.axiom Clifford._QRel,_===_.comm-X-Z)
-  f-well-defined {n@(suc n')} (left (XZ.comm-X {g = g})) = begin
+  f-well-defined {n@(₁₊ n')} (left (XZ.comm-X {g = g})) = begin
     (f *) ([ [ g XZ.↥ ]ʷ • XZ.X ]ₗ) ≡⟨ auto ⟩
     (f *) ([ [ g XZ.↥ ]ʷ ]ₗ) • (f *) ([ XZ.X ]ₗ) ≡⟨ auto ⟩
     (f *) ([ [ g XZ.↥ ]ʷ ]ₗ) • Clifford.X ≈⟨ sym₂ (Lemmas-Clifford.lemma-comm-X-w↑ (f (inj₁ g))) ⟩
@@ -324,7 +322,7 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_ ; sym to sym₂) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc n')} (left (XZ.comm-Z {g = g})) = begin
+  f-well-defined {n@(₁₊ n')} (left (XZ.comm-Z {g = g})) = begin
     (f *) ([ [ g XZ.↥ ]ʷ • XZ.Z ]ₗ) ≡⟨ auto ⟩
     (f *) ([ [ g XZ.↥ ]ʷ ]ₗ) • (f *) ([ XZ.Z ]ₗ) ≡⟨ auto ⟩
     (f *) ([ [ g XZ.↥ ]ʷ ]ₗ) • Clifford.Z ≈⟨ sym₂ (Lemmas-Clifford.lemma-comm-Z-w↑ (f (inj₁ g))) ⟩
@@ -334,7 +332,7 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_ ; sym to sym₂) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc (n'@(suc n'')))} (left (XZ.cong↑ {w = w} {v} x)) = begin
+  f-well-defined {n@(suc (n'@(₁₊ n'')))} (left (XZ.cong↑ {w = w} {v} x)) = begin
     (f *) ([ w XZ.↑ ]ₗ) ≡⟨ lemma-f*-[w]ₗ {w = w} ⟩
     (f *) ([ w ]ₗ) ↑ ≈⟨ Lemmas-Clifford.lemma-cong↑ ((f *) ([ w ]ₗ)) ((f *) ([ v ]ₗ)) (f-well-defined (left x)) ⟩
     (f *) ([ v ]ₗ) ↑ ≡⟨ Eq.sym (lemma-f*-[w]ₗ {w = v}) ⟩
@@ -349,7 +347,7 @@ module Iso (n : ℕ) where
     lemma-f*-[w]ₗ {n} {ε} = auto
     lemma-f*-[w]ₗ {n} {w • w₁} rewrite lemma-f*-[w]ₗ {w = w} | lemma-f*-[w]ₗ {w = w₁} = auto
 
-  f-well-defined {n@(suc n')} (right Sim.order-S) = begin
+  f-well-defined {n@(₁₊ n')} (right Sim.order-S) = begin
     (f *) ([ S ^ p ]ᵣ) ≡⟨ Eq.cong (f *) (lemma-[w^n]ᵣ=[w]ᵣ^n S p) ⟩
     (f *) ([ S ]ᵣ ^ p) ≡⟨ lemma-f*-w^n p ⟩
     ((f *) [ S ]ᵣ) ^ p ≈⟨ CL.lemma-order-𝑠 n' ⟩
@@ -359,7 +357,7 @@ module Iso (n : ℕ) where
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
   
-  f-well-defined {n@(suc n')} (right Sim.order-H) = begin
+  f-well-defined {n@(₁₊ n')} (right Sim.order-H) = begin
     (f *) ([ H ^ 2 ]ᵣ) ≡⟨ auto ⟩
     Cli.H ^ 2 ≈⟨ _≈₂_.axiom Clifford._QRel,_===_.order-H ⟩
     Clifford.M₋₁ ≡⟨ Eq.sym (f-M' -'₁) ⟩
@@ -369,7 +367,7 @@ module Iso (n : ℕ) where
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
  
-  f-well-defined {n@(suc n')} (right (Sim.M-power k)) =  begin
+  f-well-defined {n@(₁₊ n')} (right (Sim.M-power k)) =  begin
     (f *) ([ Sim.Mg^ k ]ᵣ) ≡⟨ Eq.cong (f *) (lemma-[w^n]ᵣ=[w]ᵣ^n Sim.Mg (toℕ k)) ⟩
     (f *) ([ Sim.Mg ]ᵣ ^ toℕ k) ≡⟨ lemma-f*-w^n (toℕ k) ⟩
     (f *) [ Sim.Mg ]ᵣ ^ toℕ k ≡⟨ Eq.cong (_^ toℕ k) (f-M' g*) ⟩
@@ -382,7 +380,7 @@ module Iso (n : ℕ) where
     open SR word-setoid
     open Primitive-Root-Modp' g* g-gen
     
-  f-well-defined {n@(suc n')} (right Sim.semi-MS) = begin
+  f-well-defined {n@(₁₊ n')} (right Sim.semi-MS) = begin
     (f *) ([ Sim.Mg • S ]ᵣ) ≡⟨ auto ⟩
     (f *) [ Sim.Mg ]ᵣ • (f *) [ S ]ᵣ ≡⟨ Eq.cong (_• (f *) [ S ]ᵣ) (f-M' g*) ⟩
     Clifford.M g* • (f *) [ S ]ᵣ ≈⟨ _≈₂_.axiom Clifford._QRel,_===_.semi-M𝑠 ⟩
@@ -395,7 +393,7 @@ module Iso (n : ℕ) where
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
 
-  f-well-defined {n@(suc (n'@(suc n'')))} (right Sim.semi-M↑CZ) = begin
+  f-well-defined {n@(suc (n'@(₁₊ n'')))} (right Sim.semi-M↑CZ) = begin
     (f *) ([ Sim.Mg ↑ • CZ ]ᵣ) ≡⟨ auto ⟩
     (f *) [ Sim.Mg ↑ ]ᵣ • Cli.CZ ≡⟨ Eq.cong (_• Cli.CZ) (lemma-f*-[w]ᵣ {w = Sim.Mg}) ⟩
     (f *) [ Sim.Mg ]ᵣ ↑ • Cli.CZ ≡⟨ Eq.cong (\ x -> x ↑ • Cli.CZ) (f-M' g*) ⟩
@@ -410,7 +408,7 @@ module Iso (n : ℕ) where
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
 
-  f-well-defined {n@(suc (n'@(suc n'')))} (right Sim.semi-M↓CZ) = begin
+  f-well-defined {n@(suc (n'@(₁₊ n'')))} (right Sim.semi-M↓CZ) = begin
     (f *) ([ Sim.Mg • CZ ]ᵣ) ≡⟨ auto ⟩
     (f *) [ Sim.Mg ]ᵣ • Cli.CZ ≡⟨ Eq.cong (_• Cli.CZ) (f-M' g*) ⟩
     Clifford.M g* • Cli.CZ ≈⟨ _≈₂_.axiom Clifford._QRel,_===_.semi-M↓CZ ⟩
@@ -422,7 +420,7 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc (n'@(suc n'')))} (right Sim.order-CZ) = begin
+  f-well-defined {n@(suc (n'@(₁₊ n'')))} (right Sim.order-CZ) = begin
     (f *) ([ CZ ^ p ]ᵣ) ≡⟨ Eq.cong (f *) (lemma-[w^n]ᵣ=[w]ᵣ^n CZ p) ⟩
     (f *) ([ CZ ]ᵣ ^ p) ≡⟨ lemma-f*-w^n p ⟩
     ((f *) [ CZ ]ᵣ) ^ p ≈⟨ _≈₂_.axiom Clifford._QRel,_===_.order-CZ ⟩
@@ -546,7 +544,7 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_ ; sym to sym₂) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc (n'@(suc n'')))} (right (Sim.cong↑ {w = w} {v} x)) = begin
+  f-well-defined {n@(suc (n'@(₁₊ n'')))} (right (Sim.cong↑ {w = w} {v} x)) = begin
     (f *) ([ w Sym.↑ ]ᵣ) ≡⟨ lemma-f*-[w]ᵣ {w = w} ⟩
     (f *) ([ w ]ᵣ) ↑ ≈⟨ Lemmas-Clifford.lemma-cong↑ ((f *) ([ w ]ᵣ)) ((f *) ([ v ]ᵣ)) (f-well-defined (right x)) ⟩
     (f *) ([ v ]ᵣ) ↑ ≡⟨ Eq.sym (lemma-f*-[w]ᵣ {w = v}) ⟩
@@ -557,7 +555,7 @@ module Iso (n : ℕ) where
     open SR word-setoid
 
 
-  f-well-defined {n@(suc n')} (mid (comm XZ.X-gen NS.Symplectic.H-gen)) = begin
+  f-well-defined {n@(₁₊ n')} (mid (comm XZ.X-gen NS.Symplectic.H-gen)) = begin
     (f *) ([ [ NS.Symplectic.H-gen ]ʷ ]ᵣ • [ [ XZ.X-gen ]ʷ ]ₗ) ≡⟨ auto ⟩
     Cli.H • Clifford.X ≈⟨ CLb.conj-H-X n' ⟩
     Clifford.Z • Cli.H ≡⟨ auto ⟩
@@ -566,7 +564,7 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc n')} (mid (comm XZ.X-gen NS.Symplectic.S-gen)) = begin
+  f-well-defined {n@(₁₊ n')} (mid (comm XZ.X-gen NS.Symplectic.S-gen)) = begin
     (f *) ([ [ NS.Symplectic.S-gen ]ʷ ]ᵣ • [ [ XZ.X-gen ]ʷ ]ₗ) ≡⟨ auto ⟩
     Clifford.𝑠 • Clifford.X ≈⟨ lemma-conj-𝑠-X ⟩
     (Clifford.X • Clifford.Z) • Clifford.𝑠 ≡⟨ auto ⟩
@@ -575,7 +573,7 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc (suc n'))} (mid (comm XZ.X-gen NS.Symplectic.CZ-gen)) = begin
+  f-well-defined {n@(₂₊ n')} (mid (comm XZ.X-gen NS.Symplectic.CZ-gen)) = begin
     (f *) ([ [ NS.Symplectic.CZ-gen ]ʷ ]ᵣ • [ [ XZ.X-gen ]ʷ ]ₗ) ≡⟨ auto ⟩
     Cli.CZ • Clifford.X ≈⟨ _≈₂_.axiom Clifford._QRel,_===_.rel-X↓-CZ ⟩
     Clifford.X • Clifford.Z ↑ • Cli.CZ ≈⟨ sym₂ assoc₂ ⟩
@@ -585,7 +583,7 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_ ; sym to sym₂ ; assoc to assoc₂) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc (suc n'))} (mid (comm XZ.X-gen (h₁ NS.Symplectic.↥))) = begin
+  f-well-defined {n@(₂₊ n')} (mid (comm XZ.X-gen (h₁ NS.Symplectic.↥))) = begin
     (f *) ([ [ h₁ NS.Symplectic.↥ ]ʷ ]ᵣ • [ [ XZ.X-gen ]ʷ ]ₗ) ≡⟨ auto ⟩
     (f (inj₂ h₁)) ↑ • Clifford.X ≈⟨ sym₂ (Lemmas-Clifford.lemma-comm-X-w↑ (f (inj₂ h₁))) ⟩
     Clifford.X • (f (inj₂ h₁)) ↑ ≡⟨ auto ⟩
@@ -594,7 +592,7 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_ ; sym to sym₂) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc n')} (mid (comm XZ.Z-gen NS.Symplectic.H-gen)) = begin
+  f-well-defined {n@(₁₊ n')} (mid (comm XZ.Z-gen NS.Symplectic.H-gen)) = begin
     (f *) ([ [ NS.Symplectic.H-gen ]ʷ ]ᵣ • [ [ XZ.Z-gen ]ʷ ]ₗ) ≡⟨ auto ⟩
     Cli.H • Clifford.Z ≈⟨ CLb.conj-H-Z n' ⟩
     Clifford.X^ (- ₁) • Cli.H ≡⟨ Eq.cong (\ x -> Clifford.X ^ x • Cli.H) lemma-toℕ-1ₚ ⟩
@@ -605,7 +603,7 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc n')} (mid (comm XZ.Z-gen NS.Symplectic.S-gen)) = begin
+  f-well-defined {n@(₁₊ n')} (mid (comm XZ.Z-gen NS.Symplectic.S-gen)) = begin
     (f *) ([ [ NS.Symplectic.S-gen ]ʷ ]ᵣ • [ [ XZ.Z-gen ]ʷ ]ₗ) ≡⟨ auto ⟩
     Clifford.𝑠 • Clifford.Z ≈⟨ lemma-comm-𝑠-Z ⟩
     Clifford.Z • Clifford.𝑠 ≡⟨ auto ⟩
@@ -614,7 +612,7 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc (suc n'))} (mid (comm XZ.Z-gen NS.Symplectic.CZ-gen)) = begin
+  f-well-defined {n@(₂₊ n')} (mid (comm XZ.Z-gen NS.Symplectic.CZ-gen)) = begin
     (f *) ([ [ NS.Symplectic.CZ-gen ]ʷ ]ᵣ • [ [ XZ.Z-gen ]ʷ ]ₗ) ≡⟨ auto ⟩
     Cli.CZ • Clifford.Z ≈⟨ sym₂ lemma-comm-Z-CZ ⟩
     Clifford.Z • Cli.CZ ≡⟨ auto ⟩
@@ -623,7 +621,7 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_ ; sym to sym₂) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc (suc n'))} (mid (comm XZ.Z-gen (h₁ NS.Symplectic.↥))) = begin
+  f-well-defined {n@(₂₊ n')} (mid (comm XZ.Z-gen (h₁ NS.Symplectic.↥))) = begin
     (f *) ([ [ h₁ NS.Symplectic.↥ ]ʷ ]ᵣ • [ [ XZ.Z-gen ]ʷ ]ₗ) ≡⟨ auto ⟩
     (f (inj₂ h₁)) ↑ • Clifford.Z ≈⟨ sym₂ (Lemmas-Clifford.lemma-comm-Z-w↑ (f (inj₂ h₁))) ⟩
     Clifford.Z • (f (inj₂ h₁)) ↑ ≡⟨ auto ⟩
@@ -632,7 +630,7 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_ ; sym to sym₂) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc (suc n'))} (mid (comm (n₁ XZ.↥) NS.Symplectic.H-gen)) = begin
+  f-well-defined {n@(₂₊ n')} (mid (comm (n₁ XZ.↥) NS.Symplectic.H-gen)) = begin
     (f *) ([ [ NS.Symplectic.H-gen ]ʷ ]ᵣ • [ [ n₁ XZ.↥ ]ʷ ]ₗ) ≡⟨ auto ⟩
     Cli.H • (f (inj₁ n₁)) ↑ ≈⟨ Lemmas-Clifford.lemma-comm-H-w↑ (f (inj₁ n₁)) ⟩
     (f (inj₁ n₁)) ↑ • Cli.H ≡⟨ auto ⟩
@@ -641,7 +639,7 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_ ; sym to sym₂) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc (suc n'))} (mid (comm (n₁ XZ.↥) NS.Symplectic.S-gen)) = begin
+  f-well-defined {n@(₂₊ n')} (mid (comm (n₁ XZ.↥) NS.Symplectic.S-gen)) = begin
     (f *) ([ [ NS.Symplectic.S-gen ]ʷ ]ᵣ • [ [ n₁ XZ.↥ ]ʷ ]ₗ) ≡⟨ auto ⟩
     Clifford.𝑠 • (f (inj₁ n₁)) ↑ ≈⟨ lemma-comm-𝑠-w↑ (f (inj₁ n₁)) ⟩
     (f (inj₁ n₁)) ↑ • Clifford.𝑠 ≡⟨ auto ⟩
@@ -650,7 +648,7 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_ ; sym to sym₂) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc (suc n'))} (mid (comm (XZ.X-gen XZ.↥) NS.Symplectic.CZ-gen)) = begin
+  f-well-defined {n@(₂₊ n')} (mid (comm (XZ.X-gen XZ.↥) NS.Symplectic.CZ-gen)) = begin
     (f *) ([ [ NS.Symplectic.CZ-gen ]ʷ ]ᵣ • [ [ XZ.X-gen XZ.↥ ]ʷ ]ₗ) ≡⟨ auto ⟩
     Cli.CZ • Clifford.X ↑ ≈⟨ _≈₂_.axiom Clifford._QRel,_===_.rel-X↑-CZ ⟩
     Clifford.X ↑ • Clifford.Z • Cli.CZ ≈⟨ sym₂ assoc₂ ⟩
@@ -660,7 +658,7 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_ ; sym to sym₂ ; assoc to assoc₂) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc (suc n'))} (mid (comm (XZ.Z-gen XZ.↥) NS.Symplectic.CZ-gen)) = begin
+  f-well-defined {n@(₂₊ n')} (mid (comm (XZ.Z-gen XZ.↥) NS.Symplectic.CZ-gen)) = begin
     (f *) ([ [ NS.Symplectic.CZ-gen ]ʷ ]ᵣ • [ [ XZ.Z-gen XZ.↥ ]ʷ ]ₗ) ≡⟨ auto ⟩
     Cli.CZ • Clifford.Z ↑ ≈⟨ sym₂ lemma-comm-Z↑-CZ ⟩
     Clifford.Z ↑ • Cli.CZ ≡⟨ auto ⟩
@@ -669,7 +667,7 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_ ; sym to sym₂) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc (suc (suc n')))} (mid (comm ((m XZ.↥) XZ.↥) NS.Symplectic.CZ-gen)) = begin
+  f-well-defined {n@(₃₊ n')} (mid (comm ((m XZ.↥) XZ.↥) NS.Symplectic.CZ-gen)) = begin
     (f *) ([ [ NS.Symplectic.CZ-gen ]ʷ ]ᵣ • [ [ (m XZ.↥) XZ.↥ ]ʷ ]ₗ) ≡⟨ auto ⟩
     Cli.CZ • (f (inj₁ m)) ↑ ↑ ≈⟨ Lemmas-Clifford.lemma-comm-CZ-w↑ (f (inj₁ m)) ⟩
     (f (inj₁ m)) ↑ ↑ • Cli.CZ ≡⟨ auto ⟩
@@ -678,17 +676,17 @@ module Iso (n : ℕ) where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_) using (refl')
     open PP (n Clifford.QRel,_===_)
     open SR word-setoid
-  f-well-defined {n@(suc n')} (mid (comm (n₁ XZ.↥) (h₁ NS.Symplectic.↥))) = begin
+  f-well-defined {n@(₁₊ n')} (mid (comm (n₁ XZ.↥) (h₁ NS.Symplectic.↥))) = begin
     (f *) ([ [ h₁ NS.Symplectic.↥ ]ʷ ]ᵣ • [ [ n₁ XZ.↥ ]ʷ ]ₗ) ≡⟨ Eq.sym (lemma-f*-SD↑ ([ [ h₁ ]ʷ ]ᵣ • [ [ n₁ ]ʷ ]ₗ)) ⟩
     (f *) ([ [ h₁ ]ʷ ]ᵣ • [ [ n₁ ]ʷ ]ₗ) ↑ ≈⟨ Lemmas-Clifford.lemma-cong↑ _ _ (f-well-defined (mid (comm n₁ h₁))) ⟩
     (f *) ([ SemiDirect.conj h₁ n₁ ]ₗ • [ [ h₁ ]ʷ ]ᵣ) ↑ ≡⟨ Eq.sym (lemma-f*-SD↑ ([ SemiDirect.conj h₁ n₁ ]ₗ • [ [ h₁ ]ʷ ]ᵣ)) ⟩
     (f *) (SD._↑ {n'} ([ SemiDirect.conj h₁ n₁ ]ₗ • [ [ h₁ ]ʷ ]ᵣ)) ≡⟨ auto ⟩
     (f *) (SD._↑ {n'} ([_]ₗ {B = Sym.Gen n'} (SemiDirect.conj h₁ n₁)) • [ [ h₁ NS.Symplectic.↥ ]ʷ ]ᵣ) ≡⟨ Eq.cong (\ x -> (f *) (x • [ [ h₁ NS.Symplectic.↥ ]ʷ ]ᵣ)) bridge ⟩
-    (f *) ([_]ₗ {B = Sym.Gen (suc n')} (SemiDirect.conj h₁ n₁ XZ.↑) • [ [ h₁ NS.Symplectic.↥ ]ʷ ]ᵣ) ≡⟨ auto ⟩
+    (f *) ([_]ₗ {B = Sym.Gen (₁₊ n')} (SemiDirect.conj h₁ n₁ XZ.↑) • [ [ h₁ NS.Symplectic.↥ ]ʷ ]ᵣ) ≡⟨ auto ⟩
     (f *) ([ SemiDirect.conj (h₁ NS.Symplectic.↥) (n₁ XZ.↥) ]ₗ • [ [ h₁ NS.Symplectic.↥ ]ʷ ]ᵣ) ∎
     where
     open PB (n Clifford.QRel,_===_) renaming (_===_ to _===₂_ ; _≈_ to _≈₂_ ; cleft_ to cleft₂_ ; cright_ to cright₂_) using (refl')
     open PP (n Clifford.QRel,_===_)
-    bridge : SD._↑ {n'} ([_]ₗ {B = Sym.Gen n'} (SemiDirect.conj h₁ n₁)) ≡ [_]ₗ {B = Sym.Gen (suc n')} (SemiDirect.conj h₁ n₁ XZ.↑)
+    bridge : SD._↑ {n'} ([_]ₗ {B = Sym.Gen n'} (SemiDirect.conj h₁ n₁)) ≡ [_]ₗ {B = Sym.Gen (₁₊ n')} (SemiDirect.conj h₁ n₁ XZ.↑)
     bridge = lemma-[]ₗ-↑' (SemiDirect.conj h₁ n₁)
     open SR word-setoid

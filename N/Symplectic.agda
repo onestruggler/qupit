@@ -1,4 +1,4 @@
-{-# OPTIONS  --safe #-}
+﻿{-# OPTIONS  --safe #-}
 {-# OPTIONS --termination-depth=2 #-}
 open import Level using (0ℓ)
 
@@ -32,7 +32,7 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
@@ -52,33 +52,10 @@ open import Presentation.GroupLike
 open import Presentation.Tactics hiding ([_])
 open import Data.Nat.Primality
 
-
+open import Notations
+import Presentation.Vertical-Syntactics
 
 module N.Symplectic (p-2 : ℕ) (p-prime : Prime (2+ p-2))  where
-
-pattern auto = Eq.refl
-
-pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
-pattern ₅ = 5
-pattern ₆ = 6
-pattern ₇ = 7
-pattern ₈ = 8
-pattern ₉ = 9
-pattern ₁₀ = 10
-pattern ₁₁ = 11
-pattern ₁₂ = 12
-pattern ₁₃ = 13
-pattern ₁₄ = 14
-pattern ₁₅ = 15
-
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
-pattern ₄₊ ⱼ = suc (suc (suc (suc ⱼ)))
-
 
 open import Zp.ModularArithmetic
 open PrimeModulus p-2 p-prime
@@ -93,37 +70,27 @@ module Symplectic where
   -- p = ₁₊ p-1
   -- ₚ = p
   
-  data Gen : ℕ → Set where
-    H-gen : ∀ {n} → Gen (₁₊ n)
-    S-gen : ∀ {n} → Gen (₁₊ n)
-    CZ-gen : ∀ {n} → Gen (₂₊ n)
---    EX-gen : ∀ {n} → Gen (₂₊ n)
-    -- lift a generator from Gen n to Gen (₁₊ n). E.g., in a two
-    -- qupit circut H-gen = H 0, and H-gen ↥ = H 1.
-    _↥ : ∀ {n} → Gen n → Gen (suc n)
+  -- Gate types for the symplectic group generators.
+  data SympGate : ℕ → Set where
+    H-gate  : SympGate 1
+    S-gate  : SympGate 1
+    CZ-gate : SympGate 2
 
-  [_⇑] : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  -- Open the Syntactics framework: provides Gen, gate₁, gate₂, _↥, _↑, _↓, _↥ᵏ_, _↑ᵏ_, Lift-Relation.
+  private module SC = Presentation.Vertical-Syntactics SympGate
+  open SC using (Gen ; gate₁ ; gate₂ ; _↥ ; _↑ ; _↓ ; _↥ᵏ_ ; _↑ᵏ_) public
+
+  -- Backward-compatible pattern synonyms for the three basic generators.
+  -- These let CommData and Rewriting-Sym0 use the old constructor-style names.
+  pattern H-gen  = gate₁ H-gate
+  pattern S-gen  = gate₁ S-gate
+  pattern CZ-gen = gate₂ CZ-gate
+
+  [_⇑] : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
   [_⇑] {n} = ([_]ʷ ∘ _↥) WB.*
 
-  [_⇑]' : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  [_⇑]' : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
   [_⇑]' {n} = wmap _↥
-
-  _↑ : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
-  _↑ = wmap _↥
-
-  _↓-gen : ∀ {n} → Gen n → Gen (suc n)
-  _↓-gen {zero} ()
-  _↓-gen {₁₊ n} H-gen = H-gen
-  _↓-gen {₁₊ n} S-gen = S-gen
-  _↓-gen {₁₊ .(₁₊ _)} CZ-gen = CZ-gen
---  _↓-gen {₁₊ .(₁₊ _)} EX-gen = EX-gen
-  _↓-gen {₁₊ n} (g ↥) = (g ↓-gen) ↥
-
-  -- _↓ : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
-  -- _↓ {n} = wmap _↓-gen
-
-  _↓ : ∀ {n} → Word (Gen n) → Word (Gen ( n))
-  _↓ {n} x = x 
 
 
   lemma-[⇑]=[⇑]' : ∀ {n} (w : Word (Gen n)) → [ w ⇑] ≡ [ w ⇑]'
@@ -132,13 +99,13 @@ module Symplectic where
   lemma-[⇑]=[⇑]' {n} (w • w₁) = Eq.cong₂ _•_ (lemma-[⇑]=[⇑]' w) (lemma-[⇑]=[⇑]' w₁)
 
   S : ∀ {n} → Word (Gen (₁₊ n))
-  S = [ S-gen ]ʷ
+  S = [ gate₁ S-gate ]ʷ
 
   S⁻¹ : ∀ {n} → Word (Gen (₁₊ n))
   S⁻¹ = S ^ p-1
 
   H : ∀ {n} → Word (Gen (₁₊ n))
-  H = [ H-gen ]ʷ
+  H = [ gate₁ H-gate ]ʷ
 
   HH : ∀ {n} → Word (Gen (₁₊ n))
   HH = H ^ 2
@@ -147,7 +114,7 @@ module Symplectic where
   H⁻¹ = H ^ 3
 
   CZ : ∀ {n} → Word (Gen (₂₊ n))
-  CZ = [ CZ-gen ]ʷ
+  CZ = [ gate₂ CZ-gate ]ʷ
 
   CZ⁻¹ : ∀ {n} → Word (Gen (₂₊ n))
   CZ⁻¹ = CZ ^ p-1
@@ -266,57 +233,84 @@ module Symplectic where
   _^1 : ℤ* ₚ -> ℤ ₚ
   _^1 x' = let x = x' .proj₁ in x
 
+  -- Group-specific axioms only (no structural rules).
+  module Base where
+      infix 4 _SRel,_===_
+      data _SRel,_===_ : (n : ℕ) → WRel (Gen n) where
+        order-S    : ∀ {n} → (₁₊ n) SRel,  S ^ p === ε
+        order-H    : ∀ {n} → (₁₊ n) SRel,  H ^ 4 === ε
+        order-SH   : ∀ {n} → (₁₊ n) SRel,  (S • H) ^ 3 === ε
+        comm-HHS   : ∀ {n} → (₁₊ n) SRel,  H • H • S === S • H • H
+        M-mul      : ∀ {n} x y → (₁₊ n) SRel,  M x • M y === M (x *' y)
+        semi-MS    : ∀ {n} x → (₁₊ n) SRel,  M x • S === S^ (x ^2) • M x
+        semi-M↑CZ  : ∀ {n} x → (₂₊ n) SRel,  M x ↑ • CZ === CZ^ (x ^1) • M x ↑
+        semi-M↓CZ  : ∀ {n} x → (₂₊ n) SRel,  M x ↓ • CZ === CZ^ (x ^1) • M x ↓
+        order-CZ   : ∀ {n} → (₂₊ n) SRel,  CZ ^ p === ε
+        comm-CZ-S↓ : ∀ {n} → (₂₊ n) SRel,  CZ • S ↓ === S ↓ • CZ
+        comm-CZ-S↑ : ∀ {n} → (₂₊ n) SRel,  CZ • S ↑ === S ↑ • CZ
+        selinger-c10 : ∀ {n} → (₂₊ n) SRel,  CZ • H ↑ • CZ === S⁻¹ ↑ • H ↑ • S⁻¹ ↑ • CZ • H ↑ • S⁻¹ ↑ • S⁻¹ ↓
+        selinger-c11 : ∀ {n} → (₂₊ n) SRel,  CZ • H ↓ • CZ === S⁻¹ ↓ • H ↓ • S⁻¹ ↓ • CZ • H ↓ • S⁻¹ ↓ • S⁻¹ ↑
+        selinger-c12 : ∀ {n} → (₃₊ n) SRel,  CZ ↑ • CZ === CZ • CZ ↑
+        selinger-c13 : ∀ {n} → (₃₊ n) SRel,  ⊤⊥ ↑ • CZ ↓ • ⊥⊤ ↑ === ⊥⊤ ↓ • CZ ↑ • ⊤⊥ ↓
+        selinger-c14 : ∀ {n} → (₃₊ n) SRel,  (⊤⊥ ↑ • CZ ↓) ^ 3 === ε
+        selinger-c15 : ∀ {n} → (₃₊ n) SRel,  (⊥⊤ ↓ • CZ ↑) ^ 3 === ε
+
+  -- Full relation: group-specific rules + structural rules (cong↑, comm).
+  private module LR = SC.Lift-Relation Base._SRel,_===_
+
   infix 4 _QRel,_===_
-  data _QRel,_===_ : (n : ℕ) → WRel (Gen n) where
-  
-    order-S :      ∀ {n} → (₁₊ n) QRel,  S ^ p === ε
-    order-H :      ∀ {n} → (₁₊ n) QRel,  H ^ 4 === ε
-    order-SH :     ∀ {n} → (₁₊ n) QRel,  (S • H) ^ 3 === ε
-    comm-HHS :     ∀ {n} → (₁₊ n) QRel,  H • H • S === S • H • H
+  _QRel,_===_ : (n : ℕ) → WRel (Gen n)
+  _QRel,_===_ = LR._CRel,_===_
 
-    M-mul :    ∀ {n} x y → (₁₊ n) QRel,  M x • M y === M (x *' y)
-    semi-MS :    ∀ {n} x → (₁₊ n) QRel,  M x • S === S^ (x ^2) • M x
-    semi-M↑CZ :  ∀ {n} x → (₂₊ n) QRel,  M x ↑ • CZ === CZ^ (x ^1) • M x ↑
-    semi-M↓CZ :  ∀ {n} x → (₂₊ n) QRel,  M x ↓ • CZ === CZ^ (x ^1) • M x ↓
+  -- Structural rules, exported directly.
+  open LR public using (srel ; cong↑ ; comm₁ ; comm₂ ; lemma-cong↑)
 
-    order-CZ :     ∀ {n} → (₂₊ n) QRel,  CZ ^ p === ε
+  -- Group-specific axioms lifted to the full relation (preserves call-site names).
+  order-S    : ∀ {n} → (₁₊ n) QRel, S ^ p === ε
+  order-S    = LR.srel Base.order-S
+  order-H    : ∀ {n} → (₁₊ n) QRel, H ^ 4 === ε
+  order-H    = LR.srel Base.order-H
+  order-SH   : ∀ {n} → (₁₊ n) QRel, (S • H) ^ 3 === ε
+  order-SH   = LR.srel Base.order-SH
+  comm-HHS   : ∀ {n} → (₁₊ n) QRel, H • H • S === S • H • H
+  comm-HHS   = LR.srel Base.comm-HHS
+  M-mul      : ∀ {n} x y → (₁₊ n) QRel, M x • M y === M (x *' y)
+  M-mul x y  = LR.srel (Base.M-mul x y)
+  semi-MS    : ∀ {n} x → (₁₊ n) QRel, M x • S === S^ (x ^2) • M x
+  semi-MS x  = LR.srel (Base.semi-MS x)
+  semi-M↑CZ  : ∀ {n} x → (₂₊ n) QRel, M x ↑ • CZ === CZ^ (x ^1) • M x ↑
+  semi-M↑CZ x = LR.srel (Base.semi-M↑CZ x)
+  semi-M↓CZ  : ∀ {n} x → (₂₊ n) QRel, M x ↓ • CZ === CZ^ (x ^1) • M x ↓
+  semi-M↓CZ x = LR.srel (Base.semi-M↓CZ x)
+  order-CZ   : ∀ {n} → (₂₊ n) QRel, CZ ^ p === ε
+  order-CZ   = LR.srel Base.order-CZ
+  comm-CZ-S↓ : ∀ {n} → (₂₊ n) QRel, CZ • S ↓ === S ↓ • CZ
+  comm-CZ-S↓ = LR.srel Base.comm-CZ-S↓
+  comm-CZ-S↑ : ∀ {n} → (₂₊ n) QRel, CZ • S ↑ === S ↑ • CZ
+  comm-CZ-S↑ = LR.srel Base.comm-CZ-S↑
+  selinger-c10 : ∀ {n} → (₂₊ n) QRel, CZ • H ↑ • CZ === S⁻¹ ↑ • H ↑ • S⁻¹ ↑ • CZ • H ↑ • S⁻¹ ↑ • S⁻¹ ↓
+  selinger-c10 = LR.srel Base.selinger-c10
+  selinger-c11 : ∀ {n} → (₂₊ n) QRel, CZ • H ↓ • CZ === S⁻¹ ↓ • H ↓ • S⁻¹ ↓ • CZ • H ↓ • S⁻¹ ↓ • S⁻¹ ↑
+  selinger-c11 = LR.srel Base.selinger-c11
+  selinger-c12 : ∀ {n} → (₃₊ n) QRel, CZ ↑ • CZ === CZ • CZ ↑
+  selinger-c12 = LR.srel Base.selinger-c12
+  selinger-c13 : ∀ {n} → (₃₊ n) QRel, ⊤⊥ ↑ • CZ ↓ • ⊥⊤ ↑ === ⊥⊤ ↓ • CZ ↑ • ⊤⊥ ↓
+  selinger-c13 = LR.srel Base.selinger-c13
+  selinger-c14 : ∀ {n} → (₃₊ n) QRel, (⊤⊥ ↑ • CZ ↓) ^ 3 === ε
+  selinger-c14 = LR.srel Base.selinger-c14
+  selinger-c15 : ∀ {n} → (₃₊ n) QRel, (⊥⊤ ↓ • CZ ↑) ^ 3 === ε
+  selinger-c15 = LR.srel Base.selinger-c15
 
-    comm-CZ-S↓ :   ∀ {n} → (₂₊ n) QRel,  CZ • S ↓ === S ↓ • CZ
-    comm-CZ-S↑ :   ∀ {n} → (₂₊ n) QRel,  CZ • S ↑ === S ↑ • CZ
-
-    selinger-c10 : ∀ {n} → (₂₊ n) QRel,  CZ • H ↑ • CZ === S⁻¹ ↑ • H ↑ • S⁻¹ ↑ • CZ • H ↑ • S⁻¹ ↑ • S⁻¹ ↓
-    selinger-c11 : ∀ {n} → (₂₊ n) QRel,  CZ • H ↓ • CZ === S⁻¹ ↓ • H ↓ • S⁻¹ ↓ • CZ • H ↓ • S⁻¹ ↓ • S⁻¹ ↑
-
-    selinger-c12 : ∀ {n} → (₃₊ n) QRel,  CZ ↑ • CZ === CZ • CZ ↑
-    selinger-c13 : ∀ {n} → (₃₊ n) QRel,  ⊤⊥ ↑ • CZ ↓ • ⊥⊤ ↑ === ⊥⊤ ↓ • CZ ↑ • ⊤⊥ ↓
-    
-    selinger-c14 : ∀ {n} → (₃₊ n) QRel,  (⊤⊥ ↑ • CZ ↓) ^ 3 === ε
-    selinger-c15 : ∀ {n} → (₃₊ n) QRel,  (⊥⊤ ↓ • CZ ↑) ^ 3 === ε
-
-    -- def-EX :       ∀ {n} → (₂₊ n) QRel,  EX === Ex
-    -- order-EX :     ∀ {n} → (₂₊ n) QRel,  EX ^ 2 === ε
-    -- comm-EX :   ∀ {n}{g} → (₃₊ n) QRel,  [ g ↥ ↥ ]ʷ • EX === EX • [ g ↥ ↥ ]ʷ
-
-    comm-H :    ∀ {n}{g} → (₂₊ n) QRel,  [ g ↥ ]ʷ • H === H • [ g ↥ ]ʷ
-    comm-S :    ∀ {n}{g} → (₂₊ n) QRel,  [ g ↥ ]ʷ • S === S • [ g ↥ ]ʷ
-    comm-CZ :   ∀ {n}{g} → (₃₊ n) QRel,  [ g ↥ ↥ ]ʷ • CZ === CZ • [ g ↥ ↥ ]ʷ
-
-    cong↑ : ∀ {n w v} → n QRel,  w === v → (₁₊ n) QRel,  w ↑ === v ↑
+  -- Structural commutativity lifted from Lift-Relation.comm₁/comm₂ (preserves old names).
+  comm-H  : ∀ {n} {g : Gen (₁₊ n)} → (₂₊ n) QRel, [ g ↥ ]ʷ • H === H • [ g ↥ ]ʷ
+  comm-H  {g = g} = LR.comm₁ H-gate g
+  comm-S  : ∀ {n} {g : Gen (₁₊ n)} → (₂₊ n) QRel, [ g ↥ ]ʷ • S === S • [ g ↥ ]ʷ
+  comm-S  {g = g} = LR.comm₁ S-gate g
+  comm-CZ : ∀ {n} {g : Gen (₁₊ n)} → (₃₊ n) QRel, [ g ↥ ↥ ]ʷ • CZ === CZ • [ g ↥ ↥ ]ʷ
+  comm-CZ {g = g} = LR.comm₂ CZ-gate g
 
 module Lemmas-Sym where
   open Symplectic
-  lemma-cong↑ : ∀ {n} w v →
-    let open PB (n QRel,_===_) using (_≈_) in
-    let open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↑_) using () in
-    w ≈ v → w ↑ ≈↑ v ↑
-  lemma-cong↑ {n} w v PB.refl = PB.refl
-  lemma-cong↑ {n} w v (PB.sym eq) = PB.sym (lemma-cong↑ v w eq)
-  lemma-cong↑ {n} w v (PB.trans eq eq₁) = PB.trans (lemma-cong↑ _ _ eq) (lemma-cong↑ _ _ eq₁)
-  lemma-cong↑ {n} w v (PB.cong eq eq₁) = PB.cong (lemma-cong↑ _ _ eq) (lemma-cong↑ _ _ eq₁)
-  lemma-cong↑ {n} w v PB.assoc = PB.assoc
-  lemma-cong↑ {n} w v PB.left-unit = PB.left-unit
-  lemma-cong↑ {n} w v PB.right-unit = PB.right-unit
-  lemma-cong↑ {n} w v (PB.axiom x) = PB.axiom (cong↑ x)
 
 
   import Data.Nat.Literals as NL
@@ -330,7 +324,7 @@ module Lemmas-Sym where
   lemma-^-↑ w ₀ = auto
   lemma-^-↑ w ₁ = auto
   lemma-^-↑ w (₂₊ k) = begin
-    (w ↑) • (w ↑) ^ ₁₊ k ≡⟨ Eq.cong ((w ↑) •_) (lemma-^-↑ w (suc k)) ⟩
+    (w ↑) • (w ↑) ^ ₁₊ k ≡⟨ Eq.cong ((w ↑) •_) (lemma-^-↑ w (₁₊ k)) ⟩
     (w ↑) • (w ^ ₁₊ k) ↑ ≡⟨ auto ⟩
     ((w • w ^ ₁₊ k) ↑) ∎
     where open ≡-Reasoning
@@ -439,7 +433,7 @@ module Lemmas-Sym where
 {-
   lemma-cong↓ : ∀ {n} w v →
     let open PB (n QRel,_===_) using (_≈_) in
-    let open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_) using () in
+    let open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_) using () in
     w ≈ v → w ↓ ≈↓ v ↓
 
   lemma-cong↓ {n} w v PB.refl = PB.refl
@@ -454,8 +448,8 @@ module Lemmas-Sym where
     ((S • S ^ ₁₊ p-2)) ≈⟨ axiom order-S ⟩
     (ε ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom order-H) = PB.axiom order-H
   lemma-cong↓ {n} w v (PB.axiom order-SH) = PB.axiom order-SH
@@ -467,8 +461,8 @@ module Lemmas-Sym where
     M (x *' y)  ≈⟨ sym (lemma-M↓ (x *' y)) ⟩
     (M (x *' y) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom (semi-MS x)) = begin
     ((M x • S) ↓) ≈⟨ (cleft lemma-M↓ x) ⟩
@@ -476,8 +470,8 @@ module Lemmas-Sym where
     S^ (x ^2) • M x ≈⟨ sym (cong (lemma-cong↓-S^ (toℕ (fromℕ< _))) (lemma-M↓ x)) ⟩
     ((S^ (x ^2) • M x) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom (semi-M↑CZ x)) = begin
     (((M x ↑) • CZ) ↓) ≈⟨ cong (lemma-M↑↓ x) refl ⟩
@@ -485,8 +479,8 @@ module Lemmas-Sym where
     CZ^ (x ^1) • M x ↑ ≈⟨ cong (sym (lemma-cong↓-CZ^ (toℕ (x .proj₁)))) (sym (lemma-M↑↓ x)) ⟩
     ((CZ^ (x ^1) • (M x ↑)) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom (semi-M↓CZ x)) =  begin
     (((M x ↓) • CZ) ↓) ≈⟨ cong (lemma-M↓↓ x) refl ⟩
@@ -494,16 +488,16 @@ module Lemmas-Sym where
     CZ^ (x ^1) • M x ↓ ≈⟨ cong (sym (lemma-cong↓-CZ^ (toℕ (x .proj₁)))) (sym (lemma-M↓↓ x)) ⟩
     ((CZ^ (x ^1) • (M x ↓)) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom order-CZ) = begin
     ((CZ • CZ ^ ₁₊ p-2) ↓) ≈⟨ cong refl (lemma-cong↓-CZ^ (₁₊ p-2)) ⟩
     ((CZ • CZ ^ ₁₊ p-2)) ≈⟨ axiom order-CZ ⟩
     (ε ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom comm-CZ-S↓) = PB.axiom comm-CZ-S↓
   lemma-cong↓ {n} w v (PB.axiom comm-CZ-S↑) = PB.axiom comm-CZ-S↑
@@ -515,8 +509,8 @@ module Lemmas-Sym where
     ((S⁻¹ ↑ ↓) • (H ↑ ↓) • (S⁻¹ ↑ ↓) • CZ ↓ • (H ↑ ↓) • (S⁻¹ ↑ ↓) • (S⁻¹ ↓ ↓)) ≈⟨ refl ⟩
     (((S⁻¹ ↑) • (H ↑) • (S⁻¹ ↑) • CZ • (H ↑) • (S⁻¹ ↑) • (S⁻¹ ↓)) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom selinger-c11) = begin
     ((CZ • (H ↓) • CZ) ↓) ≈⟨ refl ⟩
@@ -525,8 +519,8 @@ module Lemmas-Sym where
     ((S⁻¹ ↓ ↓) • (H ↓) • (S⁻¹ ↓ ↓) • CZ • (H ↓) • (S⁻¹ ↓ ↓) • (S⁻¹ ↑ ↓)) ≈⟨ refl ⟩
     (((S⁻¹ ↓) • (H ↓) • (S⁻¹ ↓) • CZ • (H ↓) • (S⁻¹ ↓) • (S⁻¹ ↑)) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom selinger-c12) = PB.axiom selinger-c12
   lemma-cong↓ {n} w v (PB.axiom selinger-c13) = PB.axiom selinger-c13
@@ -541,8 +535,8 @@ module Lemmas-Sym where
     ((v₁ ↓) ↑) ≡⟨ Eq.sym (lemma-↑↓ v₁) ⟩
     ((v₁ ↑) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
 -}
 
@@ -681,54 +675,43 @@ module Symplectic-GroupLike where
   open Lemmas-Sym
 
   grouplike : Grouplike (n QRel,_===_)
-  grouplike {₁₊ n} (H-gen) = (H ) ^ 3 , claim
+  grouplike {n} (gate₁ H-gate) = H ^ 3 , claim
     where
-    open PB ((₁₊ n) QRel,_===_)
-    open PP ((₁₊ n) QRel,_===_)
+    open PB (n QRel,_===_)
+    open PP (n QRel,_===_)
     open SR word-setoid
-    claim : (H ) ^ 3 • H ≈ ε
+    claim : H ^ 3 • H ≈ ε
     claim = begin
-      (H) ^ 3 • H ≈⟨ by-assoc auto ⟩
-      (H) ^ 4 ≈⟨ axiom order-H ⟩
+      H ^ 3 • H ≈⟨ by-assoc auto ⟩
+      H ^ 4 ≈⟨ axiom order-H ⟩
       ε ∎
-
-  grouplike {₁₊ n} (S-gen) = (S) ^ p-1 ,  claim
+  grouplike {n} (gate₁ S-gate) = S ^ p-1 , claim
     where
-    open PB ((₁₊ n) QRel,_===_)
-    open PP ((₁₊ n) QRel,_===_)
+    open PB (n QRel,_===_)
+    open PP (n QRel,_===_)
     open SR word-setoid
-    claim : (S) ^ p-1 • S ≈ ε
+    claim : S ^ p-1 • S ≈ ε
     claim = begin
-      (S) ^ p-1 • S ≈⟨ sym (lemma-^-+ (S) p-1 1) ⟩
-      (S) ^ (p-1 Nat.+ 1) ≡⟨ Eq.cong (S ^_) ( NP.+-comm p-1 1) ⟩
-      (S ^ p) ≈⟨ (axiom order-S) ⟩
-      (ε) ∎
-
-  grouplike {₂₊ n} (CZ-gen) = (CZ) ^ p-1 ,  claim
+      S ^ p-1 • S ≈⟨ sym (lemma-^-+ S p-1 1) ⟩
+      S ^ (p-1 Nat.+ 1) ≡⟨ Eq.cong (S ^_) (NP.+-comm p-1 1) ⟩
+      S ^ p ≈⟨ axiom order-S ⟩
+      ε ∎
+  grouplike {n} (gate₂ CZ-gate) = CZ ^ p-1 , claim
     where
-    open PB ((₂₊ n) QRel,_===_)
-    open PP ((₂₊ n) QRel,_===_)
+    open PB (n QRel,_===_)
+    open PP (n QRel,_===_)
     open SR word-setoid
-    claim : (CZ) ^ p-1 • CZ ≈ ε
+    claim : CZ ^ p-1 • CZ ≈ ε
     claim = begin
-      (CZ) ^ p-1 • CZ ≈⟨ sym (lemma-^-+ (CZ) p-1 1) ⟩
-      (CZ) ^ (p-1 Nat.+ 1) ≡⟨ Eq.cong (CZ ^_) ( NP.+-comm p-1 1) ⟩
-      (CZ ^ p) ≈⟨ (axiom order-CZ) ⟩
-      (ε) ∎
-
-  -- grouplike {₂₊ n} (EX-gen) = EX ,  claim
-  --   where
-  --   open PB ((₂₊ n) QRel,_===_)
-  --   open PP ((₂₊ n) QRel,_===_)
-  --   open SR word-setoid
-  --   claim : (EX) • EX ≈ ε
-  --   claim = axiom order-EX
-
-  grouplike {₂₊ n} (g ↥) with grouplike g
-  ... | ig , prf = (ig ↑) , lemma-cong↑ (ig • [ g ]ʷ) ε prf
+      CZ ^ p-1 • CZ ≈⟨ sym (lemma-^-+ CZ p-1 1) ⟩
+      CZ ^ (p-1 Nat.+ 1) ≡⟨ Eq.cong (CZ ^_) (NP.+-comm p-1 1) ⟩
+      CZ ^ p ≈⟨ axiom order-CZ ⟩
+      ε ∎
+  grouplike {n} (g ↥) with grouplike g
+  ... | ig , prf = ig ↑ , lemma-cong↑ (ig • [ g ]ʷ) ε prf
     where
-    open PB ((₂₊ n) QRel,_===_)
-    open PP ((₂₊ n) QRel,_===_)
+    open PB (n QRel,_===_)
+    open PP (n QRel,_===_)
 
 
 {-
@@ -746,25 +729,25 @@ module Symplectic-Derived-Gen where
     CZ-gen : ∀ {n} → ℤ ₚ -> Gen (₂₊ n)
     -- lift a generator from Gen n to Gen (₁₊ n). E.g., in a two
     -- qupit circut H-gen = H 0, and H-gen ↥ = H 1.
-    _↥ : ∀ {n} → Gen n → Gen (suc n)
+    _↥ : ∀ {n} → Gen n → Gen (₁₊ n)
 
-  [_⇑] : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  [_⇑] : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
   [_⇑] {n} = ([_]ʷ ∘ _↥) WB.*
 
-  [_⇑]' : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  [_⇑]' : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
   [_⇑]' {n} = wmap _↥
 
-  _↑ : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  _↑ : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
   _↑ = wmap _↥
 
-  _↓-gen : ∀ {n} → Gen n → Gen (suc n)
+  _↓-gen : ∀ {n} → Gen n → Gen (₁₊ n)
   _↓-gen {zero} ()
   _↓-gen {₁₊ n} (H-gen k) = (H-gen k)
   _↓-gen {₁₊ n} (S-gen k) = S-gen k
   _↓-gen {₁₊ .(₁₊ _)} (CZ-gen k) = CZ-gen k
   _↓-gen {₁₊ n} (g ↥) = (g ↓-gen) ↥
 
-  _↓ : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  _↓ : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
   _↓ {n} = wmap _↓-gen
 
 
@@ -893,7 +876,7 @@ module Symplectic-Derived-Gen where
 
   lemma-cong↑ : ∀ {n} w v →
     let open PB (n QRel,_===_) using (_≈_) in
-    let open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↑_) using () in
+    let open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↑_) using () in
     w ≈ v → w ↑ ≈↑ v ↑
   lemma-cong↑ {n} w v PB.refl = PB.refl
   lemma-cong↑ {n} w v (PB.sym eq) = PB.sym (lemma-cong↑ v w eq)
@@ -955,7 +938,7 @@ module Symplectic-Derived-Gen where
 
   lemma-cong↓ : ∀ {n} w v →
     let open PB (n QRel,_===_) using (_≈_) in
-    let open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_) using () in
+    let open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_) using () in
     w ≈ v → w ↓ ≈↓ v ↓
   lemma-cong↓ {n} w v PB.refl = PB.refl
   lemma-cong↓ {n} w v (PB.sym eq) = PB.sym (lemma-cong↓ v w eq)
@@ -969,8 +952,8 @@ module Symplectic-Derived-Gen where
     ((S • S ^ ₁₊ p-2)) ≈⟨ axiom order-S ⟩
     (ε ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom order-H) = PB.axiom order-H
   lemma-cong↓ {n} w v (PB.axiom order-SH) = PB.axiom order-SH
@@ -984,8 +967,8 @@ module Symplectic-Derived-Gen where
     ((CZ • CZ ^ ₁₊ p-2)) ≈⟨ axiom order-CZ ⟩
     (ε ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom comm-CZ-S↓) = PB.axiom comm-CZ-S↓
   lemma-cong↓ {n} w v (PB.axiom comm-CZ-S↑) = PB.axiom comm-CZ-S↑
@@ -997,8 +980,8 @@ module Symplectic-Derived-Gen where
     ((S⁻¹ ↑ ↓) • (H ↑ ↓) • (S⁻¹ ↑ ↓) • CZ ↓ • (H ↑ ↓) • (S⁻¹ ↑ ↓) • (S⁻¹ ↓ ↓)) ≈⟨ refl ⟩
     (((S⁻¹ ↑) • (H ↑) • (S⁻¹ ↑) • CZ • (H ↑) • (S⁻¹ ↑) • (S⁻¹ ↓)) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom selinger-c11) = begin
     ((CZ • (H ↓) • CZ) ↓) ≈⟨ refl ⟩
@@ -1007,8 +990,8 @@ module Symplectic-Derived-Gen where
     ((S⁻¹ ↓ ↓) • (H ↓) • (S⁻¹ ↓ ↓) • CZ • (H ↓) • (S⁻¹ ↓ ↓) • (S⁻¹ ↑ ↓)) ≈⟨ refl ⟩
     (((S⁻¹ ↓) • (H ↓) • (S⁻¹ ↓) • CZ • (H ↓) • (S⁻¹ ↓) • (S⁻¹ ↑)) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom selinger-c12) = PB.axiom selinger-c12
   lemma-cong↓ {n} w v (PB.axiom selinger-c13) = PB.axiom selinger-c13
@@ -1023,8 +1006,8 @@ module Symplectic-Derived-Gen where
     ((S ^ toℕ k)) ≈⟨ sym (lemma-cong↓-S^ (toℕ k)) ⟩
     ((S ^ toℕ k) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom (derived-H k)) = begin
     ([ H-gen k ]ʷ ↓) ≈⟨ refl ⟩
@@ -1032,8 +1015,8 @@ module Symplectic-Derived-Gen where
     ((H ^ toℕ k)) ≈⟨ sym (lemma-cong↓-H^ (toℕ k)) ⟩
     ((H ^ toℕ k) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom (derived-CZ k)) =  begin
     ([ CZ-gen k ]ʷ ↓) ≈⟨ refl ⟩
@@ -1041,8 +1024,8 @@ module Symplectic-Derived-Gen where
     ((CZ ^ toℕ k)) ≈⟨ sym (lemma-cong↓-CZ^ (toℕ k)) ⟩
     ((CZ ^ toℕ k) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
   lemma-cong↓ {n} w v (PB.axiom (cong↑ {w = w₁} {v = v₁} x)) = begin
     ((w₁ ↑) ↓) ≡⟨  lemma-↑↓ w₁ ⟩
@@ -1050,8 +1033,8 @@ module Symplectic-Derived-Gen where
     ((v₁ ↓) ↑) ≡⟨ Eq.sym (lemma-↑↓ v₁) ⟩
     ((v₁ ↑) ↓) ∎
     where
-    open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↓_)
-    open PP ((suc n) QRel,_===_)
+    open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↓_)
+    open PP ((₁₊ n) QRel,_===_)
     open SR word-setoid
 
 
@@ -1412,7 +1395,7 @@ module Action where
   [_]ᵇ {n} (₀ , ₀) = Ex
   [_]ᵇ {n} (₀ , ₁) = H ↑ ^ 3 • CZ • H ↑ • Ex
   [_]ᵇ {n} (a@₀ , b@(₂)) = [ ₀ , ₁ ]ᵇ • [ (a , b) , (λ ()) ]ᵃ ↑
-  [_]ᵇ {n} (a@(suc a') , b) = [ ₀ , ₁ ]ᵇ • [ (a , b) , (λ ()) ]ᵃ ↑
+  [_]ᵇ {n} (a@(₁₊ a') , b) = [ ₀ , ₁ ]ᵇ • [ (a , b) , (λ ()) ]ᵃ ↑
 
 
 {- Sarah's B box
@@ -1420,7 +1403,7 @@ module Action where
   [_]ᵇ {n} (₀ , ₀) = Ex • CZ
   [_]ᵇ {n} (₀ , ₁) = H ↑ ^ 3 • CZ • H ↑ • CZ • CZ • Ex
   [_]ᵇ {n} (a@₀ , b@(₂)) = [ ₀ , ₁ ]ᵇ • CZ • [ (a , b) , (λ ()) ]ᵃ ↑
-  [_]ᵇ {n} (a@(suc a') , b) = [ ₀ , ₁ ]ᵇ • CZ • CZ • [ (a , b) , (λ ()) ]ᵃ ↑
+  [_]ᵇ {n} (a@(₁₊ a') , b) = [ ₀ , ₁ ]ᵇ • CZ • CZ • [ (a , b) , (λ ()) ]ᵃ ↑
 -}
 
 
@@ -1471,11 +1454,11 @@ module Action where
 
   [_]ᵛᵇ : ∀ {n} → Vec B n → Word (Gen (₁₊ n))
   [_]ᵛᵇ {₀} [] = ε
-  [_]ᵛᵇ {suc n} (x ∷ v) = [ v ]ᵛᵇ ↑ • [ x ]ᵇ
+  [_]ᵛᵇ {₁₊ n} (x ∷ v) = [ v ]ᵛᵇ ↑ • [ x ]ᵇ
 
   [_]ᵛᵈ : ∀ {n} → Vec D n → Word (Gen (₁₊ n))
   [_]ᵛᵈ {₀} [] = ε
-  [_]ᵛᵈ {suc n} (x ∷ v) = [ x ]ᵈ • [ v ]ᵛᵈ ↑
+  [_]ᵛᵈ {₁₊ n} (x ∷ v) = [ x ]ᵈ • [ v ]ᵛᵈ ↑
 
   [_]ᵐ : ∀ {n} → M n → Word (Gen (₁₊ n))
   [_]ᵐ {n} (e , ds) = [ e ]ᵉ • [ ds ]ᵛᵈ
@@ -1872,7 +1855,7 @@ module Action where
 
   prop-∃-M : ∀ {n} {e} (ps : Pauli (₁₊ n)) (eqX : last ps ≡ (₁ , e)) → ∃ \ m → act [ m ]ᵐ ps ≡ pX₀
   prop-∃-M {0} {e} (x ∷ []) eqX rewrite eqX = (- e , []) , prop-ebox e []
-  prop-∃-M {n@(suc m)} {e} ps eqX = (- e , proj₁ vdp) , (begin
+  prop-∃-M {n@(₁₊ m)} {e} ps eqX = (- e , proj₁ vdp) , (begin
     act [ - e ]ᵉ (act [ proj₁ vdp ]ᵛᵈ ps) ≡⟨ Eq.cong (act [ - e ]ᵉ) (proj₂ vdp) ⟩
     act [ - e ]ᵉ (pX₀Z₀ e) ≡⟨ prop-ebox e pIₙ ⟩
     pX₀ ∎)
@@ -1959,13 +1942,13 @@ module CommData where
   commute {n} (S-gen ↥) CZ-gen = just (PB.sym (PB.axiom comm-CZ-S↑))
   commute {n} CZ-gen (S-gen ↥) = just (PB.axiom comm-CZ-S↑)
   
-  commute {n@(suc n')} CZ-gen (CZ-gen ↥) = just (PB.sym (PB.axiom selinger-c12))
+  commute {n@(₁₊ n')} CZ-gen (CZ-gen ↥) = just (PB.sym (PB.axiom selinger-c12))
   commute {n} (CZ-gen ↥) CZ-gen = just (PB.axiom selinger-c12)
   
-  commute {n@(suc n')} CZ-gen ((y ↥) ↥) = just (PB.sym (PB.axiom comm-CZ))
-  commute {n@(suc n')} ((x ↥) ↥) CZ-gen = just (PB.axiom comm-CZ)
+  commute {n@(₁₊ n')} CZ-gen ((y ↥) ↥) = just (PB.sym (PB.axiom comm-CZ))
+  commute {n@(₁₊ n')} ((x ↥) ↥) CZ-gen = just (PB.axiom comm-CZ)
   
-  commute {n@(suc n')} (x ↥) (y ↥) with commute x y
+  commute {n@(₁₊ n')} (x ↥) (y ↥) with commute x y
   ... | nothing = nothing
   ... | just eq = just (lemma-cong↑ ([ x ]ʷ • [ y ]ʷ) ([ y ]ʷ • [ x ]ʷ) eq)
 
@@ -1976,9 +1959,9 @@ module CommData where
   ord : Gen (₁₊ n) → ℕ
   ord {n}(S-gen) = 0
   ord {n} (H-gen) = 1
-  ord {suc n} (CZ-gen) = 2
---  ord {suc n} (EX-gen) = 3
-  ord {suc n} (g ↥) = 4 Nat.+ ord g
+  ord {₁₊ n} (CZ-gen) = 2
+--  ord {₁₊ n} (EX-gen) = 3
+  ord {₁₊ n} (g ↥) = 4 Nat.+ ord g
 
 
   -- Ordering of generators.
@@ -2957,7 +2940,7 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
 
 
@@ -2968,8 +2951,8 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
-    open Commuting-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
+    open Commuting-Symplectic (₁₊ n)
 
   lemma-comm-Ex↑-S : let open PB ((₃₊ n) QRel,_===_) in
     Ex ↑ • S ≈ S • Ex ↑
@@ -2978,8 +2961,8 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
-    open Commuting-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
+    open Commuting-Symplectic (₁₊ n)
 
   lemma-comm-Ex-H↑↑ : let open PB ((₃₊ n) QRel,_===_) in
     Ex • H ↑ ↑ ≈ H ↑ ↑ • Ex
@@ -2987,7 +2970,7 @@ module Lemmas0 (n : ℕ) where
     where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
-    open Commuting-Symplectic (suc n)
+    open Commuting-Symplectic (₁₊ n)
 
   lemma-comm-Ex↑-H : let open PB ((₃₊ n) QRel,_===_) in
     Ex ↑ • H ≈ H • Ex ↑
@@ -2995,7 +2978,7 @@ module Lemmas0 (n : ℕ) where
     where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
-    open Commuting-Symplectic (suc n)
+    open Commuting-Symplectic (₁₊ n)
 
 
 
@@ -3013,7 +2996,7 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
 
 
@@ -3031,9 +3014,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-  lemma-S↑²H↑CZ↑H {n@(suc n')} = begin
+  lemma-S↑²H↑CZ↑H {n@(₁₊ n')} = begin
     S ↑ ^ 2 • H ↑ • CZ • H ↑ ≈⟨ assoc ⟩
     S ↑ • S ↑ • H ↑ • CZ • H ↑ ≈⟨ (cright lemma-S↑H↑CZ↑H) ⟩
     S ↑ • H ↑ • CZ • H ↑ • CZ • S ↓ • S ↑ ≈⟨ by-assoc auto ⟩
@@ -3045,7 +3028,7 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
 
 
@@ -3063,8 +3046,8 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
-    open Sym0-Rewriting (suc n)    
+    open Powers0-Symplectic (₁₊ n)
+    open Sym0-Rewriting (₁₊ n)    
     open Commuting-Symplectic (n)
 
   lemma-H↑CZ↑HS↑S↑ : let open PB ((₂₊ n) QRel,_===_) in
@@ -3080,9 +3063,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)    
+    open Sym0-Rewriting (₁₊ n)    
 
   lemma-S↓H↓CZ↓H : let open PB ((₂₊ n) QRel,_===_) in
     S • H • CZ • H ≈ H • CZ • H • CZ • S ↑ • S
@@ -3097,7 +3080,7 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
 
   lemma-S↓²H↓CZ↓H : let open PB ((₂₊ n) QRel,_===_) in
@@ -3114,9 +3097,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-  lemma-S↓²H↓CZ↓H {n@(suc _)} = begin
+  lemma-S↓²H↓CZ↓H {n@(₁₊ _)} = begin
     S ↓ ^ 2 • H ↓ • CZ • H ↓ ≈⟨ assoc ⟩
     S ↓ • S ↓ • H ↓ • CZ • H ↓ ≈⟨ (cright lemma-S↓H↓CZ↓H) ⟩
     S ↓ • H ↓ • CZ • H ↓ • CZ • S ↑ • S ↓ ≈⟨ by-assoc auto ⟩
@@ -3128,7 +3111,7 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
 
 
@@ -3156,9 +3139,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)    
+    open Sym0-Rewriting (₁₊ n)    
 
 
   lemma-comm-S↑-Ex' : let open PB ((₂₊ n) QRel,_===_) in
@@ -3185,9 +3168,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)    
+    open Sym0-Rewriting (₁₊ n)    
 
 
 
@@ -3204,9 +3187,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)    
+    open Sym0-Rewriting (₁₊ n)    
 
 
   lemma-SHSHS : let open PB ((₁₊ n) QRel,_===_) in
@@ -3244,10 +3227,10 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
-  lemma-CZHCZCZ {n@(suc _)} = begin
+    open Sym0-Rewriting (₁₊ n)
+  lemma-CZHCZCZ {n@(₁₊ _)} = begin
     CZ • H ↑ • CZ • CZ ≈⟨ sym (trans assoc (cong refl assoc)) ⟩
     (CZ • H ↑ • CZ) • CZ ≈⟨ cong (axiom selinger-c10) refl ⟩
     (S ↑ ^ 2 • H ↑ • S ↑ ^ 2 • CZ • H ↑ • S ↑ ^ 2 • S ↓ ^ 2) • CZ ≈⟨ general-comm auto ⟩
@@ -3262,9 +3245,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
 
 
@@ -3284,10 +3267,10 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
-  lemma-CZCZH↓CZ {n@(suc _)} = begin
+    open Sym0-Rewriting (₁₊ n)
+  lemma-CZCZH↓CZ {n@(₁₊ _)} = begin
     CZ • CZ • H  • CZ ≈⟨ cong refl (axiom selinger-c11) ⟩
     CZ • (S  ^ 2 • H  • S  ^ 2 • CZ • H  • S  ^ 2 • S ↑ ^ 2) ≈⟨ general-comm auto ⟩
     S  ^ 2 • (CZ • H • CZ) • S  ^ 2 • H  • S  ^ 2 • S ↑ ^ 2 ≈⟨ (cright (cleft axiom selinger-c11)) ⟩
@@ -3301,9 +3284,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
   
 
   lemma-CZH↓CZCZ : let open PB ((₂₊ n) QRel,_===_) in
@@ -3323,10 +3306,10 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
-  lemma-CZH↓CZCZ {n@(suc _)} = begin
+    open Sym0-Rewriting (₁₊ n)
+  lemma-CZH↓CZCZ {n@(₁₊ _)} = begin
     CZ • H  • CZ • CZ ≈⟨ sym (trans assoc (cong refl assoc)) ⟩
     (CZ • H  • CZ) • CZ ≈⟨ cong (axiom selinger-c11) refl ⟩
     (S  ^ 2 • H  • S  ^ 2 • CZ • H  • S  ^ 2 • S ↑ ^ 2) • CZ ≈⟨ general-comm auto ⟩
@@ -3341,9 +3324,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
   lemma-SHSH' : let open PB ((₁₊ n) QRel,_===_) in
 
@@ -3439,11 +3422,11 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
-  lemma-eqn17 {n@(suc _)} = begin
+  lemma-eqn17 {n@(₁₊ _)} = begin
         H ↑ • CZ • S ↑ ^ 2 • H ↑ • H • CZ ≈⟨ general-powers0 100 auto ⟩
         (H ↑ • CZ • S ↑ ^ 2 • H ↑ • CZ) • CZ • CZ • H • CZ ≈⟨ rewrite-sym0 100 auto ⟩
         (H ↑ • S ↑ ^ 2) • (CZ • H ↑ • CZ • CZ) • CZ • H • CZ ≈⟨ (cright (cleft lemma-CZHCZCZ)) ⟩
@@ -3459,9 +3442,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
   -- eqn 17 in Peter's clifford supplement.
   lemma-eqn17↓ : let open PB ((₂₊ n) QRel,_===_) in
@@ -3482,10 +3465,10 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
-  lemma-eqn17↓ {n@(suc _)} = begin
+    open Sym0-Rewriting (₁₊ n)
+  lemma-eqn17↓ {n@(₁₊ _)} = begin
         H  • CZ • S  ^ 2 • H • H ↑ • CZ ≈⟨ general-powers0 100 auto ⟩
         (H  • CZ • S  ^ 2 • H  • CZ) • CZ • CZ • H ↑ • CZ ≈⟨ rewrite-sym0 100 auto ⟩
         (H  • S  ^ 2) • (CZ • H • CZ • CZ) • CZ • H ↑ • CZ ≈⟨ (cright (cleft lemma-CZH↓CZCZ)) ⟩
@@ -3501,9 +3484,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
 
   -- eqn 16 in Peter's clifford supplement.
@@ -3525,11 +3508,11 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
-  lemma-eqn16 {n@(suc _)} = begin
+  lemma-eqn16 {n@(₁₊ _)} = begin
     S • H • CZ • H • H ↑ • CZ ≈⟨ general-powers0 100 auto ⟩
     S • H • (CZ • H • CZ • CZ) • CZ • H ↑ • CZ ≈⟨ (cright (cright (cleft lemma-CZH↓CZCZ))) ⟩
     S • H • (S ↑ • S  • H  ^ 3 • CZ • S  • H  • S) • CZ • H ↑ • CZ ≈⟨ by-assoc auto ⟩
@@ -3545,9 +3528,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
   lemma-eqn16↑ : let open PB ((₂₊ n) QRel,_===_) in
     S ↑ • H ↑ • CZ • H ↑ • H • CZ ≈ H ↑ • CZ • H ↑ • H • CZ • S ^ 2 • H • S ^ 2
@@ -3567,11 +3550,11 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
-  lemma-eqn16↑ {n@(suc _)} = begin
+  lemma-eqn16↑ {n@(₁₊ _)} = begin
     S ↑ • H ↑ • CZ • H ↑ • H • CZ ≈⟨ general-powers0 100 auto ⟩
     S ↑ • H ↑ • (CZ • H ↑ • CZ • CZ) • CZ • H • CZ ≈⟨ (cright (cright (cleft lemma-CZHCZCZ))) ⟩
     S ↑ • H ↑ • (S • S ↑  • H ↑  ^ 3 • CZ • S ↑  • H ↑  • S ↑) • CZ • H • CZ ≈⟨ by-assoc auto ⟩
@@ -3587,9 +3570,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
 
   -- eqn 18 in Peter's clifford supplement.
@@ -3618,10 +3601,10 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
-  lemma-comm-Ex-H' {n@(suc _)}  = begin
+    open Sym0-Rewriting (₁₊ n)
+  lemma-comm-Ex-H' {n@(₁₊ _)}  = begin
     H ↓ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑ • CZ ≈⟨ general-powers0 100 auto ⟩
     (H • CZ • H ↓ • H ↑) • (CZ • H ↓ • CZ • CZ) • CZ • H ↑ • CZ ≈⟨ (cright (cleft lemma-CZH↓CZCZ)) ⟩
     (H • CZ • H ↓ • H ↑) • (S ↑ • S • H  ^ 3 • CZ • S  • H  • S) • CZ • H ↑ • CZ ≈⟨ (cright rewrite-sym0 1000 auto) ⟩
@@ -3644,9 +3627,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
 
   lemma-comm-Ex-H↑' : let open PB ((₂₊ n) QRel,_===_) in
@@ -3674,11 +3657,11 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
-  lemma-comm-Ex-H↑' {n@(suc _)}  = begin
+  lemma-comm-Ex-H↑' {n@(₁₊ _)}  = begin
     H ↑  • CZ • H ↑  • H • CZ • H ↑  • H • CZ ≈⟨ general-powers0 100 auto ⟩
     (H ↑ • CZ • H ↑  • H) • (CZ • H ↑ • CZ • CZ) • CZ • H • CZ ≈⟨ (cright (cleft lemma-CZHCZCZ)) ⟩
     (H ↑ • CZ • H ↑  • H) • (S • S ↑ • H ↑ ^ 3 • CZ • S ↑ • H ↑ • S ↑) • CZ • H • CZ ≈⟨ (cright rewrite-sym0 1000 auto) ⟩
@@ -3701,9 +3684,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
 
   lemma-comm-Ex-H : let open PB ((₂₊ n) QRel,_===_) in
@@ -3717,11 +3700,11 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
-  lemma-comm-Ex-H {n@(suc _)}  = begin
+  lemma-comm-Ex-H {n@(₁₊ _)}  = begin
     H ↑ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑ ≈⟨ general-comm auto ⟩
     (H ↑  • CZ • H ↑  • H • CZ • H ↑  • H • CZ) • H ↓ • H ↑ ≈⟨ (cleft lemma-comm-Ex-H↑') ⟩
     ((CZ • H • H ↑ • CZ • H ↑ • H • CZ) • H) • H ↓ • H ↑ ≈⟨ general-comm auto ⟩
@@ -3730,9 +3713,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
 
 
@@ -3750,10 +3733,10 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
-  lemma-comm-Ex-CZ' {n@(suc _)} = begin
+    open Sym0-Rewriting (₁₊ n)
+  lemma-comm-Ex-CZ' {n@(₁₊ _)} = begin
     CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑ ≈⟨ general-comm auto ⟩
     ((CZ • H • H ↑ • CZ • H ↑ • H • CZ) • H) • H ↑ ≈⟨ (cleft sym lemma-comm-Ex-H↑') ⟩
     (H ↑  • CZ • H ↑  • H • CZ • H ↑  • H • CZ) • H ↑ ≈⟨ general-comm auto ⟩
@@ -3764,9 +3747,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
   lemma-comm-Ex-CZ : let open PB ((₂₊ n) QRel,_===_) in
     CZ • Ex ≈ Ex • CZ
@@ -3779,11 +3762,11 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
-  lemma-comm-Ex-CZ {n@(suc _)} = begin
+  lemma-comm-Ex-CZ {n@(₁₊ _)} = begin
     CZ • Ex ≈⟨ refl ⟩
     CZ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑ ≈⟨ (cright lemma-comm-Ex-CZ') ⟩
     CZ • (H ↓ • H ↑ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑) • CZ ≈⟨ sym assoc ⟩
@@ -3792,9 +3775,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
 
   lemma-order-Ex : let open PB ((₂₊ n) QRel,_===_) in
@@ -3817,11 +3800,11 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
-  lemma-order-Ex {n@(suc _)} = begin
+  lemma-order-Ex {n@(₁₊ _)} = begin
     Ex ^ 2 ≈⟨ refl ⟩
     (CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑) • (CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑) ≈⟨ (cright lemma-comm-Ex-CZ') ⟩
     (CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑) • ((H ↓ • H ↑ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑) • CZ) ≈⟨ general-comm auto ⟩
@@ -3839,9 +3822,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
 
   lemma-order-ₕ|ₕ : let open PB ((₂₊ n) QRel,_===_) in
@@ -3853,9 +3836,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
   lemma-order-ʰ|ʰ : let open PB ((₂₊ n) QRel,_===_) in
     ʰ|ʰ ^ 2 ≈ ε
@@ -3866,9 +3849,9 @@ module Lemmas0 (n : ℕ) where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
-    open Powers0-Symplectic (suc n)
+    open Powers0-Symplectic (₁₊ n)
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
 
 
   lemma-Ex-Ex↑-CZ'a : let open PB ((₃₊ n) QRel,_===_) in
@@ -3890,8 +3873,8 @@ module Lemmas0 (n : ℕ) where
     open PP ((₃₊ n) QRel,_===_)
     open SR word-setoid
     open Powers0-Symplectic (₂₊ n)
-    open Commuting-Symplectic (suc n)
-  lemma-Ex-Ex↑-CZ'a {n@(suc _)} = begin
+    open Commuting-Symplectic (₁₊ n)
+  lemma-Ex-Ex↑-CZ'a {n@(₁₊ _)} = begin
     (CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑) ↑ • CZ • (CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑) ↑ ≈⟨ (cright (cright lemma-cong↑ _ _ lemma-comm-Ex-CZ')) ⟩
     (CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑) ↑ • CZ • ((H ↓ • H ↑ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑) • CZ) ↑ ≈⟨ general-comm auto ⟩
     (((CZ • H • H ↑ • CZ • H ↑ • H • CZ) • H) • H ↑) ↑ • CZ • (H ↑ • (H ↓ • CZ • H ↓ • H ↑ • CZ • H ↓ • H ↑ • CZ)) ↑ ≈⟨ cong (cleft (sym (lemma-cong↑ _ _ lemma-comm-Ex-H↑'))) (cright (cright lemma-cong↑ _ _ lemma-comm-Ex-H')) ⟩
@@ -3908,7 +3891,7 @@ module Lemmas0 (n : ℕ) where
     open PP ((₃₊ n) QRel,_===_)
     open SR word-setoid
     open Powers0-Symplectic (₂₊ n)
-    open Commuting-Symplectic (suc n)
+    open Commuting-Symplectic (₁₊ n)
     
 
 
@@ -3931,7 +3914,7 @@ module Lemmas0 (n : ℕ) where
     open PP ((₃₊ n) QRel,_===_)
     open SR word-setoid
     open Powers0-Symplectic (₂₊ n)
-    open Commuting-Symplectic (suc n)
+    open Commuting-Symplectic (₁₊ n)
 
 
 
@@ -3947,7 +3930,7 @@ module Lemmas0 (n : ℕ) where
     open PP ((₃₊ n) QRel,_===_)
     open SR word-setoid
     open Powers0-Symplectic (₂₊ n)
-    open Commuting-Symplectic (suc n)
+    open Commuting-Symplectic (₁₊ n)
 
 
 
@@ -4383,7 +4366,7 @@ module Lemmas where
   lemma-^-↑ w ₀ = auto
   lemma-^-↑ w ₁ = auto
   lemma-^-↑ w (₂₊ k) = begin
-    (w ↑) • (w ↑) ^ ₁₊ k ≡⟨ Eq.cong ((w ↑) •_) (lemma-^-↑ w (suc k)) ⟩
+    (w ↑) • (w ↑) ^ ₁₊ k ≡⟨ Eq.cong ((w ↑) •_) (lemma-^-↑ w (₁₊ k)) ⟩
     (w ↑) • (w ^ ₁₊ k) ↑ ≡⟨ auto ⟩
     ((w • w ^ ₁₊ k) ↑) ∎
     where open ≡-Reasoning
@@ -4724,10 +4707,10 @@ module Symplectic-Rewriting where
   step-symplectic (CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ S-gen ∷ xs) = just (S-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ xs , at-head (PB.sym (lemma-comm-Ex-S)))
   step-symplectic (CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ S-gen ↥ ∷ xs) = just (S-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ xs , at-head (PB.sym ( (lemma-cong↑ _ _ lemma-comm-Ex-S))))
 
-  step-symplectic {suc n} (CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ S-gen ↥ ∷ xs) = just (S-gen ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ xs , at-head (((lemma-Ex-S↑ {n}))))
+  step-symplectic {₁₊ n} (CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ S-gen ↥ ∷ xs) = just (S-gen ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ xs , at-head (((lemma-Ex-S↑ {n}))))
   step-symplectic (CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ S-gen ↥ ↥ ∷ xs) = just (S-gen ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ xs , at-head (lemma-cong↑ _ _ lemma-Ex-S↑))
 
-  step-symplectic {suc n} (CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ H-gen ↥ ∷ xs) = just (H-gen ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ xs , at-head (((lemma-Ex-H↑ {n}))))
+  step-symplectic {₁₊ n} (CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ H-gen ↥ ∷ xs) = just (H-gen ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ xs , at-head (((lemma-Ex-H↑ {n}))))
   step-symplectic (CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ H-gen ↥ ↥ ∷ xs) = just (H-gen ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ xs , at-head (lemma-cong↑ _ _ lemma-Ex-H↑))
 
 
@@ -4831,10 +4814,10 @@ module Swap-Rewriting where
   step-swap (CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ S-gen ∷ xs) = just (S-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ xs , at-head (PB.sym (lemma-comm-Ex-S)))
   step-swap (CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ S-gen ↥ ∷ xs) = just (S-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ xs , at-head (PB.sym ( (lemma-cong↑ _ _ lemma-comm-Ex-S))))
 
-  step-swap {suc n} (CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ S-gen ↥ ∷ xs) = just (S-gen ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ xs , at-head (((lemma-Ex-S↑ {n}))))
+  step-swap {₁₊ n} (CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ S-gen ↥ ∷ xs) = just (S-gen ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ xs , at-head (((lemma-Ex-S↑ {n}))))
   step-swap (CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ S-gen ↥ ↥ ∷ xs) = just (S-gen ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ xs , at-head (lemma-cong↑ _ _ lemma-Ex-S↑))
 
-  step-swap {suc n} (CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ H-gen ↥ ∷ xs) = just (H-gen ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ xs , at-head (((lemma-Ex-H↑ {n}))))
+  step-swap {₁₊ n} (CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ H-gen ↥ ∷ xs) = just (H-gen ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ xs , at-head (((lemma-Ex-H↑ {n}))))
   step-swap (CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ H-gen ↥ ↥ ∷ xs) = just (H-gen ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ xs , at-head (lemma-cong↑ _ _ lemma-Ex-H↑))
 
 
@@ -4887,10 +4870,10 @@ module Swap0-Rewriting where
   step-swap0 (CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ S-gen ∷ xs) = just (S-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ xs , at-head (PB.sym (lemma-comm-Ex-S)))
   step-swap0 (CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ S-gen ↥ ∷ xs) = just (S-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ xs , at-head (PB.sym ( (lemma-cong↑ _ _ lemma-comm-Ex-S))))
 
-  step-swap0 {suc n} (CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ S-gen ↥ ∷ xs) = just (S-gen ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ xs , at-head (((lemma-Ex-S↑ {n}))))
+  step-swap0 {₁₊ n} (CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ S-gen ↥ ∷ xs) = just (S-gen ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ xs , at-head (((lemma-Ex-S↑ {n}))))
   step-swap0 (CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ S-gen ↥ ↥ ∷ xs) = just (S-gen ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ xs , at-head (lemma-cong↑ _ _ lemma-Ex-S↑))
 
-  step-swap0 {suc n} (CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ H-gen ↥ ∷ xs) = just (H-gen ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ xs , at-head (((lemma-Ex-H↑ {n}))))
+  step-swap0 {₁₊ n} (CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ H-gen ↥ ∷ xs) = just (H-gen ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ CZ-gen ∷ H-gen ∷ H-gen ↥ ∷ xs , at-head (((lemma-Ex-H↑ {n}))))
   step-swap0 (CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ H-gen ↥ ↥ ∷ xs) = just (H-gen ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ CZ-gen ↥ ∷ H-gen ↥ ∷ H-gen ↥ ↥ ∷ xs , at-head (lemma-cong↑ _ _ lemma-Ex-H↑))
 
 
@@ -5006,12 +4989,12 @@ module Duality where
 
   -- Each generator has a dual, obtained by swapping the two qubits.
   dual-gen : Gen 2 -> Gen 2
-  dual-gen H-gen = H-gen ↥
-  dual-gen S-gen = S-gen ↥
-  dual-gen CZ-gen = CZ-gen
+  dual-gen (gate₁ H-gate)        = gate₁ H-gate ↥
+  dual-gen (gate₁ S-gate)        = gate₁ S-gate ↥
+  dual-gen (gate₂ CZ-gate)       = gate₂ CZ-gate
 --  dual-gen EX-gen = EX-gen
-  dual-gen (H-gen ↥) = H-gen
-  dual-gen (S-gen ↥) = S-gen
+  dual-gen (gate₁ H-gate ↥)      = gate₁ H-gate
+  dual-gen (gate₁ S-gate ↥)      = gate₁ S-gate
   
 
   -- Compute the dual of a word.
@@ -5022,11 +5005,11 @@ module Duality where
 
   -- Lemma: duality is an involution.
   lemma-double-dual : ∀ w -> w ≡ dual (dual w)
-  lemma-double-dual ([ H-gen ]ʷ) = Eq.refl
-  lemma-double-dual ([ H-gen ↥ ]ʷ) = Eq.refl
-  lemma-double-dual ([ S-gen ]ʷ) = Eq.refl
-  lemma-double-dual ([ S-gen ↥ ]ʷ) = Eq.refl
-  lemma-double-dual ([ CZ-gen ]ʷ) = Eq.refl
+  lemma-double-dual ([ gate₁ H-gate ]ʷ)       = Eq.refl
+  lemma-double-dual ([ gate₁ H-gate ↥ ]ʷ)     = Eq.refl
+  lemma-double-dual ([ gate₁ S-gate ]ʷ)       = Eq.refl
+  lemma-double-dual ([ gate₁ S-gate ↥ ]ʷ)     = Eq.refl
+  lemma-double-dual ([ gate₂ CZ-gate ]ʷ)      = Eq.refl
 --  lemma-double-dual ([ EX-gen ]ʷ) = Eq.refl
   lemma-double-dual ε = Eq.refl
   lemma-double-dual (w • v) = Eq.cong₂ _•_ (lemma-double-dual w) (lemma-double-dual v)
@@ -5134,74 +5117,75 @@ module Duality where
   --   Ex ≈⟨ general-comm 0 auto ⟩
   --   dual Ex ∎
   -- lemma-dual order-EX = axiom order-EX
-  lemma-dual order-S = begin
-    [ S-gen ↥ ]ʷ • dual (S ^ ₁₊ p-2) ≈⟨ (cright (refl' (aux-dual S p-1))) ⟩
-    [ S-gen ↥ ]ʷ • dual S ^ ₁₊ p-2 ≈⟨ refl ⟩
-    [ S-gen ↥ ]ʷ • (S ↑) ^ ₁₊ p-2 ≈⟨ (cright (refl' (aux-↑ S p-1))) ⟩
+  lemma-dual (srel Base.order-S) = begin
+    S ↑ • dual (S ^ ₁₊ p-2) ≈⟨ (cright (refl' (aux-dual S p-1))) ⟩
+    S ↑ • dual S ^ ₁₊ p-2 ≈⟨ refl ⟩
+    S ↑ • (S ↑) ^ ₁₊ p-2 ≈⟨ (cright (refl' (aux-↑ S p-1))) ⟩
     (S ^ p) ↑ ≈⟨ axiom (cong↑ order-S) ⟩
     ε ∎
-  lemma-dual order-H = axiom (cong↑ order-H)
-  lemma-dual order-SH = axiom (cong↑ order-SH)
-  lemma-dual comm-HHS = axiom (cong↑ comm-HHS)
-  lemma-dual (M-mul x y) = begin
+  lemma-dual (srel Base.order-H) = axiom (cong↑ order-H)
+  lemma-dual (srel Base.order-SH) = axiom (cong↑ order-SH)
+  lemma-dual (srel Base.comm-HHS) = axiom (cong↑ comm-HHS)
+  lemma-dual (srel (Base.M-mul x y)) = begin
     dual (M x • M y) ≈⟨ cong (refl' (aux-dual-Mx x)) (refl' (aux-dual-Mx y)) ⟩
     (M x • M y) ↑ ≈⟨ axiom (cong↑ (M-mul x y)) ⟩
     M (x *' y) ↑ ≈⟨ refl' ((Eq.sym  (aux-dual-Mx (x *' y)))) ⟩
     dual (M (x *' y)) ∎
-  lemma-dual (semi-MS x) = begin
+  lemma-dual (srel (Base.semi-MS x)) = begin
     dual (M x • S) ≈⟨ (cleft refl' (aux-dual-Mx x)) ⟩
     (M x • S) ↑ ≈⟨ axiom (cong↑ (semi-MS x)) ⟩
     (S^ (x ^2) • M x) ↑ ≈⟨ cong (refl' (Eq.sym (aux-dual-S^k (toℕ (fromℕ< _))))) (refl' (Eq.sym (aux-dual-Mx x))) ⟩
     dual (S^ (x ^2) • M x) ∎
-  lemma-dual (semi-M↑CZ x) = begin
+  lemma-dual (srel (Base.semi-M↑CZ x)) = begin
     dual (M x ↑ • CZ) ≈⟨ (cleft refl' (aux-dual-Mx↑ x)) ⟩
     (M x • CZ) ≈⟨ axiom (semi-M↓CZ x) ⟩
     (CZ^ (x ^1) • M x) ≈⟨ cong (refl' (Eq.sym (aux-dual-CZ^k (toℕ (x .proj₁))))) (sym (refl' (aux-dual-Mx↑ x))) ⟩
     dual (CZ^ (x ^1) • M x ↑) ∎
-  lemma-dual (semi-M↓CZ x) = begin
+  lemma-dual (srel (Base.semi-M↓CZ x)) = begin
     dual (M x • CZ) ≈⟨ (cleft refl' (aux-dual-Mx x)) ⟩
     (M x ↑ • CZ) ≈⟨ axiom (semi-M↑CZ x) ⟩
     (CZ^ (x ^1) • M x ↑) ≈⟨ cong (refl' (Eq.sym (aux-dual-CZ^k (toℕ (x .proj₁))))) (sym (refl' (aux-dual-Mx x))) ⟩
     dual (CZ^ (x ^1) • M x) ∎
-  lemma-dual order-CZ =  begin
-    [ CZ-gen ]ʷ • dual (CZ ^ ₁₊ p-2) ≈⟨ (cright (refl' (aux-dual CZ p-1))) ⟩
-    [ CZ-gen ]ʷ • dual CZ ^ ₁₊ p-2 ≈⟨ refl ⟩
+  lemma-dual (srel Base.order-CZ) = begin
+    CZ • dual (CZ ^ ₁₊ p-2) ≈⟨ (cright (refl' (aux-dual CZ p-1))) ⟩
+    CZ • dual CZ ^ ₁₊ p-2 ≈⟨ refl ⟩
     (CZ ^ p) ≈⟨ axiom (order-CZ) ⟩
     ε ∎
-  lemma-dual comm-CZ-S↓ = axiom comm-CZ-S↑
-  lemma-dual comm-CZ-S↑ = axiom comm-CZ-S↓
-  lemma-dual selinger-c10 = begin
+  lemma-dual (srel Base.comm-CZ-S↓) = axiom comm-CZ-S↑
+  lemma-dual (srel Base.comm-CZ-S↑) = axiom comm-CZ-S↓
+  lemma-dual (srel Base.selinger-c10) = begin
     dual (CZ • H ↑ • CZ) ≈⟨ refl ⟩
     (CZ • H • CZ) ≈⟨ axiom selinger-c11 ⟩
     S⁻¹ ↓ • H ↓ • S⁻¹ ↓ • CZ • H ↓ • S⁻¹ ↓ • S⁻¹ ↑ ≈⟨ sym (cong (refl' aux-dual-S⁻¹↑) (cright cong (refl' aux-dual-S⁻¹↑) (cright (cright cong (refl' aux-dual-S⁻¹↑) (refl' aux-dual-S⁻¹))))) ⟩
     dual (S⁻¹ ↑ • H ↑ • S⁻¹ ↑ • CZ • H ↑ • S⁻¹ ↑ • S⁻¹ ↓) ∎
-  lemma-dual selinger-c11 = begin
+  lemma-dual (srel Base.selinger-c11) = begin
     dual (CZ • H ↓ • CZ) ≈⟨ refl ⟩
     (CZ • H ↑ • CZ) ≈⟨ axiom selinger-c10 ⟩
     S⁻¹ ↑ • H ↑ • S⁻¹ ↑ • CZ • H ↑ • S⁻¹ ↑ • S⁻¹ ≈⟨ sym (cong (refl' aux-dual-S⁻¹) (cright cong (refl' aux-dual-S⁻¹) (cright (cright cong (refl' aux-dual-S⁻¹) (refl' aux-dual-S⁻¹↑))))) ⟩
     dual (S⁻¹ • H • S⁻¹ • CZ • H • S⁻¹ • S⁻¹ ↑) ∎
-  lemma-dual (comm-H {g = S-gen}) = sym (axiom comm-S)
-  lemma-dual (comm-H {g = H-gen}) = sym (axiom comm-H)
-  lemma-dual (comm-S {g = S-gen}) = sym (axiom comm-S)
-  lemma-dual (comm-S {g = H-gen}) = sym (axiom comm-H)
-  lemma-dual (cong↑ order-S) = begin
+  lemma-dual (comm₁ H-gate (gate₁ S-gate)) = sym (axiom comm-S)
+  lemma-dual (comm₁ H-gate (gate₁ H-gate)) = sym (axiom comm-H)
+  lemma-dual (comm₁ S-gate (gate₁ S-gate)) = sym (axiom comm-S)
+  lemma-dual (comm₁ S-gate (gate₁ H-gate)) = sym (axiom comm-H)
+  lemma-dual (cong↑ (srel Base.order-S)) = begin
      S • dual ((S ^ p-1) ↑) ≈⟨ (cright refl' (Eq.cong dual (Eq.sym (aux-↑ S p-1)))) ⟩
      S • dual ((S ↑ ^ p-1)) ≈⟨ (cright refl' ( aux-dual (S ↑) p-1)) ⟩
      S • dual (S ↑) ^ p-1 ≈⟨ axiom order-S ⟩
      ε ∎
-  lemma-dual (cong↑ order-H) = axiom order-H
-  lemma-dual (cong↑ order-SH) = axiom order-SH
-  lemma-dual (cong↑ comm-HHS) = axiom comm-HHS
-  lemma-dual (cong↑ (M-mul x y)) = begin
+  lemma-dual (cong↑ (srel Base.order-H)) = axiom order-H
+  lemma-dual (cong↑ (srel Base.order-SH)) = axiom order-SH
+  lemma-dual (cong↑ (srel Base.comm-HHS)) = axiom comm-HHS
+  lemma-dual (cong↑ (srel (Base.M-mul x y))) = begin
     dual ((M x • M y) ↑) ≈⟨ cong (refl' (aux-dual-Mx↑ x)) (refl' (aux-dual-Mx↑ y)) ⟩
     M x • M y ≈⟨ axiom (M-mul x y) ⟩
     M (x *' y) ≈⟨ sym (refl' (aux-dual-Mx↑ (x *' y))) ⟩
     dual (M (x *' y) ↑) ∎
-  lemma-dual (cong↑ (semi-MS x)) = begin
+  lemma-dual (cong↑ (srel (Base.semi-MS x))) = begin
     dual ((M x • S) ↑) ≈⟨ (cleft refl' (aux-dual-Mx↑ x)) ⟩
     M x • S ≈⟨ axiom (semi-MS x) ⟩
     S^ (x ^2) • M x ≈⟨ sym (cong (refl' (aux-dual-S^k↑ (toℕ (fromℕ< _)))) (refl' (aux-dual-Mx↑ x))) ⟩
     dual ((S^ (x ^2) • M x) ↑) ∎
+  lemma-dual (cong↑ (cong↑ (srel ())))
 
   -- A proof principle for duality.
   by-duality : ∀ {w u} -> w ≈ u -> dual w ≈ dual u

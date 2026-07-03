@@ -1,3 +1,11 @@
+------------------------------------------------------------------------
+-- Presentations of groups
+--
+-- Amalgamated products of three group presentations.
+------------------------------------------------------------------------
+
+{-# OPTIONS --safe #-}
+
 open import Relation.Binary using (Rel ; REL)
 
 open import Level using (0ℓ)
@@ -15,7 +23,7 @@ import Relation.Binary.Reasoning.Setoid as SR
 
 open import Word.Base
 open import Word.Properties
-open import Presentation.Base
+open import Presentation.Horizontal-Syntactics
 open import Presentation.Reidemeister-Schreier
 
 open import Presentation.Construct.Base
@@ -23,7 +31,7 @@ open import Presentation.Construct.Properties.Amalgamation
 open import Presentation.Morphism as Morphism
 open import Presentation.MorphismId as MorphismId
 
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 
 open import Algebra.Morphism.Structures using (module MonoidMorphisms)
@@ -49,34 +57,34 @@ module Presentation.Construct.ThreeAmalgamation
   Γ₁' : WRel ((X ⊎ Y) ⊎ Z)
   Γ₁' = Γ₁ ⸲ Γₑ ⸲ Γₑ
 
-  ext1 : (X ⊎ Y) -> X ⊎ Y ⊎ Z
+  ext1 : (X ⊎ Y) → X ⊎ Y ⊎ Z
   ext1 (inj₁ x) = inj₁ x
   ext1 (inj₂ y) = inj₂ (inj₁ y)
 
-  ext2 : (X ⊎ Z) -> X ⊎ Y ⊎ Z
+  ext2 : (X ⊎ Z) → X ⊎ Y ⊎ Z
   ext2 (inj₁ x) = inj₁ x
   ext2 (inj₂ z) = inj₂ (inj₂ z)
 
-  ext3 : (Y ⊎ Z) -> X ⊎ Y ⊎ Z
+  ext3 : (Y ⊎ Z) → X ⊎ Y ⊎ Z
   ext3 yz = inj₂ yz
 
   data Γ₁'' : WRel (X ⊎ Y ⊎ Z) where
-    lift : ∀ {w v} -> Γ₁ w v -> Γ₁'' (wmap ext1 w) (wmap ext1 v)
+    lift : ∀ {w v} → Γ₁ w v → Γ₁'' (wmap ext1 w) (wmap ext1 v)
     
   data Γ₂'' : WRel (X ⊎ Y ⊎ Z) where
-    lift : ∀ {w v} -> Γ₂ w v -> Γ₂'' (wmap ext2 w) (wmap ext2 v)
+    lift : ∀ {w v} → Γ₂ w v → Γ₂'' (wmap ext2 w) (wmap ext2 v)
 
   data Γ₃'' : WRel (X ⊎ Y ⊎ Z) where
-    lift : ∀ {w v} -> Γ₃ w v -> Γ₃'' (wmap ext3 w) (wmap ext3 v)
+    lift : ∀ {w v} → Γ₃ w v → Γ₃'' (wmap ext3 w) (wmap ext3 v)
 
   module MX = Morphism (Γ₁'' ∪ Γ₂'') amal12
   
-  fx : X ⊎ Y ⊎ Z -> (X ⊎ Y) ⊎ (X ⊎ Z)
+  fx : X ⊎ Y ⊎ Z → (X ⊎ Y) ⊎ (X ⊎ Z)
   fx (inj₁ x) = inj₁ (inj₁ x)
   fx (inj₂ (inj₁ y)) = inj₁ (inj₂ y)
   fx (inj₂ (inj₂ z)) = inj₂ (inj₂ z)
   
-  gx : (X ⊎ Y) ⊎ (X ⊎ Z) -> X ⊎ Y ⊎ Z
+  gx : (X ⊎ Y) ⊎ (X ⊎ Z) → X ⊎ Y ⊎ Z
   gx (inj₁ (inj₁ x)) = inj₁ x
   gx (inj₁ (inj₂ y)) = inj₂ (inj₁ y)
   gx (inj₂ (inj₁ x)) = inj₁ x
@@ -89,28 +97,28 @@ module Presentation.Construct.ThreeAmalgamation
  
   module LRx = LeftRightCongruence Γ₁ Γ₂ (Γₐ ([_]ʷ ∘ inj₁) ([_]ʷ ∘ inj₁))
 
-  fx∘ext1=inj₁ : ∀ {x} -> (fx ∘ ext1) x ≡ inj₁ x
+  fx∘ext1=inj₁ : ∀ {x} → (fx ∘ ext1) x ≡ inj₁ x
   fx∘ext1=inj₁ {inj₁ x} = Eq.refl
   fx∘ext1=inj₁ {inj₂ y} = Eq.refl
 
-  wmap-fx∘ext1=wmap-inj₁ : ∀ {w} -> wmap (fx ∘ ext1) w ≡ wmap inj₁ w
+  wmap-fx∘ext1=wmap-inj₁ : ∀ {w} → wmap (fx ∘ ext1) w ≡ wmap inj₁ w
   wmap-fx∘ext1=wmap-inj₁ {[ x ]ʷ} = Eq.cong [_]ʷ fx∘ext1=inj₁
   wmap-fx∘ext1=wmap-inj₁ {ε} = Eq.refl
   wmap-fx∘ext1=wmap-inj₁ {w • w₁} = Eq.cong₂ _•_ wmap-fx∘ext1=wmap-inj₁ wmap-fx∘ext1=wmap-inj₁
 
-  wmap-fx∘ext2=wmap-inj₁ : ∀ {w} -> wmap (fx ∘ ext2) w ≈₂ wmap inj₂ w
+  wmap-fx∘ext2=wmap-inj₁ : ∀ {w} → wmap (fx ∘ ext2) w ≈₂ wmap inj₂ w
   wmap-fx∘ext2=wmap-inj₁ {[ inj₁ x ]ʷ} = _≈_.axiom (mid amal)
   wmap-fx∘ext2=wmap-inj₁ {[ inj₂ y ]ʷ} = _≈_.refl
   wmap-fx∘ext2=wmap-inj₁ {ε} = _≈_.refl
   wmap-fx∘ext2=wmap-inj₁ {w • w₁} = _≈_.cong wmap-fx∘ext2=wmap-inj₁ wmap-fx∘ext2=wmap-inj₁
 
-  wmap-gx∘inj₁=wmap-ext1 : ∀ {w} -> wmap (gx ∘ inj₁) w ≡ wmap ext1 w
+  wmap-gx∘inj₁=wmap-ext1 : ∀ {w} → wmap (gx ∘ inj₁) w ≡ wmap ext1 w
   wmap-gx∘inj₁=wmap-ext1 {[ inj₁ x ]ʷ} = Eq.refl
   wmap-gx∘inj₁=wmap-ext1 {[ inj₂ y ]ʷ} = Eq.refl
   wmap-gx∘inj₁=wmap-ext1 {ε} = Eq.refl
   wmap-gx∘inj₁=wmap-ext1 {w • w₁} = Eq.cong₂ _•_ wmap-gx∘inj₁=wmap-ext1 wmap-gx∘inj₁=wmap-ext1
 
-  wmap-gx∘inj₂=wmap-ext1 : ∀ {w} -> wmap (gx ∘ inj₂) w ≡ wmap ext2 w
+  wmap-gx∘inj₂=wmap-ext1 : ∀ {w} → wmap (gx ∘ inj₂) w ≡ wmap ext2 w
   wmap-gx∘inj₂=wmap-ext1 {[ inj₁ x ]ʷ} = Eq.refl
   wmap-gx∘inj₂=wmap-ext1 {[ inj₂ y ]ʷ} = Eq.refl
   wmap-gx∘inj₂=wmap-ext1 {ε} = Eq.refl
@@ -196,12 +204,12 @@ module Presentation.Construct.ThreeAmalgamation
 
 
 
-  fy : X ⊎ Y ⊎ Z -> (X ⊎ Y) ⊎ (Y ⊎ Z)
+  fy : X ⊎ Y ⊎ Z → (X ⊎ Y) ⊎ (Y ⊎ Z)
   fy (inj₁ x) = inj₁ (inj₁ x)
   fy (inj₂ (inj₁ y)) = inj₂ (inj₁ y)
   fy (inj₂ (inj₂ z)) = inj₂ (inj₂ z)
   
-  gy : (X ⊎ Y) ⊎ (Y ⊎ Z) -> X ⊎ Y ⊎ Z
+  gy : (X ⊎ Y) ⊎ (Y ⊎ Z) → X ⊎ Y ⊎ Z
   gy (inj₁ (inj₁ x)) = inj₁ x
   gy (inj₁ (inj₂ y)) = inj₂ (inj₁ y)
   gy (inj₂ (inj₁ y)) = inj₂ (inj₁ y)
@@ -215,13 +223,13 @@ module Presentation.Construct.ThreeAmalgamation
 
   module LRy = LeftRightCongruence Γ₁ Γ₃ (Γₐ ([_]ʷ ∘ inj₂) ([_]ʷ ∘ inj₁))
 
-  wmap-fy∘ext1=wmap-inj₁ : ∀ {w} -> wmap (fy ∘ ext1) w ≈₁₃ₐ wmap inj₁ w
+  wmap-fy∘ext1=wmap-inj₁ : ∀ {w} → wmap (fy ∘ ext1) w ≈₁₃ₐ wmap inj₁ w
   wmap-fy∘ext1=wmap-inj₁ {[ inj₂ x ]ʷ} = _≈_.sym (_≈_.axiom (mid amal))
   wmap-fy∘ext1=wmap-inj₁ {[ inj₁ y ]ʷ} = _≈_.refl
   wmap-fy∘ext1=wmap-inj₁ {ε} = _≈_.refl
   wmap-fy∘ext1=wmap-inj₁ {w • w₁} = _≈_.cong wmap-fy∘ext1=wmap-inj₁ wmap-fy∘ext1=wmap-inj₁
 
-  wmap-fy∘ext3=wmap-inj₂ : ∀ {w} -> wmap (fy ∘ ext3) w ≈₁₃ₐ wmap inj₂ w
+  wmap-fy∘ext3=wmap-inj₂ : ∀ {w} → wmap (fy ∘ ext3) w ≈₁₃ₐ wmap inj₂ w
   wmap-fy∘ext3=wmap-inj₂ {[ inj₁ x ]ʷ} = _≈₁₃ₐ_.refl
   wmap-fy∘ext3=wmap-inj₂ {[ inj₂ y ]ʷ} = _≈₁₃ₐ_.refl
   wmap-fy∘ext3=wmap-inj₂ {ε} = _≈₁₃ₐ_.refl
@@ -252,13 +260,13 @@ module Presentation.Construct.ThreeAmalgamation
       where
       open SR ws₁₃ₐ
 
-  wmap-gy∘inj₁=wmap-ext1 : ∀ {w} -> wmap (gy ∘ inj₁) w ≡ wmap ext1 w
+  wmap-gy∘inj₁=wmap-ext1 : ∀ {w} → wmap (gy ∘ inj₁) w ≡ wmap ext1 w
   wmap-gy∘inj₁=wmap-ext1 {[ inj₁ x ]ʷ} = Eq.refl
   wmap-gy∘inj₁=wmap-ext1 {[ inj₂ y ]ʷ} = Eq.refl
   wmap-gy∘inj₁=wmap-ext1 {ε} = Eq.refl
   wmap-gy∘inj₁=wmap-ext1 {w • w₁} = Eq.cong₂ _•_ wmap-gy∘inj₁=wmap-ext1 wmap-gy∘inj₁=wmap-ext1
 
-  wmap-gy∘inj₂=wmap-ext3 : ∀ {w} -> wmap (gy ∘ inj₂) w ≡ wmap ext3 w
+  wmap-gy∘inj₂=wmap-ext3 : ∀ {w} → wmap (gy ∘ inj₂) w ≡ wmap ext3 w
   wmap-gy∘inj₂=wmap-ext3 {[ inj₁ x ]ʷ} = Eq.refl
   wmap-gy∘inj₂=wmap-ext3 {[ inj₂ y ]ʷ} = Eq.refl
   wmap-gy∘inj₂=wmap-ext3 {ε} = Eq.refl
@@ -309,12 +317,12 @@ module Presentation.Construct.ThreeAmalgamation
 
 
 
-  fz : X ⊎ Y ⊎ Z -> (X ⊎ Z) ⊎ (Y ⊎ Z)
+  fz : X ⊎ Y ⊎ Z → (X ⊎ Z) ⊎ (Y ⊎ Z)
   fz (inj₁ x) = inj₁ (inj₁ x)
   fz (inj₂ (inj₁ z)) = inj₂ (inj₁ z)
   fz (inj₂ (inj₂ z)) = inj₂ (inj₂ z)
   
-  gz : (X ⊎ Z) ⊎ (Y ⊎ Z) -> X ⊎ Y ⊎ Z
+  gz : (X ⊎ Z) ⊎ (Y ⊎ Z) → X ⊎ Y ⊎ Z
   gz (inj₁ (inj₁ x)) = inj₁ x
   gz (inj₁ (inj₂ z)) = inj₂ (inj₂ z)
   gz (inj₂ (inj₁ y)) = inj₂ (inj₁ y)
@@ -330,13 +338,13 @@ module Presentation.Construct.ThreeAmalgamation
   module LRz = LeftRightCongruence Γ₂ Γ₃ (Γₐ ([_]ʷ ∘ inj₂) ([_]ʷ ∘ inj₂))
 
 
-  wmap-fz∘ext2=wmap-inj₁ : ∀ {w} -> wmap (fz ∘ ext2) w ≈₂₃ₐ wmap inj₁ w
+  wmap-fz∘ext2=wmap-inj₁ : ∀ {w} → wmap (fz ∘ ext2) w ≈₂₃ₐ wmap inj₁ w
   wmap-fz∘ext2=wmap-inj₁ {[ inj₂ x ]ʷ} = _≈_.sym (_≈_.axiom (mid amal))
   wmap-fz∘ext2=wmap-inj₁ {[ inj₁ y ]ʷ} = _≈_.refl
   wmap-fz∘ext2=wmap-inj₁ {ε} = _≈_.refl
   wmap-fz∘ext2=wmap-inj₁ {w • w₁} = _≈_.cong wmap-fz∘ext2=wmap-inj₁ wmap-fz∘ext2=wmap-inj₁
 
-  wmap-fz∘ext3=wmap-inj₂ : ∀ {w} -> wmap (fz ∘ ext3) w ≈₂₃ₐ wmap inj₂ w
+  wmap-fz∘ext3=wmap-inj₂ : ∀ {w} → wmap (fz ∘ ext3) w ≈₂₃ₐ wmap inj₂ w
   wmap-fz∘ext3=wmap-inj₂ {[ inj₁ x ]ʷ} = _≈₂₃ₐ_.refl
   wmap-fz∘ext3=wmap-inj₂ {[ inj₂ y ]ʷ} = _≈₂₃ₐ_.refl
   wmap-fz∘ext3=wmap-inj₂ {ε} = _≈₂₃ₐ_.refl
@@ -368,13 +376,13 @@ module Presentation.Construct.ThreeAmalgamation
       where
       open SR ws₂₃ₐ
 
-  wmap-gz∘inj₁=wmap-ext2 : ∀ {w} -> wmap (gz ∘ inj₁) w ≡ wmap ext2 w
+  wmap-gz∘inj₁=wmap-ext2 : ∀ {w} → wmap (gz ∘ inj₁) w ≡ wmap ext2 w
   wmap-gz∘inj₁=wmap-ext2 {[ inj₁ x ]ʷ} = Eq.refl
   wmap-gz∘inj₁=wmap-ext2 {[ inj₂ y ]ʷ} = Eq.refl
   wmap-gz∘inj₁=wmap-ext2 {ε} = Eq.refl
   wmap-gz∘inj₁=wmap-ext2 {w • w₁} = Eq.cong₂ _•_ wmap-gz∘inj₁=wmap-ext2 wmap-gz∘inj₁=wmap-ext2
 
-  wmap-gz∘inj₂=wmap-ext3 : ∀ {w} -> wmap (gz ∘ inj₂) w ≡ wmap ext3 w
+  wmap-gz∘inj₂=wmap-ext3 : ∀ {w} → wmap (gz ∘ inj₂) w ≡ wmap ext3 w
   wmap-gz∘inj₂=wmap-ext3 {[ inj₁ x ]ʷ} = Eq.refl
   wmap-gz∘inj₂=wmap-ext3 {[ inj₂ y ]ʷ} = Eq.refl
   wmap-gz∘inj₂=wmap-ext3 {ε} = Eq.refl
@@ -485,7 +493,7 @@ module Presentation.Construct.ThreeAmalgamation
     {X Y : Set}
     (Γ : WRel X)
     (Δ : WRel Y)
-    (ff : Word X -> Word Y)
+    (ff : Word X → Word Y)
     (open PP Γ renaming (•-ε-monoid to mi₁ ; word-setoid to w₁))
     (open PP Δ renaming (•-ε-monoid to mi₂ ; word-setoid to w₂))
     (open MonoidMorphisms (Monoid.rawMonoid mi₁) (Monoid.rawMonoid mi₂) using (IsMonoidIsomorphism))
@@ -497,7 +505,7 @@ module Presentation.Construct.ThreeAmalgamation
 
     open IsMonoidIsomorphism iso→ renaming (injective to inje₁ ; ⟦⟧-cong to ⟦⟧-cong₁) using (surjective ; ε-homo ; homo)
 
-    gg : Word Y -> Word X
+    gg : Word Y → Word X
     gg y = proj₁ (surjective y)
 
     open import Function.Definitions using (Surjective ; Injective)
@@ -540,7 +548,7 @@ module Presentation.Construct.ThreeAmalgamation
       where
       open SR w₂
 
-    gg-cong : ∀ {x y} → x ≈₂ₒ y -> gg x ≈₁ₒ gg y
+    gg-cong : ∀ {x y} → x ≈₂ₒ y → gg x ≈₁ₒ gg y
     gg-cong {x} {y} eq = inje₁ (
       begin
         ff (gg x) ≈⟨ (proj₂ (surjective x) (refl'₁ Eq.refl)) ⟩
@@ -618,7 +626,7 @@ module Presentation.Construct.ThreeAmalgamation
     {Γ : WRel X}
     {Δ : WRel Y}
     (nfp : PP.NFProperty Γ)
-    (f : Word X -> Word Y)
+    (f : Word X → Word Y)
     (open PP (Γ) renaming (•-ε-monoid to mi₁))
     (open PP (Δ) renaming (•-ε-monoid to mi₂))
     (iso : MonoidMorphisms.IsMonoidIsomorphism (Monoid.rawMonoid mi₁) (Monoid.rawMonoid mi₂) f)
@@ -741,9 +749,9 @@ module Presentation.Construct.ThreeAmalgamation
   open PP ((Γ₁'' ∪ Γ₂'') ∪ Γ₃'') renaming (•-ε-monoid to mc1b) using ()
   open PB ((Γ₁'' ∪ Γ₂'') ∪ Γ₃'') renaming (_≈_ to _≈1_) using ()
 
-  -- ((Γ₁'' ∪ Γ₃'') ∪ (Γ₂'' ∪ Γ₃'')) -> ((Γ₁'' ∪ Γ₃'') ∪ (Γ₃'' ∪ Γ₂'')) ->
-  -- (Γ₁'' ∪ Γ₃'' ∪ (Γ₃'' ∪ Γ₂'')) -> (Γ₁'' ∪ (Γ₃'' ∪ Γ₃'') ∪ Γ₂'') -> (Γ₁'' ∪ Γ₃'' ∪ Γ₂'') ->
-  -- (Γ₁'' ∪ Γ₂'' ∪ Γ₃'') -> ((Γ₁'' ∪ Γ₂'') ∪ Γ₃'')
+  -- ((Γ₁'' ∪ Γ₃'') ∪ (Γ₂'' ∪ Γ₃'')) → ((Γ₁'' ∪ Γ₃'') ∪ (Γ₃'' ∪ Γ₂'')) →
+  -- (Γ₁'' ∪ Γ₃'' ∪ (Γ₃'' ∪ Γ₂'')) → (Γ₁'' ∪ (Γ₃'' ∪ Γ₃'') ∪ Γ₂'') → (Γ₁'' ∪ Γ₃'' ∪ Γ₂'') →
+  -- (Γ₁'' ∪ Γ₂'' ∪ Γ₃'') → ((Γ₁'' ∪ Γ₂'') ∪ Γ₃'')
 
   iso-3amal1 : MonoidMorphisms.IsMonoidIsomorphism (Monoid.rawMonoid mc1) (Monoid.rawMonoid mc1b) id
   iso-3amal1 =
@@ -758,8 +766,8 @@ module Presentation.Construct.ThreeAmalgamation
   open PP (Γ₁'' ∪ Γ₂'' ∪ Γ₃'') renaming (•-ε-monoid to mc₂) using ()
   open PB ((Γ₁'' ∪ Γ₂'') ∪ (Γ₁'' ∪ Γ₂'') ∪ Γ₃'') renaming (_===_ to _===ₑ_ ; _≈_ to _≈ₑ_) using ()
   
-  -- (Γ₁'' ∪ Γ₂'') ∪ (Γ₁'' ∪ Γ₃'') ∪ (Γ₂'' ∪ Γ₃'') -> (Γ₁'' ∪ Γ₂'') ∪ (Γ₁'' ∪ Γ₂'') ∪ Γ₃''
-  -- -> ((Γ₁'' ∪ Γ₂'') ∪ (Γ₁'' ∪ Γ₂'')) ∪ Γ₃'' -> ((Γ₁'' ∪ Γ₂'')) ∪ Γ₃'' -> Γ₁'' ∪ Γ₂'' ∪ Γ₃''
+  -- (Γ₁'' ∪ Γ₂'') ∪ (Γ₁'' ∪ Γ₃'') ∪ (Γ₂'' ∪ Γ₃'') → (Γ₁'' ∪ Γ₂'') ∪ (Γ₁'' ∪ Γ₂'') ∪ Γ₃''
+  -- → ((Γ₁'' ∪ Γ₂'') ∪ (Γ₁'' ∪ Γ₂'')) ∪ Γ₃'' → ((Γ₁'' ∪ Γ₂'')) ∪ Γ₃'' → Γ₁'' ∪ Γ₂'' ∪ Γ₃''
   
   iso-3amal : MonoidMorphisms.IsMonoidIsomorphism (Monoid.rawMonoid mc₁) (Monoid.rawMonoid mc₂) id
   iso-3amal =

@@ -33,7 +33,7 @@ open import Data.Fin hiding (_+_ ; _-_)
 open import Data.Sum using (_⊎_ ; inj₁ ; inj₂)
 
 open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 
 open import Presentation.Construct.Base hiding (_*_)
 open import Presentation.GroupLike
@@ -41,23 +41,21 @@ open import Data.Nat.Primality
 
 open import Zp.ModularArithmetic
 open import Zp.Fermats-little-theorem
+open import Notations
 
 
 module N.Clifford.Clifford-Mod-Scalars-Simplified
   (p-3 : ℕ)
-  (let p-2 = suc p-3)
-  (p-prime : Prime (suc (suc p-2)))
+  (let p-2 = ₁₊ p-3)
+  (p-prime : Prime (suc (₁₊ p-2)))
   (let open PrimeModulus' p-2 p-prime)
   (g*@(g , g≠0) : ℤ* ₚ)
   (g-gen : ∀ ((x , _) : ℤ* ₚ) -> ∃ \ (k : ℤ ₚ-₁) -> x ≡ g ^′ toℕ k )
   where
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₁₊ n = suc n
-pattern ₂₊ n = suc (suc n)
-pattern ₃₊ n = suc (₂₊ n)
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
 
 open Primitive-Root-Modp' g* g-gen
 

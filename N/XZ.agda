@@ -32,11 +32,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
@@ -59,9 +60,9 @@ module N.XZ (p-2 : ℕ) (p-prime : Prime (2+ p-2))  where
 pattern auto = Eq.refl
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
 pattern ₅ = 5
 pattern ₆ = 6
 pattern ₇ = 7
@@ -74,10 +75,6 @@ pattern ₁₃ = 13
 pattern ₁₄ = 14
 pattern ₁₅ = 15
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
-pattern ₄₊ ⱼ = suc (suc (suc (suc ⱼ)))
 
 
 open import Zp.ModularArithmetic
@@ -113,15 +110,15 @@ module XZ where
 data Gen : ℕ → Set where
   X-gen : ∀ {n} → Gen (₁₊ n)
   Z-gen : ∀ {n} → Gen (₁₊ n)
-  _↥ : ∀ {n} → Gen n → Gen (suc n)
+  _↥ : ∀ {n} → Gen n → Gen (₁₊ n)
 
-[_⇑] : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+[_⇑] : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
 [_⇑] {n} = ([_]ʷ ∘ _↥) WB.*
 
-[_⇑]' : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+[_⇑]' : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
 [_⇑]' {n} = wmap _↥
 
-_↑ : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+_↑ : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
 _↑ = wmap _↥
 
 _↓ : ∀ {n} → Word (Gen n) → Word (Gen ( n))
@@ -153,7 +150,7 @@ data _QRel,_===_ : (n : ℕ) → WRel (Gen n) where
 
 lemma-cong↑ : ∀ {n} w v →
   let open PB (n QRel,_===_) using (_≈_) in
-  let open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↑_) using () in
+  let open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↑_) using () in
   w ≈ v → w ↑ ≈↑ v ↑
 lemma-cong↑ {n} w v PB.refl = PB.refl
 lemma-cong↑ {n} w v (PB.sym eq) = PB.sym (lemma-cong↑ v w eq)
@@ -176,7 +173,7 @@ lemma-^-↑ : ∀ {n} (w : Word (Gen n)) k → w ↑ ^ k ≡ (w ^ k) ↑
 lemma-^-↑ w ₀ = auto
 lemma-^-↑ w ₁ = auto
 lemma-^-↑ w (₂₊ k) = begin
-  (w ↑) • (w ↑) ^ ₁₊ k ≡⟨ Eq.cong ((w ↑) •_) (lemma-^-↑ w (suc k)) ⟩
+  (w ↑) • (w ↑) ^ ₁₊ k ≡⟨ Eq.cong ((w ↑) •_) (lemma-^-↑ w (₁₊ k)) ⟩
   (w ↑) • (w ^ ₁₊ k) ↑ ≡⟨ auto ⟩
   ((w • w ^ ₁₊ k) ↑) ∎
   where open ≡-Reasoning
@@ -335,7 +332,7 @@ module CommData where
   commute {n} X-gen (y ↥) = just (PB.sym (PB.axiom comm-X))
   commute {n} (x ↥) X-gen = just (PB.axiom comm-X)
   
-  commute {n@(suc n')} (x ↥) (y ↥) with commute x y
+  commute {n@(₁₊ n')} (x ↥) (y ↥) with commute x y
   ... | nothing = nothing
   ... | just eq = just (lemma-cong↑ ([ x ]ʷ • [ y ]ʷ) ([ y ]ʷ • [ x ]ʷ) eq)
 
@@ -346,7 +343,7 @@ module CommData where
   ord : Gen (₁₊ n) → ℕ
   ord {n}(X-gen) = 0
   ord {n} (Z-gen) = 1
-  ord {suc n} (g ↥) = 2 Nat.+ ord g
+  ord {₁₊ n} (g ↥) = 2 Nat.+ ord g
 
   -- Ordering of generators.
   les : Gen (₂₊ n) → Gen (₂₊ n) → Bool

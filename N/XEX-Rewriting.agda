@@ -32,11 +32,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
@@ -59,10 +60,10 @@ module N.XEX-Rewriting (p-2 : ℕ) (p-prime : Prime (2+ p-2)) where
 pattern auto = Eq.refl
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
-pattern ₄ = suc ₃
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
+pattern ₄ = ₁₊ ₃
 pattern ₅ = 5
 pattern ₆ = 6
 pattern ₇ = 7
@@ -75,9 +76,6 @@ pattern ₁₃ = 13
 pattern ₁₄ = 14
 pattern ₁₅ = 15
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
 
 
 open import Zp.ModularArithmetic
@@ -100,19 +98,19 @@ module Symplectic-EX where
     EX-gen : ∀ {n} → Gen (₂₊ n)
     -- lift a generator from Gen n to Gen (₁₊ n). E.g., in a two
     -- qupit circut H-gen = H 0, and H-gen ↥ = H 1.
-    _↥ : ∀ {n} → Gen n → Gen (suc n)
+    _↥ : ∀ {n} → Gen n → Gen (₁₊ n)
 
-  [_⇑] : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  [_⇑] : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
   [_⇑] {n} = ([_]ʷ ∘ _↥) WB.*
 
-  [_⇑]' : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  [_⇑]' : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
   [_⇑]' {n} = wmap _↥
 
-  _↑ : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  _↑ : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
   _↑ = wmap _↥
 
 {-
-  _↓-gen : ∀ {n} → Gen n → Gen (suc n)
+  _↓-gen : ∀ {n} → Gen n → Gen (₁₊ n)
   _↓-gen {zero} ()
   _↓-gen {₁₊ n} H-gen = H-gen
   _↓-gen {₁₊ n} S-gen = S-gen
@@ -120,7 +118,7 @@ module Symplectic-EX where
   _↓-gen {₁₊ .(₁₊ _)} EX-gen = EX-gen
   _↓-gen {₁₊ n} (g ↥) = (g ↓-gen) ↥
 
-  _↓ : ∀ {n} → Word (Gen n) → Word (Gen (suc n))
+  _↓ : ∀ {n} → Word (Gen n) → Word (Gen (₁₊ n))
   _↓ {n} = wmap _↓-gen
 -}
 
@@ -288,7 +286,7 @@ module Symplectic-EX where
 
   lemma-cong↑ : ∀ {n} w v →
     let open PB (n QRel,_===_) using (_≈_) in
-    let open PB ((suc n) QRel,_===_) renaming (_≈_ to _≈↑_) using () in
+    let open PB ((₁₊ n) QRel,_===_) renaming (_≈_ to _≈↑_) using () in
     w ≈ v → w ↑ ≈↑ v ↑
   lemma-cong↑ {n} w v PB.refl = PB.refl
   lemma-cong↑ {n} w v (PB.sym eq) = PB.sym (lemma-cong↑ v w eq)
@@ -411,7 +409,7 @@ module Homo (m : ℕ) where
   open import Presentation.ListNF
 
   module EX = Symplectic-EX
-  open EX using (_↥ ; H-gen ; S-gen ; CZ-gen ; EX-gen)
+  open EX using (_↥ ; EX-gen)
 
 
 
@@ -419,11 +417,11 @@ module Homo (m : ℕ) where
 
 
   f : EX.Gen n -> Word (Gen (n))
-  f H-gen = H
-  f S-gen = S
-  f CZ-gen = CZ
-  f EX-gen = Ex
-  f (x ↥) = f x ↑
+  f EX.H-gen  = H
+  f EX.S-gen  = S
+  f EX.CZ-gen = CZ
+  f EX.EX-gen = Ex
+  f (x EX.↥)  = f x ↑
 
 
   f* : Word (EX.Gen n) -> Word (Gen (n))

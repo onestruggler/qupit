@@ -1,3 +1,11 @@
+------------------------------------------------------------------------
+-- Presentations of groups
+--
+-- Normal-form properties for sugar products of group presentations.
+------------------------------------------------------------------------
+
+{-# OPTIONS --safe #-}
+
 open import Relation.Binary using (Rel ; REL)
 
 open import Level using (0ℓ)
@@ -12,7 +20,7 @@ import Relation.Binary.Reasoning.Setoid as SR
 
 open import Word.Base
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open import Presentation.Properties 
 
@@ -22,7 +30,7 @@ module Presentation.Construct.Properties.SugarProduct
   {M A : Set}
   (Γ : WRel M)
   (Δ : WRel A)
-  (f : M -> Word A)
+  (f : M → Word A)
   where
   
 open PB Γ renaming (_===_ to _===₁_ ; _≈_ to _≈₁_) using ()
@@ -36,37 +44,37 @@ open PP (Γ ⸲ Δ ⸲ Γₛ f) renaming (•-ε-monoid to mm ; word-setoid to w
 open _≈_
 
 module _
-  (f-wd-ax : ∀ {w v} -> w ===₁ v -> ((f *) w) ≈₂ ((f *) v))
+  (f-wd-ax : ∀ {w v} → w ===₁ v → ((f *) w) ≈₂ ((f *) v))
   where
 
   X = M ⊎ A
 
-  to-right : X -> Word A
+  to-right : X → Word A
   to-right (inj₁ x) = f x
   to-right (inj₂ y) = [ y ]ʷ
 
-  to-right-right : ∀ x -> [ x ]ʷ ≈ [ to-right x ]ᵣ
+  to-right-right : ∀ x → [ x ]ʷ ≈ [ to-right x ]ᵣ
   to-right-right (inj₁ x) = axiom (mid desugar)
   to-right-right (inj₂ y) = refl
   
-  to-right*-right : ∀ w -> w ≈ [ (to-right *) w ]ᵣ
+  to-right*-right : ∀ w → w ≈ [ (to-right *) w ]ᵣ
   to-right*-right [ x ]ʷ = to-right-right x
   to-right*-right ε = _≈_.refl
   to-right*-right (w • w₁) with to-right*-right w | to-right*-right w₁
   to-right*-right (w • w₁) | ih1 | ih2 = _≈_.cong ih1 ih2
 
 
-  lemma-to-right-r : ∀ w -> (to-right *) [ w ]ᵣ ≡ w
+  lemma-to-right-r : ∀ w → (to-right *) [ w ]ᵣ ≡ w
   lemma-to-right-r [ x ]ʷ = Eq.refl
   lemma-to-right-r ε = Eq.refl
   lemma-to-right-r (w • w₁) rewrite lemma-to-right-r w | lemma-to-right-r w₁  = Eq.refl
 
-  lemma-to-right-l : ∀ w -> (to-right *) [ w ]ₗ ≡ (f *) w
+  lemma-to-right-l : ∀ w → (to-right *) [ w ]ₗ ≡ (f *) w
   lemma-to-right-l [ x ]ʷ = Eq.refl
   lemma-to-right-l ε = Eq.refl
   lemma-to-right-l (w • w₁) rewrite lemma-to-right-l w | lemma-to-right-l w₁ = Eq.refl
 
-  to-right-wd :  ∀ {w v} -> w === v -> (to-right *) w ≈₂ (to-right *) v
+  to-right-wd :  ∀ {w v} → w === v → (to-right *) w ≈₂ (to-right *) v
   to-right-wd {w} {v} (left {u} {v₁} x) = begin
     (to-right *) [ u ]ₗ ≡⟨ lemma-to-right-l u ⟩
     (f *) u ≈⟨ f-wd-ax x ⟩
@@ -84,7 +92,7 @@ module _
   I : Word A
   I = ε
 
-  nfp : NFProperty Δ -> NFProperty (Γ ⸲ Δ ⸲ Γₛ f)
+  nfp : NFProperty Δ → NFProperty (Γ ⸲ Δ ⸲ Γₛ f)
   nfp p = record { NF = NF ; nf = nf ∘ (to-right *) ; nf-cong = nf'-cong ; nf-injective = nf'-inj }
     where
     open NFProperty p
@@ -113,7 +121,7 @@ module _
     nf'-inj : Injective _≈_ _≡_ nf'
     nf'-inj = FCC.injective _≈_ _≈₂_ _≡_ to-right*-inj nf-injective
 
-  nfp' : NFProperty' Δ -> NFProperty' (Γ ⸲ Δ ⸲ Γₛ f)
+  nfp' : NFProperty' Δ → NFProperty' (Γ ⸲ Δ ⸲ Γₛ f)
   nfp' p = record
              { NF = NF ; nf = nf' ; nf-cong = nf'-cong ; inv-nf = inv-nf' ; inv-nf∘nf=id = gf=id }
     where
@@ -121,7 +129,7 @@ module _
 
     nf' = nf ∘ (to-right *)
     
-    inv-nf' : NF -> Word X
+    inv-nf' : NF → Word X
     inv-nf' = [_]ᵣ ∘ inv-nf
 
     open Star-Injective-Full-Setoid Γ (Γ ⸲ Δ ⸲ Γₛ f) Cₛ I renaming (nf to anf)

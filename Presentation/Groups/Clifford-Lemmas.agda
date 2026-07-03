@@ -1,3 +1,4 @@
+﻿{-# OPTIONS --safe #-}
 -- This module implements 'rewrite-clifford', a complete decision
 -- procedure for equality of 2-qubit Clifford operators.
 --
@@ -35,7 +36,7 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base hiding (wfoldl)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
@@ -156,7 +157,7 @@ module CommData where
   open PB _===_
   
   -- Commutativity.
-  comm~ : (x y : Gen) -> Maybe (([ x ]ʷ • [ y ]ʷ) ≈ ([ y ]ʷ • [ x ]ʷ))
+  comm~ : (x y : Gen) → Maybe (([ x ]ʷ • [ y ]ʷ) ≈ ([ y ]ʷ • [ x ]ʷ))
   comm~ H0-gen H1-gen = just (axiom comm-H0H1)
   comm~ H0-gen S1-gen = just (axiom comm-H0S1)
   comm~ S0-gen H1-gen = just (axiom comm-S0H1)
@@ -175,7 +176,7 @@ module CommData where
 
 
   -- We number the generators for the purpose of ordering them.
-  ord : Gen -> ℕ
+  ord : Gen → ℕ
   ord S0-gen = 0
   ord S1-gen = 1
   ord H0-gen = 2
@@ -183,7 +184,7 @@ module CommData where
   ord CZ-gen = 4
 
   -- Ordering of generators.
-  les : Gen -> Gen -> Bool
+  les : Gen → Gen → Bool
   les x y with ord x Nat.<? ord y
   les x y | yes _ = true
   les x y | no _ = false
@@ -201,11 +202,11 @@ module Clifford-Duality where
 
   open Clifford
   open PB Clifford._===_
-  gen : Gen -> Word Gen
+  gen : Gen → Word Gen
   gen = [_]ʷ
   
   -- Each generator has a dual, obtained by swapping the two qubits.
-  dual-gen : Gen -> Gen
+  dual-gen : Gen → Gen
   dual-gen H0-gen = H1-gen
   dual-gen H1-gen = H0-gen
   dual-gen S0-gen = S1-gen
@@ -213,13 +214,13 @@ module Clifford-Duality where
   dual-gen CZ-gen = CZ-gen
 
   -- Compute the dual of a word.
-  dual : Word Gen -> Word Gen
+  dual : Word Gen → Word Gen
   dual ([ x ]ʷ) = gen (dual-gen x)
   dual ε = ε
   dual (w • u) = dual w • dual u
 
   -- Lemma: duality is an involution.
-  lemma-double-dual : ∀ w -> w ≡ dual (dual w)
+  lemma-double-dual : ∀ w → w ≡ dual (dual w)
   lemma-double-dual ([ H0-gen ]ʷ) = Eq.refl
   lemma-double-dual ([ H1-gen ]ʷ) = Eq.refl
   lemma-double-dual ([ S0-gen ]ʷ) = Eq.refl
@@ -232,7 +233,7 @@ module Clifford-Duality where
   -- prove the duals of axioms rel-A, rel-B, and rel-C until much
   -- later. Therefore, we work only with Clifford relations for the
   -- time being.
-  lemma-dual : ∀ {w u} -> w ≈ u -> dual w ≈ dual u
+  lemma-dual : ∀ {w u} → w ≈ u → dual w ≈ dual u
   lemma-dual (axiom comm-H0H1) = axiom comm-H0H1 reversed
   lemma-dual (axiom comm-H0S1) = axiom comm-S0H1 reversed
   lemma-dual (axiom comm-S0H1) = axiom comm-H0S1 reversed
@@ -259,7 +260,7 @@ module Clifford-Duality where
   lemma-dual right-unit = right-unit
 
   -- A proof principle for duality.
-  by-duality : ∀ {w u} -> w ≈ u -> dual w ≈ dual u
+  by-duality : ∀ {w u} → w ≈ u → dual w ≈ dual u
   by-duality = lemma-dual
 
 -- ----------------------------------------------------------------------
@@ -279,7 +280,7 @@ module Clifford-Powers where
   
   -- The at-head tactic: apply an axiom or a lemma at the beginning of a
   -- list. See above for usage information.
-  at-head : ∀ {X'} {Γ' : WRel X'} {u v k} -> let open PB Γ' in u ≈ v -> let open PP Γ' in from-list (to-list u ++ k) ≈ from-list (to-list v ++ k)
+  at-head : ∀ {X'} {Γ' : WRel X'} {u v k} → let open PB Γ' in u ≈ v → let open PP Γ' in from-list (to-list u ++ k) ≈ from-list (to-list v ++ k)
   at-head {X'} {Γ'} {u} {v} {k} hyp =
      begin from-list (to-list u ++ k)
              ≈⟨ from-list-homo (to-list u) k ⟩
@@ -300,14 +301,14 @@ module Clifford-Powers where
 
   -- The in-context tactic: apply an axiom at a specified position
   -- inside a word. See above for usage information.
-  in-context : ∀ {X} {Γ : WRel X} {s t pre post s2 t2 s3 t3} -> (n m : ℕ) ->
+  in-context : ∀ {X} {Γ : WRel X} {s t pre post s2 t2 s3 t3} → (n m : ℕ) →
              let open PP Γ in
              let open PB Γ in
              let s' = to-list2 s
                  t' = to-list2 t
                  m' = m + length t' - length s'
-             in (mysplit n m s' , mysplit n m' t' , to-list s2 , to-list t2) ≡ ((pre , s2 , post) , (pre , t2 , post) , to-list s3 , to-list t3) ->
-                s3 ≈ t3 -> s ≈ t
+             in (mysplit n m s' , mysplit n m' t' , to-list s2 , to-list t2) ≡ ((pre , s2 , post) , (pre , t2 , post) , to-list s3 , to-list t3) →
+                s3 ≈ t3 → s ≈ t
 
   in-context {X} {Γ} {s} {t} {pre} {post} {s2} {t2} {s3} {t3} n m hyp lemma =
     let open PP Γ in
@@ -342,14 +343,14 @@ module Clifford-Powers where
   -- The rewrite-in-context tactic: given a multistep rewrite rule,
   -- prove the equality of two words ≈⟨ applying rewriting only to the ⟩
   -- subword at the specified position. See above for usage information.
-  rewrite-in-context : ∀ {X Γ s t pre post s2 t2} -> (multistep : (n : ℕ) -> List X -> List X) -> (lemma-multistep : (n : ℕ) -> (xs : List X) -> let open PP Γ in let open PB Γ in from-list xs ≈ from-list (multistep n xs)) -> (n m k : ℕ) ->
+  rewrite-in-context : ∀ {X Γ s t pre post s2 t2} → (multistep : (n : ℕ) → List X → List X) → (lemma-multistep : (n : ℕ) → (xs : List X) → let open PP Γ in let open PB Γ in from-list xs ≈ from-list (multistep n xs)) → (n m k : ℕ) →
              let open PP Γ in
              let open PB Γ in
              let s' = to-list2 s
                  t' = to-list2 t
                  m' = m + length t' - length s'
              in (mysplit n m s' , mysplit n m' t' , multistep k (to-list s2)) ≡ 
-                ((pre , s2 , post) , (pre , t2 , post) , multistep k (to-list t2)) ->
+                ((pre , s2 , post) , (pre , t2 , post) , multistep k (to-list t2)) →
                 s ≈ t
   rewrite-in-context {X} {Γ} {s} {t} {pre} {post} {s2} {t2} multistep lemma-multistep n m k hyp =
     let open PP Γ in
@@ -909,7 +910,7 @@ module Clifford-Rewriting where
   -- relations, and turn it into a tactic that works on Clifford+T
   -- relations. It works ≈⟨ ignoring T-generators. ⟩
 
-  rewrite-clifford : (n : ℕ) -> {w u : Word Gen} -> clifford-multistep n (to-list w) ≡ clifford-multistep n (to-list u) -> w ≈ u
+  rewrite-clifford : (n : ℕ) → {w u : Word Gen} → clifford-multistep n (to-list w) ≡ clifford-multistep n (to-list u) → w ≈ u
   rewrite-clifford n eq = (rewrite-clifford-aux n eq)
 
 
@@ -925,16 +926,16 @@ module Clifford-Rewriting where
   -- of the cleft-hand side (starting at position 3 and having length 2),
   -- and to the corresponding subword C • D • E of the cright-hand
   -- side, and checks whether a common normal form is reached.
-  clifford-tactic : ∀ {s t pre post s2 t2} -> (n m k : ℕ) ->
+  clifford-tactic : ∀ {s t pre post s2 t2} → (n m k : ℕ) →
              let s' = to-list2 s
                  t' = to-list2 t
                  m' = m + length t' - length s'
              in (mysplit n m s' , mysplit n m' t' , clifford-multistep k (to-list s2)) ≡ 
-                ((pre , s2 , post) , (pre , t2 , post) , clifford-multistep k (to-list t2)) ->
+                ((pre , s2 , post) , (pre , t2 , post) , clifford-multistep k (to-list t2)) →
                 s ≈ t
   clifford-tactic = rewrite-in-context clifford-multistep lemma-clifford-multistep-inclusion
     where
-      lemma-clifford-multistep-inclusion : (n : ℕ) (xs : List Gen) ->  from-list xs ≈ from-list (clifford-multistep n xs)
+      lemma-clifford-multistep-inclusion : (n : ℕ) (xs : List Gen) →  from-list xs ≈ from-list (clifford-multistep n xs)
       lemma-clifford-multistep-inclusion n xs = (lemma-clifford-multistep n xs)
 
 open Clifford-Rewriting using (rewrite-clifford) public
@@ -1064,13 +1065,13 @@ module Ex where
   [_]ₒ : C → Word Gen
   [ cEx ]ₒ = Ex
 
-  hcme : ∀ c m -> ∃ \ w -> ∃ \ c' -> ((h **) (inj₁ c) (f m)) ≡ (w , inj₁ c')
+  hcme : ∀ c m → ∃ \ w → ∃ \ c' → ((h **) (inj₁ c) (f m)) ≡ (w , inj₁ c')
   hcme cEx (inj₁ C1.H-gen) = [ C1.H ]ᵣ , cEx , Eq.refl
   hcme cEx (inj₁ C1.S-gen) = [ C1.S ]ᵣ , cEx , Eq.refl
   hcme cEx (inj₂ C1.H-gen) = [ C1.H ]ₗ , cEx , Eq.refl
   hcme cEx (inj₂ C1.S-gen) = [ C1.S ]ₗ , cEx , Eq.refl
   
-  htme : ∀ m -> ((h **) (inj₂ tt) (f m)) ≡ ([ m ]ʷ , inj₂ tt)
+  htme : ∀ m → ((h **) (inj₂ tt) (f m)) ≡ ([ m ]ʷ , inj₂ tt)
   htme (inj₁ C1.H-gen) = Eq.refl
   htme (inj₁ C1.S-gen) = Eq.refl
   htme (inj₂ C1.H-gen) = Eq.refl
@@ -1079,7 +1080,7 @@ module Ex where
   infix 4 _~_
   _~_ = PW.Pointwise _≈₁_ (_≡_ {A = C ⊎ ⊤})
 
-  htme~ : ∀ (m : GenM) -> ([ m ]ʷ , I) ~ ((h **) I (f m))
+  htme~ : ∀ (m : GenM) → ([ m ]ʷ , I) ~ ((h **) I (f m))
   htme~ (inj₁ C1.H-gen) = refl , Eq.refl
   htme~ (inj₁ C1.S-gen) = refl , Eq.refl
   htme~ (inj₂ C1.H-gen) = refl , Eq.refl
@@ -1087,13 +1088,13 @@ module Ex where
 
   [_]ₓ = f *
 
-  hcme~ : ∀ (c : C) (m : GenM) -> let (w' , c' , p) = hcme c m in [ c ]ₒ • f m ≈₂ [ w' ]ₓ • [ c' ]ₒ 
+  hcme~ : ∀ (c : C) (m : GenM) → let (w' , c' , p) = hcme c m in [ c ]ₒ • f m ≈₂ [ w' ]ₓ • [ c' ]ₒ 
   hcme~ cEx (inj₁ C1.H-gen) = _≈₂_.sym lemma-comm-ExH1
   hcme~ cEx (inj₁ C1.S-gen) = _≈₂_.sym lemma-comm-ExS1
   hcme~ cEx (inj₂ C1.H-gen) = sym (axiom comm-H0Ex)
   hcme~ cEx (inj₂ C1.S-gen) = _≈₂_.sym (_≈₂_.axiom comm-S0Ex)
   
-  h-wd-ax : ∀ (c : C ⊎ ⊤){u t : Word Gen} -> u ===₂ t -> ((h **) c u) ~ ((h **) c t)
+  h-wd-ax : ∀ (c : C ⊎ ⊤){u t : Word Gen} → u ===₂ t → ((h **) c u) ~ ((h **) c t)
   h-wd-ax •Ex {u} {t} order-S0 = axiom (right C1.order-S) , Eq.refl
   h-wd-ax •Ex {u} {t} order-H0 = axiom (right C1.order-H) , Eq.refl
   h-wd-ax •Ex {u} {t} order-S0H0 = axiom (right C1.order-SH) , Eq.refl
@@ -1121,7 +1122,7 @@ module Ex where
   h-wd-ax •ε comm-S0H1 = axiom (mid (comm C1.S-gen C1.H-gen)) , Eq.refl  
   h-wd-ax •ε comm-S0S1 = axiom (mid (comm C1.S-gen C1.S-gen)) , Eq.refl
   
-  f-wd-ax : ∀ {w v} -> w ===₁ v -> (f *) w ≈₂ (f *) v
+  f-wd-ax : ∀ {w v} → w ===₁ v → (f *) w ≈₂ (f *) v
   f-wd-ax {w} {v} (left C1.order-S) = axiom order-S0
   f-wd-ax {w} {v} (left C1.order-H) = axiom order-H0
   f-wd-ax {w} {v} (left C1.order-SH) = axiom order-S0H0
@@ -1133,10 +1134,10 @@ module Ex where
   f-wd-ax {w} {v} (mid (comm C1.S-gen C1.H-gen)) = axiom comm-S0H1
   f-wd-ax {w} {v} (mid (comm C1.S-gen C1.S-gen)) = axiom comm-S0S1
 
-  [_] : C ⊎ ⊤ -> Word Gen
+  [_] : C ⊎ ⊤ → Word Gen
   [_] = [_,_] [_]ₒ (λ v → ε)
 
-  h=ract :  ∀ c y -> let (m' , c') = h c y in
+  h=ract :  ∀ c y → let (m' , c') = h c y in
    ([ c ] • [ y ]ʷ) ≈₂ ([ m' ]ₓ • [ c' ])
   h=ract •Ex H0-gen = sym lemma-comm-ExH1
   h=ract •Ex S0-gen = sym lemma-comm-ExS1
@@ -1268,7 +1269,7 @@ module C2 where
   module Comm where
 
     -- Commutativity.
-    comm~ : (x y : Gen) -> Maybe (([ x ]ʷ • [ y ]ʷ) ≈₂ ([ y ]ʷ • [ x ]ʷ))
+    comm~ : (x y : Gen) → Maybe (([ x ]ʷ • [ y ]ʷ) ≈₂ ([ y ]ʷ • [ x ]ʷ))
     comm~ H0-gen H1-gen = just (_≈₂_.axiom comm-H0H1)
     comm~ H0-gen S1-gen = just (_≈₂_.axiom comm-H0S1)
     comm~ S0-gen H1-gen = just (_≈₂_.axiom comm-S0H1)
@@ -1287,7 +1288,7 @@ module C2 where
 
 
     -- We number the generators for the purpose of ordering them.
-    ord : Gen -> ℕ
+    ord : Gen → ℕ
     ord S0-gen = 0
     ord S1-gen = 1
     ord H0-gen = 2
@@ -1295,7 +1296,7 @@ module C2 where
     ord CZ-gen = 4
 
     -- Ordering of generators.
-    les : Gen -> Gen -> Bool
+    les : Gen → Gen → Bool
     les x y with ord x Nat.<? ord y
     les x y | yes _ = true
     les x y | no _ = false
@@ -1404,7 +1405,7 @@ module C2 where
   [_]ₓ = f *
 
 
-  hcme : ∀ c m -> ∃ \ w -> ∃ \ c' -> ((h **) (inj₁ c) (f m)) ≡ (w , inj₁ c')
+  hcme : ∀ c m → ∃ \ w → ∃ \ c' → ((h **) (inj₁ c) (f m)) ≡ (w , inj₁ c')
   hcme cCZ Ex.H0-gen = ε , cCZH0 , Eq.refl
   hcme cCZ Ex.S0-gen = Ex.S0 , cCZ , Eq.refl
   hcme cCZ Ex.H1-gen = ε , cCZH1 , Eq.refl
@@ -1470,7 +1471,7 @@ module C2 where
                                 , cCZH0H1S0S1 , Eq.refl
   
 
-  htme~ : ∀ (m : GenM) -> ([ m ]ʷ , I) ~ ((h **) I (f m))
+  htme~ : ∀ (m : GenM) → ([ m ]ʷ , I) ~ ((h **) I (f m))
   htme~ Ex.H0-gen = refl , Eq.refl
   htme~ Ex.S0-gen = refl , Eq.refl
   htme~ Ex.H1-gen = refl , Eq.refl
@@ -1489,7 +1490,7 @@ module C2 where
       Ex.Ex ∎
 
 
-  hcme~ : ∀ (c : C) (m : GenM) -> let (w' , c' , p) = hcme c m in [ c ]ₒ • f m ≈₂ [ w' ]ₓ • [ c' ]ₒ 
+  hcme~ : ∀ (c : C) (m : GenM) → let (w' , c' , p) = hcme c m in [ c ]ₒ • f m ≈₂ [ w' ]ₓ • [ c' ]ₒ 
   hcme~ cCZ Ex.H0-gen = rewrite-clifford 100 Eq.refl
   hcme~ cCZ Ex.S0-gen = rewrite-clifford 100 Eq.refl
   hcme~ cCZ Ex.H1-gen = rewrite-clifford 100 Eq.refl
@@ -1538,7 +1539,7 @@ module C2 where
 
   open NFProperty' ExM-nfp'
   
-  h-wd-ax : ∀ (c : C ⊎ ⊤){u t : Word Gen} -> u ===₂ t -> ((h **) c u) ~ ((h **) c t)
+  h-wd-ax : ∀ (c : C ⊎ ⊤){u t : Word Gen} → u ===₂ t → ((h **) c u) ~ ((h **) c t)
   h-wd-ax •CZ {u} {t} order-S0 = axiom Ex.order-S0 , Eq.refl
   h-wd-ax •CZH0 {u} {t} order-S0 = by-equal-nf Eq.refl , Eq.refl
   h-wd-ax •CZH0S0 {u} {t} order-S0 = by-equal-nf Eq.refl , Eq.refl
@@ -1749,7 +1750,7 @@ module C2 where
     Ex • H1 ∎
     where open SR ws₂
 
-  f-wd-ax : ∀ {w v} -> w ===₁ v -> (f *) w ≈₂ (f *) v
+  f-wd-ax : ∀ {w v} → w ===₁ v → (f *) w ≈₂ (f *) v
   f-wd-ax {w} {v} Ex.order-S0 = axiom order-S0
   f-wd-ax {w} {v} Ex.order-H0 = axiom order-H0
   f-wd-ax {w} {v} Ex.order-S0H0 = axiom order-S0H0
@@ -1764,14 +1765,14 @@ module C2 where
   f-wd-ax {w} {v} Ex.comm-H0Ex = lemma-order-H0Ex
   f-wd-ax {w} {v} Ex.comm-S0Ex = rewrite-clifford 100 Eq.refl
 
-  [_] : C ⊎ ⊤ -> Word Gen
+  [_] : C ⊎ ⊤ → Word Gen
   [_] = [_,_] [_]ₒ (λ v → ε)
 
   open SR ws₂
   open import Presentation.Tactics hiding ([_])
   open Commuting  _===_ Comm.comm~ Comm.les
   
-  h=ract :  ∀ c y -> let (m' , c') = h c y in
+  h=ract :  ∀ c y → let (m' , c') = h c y in
    ([ c ] • [ y ]ʷ) ≈₂ ([ m' ]ₓ • [ c' ])
   h=ract •CZ H0-gen = _≈₂_.sym _≈₂_.left-unit
   h=ract •CZH0 H0-gen = trans (trans assoc (trans (cong refl (axiom order-H0)) _≈₂_.right-unit)) (sym left-unit)

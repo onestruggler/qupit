@@ -32,11 +32,12 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _*)
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Construct.Base hiding (_*_ ; _⊕_)
@@ -59,9 +60,9 @@ module N.Ex-Sym1 (p-2 : ℕ) (p-prime : Prime (2+ p-2))  where
 pattern auto = Eq.refl
 
 pattern ₀ = zero
-pattern ₁ = suc ₀
-pattern ₂ = suc ₁
-pattern ₃ = suc ₂
+pattern ₁ = ₁₊ ₀
+pattern ₂ = ₁₊ ₁
+pattern ₃ = ₁₊ ₂
 pattern ₄ = 4
 pattern ₅ = 5
 pattern ₆ = 6
@@ -75,9 +76,6 @@ pattern ₁₃ = 13
 pattern ₁₄ = 14
 pattern ₁₅ = 15
 
-pattern ₁₊ ⱼ = suc ⱼ
-pattern ₂₊ ⱼ = suc (suc ⱼ)
-pattern ₃₊ ⱼ = suc (suc (suc ⱼ))
 
 
 open import Zp.ModularArithmetic
@@ -115,22 +113,22 @@ module Lemmas0a1 where
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
     open Pattern-Assoc
 
 
-  lemma-CZ^kHCZ : let open PB ((₂₊ n) QRel,_===_) in ∀ k' -> let k = suc k' in
+  lemma-CZ^kHCZ : let open PB ((₂₊ n) QRel,_===_) in ∀ k' -> let k = ₁₊ k' in
     CZ ^ k • H • CZ ≈ (S⁻¹ ^ k) • H • CZ • (S⁻¹ • H • S⁻¹) ^ k • S⁻¹ ↑ ^ k
-  lemma-CZ^kHCZ {n} k'@0 = let k = suc k' in lemma-selinger-c11
+  lemma-CZ^kHCZ {n} k'@0 = let k = ₁₊ k' in lemma-selinger-c11
     where
     open PB ((₂₊ n) QRel,_===_)
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
     open Pattern-Assoc
 
-  lemma-CZ^kHCZ {n} k'@(₁₊ k'') = let k = suc k' in begin
+  lemma-CZ^kHCZ {n} k'@(₁₊ k'') = let k = ₁₊ k' in begin
     CZ ^ k • H • CZ ≈⟨ assoc ⟩
     CZ • CZ ^ k' • H • CZ ≈⟨ (cright lemma-CZ^kHCZ k'') ⟩
     CZ • (S⁻¹ ^ k') • H • CZ • (S⁻¹ • H • S⁻¹) ^ k' • S⁻¹ ↑ ^ k' ≈⟨ sym assoc ⟩
@@ -146,7 +144,7 @@ module Lemmas0a1 where
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
     open Pattern-Assoc
     aux : (S⁻¹ ↑) • (S⁻¹ • H • S⁻¹) ≈ (S⁻¹ • H • S⁻¹) • (S⁻¹ ↑)
     aux = begin
@@ -209,7 +207,7 @@ module Lemmas0a1 where
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
     open Lemmas0 (₁₊ n)
 
     open Pattern-Assoc
@@ -241,7 +239,7 @@ module Lemmas0a1 where
     open PP ((₂₊ n) QRel,_===_)
     open SR word-setoid
     open Commuting-Symplectic (n)
-    open Sym0-Rewriting (suc n)
+    open Sym0-Rewriting (₁₊ n)
     open Lemmas0 (₁₊ n)
 
     open Pattern-Assoc

@@ -1,3 +1,5 @@
+﻿{-# OPTIONS --safe #-}
+
 open import Level using (0ℓ)
 
 open import Relation.Binary using (Rel)
@@ -22,12 +24,13 @@ open import Data.Unit using (⊤ ; tt)
 
 open import Word.Base
 open import Word.Properties
-import Presentation.Base as PB
+import Presentation.Horizontal-Syntactics as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 
 import Presentation.CosetNF as CA
 import Presentation.Reidemeister-Schreier as RS
+open import Notations
 module RSF = RS.Star-Injective-Full.Reidemeister-Schreier-Full
 
 open import Presentation.Groups.Sn
@@ -42,11 +45,11 @@ module Presentation.Groups.S16 where
   open PB (pres 1) renaming (Alphabet to S2) using ()
 
   
-  embed : ∀ {n} -> C n -> C (suc (suc n))
+  embed : ∀ {n} → C n → C (₂₊ n)
   embed {n} ε = ε
   embed {n} (swap• c) = swap• embed c
 
-  aux2 : ∀ {n} -> C n -> C (suc n) -> Bool × (C n × C (suc n))
+  aux2 : ∀ {n} → C n → C (₁₊ n) → Bool × (C n × C (₁₊ n))
   aux2 {n} ε ε = false , ε , ε
   aux2 {n} ε (swap• b) = true , b , ε
   aux2 {n} (swap• a) ε = false , ((swap• a) , ε)
@@ -57,77 +60,77 @@ module Presentation.Groups.S16 where
     variable
       m : ℕ
 
-  toℕ : C m -> ℕ
+  toℕ : C m → ℕ
   toℕ ε = 0
   toℕ (swap• c) = suc (toℕ c)
 
-  df : C m -> Set
+  df : C m → Set
   df c = C (toℕ c)
 
-  CC : ℕ -> Set
+  CC : ℕ → Set
   CC m = Σ (C m) df
 
-  aux2' : ∀ {n} -> C n -> C (suc n) -> Bool × CC n
+  aux2' : ∀ {n} → C n → C (₁₊ n) → Bool × CC n
   aux2' {n} ε ε = false , ε , ε
   aux2' {n} ε (swap• d) = true , d , ε
   aux2' {n} (swap• c) ε = false , ((swap• c) , ε)
   aux2' {n} (swap• c) (swap• d) with aux2' c d
   ... | bl , c' , d' = bl , (swap• c') , (swap• d')
 
-  eval-bool : ∀ {n} -> Bool ->
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+  eval-bool : ∀ {n} → Bool →
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     Word Sₙ₊₂
   eval-bool {n} true = [ swap ]ʷ
   eval-bool {n} false = ε
 
-  eval-bool₁ : Bool -> Word S2
+  eval-bool₁ : Bool → Word S2
   eval-bool₁ true = [ swap ]ʷ
   eval-bool₁ false = ε
 
-  inject : ∀ {n} {i : C n} -> df i -> C n
+  inject : ∀ {n} {i : C n} → df i → C n
   inject {n} {ε} ε = ε
   inject {n} {swap• i} ε = ε
   inject {n} {swap•_ {n₁} i} (swap• x) = swap• (inject x)
   
-  inject₁ : ∀ {n} (i : C n) -> C (suc n)
+  inject₁ : ∀ {n} (i : C n) → C (₁₊ n)
   inject₁ {n} ε = ε
   inject₁ {n} (swap• i) = swap• (inject₁ i)
 
 
-  ract' : ∀ {n} -> C (suc n) × C (suc (suc n)) -> X (suc (suc n)) ->
+  ract' : ∀ {n} → C (₁₊ n) × C (₂₊ n) → X (₂₊ n) →
     let open PB (pres n) renaming (Alphabet to Sn) using () in
     let A = S2 ⊎ Sn in
-    Word A × C (suc n) × C (suc (suc n))
+    Word A × C (₁₊ n) × C (₂₊ n)
   ract' {n} (c , d) x with ract d x
   ... | (ws , d') with racts c ws
   ... | (ws' , c') with aux2 c' d'
   ... | false , c'' , d'' = [ ws' ]ᵣ , c'' , d''
   ... | true , c'' , d'' = [ ws' ]ᵣ • [ [ swap ]ʷ ]ₗ , c'' , d''
 
-  racts' : ∀ {n} -> C (suc n) × C (suc (suc n)) -> Word (X (suc (suc n))) ->
+  racts' : ∀ {n} → C (₁₊ n) × C (₂₊ n) → Word (X (₂₊ n)) →
     let open PB (pres n) renaming (Alphabet to Sn) using () in
     let A = S2 ⊎ Sn in
-    Word A × C (suc n) × C (suc (suc n))
+    Word A × C (₁₊ n) × C (₂₊ n)
   racts' {n} = ract' {n} **
 
 
-  fm : ∀ {n} -> Word (X 1 ⊎ X n) -> Word (X 1 ⊎ X (suc n))
+  fm : ∀ {n} → Word (X 1 ⊎ X n) → Word (X 1 ⊎ X (₁₊ n))
   fm {n} = wmap (\{ (inj₁ x) → inj₁ x ; (inj₂ y) → inj₂ (y ₛ)})
 
-  fm' : ∀ {n} -> (X 1 ⊎ X n) -> Word (X 1 ⊎ X (suc n))
+  fm' : ∀ {n} → (X 1 ⊎ X n) → Word (X 1 ⊎ X (₁₊ n))
   fm' {n} (inj₁ x) = [ inj₁ x ]ʷ
   fm' {n} (inj₂ x) = [ inj₂ (x ₛ) ]ʷ
 
 
-  lemma-fm3 : ∀ {n} (w : Word (X n)) -> fm [ w ]ᵣ ≡ [ [ w ⇑] ]ᵣ
+  lemma-fm3 : ∀ {n} (w : Word (X n)) → fm [ w ]ᵣ ≡ [ [ w ⇑] ]ᵣ
   lemma-fm3 {n} [ x ]ʷ = Eq.refl
   lemma-fm3 {n} ε = Eq.refl
   lemma-fm3 {n} (w • w₁) rewrite lemma-fm3 w | lemma-fm3 w₁  = Eq.refl
 
-  fm-cong-ax : ∀ {n} w v ->
+  fm-cong-ax : ∀ {n} w v →
     let open PB (pres 1 ⊕ pres n) renaming (_===_ to _===₀_) in
-    let open PB (pres 1 ⊕ pres (suc n)) renaming (_≈_ to _≈₁_) in
-    w ===₀ v -> fm w ≈₁ fm v
+    let open PB (pres 1 ⊕ pres (₁₊ n)) renaming (_≈_ to _≈₁_) in
+    w ===₀ v → fm w ≈₁ fm v
   fm-cong-ax {n} w v (left {u} {v₁} order) = PB.axiom (left order)
   fm-cong-ax {n} w v (right order) = PB.axiom (right (congₛ order))
   fm-cong-ax {n} w v (right comm) = PB.axiom (right (congₛ comm))
@@ -136,10 +139,10 @@ module Presentation.Groups.S16 where
   fm-cong-ax {n} w v (mid (comm swap swap)) = PB.axiom (mid (comm swap (swap ₛ)))
   fm-cong-ax {n} w v (mid (comm swap (b ₛ))) = PB.axiom (mid (comm swap ((b ₛ) ₛ)))
 
-  fm-cong : ∀ {n} w v ->
+  fm-cong : ∀ {n} w v →
     let open PB (pres 1 ⊕ pres n) renaming (_≈_ to _≈₀_) in
-    let open PB (pres 1 ⊕ pres (suc n)) renaming (_≈_ to _≈₁_) in
-    w ≈₀ v -> fm w ≈₁ fm v
+    let open PB (pres 1 ⊕ pres (₁₊ n)) renaming (_≈_ to _≈₁_) in
+    w ≈₀ v → fm w ≈₁ fm v
   fm-cong {n} w v PB.refl = PB.refl
   fm-cong {n} w v (PB.sym eq) = PB.sym (fm-cong v w eq)
   fm-cong {n} w v (PB.trans eq eq₁) = PB.trans (fm-cong _ _ eq) (fm-cong _ _ eq₁)
@@ -151,22 +154,22 @@ module Presentation.Groups.S16 where
 
 
 
-  ract'' : ∀ {n} -> CC (suc n) -> X (suc (suc n)) ->
+  ract'' : ∀ {n} → CC (₁₊ n) → X (₂₊ n) →
     let open PB (pres n) renaming (Alphabet to Sn) using () in
     let A = S2 ⊎ Sn in
-    Word A × CC (suc n)
+    Word A × CC (₁₊ n)
   ract'' {n} (c , d) x with ract (inject₁ (inject d)) x
   ... | (ws , d') with racts c ws
   ... | (ws' , c') with aux2' c' d'
   ... | b , c'' , d'' = [ ws' ]ᵣ • [ eval-bool₁ b ]ₗ , c'' , d''
 
-  fm2 : ∀ {n} -> ((c , d) : CC (suc n)) -> CC n
+  fm2 : ∀ {n} → ((c , d) : CC (₁₊ n)) → CC n
   fm2 {n} (c , d) = ε , ε
 
-  ract3 : ∀ {n} -> CC (suc n) -> X (suc (suc n)) ->
+  ract3 : ∀ {n} → CC (₁₊ n) → X (₂₊ n) →
     let open PB (pres n) renaming (Alphabet to Sn) using () in
     let A = S2 ⊎ Sn in
-    Word A × CC (suc n)
+    Word A × CC (₁₊ n)
   ract3 {n} (ε , ε) swap = [ [ swap ]ʷ ]ₗ , (ε , ε)
   ract3 {n} (ε , ε) (swap ₛ) = ε , (swap• ε , ε)
   ract3 {n} (ε , ε) ((x ₛ) ₛ) = [ [ x ]ʷ ]ᵣ , (ε , ε)
@@ -185,11 +188,11 @@ module Presentation.Groups.S16 where
   ract3 {n} (swap• swap• c , swap• swap• d) swap = [ [ swap ]ʷ ]ᵣ , (swap• swap• c , swap• swap• d)
 
   ract3 {n} (swap• ε , swap• ε) (swap ₛ) = [ [ swap ]ʷ ]ₗ , (swap• ε , swap• ε)
-  ract3 {suc n} (swap• c , swap• d) (x ₛ) with ract3 (c , d) x
+  ract3 {₁₊ n} (swap• c , swap• d) (x ₛ) with ract3 (c , d) x
   ... | (w , (c' , d')) = fm w , swap• c' , swap• d'
 
 
-  ler3 : ∀ {n} (c : C n) (d : C (suc (toℕ c))) x ->
+  ler3 : ∀ {n} (c : C n) (d : C (suc (toℕ c))) x →
     let (w , (c' , d')) = ract3 ((swap• c),  ( d)) (x ₛ) in
     ract3 ((swap• swap• c) , (swap• ( d))) (x ₛ ₛ) ≡ (fm w , ((swap• c') , (swap• d')))
   ler3 {n} ε ε x = Eq.refl
@@ -201,42 +204,42 @@ module Presentation.Groups.S16 where
   ler3 {n} (swap• swap• c) (swap• swap• d) x = Eq.refl
 
 
-  racts'' : ∀ {n} -> CC (suc n) -> Word (X (suc (suc n))) ->
+  racts'' : ∀ {n} → CC (₁₊ n) → Word (X (₂₊ n)) →
     let open PB (pres n) renaming (Alphabet to Sn) using () in
     let A = S2 ⊎ Sn in
-    Word A × CC (suc n)
+    Word A × CC (₁₊ n)
   racts'' {n} = ract'' {n} **
 
-  racts2 : ∀ {n} -> CC (suc n) -> Word (X (suc (suc n))) ->
+  racts2 : ∀ {n} → CC (₁₊ n) → Word (X (₂₊ n)) →
     let open PB (pres n) renaming (Alphabet to Sn) using () in
     let A = S2 ⊎ Sn in
-    Word A × CC (suc n)
+    Word A × CC (₁₊ n)
   racts2 {n} (c , d) w with racts (inject₁ (inject d)) w
   ... | (ws , d') with racts c ws
   ... | (ws' , c') with aux2' c' d'
   ... | b , c'' , d'' = [ ws' ]ᵣ • [ eval-bool₁ b ]ₗ , c'' , d''
 
 
-  racts3 : ∀ {n} -> CC (suc n) -> Word (X (suc (suc n))) ->
+  racts3 : ∀ {n} → CC (₁₊ n) → Word (X (₂₊ n)) →
     let open PB (pres n) renaming (Alphabet to Sn) using () in
     let A = S2 ⊎ Sn in
-    Word A × CC (suc n)
+    Word A × CC (₁₊ n)
   racts3 {n} = ract3 {n} **
 
 
-  ler4 : ∀ {n} (c : C (suc n)) (d : df c) w ->
+  ler4 : ∀ {n} (c : C (₁₊ n)) (d : df c) w →
     let (w' , (c' , d')) = racts3 (c , d) w in
     racts3 (swap• c , swap• d) [ w ⇑] ≡ (fm w' , swap• c' , swap• d')
   ler4 {zero} ε ε [ swap ]ʷ = Eq.refl
   ler4 {zero} ε ε [ x ₛ ]ʷ = Eq.refl
   ler4 {zero} (swap• c) ε [ x ]ʷ = Eq.refl
   ler4 {zero} (swap• c) (swap• d) [ x ]ʷ = Eq.refl
-  ler4 {suc n} ε ε [ swap ]ʷ = Eq.refl
-  ler4 {suc n} (swap• c) ε [ swap ]ʷ = Eq.refl
-  ler4 {suc n} (swap• c) (swap• d) [ swap ]ʷ = Eq.refl
-  ler4 {suc n} ε ε [ x ₛ ]ʷ = Eq.refl
-  ler4 {suc n} (swap• c) ε [ x ₛ ]ʷ = Eq.refl
-  ler4 {suc n} (swap• c) (swap• d) [ x ₛ ]ʷ = Eq.refl
+  ler4 {₁₊ n} ε ε [ swap ]ʷ = Eq.refl
+  ler4 {₁₊ n} (swap• c) ε [ swap ]ʷ = Eq.refl
+  ler4 {₁₊ n} (swap• c) (swap• d) [ swap ]ʷ = Eq.refl
+  ler4 {₁₊ n} ε ε [ x ₛ ]ʷ = Eq.refl
+  ler4 {₁₊ n} (swap• c) ε [ x ₛ ]ʷ = Eq.refl
+  ler4 {₁₊ n} (swap• c) (swap• d) [ x ₛ ]ʷ = Eq.refl
   ler4 {n} c d ε = Eq.refl
   ler4 {n} c d (w • v) =
     let (ww , cw , dw) = racts3 (c , d) w in
@@ -244,16 +247,16 @@ module Presentation.Groups.S16 where
     let (w' , c' , d') = racts3 (swap• c , swap• d) [ w ⇑] in
     begin
       racts3 (swap• c , swap• d) [ w • v ⇑] ≡⟨ Eq.refl ⟩
-      w' • racts3 (c' , d') [ v ⇑] .proj₁ , racts3 (c' , d') [ v ⇑] .proj₂ ≡⟨ Eq.cong (\x -> x • racts3 (c' , d') [ v ⇑] .proj₁ , racts3 (c' , d') [ v ⇑] .proj₂) (Eq.cong proj₁ (ler4 c d w)) ⟩
-      fm ww • racts3 (c' , d') [ v ⇑] .proj₁ , racts3 (c' , d') [ v ⇑] .proj₂ ≡⟨ Eq.cong (\x -> fm ww • racts3 (x) [ v ⇑] .proj₁ , racts3 (x) [ v ⇑] .proj₂) (Eq.cong (proj₂) (ler4 c d w)) ⟩
+      w' • racts3 (c' , d') [ v ⇑] .proj₁ , racts3 (c' , d') [ v ⇑] .proj₂ ≡⟨ Eq.cong (\x → x • racts3 (c' , d') [ v ⇑] .proj₁ , racts3 (c' , d') [ v ⇑] .proj₂) (Eq.cong proj₁ (ler4 c d w)) ⟩
+      fm ww • racts3 (c' , d') [ v ⇑] .proj₁ , racts3 (c' , d') [ v ⇑] .proj₂ ≡⟨ Eq.cong (\x → fm ww • racts3 (x) [ v ⇑] .proj₁ , racts3 (x) [ v ⇑] .proj₂) (Eq.cong (proj₂) (ler4 c d w)) ⟩
       fm ww • racts3 (swap• cw , swap• dw) [ v ⇑] .proj₁ , racts3 (swap• cw , swap• dw) [ v ⇑] .proj₂ ≡⟨ Eq.cong₂ (λ x y → fm ww • x , y) (Eq.cong proj₁ (ler4 cw dw v)) (Eq.cong proj₂ (ler4 cw dw v)) ⟩
       fm ww • fm vv , swap• cv , swap• dv ∎
     where
     open Eq.≡-Reasoning
 
 
-  lel5b : ∀ {n} (c : C (suc n)) w ->
-    ∃ \ w' -> ∃ \c' -> racts3 {suc n}(swap• c , ε) [ [ w ⇑] ⇑] ≡ ([ [ w' ⇑] ]ᵣ , swap• c' , ε)
+  lel5b : ∀ {n} (c : C (₁₊ n)) w →
+    ∃ \ w' → ∃ \c' → racts3 {₁₊ n}(swap• c , ε) [ [ w ⇑] ⇑] ≡ ([ [ w' ⇑] ]ᵣ , swap• c' , ε)
   lel5b {n} ε [ swap ]ʷ = ε , swap• ε , Eq.refl
   lel5b {n} ε [ swap ₛ ]ʷ = [ swap ]ʷ , (ε , Eq.refl)
   lel5b {n} ε [ (x ₛ) ₛ ]ʷ = [ x ₛ ]ʷ , (ε , Eq.refl)
@@ -263,7 +266,7 @@ module Presentation.Groups.S16 where
   ... | v' , cv , pv rewrite pw | pv = w' • v' , cv , Eq.refl
   lel5b {n} (swap• ε) [ swap ]ʷ = ε , (ε , Eq.refl)
   lel5b {n} (swap• swap• c) [ swap ]ʷ = [ swap ]ʷ , ((swap• swap• c) , Eq.refl)
-  lel5b {suc n} (swap• c) [ x ₛ ]ʷ with ract3 (swap• c , ε) (x ₛ ₛ) | lel5b c [ x ]ʷ
+  lel5b {₁₊ n} (swap• c) [ x ₛ ]ʷ with ract3 (swap• c , ε) (x ₛ ₛ) | lel5b c [ x ]ʷ
   ... | (w' , c' , d') | (w'' , c'' , pr) rewrite Eq.cong proj₁ pr | lemma-fm3 [ w'' ⇑]  =  [ w'' ⇑] , (swap• c'') , ≡×≡⇒≡ (Eq.refl , Eq.cong (λ x → swap• x , ε) (Eq.cong (proj₁ ∘ proj₂) pr) )
   lel5b {n} (swap• c) ε = ε , swap• c , Eq.refl
   lel5b {n} (swap• c) (w • v) with lel5b (swap• c) w
@@ -273,9 +276,9 @@ module Presentation.Groups.S16 where
 
 
 
-  aux3a : ∀ {n} c x ->
+  aux3a : ∀ {n} c x →
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let (x' , c') = ract3 {n} (c , ε) (x ₛ) in c' .proj₂ ≡ ε
   aux3a {n} ε swap = Eq.refl
   aux3a {n} (swap• ε) swap = Eq.refl
@@ -295,8 +298,8 @@ module Presentation.Groups.S16 where
 
 
 
-  ler5b : ∀ {n} (c : C ( n)) w ->
-    ∃ \w' -> ∃ \c' -> racts3 (swap• c , ε) [ [ w ⇑] ⇑] ≡ (w' , swap• c' , ε)
+  ler5b : ∀ {n} (c : C ( n)) w →
+    ∃ \w' → ∃ \c' → racts3 (swap• c , ε) [ [ w ⇑] ⇑] ≡ (w' , swap• c' , ε)
   ler5b {n} ε [ swap ]ʷ = ε , swap• ε , Eq.refl
   ler5b {n} ε [ x ₛ ]ʷ = [ [ x ₛ ]ʷ ]ᵣ , ε , Eq.refl
   ler5b {n} ε ε = ε , ε , Eq.refl
@@ -313,8 +316,8 @@ module Presentation.Groups.S16 where
   ... | v' , cv , pv rewrite pw | pv = w' • v' , cv , Eq.refl
 
 
-  ler5c : ∀ {n} (c : C (suc n)) w ->
-    ∃ \w' -> ∃ \c' -> racts3 (c , ε) [ w ⇑] ≡ (w' , c' , ε)
+  ler5c : ∀ {n} (c : C (₁₊ n)) w →
+    ∃ \w' → ∃ \c' → racts3 (c , ε) [ w ⇑] ≡ (w' , c' , ε)
   ler5c {n} ε [ swap ]ʷ = ε , swap• ε , Eq.refl
   ler5c {n} (swap• ε) [ swap ]ʷ = ε , ε , Eq.refl
   ler5c {n} (swap• swap• c) [ swap ]ʷ = [ [ swap ]ʷ ]ᵣ , swap• swap• c , Eq.refl
@@ -334,13 +337,13 @@ module Presentation.Groups.S16 where
   ... | w' , cw , pw with ler5c cw v
   ... | v' , cv , pv rewrite pw | pv = w' • v' , cv , Eq.refl
 
-  ler5d : ∀ {n} (c : C (suc n)) w ->
+  ler5d : ∀ {n} (c : C (₁₊ n)) w →
     racts3 (c , ε) [ w ⇑] .proj₂ .proj₂ ≡ ε
   ler5d {n} c w with ler5c c w
   ... | w' , c' , pr rewrite pr = Eq.refl
 
 
-  ler6 : ∀ {n} (c : C (suc n)) w ->
+  ler6 : ∀ {n} (c : C (₁₊ n)) w →
     let (w' , (c' , d')) = racts3 (c , ε) [ w ⇑] in
     racts3 (swap• swap• c , ε) [ [ [ w ⇑] ⇑] ⇑] ≡ (fm (fm w') , swap• swap• c' , ε)
   ler6 ε [ swap ]ʷ = Eq.refl
@@ -382,36 +385,36 @@ module Presentation.Groups.S16 where
 
 
 
-  [_]' : ∀ {n} -> C (suc n) × C (suc (suc n)) -> 
+  [_]' : ∀ {n} → C (₁₊ n) × C (₂₊ n) → 
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     Word Sₙ₊₂
   [_]' {n} (c , d) = [ [ c ] ⇑] • [ d ]
 
-  [_]'' : ∀ {n} -> CC (suc n) -> 
+  [_]'' : ∀ {n} → CC (₁₊ n) → 
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     Word Sₙ₊₂
   [_]'' {n} (c , d) = [ [ c ] ⇑] • [ inject₁ (inject d) ]
 
 
-  [_]₃ : ∀ {n} -> CC (suc n) -> 
+  [_]₃ : ∀ {n} → CC (₁₊ n) → 
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     Word Sₙ₊₂
   [_]₃ {n} (c , d) = [ [ c ] ⇑] • [ inject₁ (inject d) ]
 
 
   open PB hiding (_≈_)
 
-  lemma-aux2 : ∀ {n} -> (c : C (suc n)) -> (d : C (suc (suc n))) ->
-    let (b , c' , d') = aux2 {suc n} c d in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+  lemma-aux2 : ∀ {n} → (c : C (₁₊ n)) → (d : C (₂₊ n)) →
+    let (b , c' , d') = aux2 {₁₊ n} c d in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     [ c , d ]' ≈ eval-bool b • [ c' , d' ]'
   lemma-aux2 {n} ε ε = _≈_.sym _≈_.left-unit
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to ws) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to ws) using ()
       open SR ws
   lemma-aux2 {n} ε (swap• d) = begin
     [ ε , swap• d ]' ≈⟨ _≈_.refl ⟩
@@ -419,13 +422,13 @@ module Presentation.Groups.S16 where
     [ swap ]ʷ • wconcat (wmap (λ x → [ x ₛ ]ʷ) [ d ]) ≈⟨ _≈_.cong _≈_.refl (_≈_.sym _≈_.right-unit) ⟩
     [ swap ]ʷ • [ d , ε ]' ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to ws) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to ws) using ()
       open SR ws
   lemma-aux2 {n} (swap• c) ε = _≈_.sym _≈_.left-unit
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to ws) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to ws) using ()
       open SR ws
   lemma-aux2 {zero} (swap• ε) (swap• ε) = PB.sym PB.left-unit
   lemma-aux2 {n@zero} (swap• ε) (swap• swap• ε) = begin
@@ -436,10 +439,10 @@ module Presentation.Groups.S16 where
     ([ swap ]ʷ) • ([ swap ₛ ]ʷ • [ swap ]ʷ) ≈⟨ cong refl (_≈_.sym (_≈_.cong _≈_.right-unit _≈_.right-unit)) ⟩
     [ swap ]ʷ • [ swap• ε , swap• ε ]' ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to ws) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to ws) using ()
       open SR ws
-  lemma-aux2 {n'@(suc n)} (swap• c) (swap• d) with aux2 (c) (d) | lemma-aux2 c d
+  lemma-aux2 {n'@(₁₊ n)} (swap• c) (swap• d) with aux2 (c) (d) | lemma-aux2 c d
   ... | (b'@false , c'' , d'') | ih = let b = b' in let c' = swap• c'' in let d' = swap• d'' in begin
     [ swap• c , swap• d ]' ≈⟨ _≈_.refl ⟩
     [ [ swap• c ] ⇑] • [ swap• d ] ≈⟨ _≈_.assoc ⟩
@@ -462,8 +465,8 @@ module Presentation.Groups.S16 where
     ε • [ c' , d' ]' ≈⟨ _≈_.refl ⟩
     eval-bool b • [ c' , d' ]' ∎
     where
-      open PB (pres (suc (suc n'))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n'))) renaming (word-setoid to ws) using ()
+      open PB (pres (₂₊ n')) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n')) renaming (word-setoid to ws) using ()
       open SR ws
   ... | (b'@true , c'' , d'') | ih = let b = b' in let c' = swap• c'' in let d' = swap• d'' in begin
     [ swap• c , swap• d ]' ≈⟨ _≈_.refl ⟩
@@ -490,29 +493,29 @@ module Presentation.Groups.S16 where
     [ swap ]ʷ • [ c' , d' ]' ≈⟨ _≈_.refl ⟩
     eval-bool b • [ c' , d' ]' ∎
     where
-      open PB (pres (suc (suc n'))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n'))) renaming (word-setoid to ws) using ()
+      open PB (pres (₂₊ n')) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n')) renaming (word-setoid to ws) using ()
       open SR ws
 
-  lemma-aux2-aux2' : ∀ {n} -> (c : C (suc n)) -> (d : C (suc (suc n))) ->
-    let (b , cd') = aux2' {suc n} c d in
-    let (b1 , c1 , d1) = aux2 {suc n} c d in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+  lemma-aux2-aux2' : ∀ {n} → (c : C (₁₊ n)) → (d : C (₂₊ n)) →
+    let (b , cd') = aux2' {₁₊ n} c d in
+    let (b1 , c1 , d1) = aux2 {₁₊ n} c d in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     b1 ≡ b × [ c1 , d1 ]' ≈ [ cd' ]''
   lemma-aux2-aux2' {n} ε ε = Eq.refl , refl
   lemma-aux2-aux2' {zero} ε (swap• ε) = Eq.refl , refl
   lemma-aux2-aux2' {zero} ε (swap• swap• d') = Eq.refl , refl
-  lemma-aux2-aux2' {(suc n')} ε (swap• ε) = Eq.refl , refl
-  lemma-aux2-aux2' {(suc n')} ε (swap• swap• d') = Eq.refl , refl
+  lemma-aux2-aux2' {(₁₊ n')} ε (swap• ε) = Eq.refl , refl
+  lemma-aux2-aux2' {(₁₊ n')} ε (swap• swap• d') = Eq.refl , refl
   lemma-aux2-aux2' {n} (swap• c) ε = Eq.refl , refl
   lemma-aux2-aux2' {zero} (swap• ε) (swap• ε) = Eq.refl , refl
   lemma-aux2-aux2' {zero} (swap• ε) (swap• swap• ε) = Eq.refl , refl
-  lemma-aux2-aux2' {n@(suc n')} (swap• c) (swap• d) with aux2' c d | aux2 c d | lemma-aux2-aux2' c d
+  lemma-aux2-aux2' {n@(₁₊ n')} (swap• c) (swap• d) with aux2' c d | aux2 c d | lemma-aux2-aux2' c d
   ... | (b , c' , d') | (b1 , c1 , d1) | (h1 , h2) = h1 , claim2
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PB (pres (suc (suc n'))) renaming (Alphabet to Sₙ₊₂ ; _≈_ to _≈₀_) using ()
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PB (pres (₂₊ n')) renaming (Alphabet to Sₙ₊₂ ; _≈_ to _≈₀_) using ()
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
       claim : [ c1 , d1 ]' ≈₀ [ c' , d' ]''
       claim = h2
@@ -533,9 +536,9 @@ module Presentation.Groups.S16 where
         ([ swap ₛ ]ʷ • [ [ [ c' ] ⇑] ⇑]) • [ swap ]ʷ • [ [ inject₁ (inject d') ] ⇑] ≈⟨ refl ⟩
         [ swap• c' , swap• d' ]'' ∎
 
-  lemma-aux2' : ∀ {n} -> (c : C (suc n)) -> (d : C (suc (suc n))) ->
-    let (b , cd') = aux2' {suc n} c d in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+  lemma-aux2' : ∀ {n} → (c : C (₁₊ n)) → (d : C (₂₊ n)) →
+    let (b , cd') = aux2' {₁₊ n} c d in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     [ c , d ]' ≈ eval-bool b • [ cd' ]''
   lemma-aux2' {n} c d with aux2' c d | aux2 c d | lemma-aux2-aux2' c d | lemma-aux2 c d
   ... | (b , cd') | (b1 , c1 , d1) | (h1 , h2) | h3 = begin
@@ -543,35 +546,35 @@ module Presentation.Groups.S16 where
     eval-bool b1 • [ c1 , d1 ]' ≈⟨ (cong (refl' _ (Eq.cong _ h1)) h2) ⟩
     eval-bool b • [ cd' ]'' ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
 
-  emb2 : ∀ {n} -> 
+  emb2 : ∀ {n} → 
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let A = S2 ⊎ Sn in
-    A -> Sₙ₊₂
+    A → Sₙ₊₂
   emb2 {n} (inj₁ x) = swap
-  emb2 {suc n} (inj₂ y) = y ₛ ₛ
+  emb2 {₁₊ n} (inj₂ y) = y ₛ ₛ
 
-  emb2' : ∀ {n} -> 
+  emb2' : ∀ {n} → 
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let A = S2 ⊎ Sn in
-    A -> Word Sₙ₊₂
+    A → Word Sₙ₊₂
   emb2' {n} (inj₁ x) = [ swap ]ʷ
-  emb2' {suc n} (inj₂ y) = [ y ₛ ₛ ]ʷ
+  emb2' {₁₊ n} (inj₂ y) = [ y ₛ ₛ ]ʷ
 
-  [_⇑]'' : ∀ {n} -> 
+  [_⇑]'' : ∀ {n} → 
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let A = S2 ⊎ Sn in
-    Word A -> Word Sₙ₊₂
+    Word A → Word Sₙ₊₂
   [_⇑]'' {n} = ((emb2' {n}) *)
 
-  aux-a : ∀ {n} ws ->
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+  aux-a : ∀ {n} ws →
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     [ [ ws ⇑] ⇑] ≈ [ [ ws ]ᵣ ⇑]''
   aux-a [ swap ]ʷ = refl
   aux-a [ x ₛ ]ʷ = refl
@@ -579,9 +582,9 @@ module Presentation.Groups.S16 where
   aux-a (ws • ws₁) = cong (aux-a ws) (aux-a ws₁)
 
 
-  lemma-ract' : ∀ {n} c x ->
+  lemma-ract' : ∀ {n} c x →
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let (x' , c') = ract' {n} c x in ([ c ]' • [ x ]ʷ) ≈ ([ x' ⇑]'' • [ c' ]')
   lemma-ract' {n} (c , d) x with ract d x | lemma-ract d x
   ... | (ws , d') | hyp1 with racts c ws | lemma-racts c ws
@@ -600,8 +603,8 @@ module Presentation.Groups.S16 where
     [ [ ws' ⇑] ⇑] • [ c'' , d'' ]' ≈⟨ cong (aux-a ws') refl  ⟩
     ([ [ ws' ]ᵣ ⇑]'' • [ c'' , d'' ]') ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
   ... | b@true , c'' , d'' | ih  = begin
     ([ c , d ]' • [ x ]ʷ) ≈⟨ _≈_.assoc ⟩
@@ -617,14 +620,14 @@ module Presentation.Groups.S16 where
     [ [ ws' ]ᵣ ⇑]'' • [ [ [ swap ]ʷ ]ₗ ⇑]'' • [ c'' , d'' ]' ≈⟨ _≈_.sym _≈_.assoc ⟩
     [ [ ws' ]ᵣ • [ [ swap ]ʷ ]ₗ ⇑]'' • [ c'' , d'' ]' ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
 
 
-  lemma-ract'' : ∀ {n} c x ->
+  lemma-ract'' : ∀ {n} c x →
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let (x' , c') = ract'' {n} c x in ([ c ]'' • [ x ]ʷ) ≈ ([ x' ⇑]'' • [ c' ]'')
   lemma-ract'' {n} (c , d) x with ract (inject₁ (inject d)) x | lemma-ract (inject₁ (inject d)) x
   ... | (ws , d') | hyp1 with racts c ws | lemma-racts c ws
@@ -647,8 +650,8 @@ module Presentation.Groups.S16 where
     ([ [ ws' ]ᵣ ⇑]'' • [ c'' , iid'' ]') ≈⟨ _≈_.cong (_≈_.sym _≈_.right-unit) _≈_.refl ⟩
     ([ [ ws' ]ᵣ • [ eval-bool₁ b ]ₗ ⇑]'' • [ c'' , iid'' ]') ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
   ... | b@true , c'' , d'' | ih  =
     let iid = inject₁ (inject d) in
@@ -667,30 +670,30 @@ module Presentation.Groups.S16 where
     [ [ ws' ]ᵣ ⇑]'' • [ [ [ swap ]ʷ ]ₗ ⇑]'' • [ c'' , iid'' ]' ≈⟨ _≈_.sym _≈_.assoc ⟩
     [ [ ws' ]ᵣ • [ [ swap ]ʷ ]ₗ ⇑]'' • [ c'' , iid'' ]' ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
 
   open import Data.List hiding ([_])
 
-  aux-emb : ∀ {n} (w : Word (X n)) -> [ [ w ]ᵣ ⇑]'' ≡ [ [ w ⇑] ⇑]
+  aux-emb : ∀ {n} (w : Word (X n)) → [ [ w ]ᵣ ⇑]'' ≡ [ [ w ⇑] ⇑]
   aux-emb [ swap ]ʷ = Eq.refl
   aux-emb [ x ₛ ]ʷ = Eq.refl
   aux-emb ε = Eq.refl
   aux-emb (w • w₁) rewrite aux-emb w | aux-emb w₁ = Eq.refl
 
-  aux-ii : ∀ {n} {i : C n} -> inject {i = i} ε ≡ ε
+  aux-ii : ∀ {n} {i : C n} → inject {i = i} ε ≡ ε
   aux-ii {n} {ε} = Eq.refl
   aux-ii {n} {swap• i} = Eq.refl
 
-  lemma-fm : ∀ {n} (w : Word (X n)) -> [ fm [ w ]ᵣ ⇑]'' ≡ [ [ [ w ]ᵣ ⇑]'' ⇑]
+  lemma-fm : ∀ {n} (w : Word (X n)) → [ fm [ w ]ᵣ ⇑]'' ≡ [ [ [ w ]ᵣ ⇑]'' ⇑]
   lemma-fm {n} [ swap ]ʷ = Eq.refl
   lemma-fm {n} [ x ₛ ]ʷ = Eq.refl
   lemma-fm {n} ε = Eq.refl
   lemma-fm {n} (w • w₁) rewrite lemma-fm w | lemma-fm w₁ = Eq.refl
 
-  lemma-fm2 : ∀ {n} (w : Word (X n)) ->
-    let open PB (pres (suc (suc n))) renaming (_≈_ to _≈₃_) in
+  lemma-fm2 : ∀ {n} (w : Word (X n)) →
+    let open PB (pres (₂₊ n)) renaming (_≈_ to _≈₃_) in
     [ [ w ]ᵣ ⇑]'' • [ swap ]ʷ ≈₃ [ swap ]ʷ • [ [ w ]ᵣ ⇑]''
   lemma-fm2 {n} [ swap ]ʷ = sym (axiom comm)
   lemma-fm2 {n} [ x ₛ ]ʷ = sym (axiom comm)
@@ -703,17 +706,17 @@ module Presentation.Groups.S16 where
     ([ swap ]ʷ • [ [ w ]ᵣ ⇑]'') • [ [ v ]ᵣ ⇑]'' ≈⟨ assoc ⟩
     [ swap ]ʷ • [ [ w • v ]ᵣ ⇑]'' ∎
     where
-    open PP (pres (suc (suc n)))
+    open PP (pres (₂₊ n))
     open SR word-setoid
 
 
 
 
-  aux3b : ∀ {n} c x ->
+  aux3b : ∀ {n} c x →
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let (x' , c') = ract3 {n} (swap• c , ε) (x ₛ) in
-      ∃ \w -> x' ≡ [ w ]ᵣ
+      ∃ \w → x' ≡ [ w ]ᵣ
   aux3b {n} ε swap = ε , Eq.refl
   aux3b {n} (swap• c) swap = [ swap ]ʷ , Eq.refl
   aux3b {n} ε (swap ₛ) = ε , Eq.refl
@@ -726,23 +729,23 @@ module Presentation.Groups.S16 where
 
 
 
-  lemma-ract3 : ∀ {n} c x ->
+  lemma-ract3 : ∀ {n} c x →
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let (x' , c') = ract3 {n} c x in ([ c ]'' • [ x ]ʷ) ≈ ([ x' ⇑]'' • [ c' ]'')
   lemma-ract3 {n} (ε , ε) swap = by-assoc Eq.refl
-    where open PP (pres (suc (suc n))) using (by-assoc)
+    where open PP (pres (₂₊ n)) using (by-assoc)
   lemma-ract3 {n} (ε , ε) (swap ₛ) = by-assoc Eq.refl
-    where open PP (pres (suc (suc n))) using (by-assoc)
+    where open PP (pres (₂₊ n)) using (by-assoc)
   lemma-ract3 {n} (ε , ε) ((x ₛ) ₛ) rewrite aux-emb [ x ]ʷ = by-assoc Eq.refl
-    where open PP (pres (suc (suc n))) using (by-assoc)
+    where open PP (pres (₂₊ n)) using (by-assoc)
 
 
   lemma-ract3 {n} (swap• c , ε) swap = begin
     [ swap• c , ε ]'' • [ swap ]ʷ ≈⟨ refl ⟩
     ([ [ swap• c ] ⇑] • [ ε ]) • [ swap ]ʷ ≈⟨ cong right-unit refl ⟩
     ([ [ swap• c ] ⇑]) • [ swap ]ʷ ≈⟨ cong refl (sym right-unit) ⟩
-    [ [ swap• c ] ⇑] • [ swap ]ʷ • [ [ inject₁ ε ] ⇑] ≡⟨ Eq.sym (Eq.cong (\x -> [ [ swap• c ] ⇑] • [ swap ]ʷ • [ [ inject₁ x ] ⇑]) (aux-ii {i = c}) )⟩
+    [ [ swap• c ] ⇑] • [ swap ]ʷ • [ [ inject₁ ε ] ⇑] ≡⟨ Eq.sym (Eq.cong (\x → [ [ swap• c ] ⇑] • [ swap ]ʷ • [ [ inject₁ x ] ⇑]) (aux-ii {i = c}) )⟩
     [ [ swap• c ] ⇑] • [ swap ]ʷ • [ [ inject₁ (inject {i = c} ε) ] ⇑] ≈⟨ refl ⟩
     [ [ swap• c ] ⇑] • [ swap• inject₁ (inject {i = c} ε) ] ≈⟨ refl ⟩
     [ [ swap• c ] ⇑] • [ inject₁ (swap• inject {i = c} ε) ] ≈⟨ refl ⟩
@@ -750,7 +753,7 @@ module Presentation.Groups.S16 where
     [ swap• c , swap• ε ]'' ≈⟨ sym left-unit ⟩
     [ ε ⇑]'' • [ swap• c , swap• ε ]'' ∎
     where
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid)
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid)
       open SR word-setoid
   lemma-ract3 {n} (swap• ε , ε) (swap ₛ) = begin
     [ swap• ε , ε ]'' • [ swap ₛ ]ʷ ≈⟨ refl ⟩
@@ -760,18 +763,18 @@ module Presentation.Groups.S16 where
     ε • ε • ε ≈⟨ refl ⟩
     [ ε ⇑]'' • [ ε , ε ]'' ∎
     where
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid)
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid)
       open SR word-setoid
 
   lemma-ract3 {n} (swap• ε , ε) ((swap ₛ) ₛ) = by-assoc Eq.refl
-    where open PP (pres (suc (suc n))) using (by-assoc ; word-setoid)
+    where open PP (pres (₂₊ n)) using (by-assoc ; word-setoid)
   lemma-ract3 {n} (swap• ε , ε) (((x ₛ) ₛ) ₛ) = begin
     [ (swap• ε , ε) ]'' • [ (((x ₛ) ₛ) ₛ) ]ʷ ≈⟨ by-assoc Eq.refl ⟩
     [ swap ₛ ]ʷ • [ x ₛ ₛ ₛ ]ʷ ≈⟨ axiom (congₛ comm) ⟩
     [ x ₛ ₛ ₛ ]ʷ • [ swap ₛ ]ʷ ≈⟨ by-assoc Eq.refl ⟩
     [ ract3 (swap• ε , ε) (((x ₛ) ₛ) ₛ) .proj₁ ⇑]'' • [ ract3 (swap• ε , ε) (((x ₛ) ₛ) ₛ) .proj₂ ]'' ∎
     where
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid)
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid)
       open SR word-setoid
   lemma-ract3 {n} (swap• swap• c , ε) (swap ₛ) = begin
     [ (swap• swap• c , ε) ]'' • [ swap ₛ ]ʷ ≈⟨ assoc ⟩
@@ -785,7 +788,7 @@ module Presentation.Groups.S16 where
     [ swap ₛ ₛ ]ʷ • [ swap ₛ ]ʷ • [ swap ₛ ₛ ]ʷ • [ [ [ [ c ] ⇑] ⇑] ⇑] ≈⟨ sym (cong refl right-unit) ⟩
     [ ract3 (swap• swap• c , ε) (swap ₛ) .proj₁ ⇑]'' • [ ract3 (swap• swap• c , ε) (swap ₛ) .proj₂ ]'' ∎
     where
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid)
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid)
       open SR word-setoid
       
   lemma-ract3 {n} (swap• swap• c , ε) ((x ₛ) ₛ) with ract3 (swap• c , ε) (x ₛ) | lemma-ract3 (swap• c , ε) (x ₛ) | aux3b c x | aux3a (swap• c) x
@@ -797,20 +800,20 @@ module Presentation.Groups.S16 where
     [ swap ₛ ]ʷ • [ [ [ swap• c ] ⇑] ⇑] • [ [ ((x ₛ)) ]ʷ ⇑] ≈⟨ refl ⟩
     [ swap ₛ ]ʷ • [ [ [ swap• c ] ⇑] • [ ((x ₛ)) ]ʷ ⇑] ≈⟨ cong refl (sym (cong right-unit refl)) ⟩
     [ swap ₛ ]ʷ • [ [ swap• c , ε ]'' • [ ((x ₛ)) ]ʷ ⇑] ≈⟨ cong refl ([⇑]-cong _ _ hyp) ⟩
-    [ swap ₛ ]ʷ • [ [ w ⇑]'' • [ c' , d' ]'' ⇑] ≈⟨ cong refl (cong (refl'' (Eq.cong (\x -> [ [ x ⇑]'' ⇑]) eq)) refl)  ⟩
+    [ swap ₛ ]ʷ • [ [ w ⇑]'' • [ c' , d' ]'' ⇑] ≈⟨ cong refl (cong (refl'' (Eq.cong (\x → [ [ x ⇑]'' ⇑]) eq)) refl)  ⟩
     [ swap ₛ ]ʷ • [ [ [ ww ]ᵣ ⇑]'' • [ c' , d' ]'' ⇑] ≈⟨ sym assoc ⟩
     [ [ swap ]ʷ • [ [ ww ]ᵣ ⇑]'' ⇑] • [ [ c' , d' ]'' ⇑] ≈⟨ cong ([⇑]-cong _ _ (sym (lemma-fm2 ww))) refl ⟩
     [ [ [ ww ]ᵣ ⇑]'' • [ swap ]ʷ ⇑] • [ [ c' , d' ]'' ⇑] ≈⟨ assoc ⟩
-    [ [ [ ww ]ᵣ ⇑]'' ⇑] • [ [ swap ]ʷ • [ c' , d' ]'' ⇑] ≈⟨ cong refl (cong refl (refl'' (Eq.cong (\x -> [ [ c' , x ]'' ⇑]) ee))) ⟩
+    [ [ [ ww ]ᵣ ⇑]'' ⇑] • [ [ swap ]ʷ • [ c' , d' ]'' ⇑] ≈⟨ cong refl (cong refl (refl'' (Eq.cong (\x → [ [ c' , x ]'' ⇑]) ee))) ⟩
     [ [ [ ww ]ᵣ ⇑]'' ⇑] • [ [ swap ]ʷ • [ c' , ε ]'' ⇑] ≈⟨ cong refl (cong refl (trans refl refl)) ⟩
-    [ [ [ ww ]ᵣ ⇑]'' ⇑] • [ [ swap ]ʷ ⇑] • [ [ [ c' ] ⇑] ⇑] • [ [ inject₁ (inject {i = c'} ε) ] ⇑] ≈⟨ cong refl (cong refl (cong refl (refl'' (Eq.cong (\x -> [ [ inject₁ x ] ⇑]) (aux-ii {i = c'}))))) ⟩
+    [ [ [ ww ]ᵣ ⇑]'' ⇑] • [ [ swap ]ʷ ⇑] • [ [ [ c' ] ⇑] ⇑] • [ [ inject₁ (inject {i = c'} ε) ] ⇑] ≈⟨ cong refl (cong refl (cong refl (refl'' (Eq.cong (\x → [ [ inject₁ x ] ⇑]) (aux-ii {i = c'}))))) ⟩
     [ [ [ ww ]ᵣ ⇑]'' ⇑] • [ [ swap ]ʷ ⇑] • [ [ [ c' ] ⇑] ⇑] • [ [ inject₁ ε ] ⇑] ≈⟨ cong refl (special-assoc (□ • □ • □) ((□ • □) • □) Eq.refl) ⟩
     [ [ [ ww ]ᵣ ⇑]'' ⇑] • [ swap• c' , ε ]'' ≈⟨ sym (cong (refl'' (lemma-fm ww)) refl) ⟩
-    [ fm [ ww ]ᵣ ⇑]'' • [ swap• c' , ε ]'' ≈⟨ cong (refl'' (Eq.cong (\x -> [ fm x ⇑]'') (Eq.sym eq))) refl ⟩
+    [ fm [ ww ]ᵣ ⇑]'' • [ swap• c' , ε ]'' ≈⟨ cong (refl'' (Eq.cong (\x → [ fm x ⇑]'') (Eq.sym eq))) refl ⟩
     [ fm w ⇑]'' • [ swap• c' , ε ]'' ∎
     where
-      open PB (pres (suc (suc n))) renaming (refl' to refl'') using ()
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid ; module Pattern-Assoc)
+      open PB (pres (₂₊ n)) renaming (refl' to refl'') using ()
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid ; module Pattern-Assoc)
       open SR word-setoid
       open Pattern-Assoc
 
@@ -821,7 +824,7 @@ module Presentation.Groups.S16 where
     [ swap ₛ ]ʷ ≈⟨ by-assoc Eq.refl ⟩
     [ ract3 (swap• ε , swap• ε) swap .proj₁ ⇑]'' • [ ract3 (swap• ε , swap• ε) swap .proj₂ ]'' ∎
     where
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid)
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid)
       open SR word-setoid
   lemma-ract3 {n} (swap• swap• c , swap• ε) swap = begin
     [ (swap• swap• c , swap• ε) ]'' • [ swap ]ʷ ≈⟨ assoc ⟩
@@ -830,7 +833,7 @@ module Presentation.Groups.S16 where
     [ [ swap• swap• c ] ⇑] ≈⟨ sym (trans left-unit right-unit) ⟩
     [ ract3 (swap• swap• c , swap• ε) (swap ) .proj₁ ⇑]'' • [ ract3 (swap• swap• c , swap• ε) (swap ) .proj₂ ]'' ∎
       where
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid)
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid)
       open SR word-setoid
 
   lemma-ract3 {n} (swap• swap• (c) , swap• swap• (d)) swap = begin
@@ -856,7 +859,7 @@ module Presentation.Groups.S16 where
     [ swap ₛ ₛ ]ʷ • ([ swap ₛ ]ʷ • [ swap ₛ ₛ ]ʷ • [ [ [ [ c ] ⇑] ⇑] ⇑]) • [ swap ]ʷ • [ swap ₛ ]ʷ • [ [ [ inject₁ (inject {i = c} d) ] ⇑] ⇑] ≈⟨ refl ⟩
     [ ract3 (swap• swap• c , swap• swap• d) (swap) .proj₁ ⇑]'' • [ ract3 (swap• swap• c , swap• swap• d) (swap) .proj₂ ]'' ∎
       where
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid ; module Pattern-Assoc)
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid ; module Pattern-Assoc)
       open SR word-setoid
       open Pattern-Assoc
 
@@ -867,9 +870,9 @@ module Presentation.Groups.S16 where
     [ swap ]ʷ • [ swap ₛ ]ʷ • [ swap ]ʷ ≈⟨ by-assoc Eq.refl ⟩
     [ ract3 (swap• ε , swap• ε) (swap ₛ) .proj₁ ⇑]'' • [ ract3 (swap• ε , swap• ε) (swap ₛ) .proj₂ ]'' ∎
     where
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid)
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid)
       open SR word-setoid
-      open NFProperty (nfp ((suc (suc n))))
+      open NFProperty (nfp ((₂₊ n)))
   lemma-ract3 {n} (swap• swap• (c@ε) , swap• ε) (swap ₛ) = begin
     [ (swap• swap• c , swap• ε) ]'' • [ swap ₛ ]ʷ ≈⟨ assoc ⟩
     [ [ swap• swap• c ] ⇑] • [ swap• ε ] • [ swap ₛ ]ʷ ≈⟨ by-assoc Eq.refl ⟩
@@ -877,7 +880,7 @@ module Presentation.Groups.S16 where
     [ swap• swap• c , swap• swap• ε ]'' ≈⟨ sym left-unit ⟩
     [ ract3 (swap• swap• c , swap• ε) (swap ₛ) .proj₁ ⇑]'' • [ ract3 (swap• swap• c , swap• ε) (swap ₛ) .proj₂ ]'' ∎
     where
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid)
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid)
       open SR word-setoid
   lemma-ract3 {n} (swap• swap• (c@(swap• c')) , swap• ε) (swap ₛ) = begin
     [ (swap• swap• c , swap• ε) ]'' • [ swap ₛ ]ʷ ≈⟨ assoc ⟩
@@ -886,7 +889,7 @@ module Presentation.Groups.S16 where
     [ swap• swap• c , swap• swap• ε ]'' ≈⟨ sym left-unit ⟩
     [ ract3 (swap• swap• c , swap• ε) (swap ₛ) .proj₁ ⇑]'' • [ ract3 (swap• swap• c , swap• ε) (swap ₛ) .proj₂ ]'' ∎
     where
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid)
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid)
       open SR word-setoid
   lemma-ract3 {n} (swap• swap• ε , swap• swap• ε) (swap ₛ) = begin
     [ (swap• swap• ε , swap• swap• ε) ]'' • [ swap ₛ ]ʷ ≈⟨ by-assoc Eq.refl ⟩
@@ -894,7 +897,7 @@ module Presentation.Groups.S16 where
     [ swap ₛ ]ʷ • [ swap ₛ ₛ ]ʷ • [ swap ]ʷ • ε ≈⟨ by-assoc Eq.refl ⟩
     [ ract3 (swap• swap• ε , swap• swap• ε) (swap ₛ) .proj₁ ⇑]'' • [ ract3 (swap• swap• ε , swap• swap• ε) (swap ₛ) .proj₂ ]'' ∎
     where
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid)
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid)
       open SR word-setoid
   lemma-ract3 {n} (swap• swap• swap• c , swap• swap• ε) (swap ₛ) = begin
     [ (swap• swap• swap• c , swap• swap• ε) ]'' • [ swap ₛ ]ʷ ≈⟨ assoc ⟩
@@ -903,7 +906,7 @@ module Presentation.Groups.S16 where
     [ [ swap• swap• swap• c ] ⇑] • [ swap ]ʷ • ε ≈⟨ sym left-unit ⟩
     [ ract3 (swap• swap• swap• c , swap• swap• ε) (swap ₛ) .proj₁ ⇑]'' • [ ract3 (swap• swap• swap• c , swap• swap• ε) (swap ₛ) .proj₂ ]'' ∎
     where
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid)
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid)
       open SR word-setoid
   lemma-ract3 {n} (swap• swap• swap• c , swap• swap• swap• d) (swap ₛ) = let dd = inject₁ (inject {i = c} d) in begin
     [ (swap• swap• swap• c , swap• swap• swap• d) ]'' • [ swap ₛ ]ʷ ≈⟨ _≈_.assoc ⟩
@@ -931,8 +934,8 @@ module Presentation.Groups.S16 where
     [ swap ₛ ₛ ₛ ]ʷ • ([ swap ₛ ]ʷ • [ swap ₛ ₛ ]ʷ • [ swap ₛ ₛ ₛ ]ʷ • [ [ [ [ [ c ] ⇑] ⇑] ⇑] ⇑]) • ([ swap ]ʷ • [ swap ₛ ]ʷ • [ swap ₛ ₛ ]ʷ • [ [ [ [ dd ] ⇑] ⇑] ⇑] ) ≈⟨ refl ⟩
     [ ract3 (swap• swap• swap• c , swap• swap• swap• d) (swap ₛ) .proj₁ ⇑]'' • [ ract3 (swap• swap• swap• c , swap• swap• swap• d) (swap ₛ) .proj₂ ]'' ∎
     where
-      open PB (pres (suc (suc n))) using (_≈_)
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid ; module Pattern-Assoc)
+      open PB (pres (₂₊ n)) using (_≈_)
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid ; module Pattern-Assoc)
       open SR word-setoid
       open Pattern-Assoc
       claim : [ swap ₛ ]ʷ • [ swap ₛ ₛ ]ʷ • [ swap ₛ ₛ ₛ ]ʷ • [ swap ]ʷ • [ swap ₛ ]ʷ • [ swap ₛ ₛ ]ʷ • [ swap ₛ ]ʷ ≈ [ swap ₛ ₛ ₛ ]ʷ • [ swap ₛ ]ʷ • [ swap ₛ ₛ ]ʷ • [ swap ₛ ₛ ₛ ]ʷ • [ swap ]ʷ • [ swap ₛ ]ʷ • [ swap ₛ ₛ ]ʷ
@@ -963,7 +966,7 @@ module Presentation.Groups.S16 where
     [ swap ₛ ]ʷ • [ swap ₛ ₛ ]ʷ • [ swap ]ʷ ≈⟨ by-assoc Eq.refl ⟩
     [ ract3 (swap• ε , swap• ε) ((swap ₛ) ₛ) .proj₁ ⇑]'' • [ ract3 (swap• ε , swap• ε) ((swap ₛ) ₛ) .proj₂ ]'' ∎
     where
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid)
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid)
       open SR word-setoid
 
   lemma-ract3 {n} (swap• swap• c , swap• d) ((x ₛ ₛ)) =
@@ -991,7 +994,7 @@ module Presentation.Groups.S16 where
     [  fm w ⇑]'' • ( [ swap ₛ ]ʷ • [ [ [ c' ] ⇑] ⇑]) • [ swap ]ʷ • [ [ d4 ] ⇑] ≈⟨ _≈₃_.refl ⟩
     [  fm w ⇑]'' • [ [ swap• c' ] ⇑] • [ swap• d4 ] ≈⟨ refl ⟩
     [  fm w ⇑]'' • [ [ swap• c' ] ⇑] • [ d3 ] ≈⟨ refl ⟩
-    [  fm w ⇑]'' • [ swap• c' , swap• d' ]''  ≡⟨ Eq.sym (Eq.cong₂  (\ x y -> [  x ⇑]'' • [ y ]'') (Eq.cong proj₁ (ler3 c d x)) (Eq.cong proj₂ (ler3 c d x))) ⟩
+    [  fm w ⇑]'' • [ swap• c' , swap• d' ]''  ≡⟨ Eq.sym (Eq.cong₂  (\ x y → [  x ⇑]'' • [ y ]'') (Eq.cong proj₁ (ler3 c d x)) (Eq.cong proj₂ (ler3 c d x))) ⟩
     [  ract3 (swap• swap• c , swap• d) ((x ₛ) ₛ) .proj₁ ⇑]'' • [ ract3 (swap• swap• c , swap• d) ((x ₛ) ₛ) .proj₂ ]''  ∎
     where
       open PB (pres (suc (suc ( n)))) using () renaming (refl' to refl'' ; _≈_ to _≈₃_)
@@ -999,7 +1002,7 @@ module Presentation.Groups.S16 where
       open SR word-setoid
       open Pattern-Assoc
 
-      claim : ∀ w -> [ swap ₛ ]ʷ • [ swap ]ʷ • [ [ w ⇑]'' ⇑] ≈₃  [ fm w ⇑]'' • [ swap ₛ ]ʷ • [ swap ]ʷ
+      claim : ∀ w → [ swap ₛ ]ʷ • [ swap ]ʷ • [ [ w ⇑]'' ⇑] ≈₃  [ fm w ⇑]'' • [ swap ₛ ]ʷ • [ swap ]ʷ
       claim ε = by-assoc Eq.refl
       claim (w • v) = begin
         [ swap ₛ ]ʷ • [ swap ]ʷ • [ [ w • v ⇑]'' ⇑] ≈⟨ _≈₃_.refl ⟩
@@ -1045,21 +1048,21 @@ module Presentation.Groups.S16 where
     [(((x ₛ) ₛ) ₛ) ]ʷ • [ swap ₛ ]ʷ • [ swap ]ʷ ≈⟨ by-assoc Eq.refl ⟩
     [ ract3 (swap• ε , swap• ε) (((x ₛ) ₛ) ₛ) .proj₁ ⇑]'' • [ ract3 (swap• ε , swap• ε) (((x ₛ) ₛ) ₛ) .proj₂ ]'' ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using (by-assoc)
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using (by-assoc)
       open SR wsh
 
 
 
-  lemma-racts' : ∀ {n} c bs ->
+  lemma-racts' : ∀ {n} c bs →
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let (x' , c') = racts' {n} c bs in ([ c ]' • bs) ≈ ([ x' ⇑]'' • [ c' ]') 
   lemma-racts' {n} c [ x ]ʷ = lemma-ract' c x
   lemma-racts' {n} c ε = _≈_.trans _≈_.right-unit (_≈_.sym _≈_.left-unit)
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
   lemma-racts' {n} c (bs • as) with racts' c bs | inspect (racts' c) bs | lemma-racts' c bs
   ... | (bs' , c') | [ eq1 ]ₑ | ih1 with racts' c' as | inspect (racts' c') as | lemma-racts' c' as
@@ -1071,21 +1074,21 @@ module Presentation.Groups.S16 where
     [ bs' ⇑]'' • [ as' ⇑]'' • [ c'' ]' ≈⟨ _≈_.sym _≈_.assoc ⟩
     [ bs' • as' ⇑]'' • [ c'' ]' ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
 
 
 
-  lemma-racts'' : ∀ {n} c bs ->
+  lemma-racts'' : ∀ {n} c bs →
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let (x' , c') = racts'' {n} c bs in ([ c ]'' • bs) ≈ ([ x' ⇑]'' • [ c' ]'') 
   lemma-racts'' {n} c [ x ]ʷ = lemma-ract'' c x
   lemma-racts'' {n} c ε = _≈_.trans _≈_.right-unit (_≈_.sym _≈_.left-unit)
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
   lemma-racts'' {n} c (bs • as) with racts'' c bs | inspect (racts'' c) bs | lemma-racts'' c bs
   ... | (bs' , c') | [ eq1 ]ₑ | ih1 with racts'' c' as | inspect (racts'' c') as | lemma-racts'' c' as
@@ -1097,20 +1100,20 @@ module Presentation.Groups.S16 where
     [ bs' ⇑]'' • [ as' ⇑]'' • [ c'' ]'' ≈⟨ _≈_.sym _≈_.assoc ⟩
     [ bs' • as' ⇑]'' • [ c'' ]'' ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
 
 
-  lemma-racts3 : ∀ {n} c bs ->
+  lemma-racts3 : ∀ {n} c bs →
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_) in
     let (x' , c') = racts3 {n} c bs in ([ c ]'' • bs) ≈ ([ x' ⇑]'' • [ c' ]'') 
   lemma-racts3 {n} c [ x ]ʷ = lemma-ract3 c x
   lemma-racts3 {n} c ε = _≈_.trans _≈_.right-unit (_≈_.sym _≈_.left-unit)
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
   lemma-racts3 {n} c (bs • as) with racts3 c bs | inspect (racts3 c) bs | lemma-racts3 c bs
   ... | (bs' , c') | [ eq1 ]ₑ | ih1 with racts3 c' as | inspect (racts3 c') as | lemma-racts3 c' as
@@ -1122,13 +1125,13 @@ module Presentation.Groups.S16 where
     [ bs' ⇑]'' • [ as' ⇑]'' • [ c'' ]'' ≈⟨ _≈_.sym _≈_.assoc ⟩
     [ bs' • as' ⇑]'' • [ c'' ]'' ∎
     where
-      open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂) using (_≈_)
-      open PP (pres (suc (suc n))) renaming (word-setoid to wsh) using ()
+      open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂) using (_≈_)
+      open PP (pres (₂₊ n)) renaming (word-setoid to wsh) using ()
       open SR wsh
 
 
 
-  aux-c : ∀ {n} w ->
+  aux-c : ∀ {n} w →
     let f = emb2' {n} in
     (f *) [ w ]ᵣ ≡ [ [ w ⇑] ⇑]
   aux-c {n} [ swap ]ʷ = Eq.refl
@@ -1140,13 +1143,13 @@ module Presentation.Groups.S16 where
   open import Presentation.CosetNF as CNF
 
 
-  module myData (n : ℕ) = Data (pres 1 ⊕ pres n) (pres (suc (suc n))) (CC (suc n)) (ε , ε) emb2' ract3 [_]''
+  module myData (n : ℕ) = Data (pres 1 ⊕ pres n) (pres (₂₊ n)) (CC (₁₊ n)) (ε , ε) emb2' ract3 [_]''
     
   import Presentation.Construct.Properties.DirectProduct as DP
 
-  lemma-ract''-suc' : ∀ {n} w ->
+  lemma-ract''-suc' : ∀ {n} w →
     let open PB (pres 1 ⊕ pres n) renaming ( _≈_ to _≈₁_ ; _===_ to _===₁_) using () in
-    let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (suc n)}) in
+    let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (₁₊ n)}) in
     ((ract'' {n}) **) (ε , ε) [ [ w ⇑] ⇑] ~ ([ w ]ᵣ , (ε , ε))
   lemma-ract''-suc' {n} [ x ]ʷ = right-unit , Eq.refl
   lemma-ract''-suc' {n} ε = refl , Eq.refl
@@ -1155,10 +1158,10 @@ module Presentation.Groups.S16 where
   ... | (w2 , cd2) | (h2l , h2r) = cong h1l h2l , h2r
 
 
-  lemma-ract''-suc'' : ∀ {n} w ->
-    let open PB (pres 1 ⊕ pres (suc n)) renaming ( _≈_ to _≈₁_ ; _===_ to _===₁_) using () in
-    let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (suc (suc n))}) in
-    ((ract'' {suc n}) **) (swap• ε , ε) [ [ [ w ⇑] ⇑] ⇑] ~ ([ [ w ⇑] ]ᵣ , (swap• ε , ε))
+  lemma-ract''-suc'' : ∀ {n} w →
+    let open PB (pres 1 ⊕ pres (₁₊ n)) renaming ( _≈_ to _≈₁_ ; _===_ to _===₁_) using () in
+    let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (₂₊ n)}) in
+    ((ract'' {₁₊ n}) **) (swap• ε , ε) [ [ [ w ⇑] ⇑] ⇑] ~ ([ [ w ⇑] ]ᵣ , (swap• ε , ε))
   lemma-ract''-suc'' {n} [ x ]ʷ = right-unit , Eq.refl
   lemma-ract''-suc'' {n} ε = refl , Eq.refl
   lemma-ract''-suc'' {n} (w • w₁) with racts'' (swap• ε , ε) [ [ [ w ⇑] ⇑] ⇑] | (lemma-ract''-suc'' w)
@@ -1166,12 +1169,12 @@ module Presentation.Groups.S16 where
   ... | (w2 , cd2) | (h2l , h2r) = cong h1l h2l , h2r
 
 
-  auxr3a : ∀ {n} -> 
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂ ; _≈_ to _≈₂_ ; _===_ to _===₂_) using () in
+  auxr3a : ∀ {n} → 
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂ ; _≈_ to _≈₂_ ; _===_ to _===₂_) using () in
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
     let open PB (pres 1 ⊕ pres n) renaming ( _≈_ to _≈₁_ ; _===_ to _===₁_) using () in
-    let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (suc n)}) in
-    let c = (ε , ε) in ∀ (w) -> (racts3 c [ [ w ⇑] ⇑]) ~ ([ w ]ᵣ , c)
+    let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (₁₊ n)}) in
+    let c = (ε , ε) in ∀ (w) → (racts3 c [ [ w ⇑] ⇑]) ~ ([ w ]ᵣ , c)
   auxr3a {n} w@([ x ]ʷ) = refl , Eq.refl
   auxr3a {n} ε = refl , Eq.refl
   auxr3a {n} (w • v) =
@@ -1190,23 +1193,23 @@ module Presentation.Groups.S16 where
     ([ w ]ᵣ • [ v ]ᵣ , c) ≈⟨ refl , Eq.refl ⟩
     ([ w • v ]ᵣ , c) ∎
     where
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid)
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid)
       open PP (pres 1 ⊕ pres n) renaming (word-setoid to ws)
-      ts = ×-setoid ws (setoid (CC (suc n)))
+      ts = ×-setoid ws (setoid (CC (₁₊ n)))
       open SR ts
     
 
 
-  auxr3b : ∀ {n1} -> let n = suc n1 in 
-    let open PB (pres (suc (suc n))) renaming (Alphabet to Sₙ₊₂ ; _≈_ to _≈₂_ ; _===_ to _===₂_) using () in
+  auxr3b : ∀ {n1} → let n = ₁₊ n1 in 
+    let open PB (pres (₂₊ n)) renaming (Alphabet to Sₙ₊₂ ; _≈_ to _≈₂_ ; _===_ to _===₂_) using () in
     let open PB (pres n) renaming (Alphabet to Sn ; _≈_ to _≈ₙ_) using () in
     let open PB (pres 1 ⊕ pres n) renaming ( _≈_ to _≈₁_ ; _===_ to _===₁_) using () in
-    let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (suc n)}) in
-    let c = (swap• ε , ε) in ∀ (w) -> (racts3 c [ [ [ w ⇑] ⇑] ⇑]) ~ ([ [ w ⇑] ]ᵣ , c)
+    let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (₁₊ n)}) in
+    let c = (swap• ε , ε) in ∀ (w) → (racts3 c [ [ [ w ⇑] ⇑] ⇑]) ~ ([ [ w ⇑] ]ᵣ , c)
   auxr3b {n} w@([ x ]ʷ) = refl , Eq.refl
   auxr3b {n} ε = refl , Eq.refl
   auxr3b {n1} (w • v) =
-    let n = suc n1 in
+    let n = ₁₊ n1 in
     let c = (swap• ε , ε) in
     let (w' , c') = racts3 c [ [ [ w ⇑] ⇑] ⇑] in
     let (v' , c'') = racts3 c [ [ [ v ⇑] ⇑] ⇑] in
@@ -1222,10 +1225,10 @@ module Presentation.Groups.S16 where
     ([ [ w ⇑] ]ᵣ • [ [ v ⇑] ]ᵣ , c) ≈⟨ refl , Eq.refl ⟩
     ([ [ w • v ⇑] ]ᵣ , c) ∎
     where
-      n = suc n1
-      open PP (pres (suc (suc n))) using (by-assoc ; word-setoid)
+      n = ₁₊ n1
+      open PP (pres (₂₊ n)) using (by-assoc ; word-setoid)
       open PP (pres 1 ⊕ pres n) renaming (word-setoid to ws)
-      ts = ×-setoid ws (setoid (CC (suc n)))
+      ts = ×-setoid ws (setoid (CC (₁₊ n)))
       open SR ts
     
 
@@ -1233,7 +1236,7 @@ module Presentation.Groups.S16 where
 
 
 {-
-  qc5 : ∀ (c : CC 5) x ->
+  qc5 : ∀ (c : CC 5) x →
     let open PB (pres 1 ⊕ pres 4) renaming ( _≈_ to _≈₁_ ; _===_ to _===₁_) using () in
     let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC 5}) in
     ract'' c x ~ ract3 c x
@@ -1267,7 +1270,7 @@ module Presentation.Groups.S16 where
 
 {-
 
-  qc : ∀ (c : CC 8) x ->
+  qc : ∀ (c : CC 8) x →
     let open PB (pres 1 ⊕ pres 7) renaming ( _≈_ to _≈₁_ ; _===_ to _===₁_) using () in
     let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC 8}) in
     ract'' c x ~ ract3 c x
@@ -1514,11 +1517,11 @@ module Presentation.Groups.S16 where
 
 
 {-
-  aux-3 : ∀ {n} (c : C n) -> (d : df c) -> ract'' (swap• swap• swap• c , swap• swap• swap• d) swap ≡ ([ [ swap ]ʷ ]ᵣ , (swap• swap• swap• c , swap• swap• swap• d))
+  aux-3 : ∀ {n} (c : C n) → (d : df c) → ract'' (swap• swap• swap• c , swap• swap• swap• d) swap ≡ ([ [ swap ]ʷ ]ᵣ , (swap• swap• swap• c , swap• swap• swap• d))
   aux-3 {n} ε ε = {!!}
   aux-3 {n} (swap• c) ε = {!!}
   aux-3 {n} (swap• c) (swap• d) with aux-3 c d
-  aux-3 {.(suc _)} (swap• c) (swap• d) | ih = {!!} --Eq.cong (λ { (fst , fst₁ , snd) → {!!} , ({!swap• fst₁!} , {!!}) }) ih
+  aux-3 {.(₁₊ _)} (swap• c) (swap• d) | ih = {!!} --Eq.cong (λ { (fst , fst₁ , snd) → {!!} , ({!swap• fst₁!} , {!!}) }) ih
 -}
 
 
@@ -1552,7 +1555,7 @@ module Presentation.Groups.S16 where
 
 
 {-
-    ler7b : ∀ {n} ((c , d) : CC (suc n)) w ->
+    ler7b : ∀ {n} ((c , d) : CC (₁₊ n)) w →
       let (w' , cd') = racts3 (swap• c , swap• ε) [ [ [ w ⇑] ⇑] ⇑] in
       let (w1 , cd1) = racts3 (swap• c , ε) [ [ [ w ⇑] ⇑] ⇑] in
 
@@ -1572,28 +1575,28 @@ module Presentation.Groups.S16 where
 
 
 {-  
-  lemma-rss : ∀ {n} (d : C (suc n)) g -> racts d [ g ]ʷ ≡ ract d g
+  lemma-rss : ∀ {n} (d : C (₁₊ n)) g → racts d [ g ]ʷ ≡ ract d g
   lemma-rss {n} d g = Eq.refl
 
-  lemma-rss2 : ∀ {n} (d : C (suc n)) -> racts d ε ≡ (ε , d)
+  lemma-rss2 : ∀ {n} (d : C (₁₊ n)) → racts d ε ≡ (ε , d)
   lemma-rss2 {n} d = Eq.refl
 
-  lemma-aa : ∀ {n} ((c , d) : (CC n)) -> aux2' c (inject₁ (inject d)) ≡ (false , c , d)
+  lemma-aa : ∀ {n} ((c , d) : (CC n)) → aux2' c (inject₁ (inject d)) ≡ (false , c , d)
   lemma-aa {zero} (ε , ε) = Eq.refl
-  lemma-aa {suc n} (ε , ε) = Eq.refl
-  lemma-aa {suc n} (swap• c , ε) = Eq.refl
-  lemma-aa {suc n} (swap• c , swap• d) with aux2' (swap• c) (inject₁ (inject (swap• d))) | aux2' c (inject₁ (inject d)) | lemma-aa (c , d)
+  lemma-aa {₁₊ n} (ε , ε) = Eq.refl
+  lemma-aa {₁₊ n} (swap• c , ε) = Eq.refl
+  lemma-aa {₁₊ n} (swap• c , swap• d) with aux2' (swap• c) (inject₁ (inject (swap• d))) | aux2' c (inject₁ (inject d)) | lemma-aa (c , d)
   ... | (b1 , c1 , d1) | (b2 , c2 , d2) | ih rewrite (Eq.cong proj₁ ih) = ≡×≡⇒≡ (Eq.refl , Eq.cong (λ { (fst , snd) → swap• fst , swap• snd}) (Eq.cong proj₂ ih))
 
 
   mutual 
-    lemma-hom : ∀ {n} -> (c : CC (suc n)) -> (w v : Word (X (suc (suc n)))) ->
+    lemma-hom : ∀ {n} → (c : CC (₁₊ n)) → (w v : Word (X (₂₊ n))) →
       let open PB (pres n) renaming (Alphabet to Sn) using () in
       let A = S2 ⊎ Sn in
       let (w' , c') = racts2 c w in
       let (v' , c'') = racts2 c' v in
       let open PB (pres 1 ⊕ pres n) renaming ( _≈_ to _≈₁_ ; _===_ to _===₁_) using () in
-      let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (suc n)}) in
+      let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (₁₊ n)}) in
       racts2 c (w • v) ~ (w' • v' , c'')
     lemma-hom {n} (c , d) w v with racts (inject₁ (inject d)) w
     ... | (w1 , d1) with racts d1 v | racts c w1
@@ -1602,11 +1605,11 @@ module Presentation.Groups.S16 where
     ... | (iv , id2) with racts c2 iv
     ... | (iv2 , ic3) = {!!} , {!!}
 
-    lemma-ss : ∀ {n} -> (c : CC (suc n)) -> (w : Word (X (suc (suc n)))) ->
+    lemma-ss : ∀ {n} → (c : CC (₁₊ n)) → (w : Word (X (₂₊ n))) →
       let open PB (pres n) renaming (Alphabet to Sn) using () in
       let A = S2 ⊎ Sn in
       let open PB (pres 1 ⊕ pres n) renaming ( _≈_ to _≈₁_ ; _===_ to _===₁_) using () in
-      let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (suc n)}) in
+      let _~_ = PW.Pointwise _≈₁_ (_≡_ {A = CC (₁₊ n)}) in
       racts'' c w ~ racts2 c w
     lemma-ss {n} (c , d) [ x ]ʷ = PB.refl , Eq.refl
     lemma-ss {n} (c , d) ε rewrite lemma-aa (c , d) = PB.sym PB.left-unit , Eq.refl
@@ -1623,7 +1626,7 @@ module Presentation.Groups.S16 where
       {![ wv5 ]ᵣ • [ eval-bool₁ b6 ]ₗ , ?!} ∎
       where
         open PP (pres 1 ⊕ pres n) using (word-setoid)
-        ts = ×-setoid word-setoid (setoid (CC (suc n)))
+        ts = ×-setoid word-setoid (setoid (CC (₁₊ n)))
         open SR ts
         
 -}
