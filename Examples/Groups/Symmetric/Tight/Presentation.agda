@@ -1,4 +1,4 @@
-------------------------------------------------------------------------
+﻿------------------------------------------------------------------------
 -- Presentations of groups
 --
 -- Group homomorphism from the free-group presentation (Word (Gen n) / ≈)
@@ -69,23 +69,11 @@ module _ (n : ℕ) where
 
   open import Data.Nat using (ℕ ; zero ; suc)
   open import Data.Fin using (Fin ; zero ; suc)
-  import Examples.Groups.Symmetric.Tight.Uniqueness as TU
   open import Examples.Groups.Symmetric.NormalForm
-  open import Examples.Groups.Symmetric.Normalization using (nf-of)
+  import Examples.Groups.Symmetric.Tight.Completeness as TC
 
   import Relation.Binary.PropositionalEquality as Eq
   open Eq using (_≡_ ; refl)
-
-  open import Presentation.Definitions
-  open import Presentation.Normalization
-  open Relative
-  
-  completeness : let open PP (n VRel,_===_) in
-    Completeness word-setoid (Group.setoid (Permutation′-group n)) ⟦_⟧
-  completeness = by-normalization (TU.unique-nf-tight) (sound {n})
-    where
-    open PP (n VRel,_===_)
-    open Completeness word-setoid (NF n) (nf-of {n}) (inv-nf {n}) (Group.setoid (Permutation′-group n)) (⟦_⟧ {n})
 
   presentation : let open PP (n VRel,_===_) in
     (n VRel,_===_) IsPresentationOf (Permutation′-group n)
@@ -95,7 +83,7 @@ module _ (n : ℕ) where
     ; iso = record
         { isGroupMonomorphism = record
             { isGroupHomomorphism = ⟦⟧-isGroupHom
-            ; injective           = completeness
+            ; injective           = TC.completeness
             }
         ; surjective = λ π →
             let w , ih = go n π

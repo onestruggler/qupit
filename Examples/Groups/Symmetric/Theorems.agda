@@ -1,4 +1,4 @@
-------------------------------------------------------------------------
+﻿------------------------------------------------------------------------
 -- Presentations of groups
 --
 -- This file collects main theorems for convenience.
@@ -30,9 +30,6 @@ open import Notations
 module Examples.Groups.Symmetric.Theorems where
 
 open import Examples.Groups.Symmetric.Syntactics
-
-import Examples.Groups.Symmetric.Loose.Uniqueness as LU
-import Examples.Groups.Symmetric.Tight.Uniqueness as TU
 open import Examples.Groups.Symmetric.NormalForm
 open import Examples.Groups.Symmetric.Normalization using (nf-of)
 
@@ -44,10 +41,12 @@ private variable
 -- ----------------------------------------------------------------------
 -- * Unique normal form, soundness, completeness and presentation
 
-module Semantics-Loose where
+module Loose where
 
   open import Examples.Groups.Symmetric.Loose.Semantics as SS
-  open import Examples.Groups.Symmetric.Loose.Soundness
+  import Examples.Groups.Symmetric.Loose.Soundness as LS
+  import Examples.Groups.Symmetric.Loose.Completeness as LC
+  import Examples.Groups.Symmetric.Loose.Uniqueness as LU
 
   unique-nf : ∀ n ->
     let
@@ -75,7 +74,7 @@ module Semantics-Loose where
     
     Soundness Syn Sem ⟦_⟧
     
-  soundness n = sound
+  soundness n = LS.sound
 
   completeness : ∀ n ->
     let
@@ -86,40 +85,56 @@ module Semantics-Loose where
     
     Completeness Syn Sem ⟦_⟧
     
-  completeness n = by-normalization (unique-nf n) (soundness n)
-    where
-    open PP (n VRel,_===_)
-    open Completeness word-setoid (NF n) (nf-of {n}) (inv-nf {n}) (Endo-setoid n) (⟦_⟧ {n})
+  completeness = LC.completeness
 
 
 module Semantics-Tight where
 
-  open import Examples.Groups.Symmetric.Tight.Semantics
-  open import Examples.Groups.Symmetric.Tight.Soundness
-  import Examples.Groups.Symmetric.Loose.Semantics as LooseSem
-  open import Data.Fin.Permutation
-    using ( Permutation′ ; _⟨$⟩ʳ_ ; _⟨$⟩ˡ_ ; _∘ₚ_ ; flip
-          ; inverseˡ ; inverseʳ ; lift₀ ; lift₀-cong ; remove ; lift₀-remove)
-  open import Data.Product using (∃ ; _,_ ; proj₁ ; proj₂)
-  import Data.Fin as F
-  import Examples.Groups.Symmetric.Tight.Presentation as P
+  open import Examples.Groups.Symmetric.Tight.Semantics as SS
+  import Examples.Groups.Symmetric.Tight.Soundness as TS
+  import Examples.Groups.Symmetric.Tight.Completeness as TC
+  import Examples.Groups.Symmetric.Tight.Uniqueness as TU
+  import Examples.Groups.Symmetric.Tight.Presentation as TP
 
-  unique-nf : let open PP (n VRel,_===_) in
-    UniqueNormalForm word-setoid (NF n) (nf-of {n}) (inv-nf {n}) (Group.setoid (Permutation′-group n)) (⟦_⟧ {n})
-  unique-nf {n = n} = TU.unique-nf-tight
-  
-  soundness : let open PP (n VRel,_===_) in
-    Soundness word-setoid (Group.setoid (Permutation′-group n)) ⟦_⟧
-  soundness = sound
+  unique-nf : ∀ n ->
+    let
+    module PPV = PP (n VRel,_===_)
+    Syn        = PPV.word-setoid
+    A          = Syn .Carrier
+    B          = NF n
+    Sem        = Group.setoid (Permutation′-group n)
+    section    : A -> B
+    section    = nf-of
+    retraction : B -> A
+    retraction = inv-nf
+    in
+    
+    UniqueNormalForm Syn B section retraction Sem ⟦_⟧
+    
+  unique-nf n = TU.unique-nf-tight {n}
 
-  completeness : let open PP (n VRel,_===_) in
-    Completeness word-setoid (Group.setoid (Permutation′-group n)) ⟦_⟧
-  completeness {n} = by-normalization unique-nf soundness
-    where
-    open PP (n VRel,_===_)
-    open Completeness word-setoid (NF n) (nf-of {n}) (inv-nf {n}) {0ℓ} {0ℓ} (Group.setoid (Permutation′-group n)) (⟦_⟧ {n})
+  soundness : ∀ n ->
+    let
+    module PPV = PP (n VRel,_===_)
+    Syn        = PPV.word-setoid
+    Sem        = Group.setoid (Permutation′-group n)
+    in
+    
+    Soundness Syn Sem ⟦_⟧
+    
+  soundness n = TS.sound
+
+  completeness : ∀ n ->
+    let
+    module PPV = PP (n VRel,_===_)
+    Syn        = PPV.word-setoid
+    Sem        = Group.setoid (Permutation′-group n)
+    in
+    
+    Completeness Syn Sem ⟦_⟧
+    
+  completeness n = TC.completeness {n} 
 
 
-  presentation : let open PP (n VRel,_===_) in
-    (n VRel,_===_) IsPresentationOf (Permutation′-group n)
-  presentation {n = n} = P.presentation n
+  presentation : ∀ n -> (n VRel,_===_) IsPresentationOf (Permutation′-group n)
+  presentation = TP.presentation

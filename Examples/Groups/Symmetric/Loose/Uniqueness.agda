@@ -1,4 +1,4 @@
-------------------------------------------------------------------------
+﻿------------------------------------------------------------------------
 -- Presentations of groups
 --
 -- Unique normal form for the loose (endofunction) semantics of Sₙ.
@@ -29,20 +29,6 @@ open import Examples.Groups.Symmetric.Normalization
   using (nf-of ; lemma-nf-cong ; lemma-inv-nf)
 
 private variable n : ℕ
-
-------------------------------------------------------------------------
--- Pointwise setoid on endofunctions Fin n → Fin n
-
-perm-setoid : (n : ℕ) → Setoid 0ℓ 0ℓ
-perm-setoid n = record
-  { Carrier       = Endo n
-  ; _≈_           = λ f g → ∀ k → f k ≡ g k
-  ; isEquivalence = record
-    { refl  = λ _       → Eq.refl
-    ; sym   = λ h k     → Eq.sym (h k)
-    ; trans = λ h₁ h₂ k → Eq.trans (h₁ k) (h₂ k)
-    }
-  }
 
 ------------------------------------------------------------------------
 -- Encoding coset descriptors as Fin indices
