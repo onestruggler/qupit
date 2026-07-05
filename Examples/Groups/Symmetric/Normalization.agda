@@ -119,18 +119,18 @@ racts {n} = ract {n} **
 -- lemma-ract: [c]ᶜ • [b]ʷ ≈ b'.proj₁ ↑ • [c']ᶜ  where (b', c') = ract c b
 
 lemma-ract : ∀ {n} c b →
-  let P = _CRel,_===_ (₂₊ n)
+  let P = _VRel,_===_ (₂₊ n)
   in let (b' , c') = ract {n} c b
-  in PB._≈_ P ([_]ᶜ c • [ b ]ʷ) (b' ↑ • [_]ᶜ c')
+  in PB._≈_ P ([ c ]ᶜ • [ b ]ʷ) (b' ↑ • [ c' ]ᶜ)
 lemma-ract {n} ε σ-gen = PB._≈_.cong PB._≈_.refl (PB._≈_.sym PB._≈_.right-unit)
-  where P = _CRel,_===_ (₂₊ n) ; open PB P
+  where P = _VRel,_===_ (₂₊ n) ; open PB P
 lemma-ract {n} (σ• ε) σ-gen =
   PB._≈_.trans (PB._≈_.cong PB._≈_.right-unit PB._≈_.refl)
                (PB._≈_.trans (PB._≈_.axiom (srel order)) (PB._≈_.sym PB._≈_.right-unit))
-  where P = _CRel,_===_ (₂₊ n) ; open PB P ; open PP P
+  where P = _VRel,_===_ (₂₊ n) ; open PB P ; open PP P
 lemma-ract {n} ε (g ↥) =
   PB._≈_.trans PB._≈_.left-unit (PB._≈_.sym PB._≈_.right-unit)
-  where P = _CRel,_===_ (₂₊ n) ; open PB P
+  where P = _VRel,_===_ (₂₊ n) ; open PB P
 lemma-ract {₁₊ n} (σ• σ• c) σ-gen = begin
   ([_]ᶜ (σ• σ• c) • σ) ≈⟨ _≈_.assoc ⟩
   σ • ([_]ᶜ (σ• c) ↑) • σ ≡⟨ Eq.refl ⟩
@@ -143,7 +143,7 @@ lemma-ract {₁₊ n} (σ• σ• c) σ-gen = begin
   σ ↑ • σ • σ ↑ • ([_]ᶜ c ↑ ↑) ≡⟨ Eq.refl ⟩
   σ ↑ • (σ • ([_]ᶜ (σ• c) ↑)) ∎
   where
-  P = _CRel,_===_ (₃₊ n)
+  P = _VRel,_===_ (₃₊ n)
   open PB P
   open PP P
   open SR word-setoid
@@ -159,14 +159,14 @@ lemma-ract {₁₊ n} (σ• ε) (b@σ-gen ↥) with lemma-ract {n} ε b
   (b0 ↑ ↑ • σ) • [_]ᶜ c0 ↑ ≈⟨ _≈_.assoc ⟩
   b0 ↑ ↑ • [_]ᶜ (σ• c0) ∎
   where
-  P0 = _CRel,_===_ (₂₊ n)
-  P  = _CRel,_===_ (₃₊ n)
+  P0 = _VRel,_===_ (₂₊ n)
+  P  = _VRel,_===_ (₃₊ n)
   open PB P
   open PP P
   open SR word-setoid
   b0 = proj₁ (ract {n} ε b)
   c0 = proj₂ (ract {n} ε b)
-  [⇑]lift : ∀ {m} (w v : Circuit m) → PB._≈_ (_CRel,_===_ m) w v → PB._≈_ (_CRel,_===_  (₁₊ m)) (w ↑) (v ↑)
+  [⇑]lift : ∀ {m} (w v : Circuit m) → PB._≈_ (_VRel,_===_ m) w v → PB._≈_ (_VRel,_===_  (₁₊ m)) (w ↑) (v ↑)
   [⇑]lift w v eq = lemma-cong↑ w v eq
 lemma-ract {₁₊ n} (σ• ε) (b@(b' ↥) ↥) with lemma-ract {n} ε b
 ... | ih = begin
@@ -178,14 +178,14 @@ lemma-ract {₁₊ n} (σ• ε) (b@(b' ↥) ↥) with lemma-ract {n} ε b
   (b0 ↑ ↑ • σ) • [_]ᶜ c0 ↑ ≈⟨ _≈_.assoc ⟩
   b0 ↑ ↑ • [_]ᶜ (σ• c0) ∎
   where
-  P0 = _CRel,_===_ (₂₊ n)
-  P  = _CRel,_===_ (₃₊ n)
+  P0 = _VRel,_===_ (₂₊ n)
+  P  = _VRel,_===_ (₃₊ n)
   open PB P
   open PP P
   open SR word-setoid
   b0 = proj₁ (ract {n} ε b)
   c0 = proj₂ (ract {n} ε b)
-  [⇑]lift : ∀ {m} (w v : Circuit m) → PB._≈_ (_CRel,_===_ m) w v → PB._≈_ (_CRel,_===_ (₁₊ m)) (w ↑) (v ↑)
+  [⇑]lift : ∀ {m} (w v : Circuit m) → PB._≈_ (_VRel,_===_ m) w v → PB._≈_ (_VRel,_===_ (₁₊ m)) (w ↑) (v ↑)
   [⇑]lift w v eq = lemma-cong↑ w v eq
 lemma-ract {₁₊ n} (σ• σ• c) (b@σ-gen ↥) with lemma-ract {n} (σ• c) b
 ... | ih = begin
@@ -197,13 +197,13 @@ lemma-ract {₁₊ n} (σ• σ• c) (b@σ-gen ↥) with lemma-ract {n} (σ• 
   (b0 ↑ ↑ • σ) • [_]ᶜ c0 ↑ ≈⟨ _≈_.assoc ⟩
   b0 ↑ ↑ • [_]ᶜ (σ• c0) ∎
   where
-  P  = _CRel,_===_ (₃₊ n)
+  P  = _VRel,_===_ (₃₊ n)
   open PB P
   open PP P
   open SR word-setoid
   b0 = proj₁ (ract {n} (σ• c) b)
   c0 = proj₂ (ract {n} (σ• c) b)
-  [⇑]lift : ∀ {m} (w v : Circuit m) → PB._≈_ (_CRel,_===_ m) w v → PB._≈_ (_CRel,_===_ (₁₊ m)) (w ↑) (v ↑)
+  [⇑]lift : ∀ {m} (w v : Circuit m) → PB._≈_ (_VRel,_===_ m) w v → PB._≈_ (_VRel,_===_ (₁₊ m)) (w ↑) (v ↑)
   [⇑]lift w v eq = lemma-cong↑ w v eq
 lemma-ract {₁₊ n} (σ• σ• c) (b@(bb ↥) ↥) with lemma-ract {n} (σ• c) b
 ... | ih = begin
@@ -215,13 +215,13 @@ lemma-ract {₁₊ n} (σ• σ• c) (b@(bb ↥) ↥) with lemma-ract {n} (σ�
   (b0 ↑ ↑ • σ) • [_]ᶜ c0 ↑ ≈⟨ _≈_.assoc ⟩
   b0 ↑ ↑ • [_]ᶜ (σ• c0) ∎
   where
-  P  = _CRel,_===_ (₃₊ n)
+  P  = _VRel,_===_ (₃₊ n)
   open PB P
   open PP P
   open SR word-setoid
   b0 = proj₁ (ract {n} (σ• c) b)
   c0 = proj₂ (ract {n} (σ• c) b)
-  [⇑]lift : ∀ {m} (w v : Circuit m) → PB._≈_ (_CRel,_===_ m) w v → PB._≈_ (_CRel,_===_ (₁₊ m)) (w ↑) (v ↑)
+  [⇑]lift : ∀ {m} (w v : Circuit m) → PB._≈_ (_VRel,_===_ m) w v → PB._≈_ (_VRel,_===_ (₁₊ m)) (w ↑) (v ↑)
   [⇑]lift w v eq = lemma-cong↑ w v eq
 
 ------------------------------------------------------------------------
@@ -229,12 +229,12 @@ lemma-ract {₁₊ n} (σ• σ• c) (b@(bb ↥) ↥) with lemma-ract {n} (σ�
 
 lemma-racts : ∀ {n} c bs →
   let P : WRel (Gen _)
-      P = _CRel,_===_ (₂₊ n)
+      P = _VRel,_===_ (₂₊ n)
   in let (bs' , c') = racts {n} c bs
   in PB._≈_ P ([_]ᶜ c • bs) (bs' ↑ • [_]ᶜ c')
 lemma-racts {n} c [ x ]ʷ = lemma-ract c x
 lemma-racts {n} c ε = PB._≈_.trans PB._≈_.right-unit (PB._≈_.sym PB._≈_.left-unit)
-  where P = _CRel,_===_ (₂₊ n) ; open PB P
+  where P = _VRel,_===_ (₂₊ n) ; open PB P
 lemma-racts {n} c (bs • as) with racts c bs | inspect (racts c) bs | lemma-racts c bs
 ... | (bs' , c') | [ eq1 ]ₑ | ih1 with racts c' as | inspect (racts c') as | lemma-racts c' as
 ... | (as' , c'') | [ eq2 ]ₑ | ih2 = begin
@@ -245,7 +245,7 @@ lemma-racts {n} c (bs • as) with racts c bs | inspect (racts c) bs | lemma-rac
   bs' ↑ • as' ↑ • [_]ᶜ c'' ≈⟨ _≈_.sym _≈_.assoc ⟩
   (bs' • as') ↑ • [_]ᶜ c'' ∎
   where
-  P = _CRel,_===_ (₂₊ n)
+  P = _VRel,_===_ (₂₊ n)
   open PB P
   open PP P
   open SR word-setoid
@@ -266,7 +266,7 @@ nf-of2 {n} = racts {n} ε
 
 infix 4 _≋_
 _≋_ : Rel (Circuit (₁₊ n) × C (₁₊ n)) 0ℓ
-_≋_ {n} = let _≈₀_ = PB._≈_ (_CRel,_===_ (₁₊ n)) in Pointwise _≈₀_ (_≡_ {A = C (₁₊ n)})
+_≋_ {n} = let _≈₀_ = PB._≈_ (_VRel,_===_ (₁₊ n)) in Pointwise _≈₀_ (_≡_ {A = C (₁₊ n)})
 
 ------------------------------------------------------------------------
 -- ⁻¹[⇑]-gen': inverse of the generator embedding
@@ -365,7 +365,7 @@ lemma-ract-σ•ε-gg↥ {₁₊ n} g = Eq.refl
 
 ⁻¹[⇑]-wd'' : ∀ {n} →
   let _⊛_ = ract ** in
-  let _===_ = _CRel,_===_ (₂₊ n) in
+  let _===_ = _VRel,_===_ (₂₊ n) in
   ∀ (c : C (₁₊ n)){u t : Circuit (₂₊ n)} → u === t → c ⊛ u ≋ c ⊛ t
 
 -- ε coset
@@ -446,8 +446,8 @@ succ {n} (w , c) = w ↑ • [_]ᶜ c , ε
 succ-cong : ∀ {n} {w v} → _≋_ {n} w v → _≋_ {₁₊ n} (succ w) (succ v)
 succ-cong {n} {a , c} {b , d} (l , r) = claim , Eq.refl
   where
-  open PB (_CRel,_===_ (₂₊ n))
-  open PP (_CRel,_===_ (₂₊ n))
+  open PB (_VRel,_===_ (₂₊ n))
+  open PP (_VRel,_===_ (₂₊ n))
   open SR word-setoid
   claim : succ (a , c) .proj₁ ≈ succ (b , d) .proj₁
   claim = begin
@@ -459,41 +459,41 @@ succ-cong {n} {a , c} {b , d} (l , r) = claim , Eq.refl
 -- Mutual induction
 
 lemma-nf-cong2 : ∀ {n} →
-  let _≈_ = PB._≈_ (_CRel,_===_ (₂₊ n)) in
-  let _≈₀_ = PB._≈_ (_CRel,_===_ (₁₊ n)) in
+  let _≈_ = PB._≈_ (_VRel,_===_ (₂₊ n)) in
+  let _≈₀_ = PB._≈_ (_VRel,_===_ (₁₊ n)) in
   let _~_ = Pointwise _≈₀_ (_≡_ {A = C (₁₊ n)}) in
   Homomorphic₂ _≈_ _~_ (nf-of2 {n})
 lemma-nf-cong2 {zero} = f-cong2
   where
-  open PB (_CRel,_===_ 1) renaming (_≈_ to _≈₀_) using ()
-  open PB (_CRel,_===_ 2) using (_≈_)
+  open PB (_VRel,_===_ 1) renaming (_≈_ to _≈₀_) using ()
+  open PB (_VRel,_===_ 2) using (_≈_)
   _~_ = Pointwise _≈₀_ (_≡_ {A = C 1})
-  module RSA = RSF (_CRel,_===_ 1) (_CRel,_===_ 2) (C 1) ε
+  module RSA = RSF (_VRel,_===_ 1) (_VRel,_===_ 2) (C 1) ε
   f = nf-of2 {0}
   f-cong2 : ∀ {a b} → a ≈ b → f a ~ f b
   f-cong2 {a} {b} eq = RSA.lemma-hypB (λ { (gate₁ ()) ; (() ↥) }) ract (λ { (gate₁ ()) ; (() ↥) }) ⁻¹[⇑]-wd'' ε _ _ eq
 lemma-nf-cong2 {n@(₁₊ n')} = f-cong2
   where
-  open PB (_CRel,_===_ (₁₊ n)) renaming (_≈_ to _≈₀_) using ()
-  open PB (_CRel,_===_ (₂₊ n)) using (_≈_)
+  open PB (_VRel,_===_ (₁₊ n)) renaming (_≈_ to _≈₀_) using ()
+  open PB (_VRel,_===_ (₂₊ n)) using (_≈_)
   _~_ = Pointwise _≈₀_ (_≡_ {A = C (₁₊ n)})
-  module RSA = RSF (_CRel,_===_ (₁₊ n)) (_CRel,_===_ (₂₊ n)) (C (₁₊ n)) ε
+  module RSA = RSF (_VRel,_===_ (₁₊ n)) (_VRel,_===_ (₂₊ n)) (C (₁₊ n)) ε
   f = nf-of2 {n}
   f-cong2 : ∀ {a b} → a ≈ b → f a ~ f b
   f-cong2 {a} {b} eq = RSA.lemma-hypB ([_]ʷ ∘ _↥) ract ⁻¹[⇑]-gen' ⁻¹[⇑]-wd'' ε _ _ eq
 
 lemma-nf-cong : ∀ {n} →
-  let _≈_ = PB._≈_ (_CRel,_===_ n) in
+  let _≈_ = PB._≈_ (_VRel,_===_ n) in
   Homomorphic₂ _≈_ _≡_ (nf-of {n})
 lemma-nf-cong {zero} = f-cong
   where
-  open PB (_CRel,_===_ 0) renaming (_≈_ to _≈₁_)
+  open PB (_VRel,_===_ 0) renaming (_≈_ to _≈₁_)
   f = nf-of {0}
   f-cong : ∀ {a b} → a ≈₁ b → f a ≡ f b
   f-cong {a} {b} eq = Eq.refl
 lemma-nf-cong {₁₊ zero} = f-cong
   where
-  open PB (_CRel,_===_ 1) renaming (_≈_ to _≈₁_)
+  open PB (_VRel,_===_ 1) renaming (_≈_ to _≈₁_)
   f = nf-of {1}
   f-cong : ∀ {a b} → a ≈₁ b → f a ≡ f b
   f-cong {a} {b} eq = Eq.refl
@@ -501,23 +501,23 @@ lemma-nf-cong {₂₊ n} {x} {y} eq with lemma-nf-cong2 {n} eq | lemma-nf-cong {
 ... | fst , snd | ih = ≡×≡⇒≡ (ih fst , snd)
 
 lemma-nf-inj : ∀ {n} →
-  let _≈_ = PB._≈_ (_CRel,_===_ n) in
+  let _≈_ = PB._≈_ (_VRel,_===_ n) in
   Injective _≈_ _≡_ (nf-of {n})
 lemma-nf-inj {zero} = f-inj
   where
-  open PB (_CRel,_===_ 0)
+  open PB (_VRel,_===_ 0)
   f = nf-of {0}
   singleton : ∀ {a} → a ≈ ε
   singleton {ε}     = refl
   singleton {a • a₁} with singleton {a} | singleton {a₁}
   ... | ih1 | ih2 = trans (cong ih1 ih2) left-unit
-  open PP (_CRel,_===_ 0)
+  open PP (_VRel,_===_ 0)
   open SR word-setoid
   f-inj : ∀ {a b} → f a ≡ f b → a ≈ b
   f-inj {a} {b} eq = begin a ≈⟨ singleton ⟩ ε ≈⟨ sym singleton ⟩ b ∎
 lemma-nf-inj {₁₊ zero} = f-inj
   where
-  open PB (_CRel,_===_ 1)
+  open PB (_VRel,_===_ 1)
   f = nf-of {1}
   singleton : ∀ {a} → a ≈ ε
   singleton {[ gate₁ () ]ʷ}
@@ -525,20 +525,20 @@ lemma-nf-inj {₁₊ zero} = f-inj
   singleton {ε}     = refl
   singleton {a • a₁} with singleton {a} | singleton {a₁}
   ... | ih1 | ih2 = trans (cong ih1 ih2) left-unit
-  open PP (_CRel,_===_ 1)
+  open PP (_VRel,_===_ 1)
   open SR word-setoid
   f-inj : ∀ {a b} → f a ≡ f b → a ≈ b
   f-inj {a} {b} eq = begin a ≈⟨ singleton ⟩ ε ≈⟨ sym singleton ⟩ b ∎
 lemma-nf-inj {₂₊ n} with lemma-nf-inj {₁₊ n} | lemma-nf-cong {₁₊ n}
 ... | ih | ih-cong = f-inj
   where
-  open PB (_CRel,_===_ (₂₊ n)) renaming (Alphabet to B)
+  open PB (_VRel,_===_ (₂₊ n)) renaming (Alphabet to B)
   f = nf-of {₂₊ n}
-  p0 : NFProperty (_CRel,_===_ (₁₊ n))
+  p0 : NFProperty (_VRel,_===_ (₁₊ n))
   p0 = record { NF = NF (₁₊ n) ; nf = nf-of ; nf-cong = ih-cong ; nf-injective = ih }
-  open PB (_CRel,_===_ (₁₊ n)) renaming (_≈_ to _≈₀_) using ()
-  module M = CA.Data (_CRel,_===_ (₁₊ n)) (_CRel,_===_ (₂₊ n)) (C (₁₊ n)) ε ([_]ʷ ∘ _↥) ract [_]ᶜ
-  nfp-1 : NFProperty (_CRel,_===_ (₂₊ n))
+  open PB (_VRel,_===_ (₁₊ n)) renaming (_≈_ to _≈₀_) using ()
+  module M = CA.Data (_VRel,_===_ (₁₊ n)) (_VRel,_===_ (₂₊ n)) (C (₁₊ n)) ε ([_]ʷ ∘ _↥) ract [_]ᶜ
+  nfp-1 : NFProperty (_VRel,_===_ (₂₊ n))
   nfp-1 = M.Assumptions-And-Theorems.nfp
     (λ x₁ → _≈₀_.refl , Eq.refl)
     ⁻¹[⇑]-wd''
@@ -548,9 +548,9 @@ lemma-nf-inj {₂₊ n} with lemma-nf-inj {₁₊ n} | lemma-nf-cong {₁₊ n}
                        (Eq.sym (lemma-* (ract c b .proj₁)))
                        (lemma-ract c b))
     p0
-  open PP (_CRel,_===_ (₂₊ n))
+  open PP (_VRel,_===_ (₂₊ n))
   open SR word-setoid
-  module RSA = RSF (_CRel,_===_ (₁₊ n)) (_CRel,_===_ (₂₊ n)) (C (₁₊ n)) ε
+  module RSA = RSF (_VRel,_===_ (₁₊ n)) (_VRel,_===_ (₂₊ n)) (C (₁₊ n)) ε
   infix 4 _~_
   _~_ = Pointwise _≈₀_ (_≡_ {A = C (₁₊ n)})
   f-inj : ∀ {a b} → f a ≡ f b → a ≈ b
@@ -559,7 +559,7 @@ lemma-nf-inj {₂₊ n} with lemma-nf-inj {₁₊ n} | lemma-nf-cong {₁₊ n}
 ------------------------------------------------------------------------
 -- NFProperty and NFProperty'
 
-nfp : (n : ℕ) → NFProperty (_CRel,_===_ n)
+nfp : (n : ℕ) → NFProperty (_VRel,_===_ n)
 nfp n = record
   { NF = NF n ; nf = nf-of ; nf-cong = lemma-nf-cong ; nf-injective = lemma-nf-inj }
 
@@ -568,7 +568,7 @@ inv-f zero    _       = ε
 inv-f (₁₊ zero) _    = ε
 inv-f (₂₊ n) (l , r) = inv-f (₁₊ n) l ↑ • [_]ᶜ r
 
-lemma-inv-f : (n : ℕ) → let _≈_ = PB._≈_ (_CRel,_===_ n) in {w : Circuit n} →
+lemma-inv-f : (n : ℕ) → let _≈_ = PB._≈_ (_VRel,_===_ n) in {w : Circuit n} →
   inv-f n (nf-of w) ≈ w
 lemma-inv-f zero {ε}     = PB._≈_.refl
 lemma-inv-f zero {w • w₁} with lemma-inv-f zero {w} | lemma-inv-f zero {w₁}
@@ -587,11 +587,11 @@ lemma-inv-f (₂₊ n) {w} =
   ε • w ≈⟨ _≈_.left-unit ⟩
   w ∎
   where
-  open PB (_CRel,_===_ (₂₊ n))
-  open PP (_CRel,_===_ (₂₊ n))
+  open PB (_VRel,_===_ (₂₊ n))
+  open PP (_VRel,_===_ (₂₊ n))
   open SR word-setoid
 
-nfp' : (n : ℕ) → NFProperty' (_CRel,_===_ n)
+nfp' : (n : ℕ) → NFProperty' (_VRel,_===_ n)
 nfp' n = record
   { NF = NF n ; nf = nf-of ; nf-cong = lemma-nf-cong
   ; inv-nf = inv-f n ; inv-nf∘nf=id = lemma-inv-f n }
@@ -608,17 +608,17 @@ lemma-racts-↑• {n} w v rewrite lemma-ract-suc {n} w = Eq.refl
 -- proj₂ (racts ε [r]ᶜ) ≡ r  and  proj₁ (racts ε [r]ᶜ) ≈ ε
 lemma-racts-section : ∀ {n} (r : C (₁₊ n)) →
   proj₂ (racts {n} ε [ r ]ᶜ) ≡ r ×
-  PB._≈_ (_CRel,_===_ (₁₊ n)) (proj₁ (racts {n} ε [ r ]ᶜ)) ε
+  PB._≈_ (_VRel,_===_ (₁₊ n)) (proj₁ (racts {n} ε [ r ]ᶜ)) ε
 lemma-racts-section {n} ε = Eq.refl , PB._≈_.refl
 lemma-racts-section {zero} (σ• ε) = Eq.refl , left-unit
-  where open PB (_CRel,_===_ 1)
+  where open PB (_VRel,_===_ 1)
 lemma-racts-section {₁₊ m} (σ• c)
   with racts {m} ε [ c ]ᶜ | lemma-racts-section {m} c | lemma-ract-σ•1s {m} ε [ c ]ᶜ
 ... | (b , d) | (snd≡ , fst≈) | lsuc
   rewrite lsuc
   = Eq.cong σ•_ snd≡ ,
     trans left-unit (lemma-cong↑ b ε fst≈)
-  where open PB (_CRel,_===_ (₂₊ m))
+  where open PB (_VRel,_===_ (₂₊ m))
 
 -- nf-of is a left inverse of inv-f: nf-of (inv-f n u) ≡ u
 lemma-nf-of-inv-f : ∀ (n : ℕ) (u : NF n) → nf-of {n} (inv-f n u) ≡ u
@@ -631,7 +631,7 @@ lemma-nf-of-inv-f (₂₊ n') (l , r)
     (Eq.cong (map₁ (nf-of {₁₊ n'})) (lemma-racts-↑• {n'} (inv-f (₁₊ n') l) [ r ]ᶜ))
     (≡×≡⇒≡ (nf-step , snd≡))
   where
-  open PB (_CRel,_===_ (₁₊ n'))
+  open PB (_VRel,_===_ (₁₊ n'))
   b   = proj₁ (racts {n'} ε [ r ]ᶜ)
   nf-step : nf-of {₁₊ n'} (inv-f (₁₊ n') l • b) ≡ l
   nf-step = Eq.trans (lemma-nf-cong (trans (cong refl fst≈) right-unit)) ih-l
@@ -738,8 +738,8 @@ private
     where r≡r' = make-r≡r' n' l l' r r' eq
 
 unique-nf : ∀ n →
-  Presentation.Normalization.UniqueNF (PP.word-setoid (_CRel,_===_ n)) (NF n) (nf-of {n}) (inv-f n)
-                         (perm-setoid n) (⟦_⟧ {n})
+  Presentation.Normalization.UniqueNF (PP.word-setoid (_VRel,_===_ n)) (NF n) (nf-of {n}) (inv-f n)
+                         (Perm-setoid n) (⟦_⟧ {n})
 unique-nf n = record
   { nf     = record { f-cong = lemma-nf-cong ; g∘f=id = lemma-inv-f n }
   ; unique = unique-impl n

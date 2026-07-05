@@ -13,6 +13,8 @@ import Relation.Binary.PropositionalEquality as Eq
 
 module Notations where
 
+Property = Set
+
 pattern auto = Eq.refl
 
 pattern ₀ = zero

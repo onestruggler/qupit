@@ -54,27 +54,27 @@ data _SRel,_===_ : (n : ℕ) → WRel (Gen n) where
 -- comm₂)
 
 private module LR = SC.Lift-Relation _SRel,_===_
-open LR public using (srel ; cong↑ ; comm₁ ; comm₂ ; lemma-cong↑ ; _CRel,_===_)
+open LR public using (srel ; cong↑ ; comm₁ ; comm₂ ; lemma-cong↑ ; _VRel,_===_)
 
 ------------------------------------------------------------------------
 -- Grouplike (each generator has a two-sided inverse)
 
-grouplike : Grouplike (_CRel,_===_ n)
+grouplike : Grouplike (_VRel,_===_ n)
 grouplike {₂₊ k} (gate₂ σ-gate) = σ , PB.axiom (srel order)
 grouplike {₁₊ n} (g ↥) with grouplike {n} g
 ... | ig , prf = ig ↑ , lemma-cong↑ (ig • [ g ]ʷ) ε prf
 
 ------------------------------------------------------------------------
--- lemma-comm : w ↑ ↑ • [σ]ʷ ≈ [σ]ʷ • w ↑ ↑   (at _CRel,_===_ (₂₊ n))
+-- lemma-comm : w ↑ ↑ • [σ]ʷ ≈ [σ]ʷ • w ↑ ↑   (at _VRel,_===_ (₂₊ n))
 
-lemma-comm : let open PB ( (₂₊ n) CRel,_===_ ) in
+lemma-comm : let open PB ( (₂₊ n) VRel,_===_ ) in
 
   ∀ (w : Circuit n) → w ↑ ↑ • σ ≈ σ • w ↑ ↑
   
 lemma-comm {n} ε = PB._≈_.trans PB._≈_.left-unit (PB._≈_.sym PB._≈_.right-unit)
-  where P = _CRel,_===_ (₂₊ n) ; open PB P
+  where P = _VRel,_===_ (₂₊ n) ; open PB P
 lemma-comm {n} [ g ]ʷ = PB._≈_.axiom (comm₂ σ-gate g)
-  where P = _CRel,_===_ (₂₊ n) ; open PB P
+  where P = _VRel,_===_ (₂₊ n) ; open PB P
 lemma-comm {n} (w • v) = begin
   (w • v) ↑ ↑ • σ ≡⟨ auto ⟩
   (w ↑ ↑ • v ↑ ↑) • σ ≈⟨ _≈_.assoc ⟩
@@ -84,7 +84,7 @@ lemma-comm {n} (w • v) = begin
   (σ • w ↑ ↑) • v ↑ ↑ ≈⟨ _≈_.assoc ⟩
   σ • (w • v) ↑ ↑ ∎
   where
-  P = _CRel,_===_ (₂₊ n)
+  P = _VRel,_===_ (₂₊ n)
   open PB P
   open PP P
   open SR word-setoid

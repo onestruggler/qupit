@@ -86,29 +86,29 @@ w ↑ᵏ ₁₊ k   = (w ↑ᵏ k) ↑
 -- relation that includes the structural rules automatically.
 module Lift-Relation (_SRel,_===_ : (n : ℕ) → CRel n) where
 
-  infix 4 _CRel,_===_
-  data _CRel,_===_ : (n : ℕ) → CRel n where
+  infix 4 _VRel,_===_
+  data _VRel,_===_ : (n : ℕ) → CRel n where
 
     -- Embed the group-specific relation.
-    srel  : n SRel, w === v → n CRel, w === v
+    srel  : n SRel, w === v → n VRel, w === v
 
     -- Structural: congruence under wire-shifting.
-    cong↑ : n CRel, w === v → (₁₊ n) CRel, w ↑ === v ↑
+    cong↑ : n VRel, w === v → (₁₊ n) VRel, w ↑ === v ↑
 
     -- Structural: a gate at the bottom commutes with any generator
     -- that has been shifted up past it.
     --
     -- comm₁: a 1-ary gate at wire 0 commutes with g shifted up 1 wire.
     -- comm₂: a 2-ary gate at wires 0-1 commutes with g shifted up 2 wires.
-    comm₁ : (h : Gate 1) (g : Gen n) → (₁₊ n) CRel,
+    comm₁ : (h : Gate 1) (g : Gen n) → (₁₊ n) VRel,
       [ g ↥ ]ʷ • [ gate₁ h ]ʷ === [ gate₁ h ]ʷ • [ g ↥ ]ʷ
-    comm₂ : (h : Gate 2) (g : Gen n) → (₂₊ n) CRel,
+    comm₂ : (h : Gate 2) (g : Gen n) → (₂₊ n) VRel,
       [ g ↥ ↥ ]ʷ • [ gate₂ h ]ʷ === [ gate₂ h ]ʷ • [ g ↥ ↥ ]ʷ
 
   -- The congruence closure at wire count n lifts to wire count ₁₊ n.
   lemma-cong↑ : ∀ {n} (w v : Circuit n)
-    → let open PB (_CRel,_===_ n)       using (_≈_)
-          open PB (_CRel,_===_ (₁₊ n)) renaming (_≈_ to _≈↑_) using ()
+    → let open PB (_VRel,_===_ n)       using (_≈_)
+          open PB (_VRel,_===_ (₁₊ n)) renaming (_≈_ to _≈↑_) using ()
       in w ≈ v → w ↑ ≈↑ v ↑
   lemma-cong↑ w v PB.refl              = PB.refl
   lemma-cong↑ w v (PB.sym eq)          = PB.sym (lemma-cong↑ v w eq)

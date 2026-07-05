@@ -3,7 +3,7 @@
 --
 -- Semantics of the symmetric group: bijections on Fin n via
 -- Data.Fin.Permutation.Permutation′.
--- Proves soundness of _CRel,_===_ (and its congruence closure) for any n.
+-- Proves soundness of _VRel,_===_ (and its congruence closure) for any n.
 ------------------------------------------------------------------------
 
 {-# OPTIONS --safe #-}
@@ -22,7 +22,7 @@ open import Word.Base
 import Presentation.Horizontal-Syntactics as PB
 open import Notations
 
-module Examples.Groups.Symmetric.Semantics2 where
+module Examples.Groups.Symmetric.Semantics-Tight where
 
 open import Examples.Groups.Symmetric.Syntactics
 
@@ -105,9 +105,9 @@ sound-comm2 π (₁₊ zero) = refl
 sound-comm2 π (₂₊ k)    = refl
 
 ------------------------------------------------------------------------
--- Soundness of the raw relation _CRel,_===_
+-- Soundness of the raw relation _VRel,_===_
 
-sound-ax : ∀ {n} {w v : Circuit n} → n CRel, w === v
+sound-ax : ∀ {n} {w v : Circuit n} → n VRel, w === v
          → ∀ k → ⟦ w ⟧ ⟨$⟩ʳ k ≡ ⟦ v ⟧ ⟨$⟩ʳ k
 sound-ax (srel order)               k = sound-order k
 sound-ax (srel yang-baxter)         k = sound-yb k
@@ -121,11 +121,11 @@ sound-ax (comm₂ σ-gate g)           k = sound-comm2 ⟦ g ⟧ᵍ k
 ------------------------------------------------------------------------
 -- Full soundness: the congruence closure _≈_ preserves denotation
 
-sound : ∀ {n} {w v : Circuit n} → PB._≈_ (_CRel,_===_ n) w v
+sound : ∀ {n} {w v : Circuit n} → PB._≈_ (_VRel,_===_ n) w v
       → ∀ k → ⟦ w ⟧ ⟨$⟩ʳ k ≡ ⟦ v ⟧ ⟨$⟩ʳ k
 sound {n} p = go p
   where
-  open PB (_CRel,_===_ n)
+  open PB (_VRel,_===_ n)
   go : ∀ {w v : Word (Gen n)} → w ≈ v → ∀ k → ⟦ w ⟧ ⟨$⟩ʳ k ≡ ⟦ v ⟧ ⟨$⟩ʳ k
   go refl                          k = refl
   go (sym p)                       k = Eq.sym (go p k)

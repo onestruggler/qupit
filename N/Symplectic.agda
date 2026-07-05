@@ -260,7 +260,7 @@ module Symplectic where
 
   infix 4 _QRel,_===_
   _QRel,_===_ : (n : ℕ) → WRel (Gen n)
-  _QRel,_===_ = LR._CRel,_===_
+  _QRel,_===_ = LR._VRel,_===_
 
   -- Structural rules, exported directly.
   open LR public using (srel ; cong↑ ; comm₁ ; comm₂ ; lemma-cong↑)

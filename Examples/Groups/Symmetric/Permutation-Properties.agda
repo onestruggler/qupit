@@ -109,3 +109,5 @@ Permutation′-group n = record
     ; inverse = flip-invˡ , flip-invʳ
     ; ⁻¹-cong = λ {π} {ρ} h → flip-cong {π = π} {ρ = ρ} h
     }
+
+
