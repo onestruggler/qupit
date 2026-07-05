@@ -12,7 +12,7 @@ open import Notations
 
 module Presentation.Tactics where
 
-import Presentation.Horizontal-Syntactics as PB
+import Presentation.Base as PB
 import Presentation.Properties as PP
 
 open import Relation.Binary.Definitions using (DecidableEquality ; Decidable)
@@ -61,7 +61,7 @@ module Commuting
        (less : X -> X -> Bool)
   where
 
-  open import Presentation.Horizontal-Syntactics Γ
+  open import Presentation.Base Γ
   open import Presentation.Properties Γ
 
   -- This module provides some tactics for proving equations between

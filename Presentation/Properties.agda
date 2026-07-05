@@ -17,8 +17,8 @@ open import Notations
 
 module Presentation.Properties {X : Set} (Γ : WRel X) where
 
-import Presentation.Horizontal-Syntactics as PB
-open import Presentation.Horizontal-Syntactics Γ
+import Presentation.Base as PB
+open import Presentation.Base Γ
 
 open import Relation.Binary.Definitions using (DecidableEquality ; Decidable)
 open import Relation.Binary.PropositionalEquality using (setoid)

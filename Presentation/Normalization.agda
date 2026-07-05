@@ -28,7 +28,7 @@ private
 normalize : A → A
 normalize = g ∘ f
 
-record NF : Set (a ⊔ b ⊔ ℓ) where
+record NormalForm : Set (a ⊔ b ⊔ ℓ) where
   field
     f-cong : x ≈₁ y → f x ≡ f y
     g∘f=id : g (f x) ≈₁ x
@@ -49,12 +49,12 @@ module _ {c d} (Sem : Setoid c d)
   (let open Setoid Sem using () renaming (Carrier to C; _≈_ to _≈₂_ ; sym to sym₂))
   (⟦_⟧ : A → C)
   where
-  record UniqueNF : Set (a ⊔ b ⊔ ℓ ⊔ c ⊔ d) where
+  record UniqueNormalForm : Set (a ⊔ b ⊔ ℓ ⊔ c ⊔ d) where
     field
-      nf : NF
+      nf : NormalForm
       unique : ⟦ g u ⟧ ≈₂ ⟦ g v ⟧ → u ≡ v
 
-    open NF nf public
+    open NormalForm nf public
 
 module Completeness {c d} (Sem : Setoid c d)
   (let open Setoid Sem using () renaming (Carrier to C; _≈_ to _≈₂_ ; sym to sym₂))
@@ -63,10 +63,10 @@ module Completeness {c d} (Sem : Setoid c d)
 
   open import Presentation.Semantics S Sem
 
-  by-normalization : UniqueNF Sem ⟦_⟧ →  Soundness ⟦_⟧ → Completeness ⟦_⟧
+  by-normalization : UniqueNormalForm Sem ⟦_⟧ →  Soundness ⟦_⟧ → Completeness ⟦_⟧
   by-normalization uni sound {x} {y} eq = f-inj (unique claim)
     where
-    open UniqueNF uni
+    open UniqueNormalForm uni
     claim : ⟦ g (f x) ⟧ ≈₂ ⟦ g (f y) ⟧
     claim = begin
       ⟦ g (f x) ⟧ ≈⟨ sound g∘f=id ⟩

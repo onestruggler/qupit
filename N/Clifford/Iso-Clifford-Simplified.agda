@@ -18,7 +18,7 @@ open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; ∃)
 open import Data.Nat hiding (_^_ ; _+_ ; _*_ ; _%_ ; _/_)
 open import Data.Fin hiding (_+_ ; _-_)
 open import Word.Base as WB hiding (wfoldl)
-import Presentation.Horizontal-Syntactics as PB
+import Presentation.Base as PB
 import Presentation.Properties as PP
 open import Presentation.Construct.Base hiding (_*_)
 open import Presentation.GroupLike

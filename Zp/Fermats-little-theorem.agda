@@ -235,7 +235,7 @@ module PrimeModulus' (p-2 : ℕ) (p-prime : Prime (₂₊ p-2)) where
 
   open import Data.Unit
   open import Function.Construct.Composition
-  import Presentation.Horizontal-Syntactics as PB
+  import Presentation.Base as PB
   import Presentation.Properties as PP
   open import Presentation.GroupLike
 

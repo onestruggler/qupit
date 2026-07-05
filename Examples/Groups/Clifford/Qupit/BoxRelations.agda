@@ -17,7 +17,7 @@ open import Data.Vec
 
 open import Relation.Binary.PropositionalEquality using (_≡_ ; _≢_)
 
-import Presentation.Horizontal-Syntactics as PB
+import Presentation.Base as PB
 open import Word.Base as WB
 
 open import Zp.ModularArithmetic

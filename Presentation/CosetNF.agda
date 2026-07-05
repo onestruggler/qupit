@@ -27,7 +27,7 @@ open import Word.Base
 open import Word.Properties
 open import Presentation.Reidemeister-Schreier
 
-import Presentation.Horizontal-Syntactics as PB
+import Presentation.Base as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 

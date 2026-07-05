@@ -31,7 +31,7 @@ open import Algebra.Morphism.Structures using (module GroupMorphisms ; module Mo
 open import Word.Base
 
 open import Presentation.GroupLike
-import Presentation.Horizontal-Syntactics as HS
+import Presentation.Base as HS
 import Presentation.Properties as PP
 import Presentation.Vertical-Syntactics as VS
 

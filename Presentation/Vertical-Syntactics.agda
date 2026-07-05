@@ -12,7 +12,7 @@ open import Relation.Binary using (Rel)
 
 open import Word.Base
 open import Notations
-import Presentation.Horizontal-Syntactics as PB
+import Presentation.Base as PB
 
 module Presentation.Vertical-Syntactics (Gate : ℕ → Set) where
 

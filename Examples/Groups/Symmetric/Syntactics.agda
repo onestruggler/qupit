@@ -16,7 +16,7 @@ open import Word.Base
 open import Notations
 open import Presentation.GroupLike
 import Presentation.Vertical-Syntactics
-import Presentation.Horizontal-Syntactics as PB
+import Presentation.Base as PB
 import Presentation.Properties as PP
 
 module Examples.Groups.Symmetric.Syntactics where

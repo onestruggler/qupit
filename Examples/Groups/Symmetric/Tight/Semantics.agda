@@ -1,35 +1,91 @@
 ------------------------------------------------------------------------
 -- Presentations of groups
 --
--- Permutation′ n is a group under ∘ₚ with identity idP and inverse flip,
--- using the pointwise equality _≈_ from Data.Fin.Permutation.
---
--- The monoid laws reduce to refl for the same reason as the endomorphism
--- monoid (∘-id-monoid in Function.Endo.Propositional): composition of
--- the underlying Fin n → Fin n functions is definitionally associative
--- and idP acts as a definitional identity.
+-- Semantics of the symmetric group: bijections on Fin n via
+-- Data.Fin.Permutation.Permutation′.
+-- Also provides the group structure on Permutation′ n.
 ------------------------------------------------------------------------
 
 {-# OPTIONS --safe #-}
 
-module Examples.Groups.Symmetric.Permutation-Properties where
-
-open import Data.Nat using (ℕ)
-open import Data.Fin using (Fin)
+open import Data.Nat using (ℕ ; zero ; suc)
+open import Data.Fin using (Fin ; zero ; suc)
 open import Data.Fin.Permutation
-  using ( Permutation′ ; _⟨$⟩ʳ_ ; _⟨$⟩ˡ_ ; _≈_ ; _∘ₚ_ ; flip
+  using ( Permutation′ ; permutation ; _⟨$⟩ʳ_ ; _⟨$⟩ˡ_ ; _∘ₚ_ ; flip
+        ; lift₀ ; lift₀-id ; lift₀-comp
         ; inverseˡ ; inverseʳ )
   renaming (id to idP)
+
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_ ; refl ; cong ; sym ; trans)
+
 open import Data.Product.Base using (_,_ ; proj₁ ; proj₂)
 open import Algebra.Structures using (IsMagma ; IsSemigroup ; IsMonoid ; IsGroup)
 open import Algebra.Bundles using (Group)
 open import Relation.Binary.Structures using (IsEquivalence)
 import Function.Endo.Propositional as Endo
 
+open import Word.Base
+open import Notations
+
+module Examples.Groups.Symmetric.Tight.Semantics where
+
+open import Examples.Groups.Symmetric.Syntactics
+
 ------------------------------------------------------------------------
--- Group instance for each n
+-- Permutation type
+
+Perm : ℕ → Set
+Perm n = Permutation′ n
+
+------------------------------------------------------------------------
+-- Semantic building blocks
+
+-- The underlying function for swap01 (used to build the Permutation′).
+private
+  swap01-fun : ∀ {n} → Fin (₂₊ n) → Fin (₂₊ n)
+  swap01-fun zero      = ₁₊ zero
+  swap01-fun (₁₊ zero) = zero
+  swap01-fun (₂₊ k)    = ₂₊ k
+
+-- Swap positions 0 and 1: the denotation of σ-gate.
+swap01 : ∀ {n} → Perm (₂₊ n)
+swap01 = permutation swap01-fun swap01-fun
+  (λ { zero → refl ; (₁₊ zero) → refl ; (₂₊ _) → refl })
+  (λ { zero → refl ; (₁₊ zero) → refl ; (₂₊ _) → refl })
+
+-- Shift a permutation up by one wire: the action of _↥.
+shift : ∀ {n} → Perm n → Perm (₁₊ n)
+shift = lift₀
+
+------------------------------------------------------------------------
+-- Denotation of generators and words
+
+⟦_⟧ᵍ : ∀ {n} → Gen n → Perm n
+⟦ gate₁ () ⟧ᵍ
+⟦ gate₂ σ-gate ⟧ᵍ = swap01
+⟦ g ↥ ⟧ᵍ          = shift ⟦ g ⟧ᵍ
+
+-- Words are read left-to-right: w • v applies w first, then v.
+⟦_⟧ : ∀ {n} → Word (Gen n) → Perm n
+⟦ ε ⟧      = idP
+⟦ [ g ]ʷ ⟧ = ⟦ g ⟧ᵍ
+⟦ w • v ⟧  = ⟦ w ⟧ ∘ₚ ⟦ v ⟧
+
+------------------------------------------------------------------------
+-- Lemmas about shift (= lift₀)
+
+-- ⟦ w ↑ ⟧ agrees with shift ⟦ w ⟧ pointwise.
+⟦↑⟧ : ∀ {n} (w : Word (Gen n)) (k : Fin (₁₊ n))
+     → ⟦ w ↑ ⟧ ⟨$⟩ʳ k ≡ shift ⟦ w ⟧ ⟨$⟩ʳ k
+⟦↑⟧ ε       k = Eq.sym (lift₀-id k)
+⟦↑⟧ [ g ]ʷ  k = refl
+⟦↑⟧ (w • v) k =
+  Eq.trans (Eq.cong (⟦ v ↑ ⟧ ⟨$⟩ʳ_) (⟦↑⟧ w k))
+  (Eq.trans (⟦↑⟧ v _) (lift₀-comp ⟦ w ⟧ ⟦ v ⟧ k))
+
+------------------------------------------------------------------------
+-- Group structure on Permutation′ n
 
 Permutation′-group : ∀ (n : ℕ) → Group _ _
 Permutation′-group n = record
@@ -41,6 +97,7 @@ Permutation′-group n = record
   ; isGroup = perm-isGroup
   }
   where
+  open import Data.Fin.Permutation using (_≈_)
   -- Pull the endomorphism-monoid laws for Fin n → Fin n (all proved by refl).
   open IsMonoid (Endo.∘-id-isMonoid (Fin n))
     using (assoc ; identity)
@@ -54,19 +111,15 @@ Permutation′-group n = record
     }
 
   -- _∘ₚ_ is congruent: if π₁ ≈ π₂ and ρ₁ ≈ ρ₂ then π₁ ∘ₚ ρ₁ ≈ π₂ ∘ₚ ρ₂.
-  -- (Follows from congruence of function composition _∘_.)
   ∘ₚ-cong : ∀ {π₁ π₂ ρ₁ ρ₂ : Permutation′ n}
            → π₁ ≈ π₂ → ρ₁ ≈ ρ₂ → π₁ ∘ₚ ρ₁ ≈ π₂ ∘ₚ ρ₂
   ∘ₚ-cong {ρ₁ = ρ₁} h₁ h₂ i = trans (cong (ρ₁ ⟨$⟩ʳ_) (h₁ i)) (h₂ _)
 
-  -- Associativity of _∘ₚ_ is pointwise associativity of _∘_,
-  -- as witnessed by assoc from ∘-id-isMonoid.
+  -- Associativity of _∘ₚ_ is pointwise associativity of _∘_.
   ∘ₚ-assoc : ∀ (π ρ σ : Permutation′ n) → (π ∘ₚ ρ) ∘ₚ σ ≈ π ∘ₚ (ρ ∘ₚ σ)
   ∘ₚ-assoc π ρ σ i =
     cong (λ f → f i) (assoc (σ ⟨$⟩ʳ_) (ρ ⟨$⟩ʳ_) (π ⟨$⟩ʳ_))
 
-  -- Identity laws: idP acts as identity because ↔-id has to = Function.Base.id,
-  -- mirroring the identity laws of ∘-id-isMonoid.
   ∘ₚ-identityˡ : ∀ (π : Permutation′ n) → idP ∘ₚ π ≈ π
   ∘ₚ-identityˡ π i =
     cong (λ f → f i) (proj₂ identity (π ⟨$⟩ʳ_))
@@ -75,17 +128,12 @@ Permutation′-group n = record
   ∘ₚ-identityʳ π i =
     cong (λ f → f i) (proj₁ identity (π ⟨$⟩ʳ_))
 
-  -- Inverse laws: flip = ↔-sym swaps to/from, and the Inverse record
-  -- guarantees forward ∘ backward = id and backward ∘ forward = id.
   flip-invˡ : ∀ (π : Permutation′ n) → flip π ∘ₚ π ≈ idP
   flip-invˡ π _ = inverseʳ π
 
   flip-invʳ : ∀ (π : Permutation′ n) → π ∘ₚ flip π ≈ idP
   flip-invʳ π _ = inverseˡ π
 
-  -- Congruence of flip: π ≈ ρ implies flip π ≈ flip ρ.
-  -- Proof: given π ⟨$⟩ʳ = ρ ⟨$⟩ʳ pointwise, injectivity of ρ ⟨$⟩ʳ
-  -- (derived from the inverse property) gives π ⟨$⟩ˡ = ρ ⟨$⟩ˡ pointwise.
   flip-cong : ∀ {π ρ : Permutation′ n} → π ≈ ρ → flip π ≈ flip ρ
   flip-cong {π = π} {ρ = ρ} h i =
     ρ-inj (trans (trans (sym (h (π ⟨$⟩ˡ i))) (inverseʳ π)) (sym (inverseʳ ρ)))
@@ -109,5 +157,3 @@ Permutation′-group n = record
     ; inverse = flip-invˡ , flip-invʳ
     ; ⁻¹-cong = λ {π} {ρ} h → flip-cong {π = π} {ρ = ρ} h
     }
-
-

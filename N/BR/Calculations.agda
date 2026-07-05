@@ -28,7 +28,7 @@ open import Data.Empty using (⊥ ; ⊥-elim)
 
 open import Word.Base as WB hiding (wfoldl ; _* ; _^'_)
 open import Word.Properties
-import Presentation.Horizontal-Syntactics as PB
+import Presentation.Base as PB
 import Presentation.Properties as PP
 
 open import Presentation.GroupLike

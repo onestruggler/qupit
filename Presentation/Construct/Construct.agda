@@ -21,7 +21,7 @@ import Relation.Binary.Reasoning.Setoid as SR
 
 open import Word.Base
 open import Word.Properties
-open import Presentation.Horizontal-Syntactics
+open import Presentation.Base
 open import Reidemeister-Schreier
 
 module Presentation.Construct.Construct where

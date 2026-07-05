@@ -39,7 +39,7 @@ module Symplectic-Completeness (p-2 : ℕ) (p-prime : Prime (2+ p-2)) where
 open import Data.Product using (_×_ ; _,_ ; proj₁ ; proj₂ ; ∃)
 open import Data.Unit using (⊤ ; tt)
 
-import Presentation.Horizontal-Syntactics as PB
+import Presentation.Base as PB
 import Presentation.Properties as PP
 import Relation.Binary.Reasoning.Setoid as SR
 

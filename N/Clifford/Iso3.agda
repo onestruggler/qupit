@@ -16,7 +16,7 @@ open import Data.Sum using (_⊎_ ; inj₁ ; inj₂ ; [_,_])
 
 open import Word.Base as WB hiding (wfoldl)
 open import Word.Properties
-import Presentation.Horizontal-Syntactics as PB
+import Presentation.Base as PB
 import Presentation.Properties as PP
 
 open import Presentation.Construct.Base hiding (_*_)

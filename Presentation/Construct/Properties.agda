@@ -23,11 +23,11 @@ import Relation.Binary.Reasoning.Setoid as SR
 
 open import Word.Base
 open import Word.Properties
-open import Presentation.Horizontal-Syntactics
+open import Presentation.Base
 open import Presentation.Construct.Base
 open import Presentation.Reidemeister-Schreier
 
-import Presentation.Horizontal-Syntactics as PB
+import Presentation.Base as PB
 import Presentation.Properties as PP
 open import Notations
 

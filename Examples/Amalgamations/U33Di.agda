@@ -14,7 +14,7 @@ open import Function using (_∘_)
 
 open import Word.Base
 import Presentation.Properties as PP
-import Presentation.Horizontal-Syntactics as PB
+import Presentation.Base as PB
 
 import Presentation.Construct.Properties.DirectProduct as DP
 import Presentation.Construct.Properties.NDirectProduct as NDP

@@ -17,7 +17,7 @@ open import Word.Base
 
 module Presentation.GroupLike where
 
-import Presentation.Horizontal-Syntactics as PB
+import Presentation.Base as PB
 import Presentation.Properties as PP
 
 ------------------------------------------------------------------------

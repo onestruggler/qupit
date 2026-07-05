@@ -30,7 +30,7 @@ open import Data.Unit using (⊤ ; tt)
 
 open import Word.Base
 open import Word.Properties
-import Presentation.Horizontal-Syntactics as PB
+import Presentation.Base as PB
 import Presentation.Properties as PP
 open PP using (NFProperty ; NFProperty')
 
@@ -49,54 +49,7 @@ private variable
   n :  ℕ
   
 open import Examples.Groups.Symmetric.Syntactics
-
-------------------------------------------------------------------------
--- Coset type  (same shape as in Presentation.Groups.Sn)
-
-infixr 10 σ•_
-data C : ℕ → Set where
-  ε   : C n
-  σ•_ : C n → C (₁₊ n)
-
-------------------------------------------------------------------------
--- Section map: C n → Circuit (₁₊ n)
--- (shifted by 1 because gate₂ σ-gate needs ≥ 2 wires)
-
-[_]ᶜ : C n → Circuit (₁₊ n)
-[_]ᶜ         ε      = ε
-[_]ᶜ {₁₊ n} (σ• c) = σ • ([ c ]ᶜ ↑)
-
-------------------------------------------------------------------------
--- Normal-form type
-
-NF : ℕ → Set
-NF 0       = ⊤
-NF 1       = ⊤
-NF (₂₊ n)  = NF (₁₊ n) × C (₁₊ n)
-
-------------------------------------------------------------------------
--- Decidable equality
-
-lemma-daux : ∀ {n} x y → σ•_ {n} x ≡ σ• y → x ≡ y
-lemma-daux x y Eq.refl = Eq.refl
-
-deceqC : DecidableEquality (C n)
-deceqC {zero}  ε      ε       = yes Eq.refl
-deceqC {₁₊ n} ε      ε       = yes Eq.refl
-deceqC {₁₊ n} ε      (σ• y)  = no (λ ())
-deceqC {₁₊ n} (σ• x) ε       = no (λ ())
-deceqC {₁₊ n} (σ• x) (σ• y) with deceqC x y
-... | yes p  = yes (Eq.cong σ•_ p)
-... | no  np = no (λ { eq → np (lemma-daux _ _ eq) })
-
-deceq : DecidableEquality (NF n)
-deceq {zero}  tt     tt     = yes Eq.refl
-deceq {₁₊ zero} tt  tt     = yes Eq.refl
-deceq {₂₊ n} (a , b) (a' , b') with deceq a a' | deceqC b b'
-... | yes p1 | yes p2 = yes (≡×≡⇒≡ (p1 , p2))
-... | yes p1 | no  p2 = no (λ { x → p2 (proj₂ (≡⇒≡×≡ x)) })
-... | no  p1 | yes p2 = no (λ { x → p1 (proj₁ (≡⇒≡×≡ x)) })
-... | no  p1 | no  p2 = no (λ { x → p2 (proj₂ (≡⇒≡×≡ x)) })
+open import Examples.Groups.Symmetric.NormalForm
 
 ------------------------------------------------------------------------
 -- Right coset action
@@ -563,26 +516,21 @@ nfp : (n : ℕ) → NFProperty (_VRel,_===_ n)
 nfp n = record
   { NF = NF n ; nf = nf-of ; nf-cong = lemma-nf-cong ; nf-injective = lemma-nf-inj }
 
-inv-f : (n : ℕ) → NF n → Circuit n
-inv-f zero    _       = ε
-inv-f (₁₊ zero) _    = ε
-inv-f (₂₊ n) (l , r) = inv-f (₁₊ n) l ↑ • [_]ᶜ r
-
-lemma-inv-f : (n : ℕ) → let _≈_ = PB._≈_ (_VRel,_===_ n) in {w : Circuit n} →
-  inv-f n (nf-of w) ≈ w
-lemma-inv-f zero {ε}     = PB._≈_.refl
-lemma-inv-f zero {w • w₁} with lemma-inv-f zero {w} | lemma-inv-f zero {w₁}
+lemma-inv-nf : (n : ℕ) → let _≈_ = PB._≈_ (_VRel,_===_ n) in {w : Circuit n} →
+  inv-nf {n} (nf-of w) ≈ w
+lemma-inv-nf zero {ε}     = PB._≈_.refl
+lemma-inv-nf zero {w • w₁} with lemma-inv-nf zero {w} | lemma-inv-nf zero {w₁}
 ... | ih1 | ih2 = PB._≈_.trans (PB._≈_.sym PB._≈_.left-unit) (PB._≈_.cong ih1 ih2)
-lemma-inv-f (₁₊ zero) {[ gate₁ () ]ʷ}
-lemma-inv-f (₁₊ zero) {[ () ↥ ]ʷ}
-lemma-inv-f (₁₊ zero) {ε}     = PB._≈_.refl
-lemma-inv-f (₁₊ zero) {w • w₁} with lemma-inv-f (₁₊ zero) {w} | lemma-inv-f (₁₊ zero) {w₁}
+lemma-inv-nf (₁₊ zero) {[ gate₁ () ]ʷ}
+lemma-inv-nf (₁₊ zero) {[ () ↥ ]ʷ}
+lemma-inv-nf (₁₊ zero) {ε}     = PB._≈_.refl
+lemma-inv-nf (₁₊ zero) {w • w₁} with lemma-inv-nf (₁₊ zero) {w} | lemma-inv-nf (₁₊ zero) {w₁}
 ... | ih1 | ih2 = PB._≈_.trans (PB._≈_.sym PB._≈_.left-unit) (PB._≈_.cong ih1 ih2)
-lemma-inv-f (₂₊ n) {w} =
+lemma-inv-nf (₂₊ n) {w} =
   let (l , r) = racts ε w in begin
-  inv-f (₂₊ n) (nf-of w) ≈⟨ _≈_.refl ⟩
-  inv-f (₂₊ n) (nf-of l , r) ≈⟨ _≈_.refl ⟩
-  inv-f (₁₊ n) (nf-of l) ↑ • [_]ᶜ r ≈⟨ cong (lemma-cong↑ (inv-f (₁₊ n) (nf-of l)) l (lemma-inv-f (₁₊ n) {l})) _≈_.refl ⟩
+  inv-nf (nf-of w) ≈⟨ _≈_.refl ⟩
+  inv-nf (nf-of l , r) ≈⟨ _≈_.refl ⟩
+  inv-nf (nf-of l) ↑ • [_]ᶜ r ≈⟨ cong (lemma-cong↑ (inv-nf (nf-of l)) l (lemma-inv-nf (₁₊ n) {l})) _≈_.refl ⟩
   l ↑ • [_]ᶜ r ≈⟨ sym (lemma-racts ε w) ⟩
   ε • w ≈⟨ _≈_.left-unit ⟩
   w ∎
@@ -594,153 +542,4 @@ lemma-inv-f (₂₊ n) {w} =
 nfp' : (n : ℕ) → NFProperty' (_VRel,_===_ n)
 nfp' n = record
   { NF = NF n ; nf = nf-of ; nf-cong = lemma-nf-cong
-  ; inv-nf = inv-f n ; inv-nf∘nf=id = lemma-inv-f n }
-
-------------------------------------------------------------------------
--- Auxiliary lemmas for UniqueNF
-
--- racts ε (w ↑ • v) = (w • proj₁ (racts ε v), proj₂ (racts ε v))
-lemma-racts-↑• : ∀ {n} (w : Circuit (₁₊ n)) (v : Circuit (₂₊ n)) →
-  racts {n} ε (w ↑ • v) ≡ (w • proj₁ (racts {n} ε v) , proj₂ (racts {n} ε v))
-lemma-racts-↑• {n} w v rewrite lemma-ract-suc {n} w = Eq.refl
-
--- [_]ᶜ is a section of the coset action:
--- proj₂ (racts ε [r]ᶜ) ≡ r  and  proj₁ (racts ε [r]ᶜ) ≈ ε
-lemma-racts-section : ∀ {n} (r : C (₁₊ n)) →
-  proj₂ (racts {n} ε [ r ]ᶜ) ≡ r ×
-  PB._≈_ (_VRel,_===_ (₁₊ n)) (proj₁ (racts {n} ε [ r ]ᶜ)) ε
-lemma-racts-section {n} ε = Eq.refl , PB._≈_.refl
-lemma-racts-section {zero} (σ• ε) = Eq.refl , left-unit
-  where open PB (_VRel,_===_ 1)
-lemma-racts-section {₁₊ m} (σ• c)
-  with racts {m} ε [ c ]ᶜ | lemma-racts-section {m} c | lemma-ract-σ•1s {m} ε [ c ]ᶜ
-... | (b , d) | (snd≡ , fst≈) | lsuc
-  rewrite lsuc
-  = Eq.cong σ•_ snd≡ ,
-    trans left-unit (lemma-cong↑ b ε fst≈)
-  where open PB (_VRel,_===_ (₂₊ m))
-
--- nf-of is a left inverse of inv-f: nf-of (inv-f n u) ≡ u
-lemma-nf-of-inv-f : ∀ (n : ℕ) (u : NF n) → nf-of {n} (inv-f n u) ≡ u
-lemma-nf-of-inv-f 0         tt     = Eq.refl
-lemma-nf-of-inv-f 1         tt     = Eq.refl
-lemma-nf-of-inv-f (₂₊ n') (l , r)
-  with lemma-nf-of-inv-f (₁₊ n') l | lemma-racts-section {n'} r
-... | ih-l | (snd≡ , fst≈) =
-  Eq.trans
-    (Eq.cong (map₁ (nf-of {₁₊ n'})) (lemma-racts-↑• {n'} (inv-f (₁₊ n') l) [ r ]ᶜ))
-    (≡×≡⇒≡ (nf-step , snd≡))
-  where
-  open PB (_VRel,_===_ (₁₊ n'))
-  b   = proj₁ (racts {n'} ε [ r ]ᶜ)
-  nf-step : nf-of {₁₊ n'} (inv-f (₁₊ n') l • b) ≡ l
-  nf-step = Eq.trans (lemma-nf-cong (trans (cong refl fst≈) right-unit)) ih-l
-
-------------------------------------------------------------------------
--- UniqueNF
-
-open import Examples.Groups.Symmetric.Semantics as Sem
-
--- Pointwise setoid on permutations Fin n → Fin n
-perm-setoid : (n : ℕ) → Setoid 0ℓ 0ℓ
-perm-setoid n = record
-  { Carrier = Perm n
-  ; _≈_     = λ f g → ∀ k → f k ≡ g k
-  ; isEquivalence = record
-    { refl  = λ _     → Eq.refl
-    ; sym   = λ h k   → Eq.sym (h k)
-    ; trans = λ h₁ h₂ k → Eq.trans (h₁ k) (h₂ k)
-    }
-  }
-
--- Encode a coset descriptor as a Fin
-private
-  depth : ∀ {n} → C n → Fin (₁₊ n)
-  depth ε      = fzero
-  depth (σ• c) = fsuc (depth c)
-
-  depth-inj : ∀ {n} {r r' : C n} → depth r ≡ depth r' → r ≡ r'
-  depth-inj {r = ε}    {r' = ε}     _  = Eq.refl
-  depth-inj {r = ε}    {r' = σ• _}  ()
-  depth-inj {r = σ• _} {r' = ε}     ()
-  depth-inj {r = σ• c} {r' = σ• c'} eq =
-    Eq.cong σ•_ (depth-inj (FP.suc-injective eq))
-
-  -- ⟦ [r]ᶜ ⟧ fzero ≡ depth r
-  lemma-⟦[r]ᶜ⟧-zero : ∀ {n} (r : C n) → ⟦ [ r ]ᶜ ⟧ fzero ≡ depth r
-  lemma-⟦[r]ᶜ⟧-zero ε      = Eq.refl
-  lemma-⟦[r]ᶜ⟧-zero (σ• c) =
-    Eq.trans (⟦↑⟧ ([ c ]ᶜ) (fsuc fzero))
-             (Eq.cong fsuc (lemma-⟦[r]ᶜ⟧-zero c))
-
-  -- ⟦ [r]ᶜ ⟧ is injective on fsuc-values
-  lemma-[r]ᶜ-suc-inj : ∀ {n} (r : C n) {j₁ j₂ : Fin n}
-    → ⟦ [ r ]ᶜ ⟧ (fsuc j₁) ≡ ⟦ [ r ]ᶜ ⟧ (fsuc j₂) → j₁ ≡ j₂
-  lemma-[r]ᶜ-suc-inj ε {j₁} {j₂} eq with eq
-  ... | Eq.refl = Eq.refl
-  lemma-[r]ᶜ-suc-inj (σ• c) {fzero}    {fzero}    _   = Eq.refl
-  lemma-[r]ᶜ-suc-inj (σ• c) {fzero}    {fsuc j₂'} eq
-    with Eq.trans (Eq.sym (⟦↑⟧ ([ c ]ᶜ) fzero))
-                  (Eq.trans eq (⟦↑⟧ ([ c ]ᶜ) (fsuc (fsuc j₂'))))
-  ... | ()
-  lemma-[r]ᶜ-suc-inj (σ• c) {fsuc j₁'} {fzero}    eq
-    with Eq.trans (Eq.trans (Eq.sym (⟦↑⟧ ([ c ]ᶜ) (fsuc (fsuc j₁')))) eq)
-                  (⟦↑⟧ ([ c ]ᶜ) fzero)
-  ... | ()
-  lemma-[r]ᶜ-suc-inj (σ• c) {fsuc j₁'} {fsuc j₂'} eq =
-    Eq.cong fsuc (lemma-[r]ᶜ-suc-inj c step)
-    where
-    step : ⟦ [ c ]ᶜ ⟧ (fsuc j₁') ≡ ⟦ [ c ]ᶜ ⟧ (fsuc j₂')
-    step = FP.suc-injective
-      (Eq.trans (Eq.sym (⟦↑⟧ ([ c ]ᶜ) (fsuc (fsuc j₁'))))
-      (Eq.trans eq  (⟦↑⟧ ([ c ]ᶜ) (fsuc (fsuc j₂')))))
-
--- Helpers for unique-impl (defined before unique-impl to avoid where-clause cycles)
-private
-  make-r≡r' : ∀ n (l l' : NF (₁₊ n)) (r r' : C (₁₊ n))
-    → (eq : ∀ k → ⟦ inv-f (₂₊ n) (l , r) ⟧ k ≡ ⟦ inv-f (₂₊ n) (l' , r') ⟧ k)
-    → r ≡ r'
-  make-r≡r' n l l' r r' eq =
-    depth-inj
-      (Eq.trans (Eq.sym (lemma-⟦[r]ᶜ⟧-zero r))
-      (Eq.trans
-        (Eq.trans
-          (Eq.cong (⟦ [ r ]ᶜ ⟧) (Eq.sym (⟦↑⟧ (inv-f (₁₊ n) l) fzero)))
-          (Eq.trans (eq fzero)
-          (Eq.cong (⟦ [ r' ]ᶜ ⟧) (⟦↑⟧ (inv-f (₁₊ n) l') fzero))))
-        (lemma-⟦[r]ᶜ⟧-zero r')))
-
-  make-eqj : ∀ n (l l' : NF (₁₊ n)) (r r' : C (₁₊ n))
-    → r ≡ r'
-    → (eq : ∀ k → ⟦ inv-f (₂₊ n) (l , r) ⟧ k ≡ ⟦ inv-f (₂₊ n) (l' , r') ⟧ k)
-    → ∀ j → ⟦ inv-f (₁₊ n) l ⟧ j ≡ ⟦ inv-f (₁₊ n) l' ⟧ j
-  make-eqj n l l' r r' r≡r' eq j =
-    lemma-[r]ᶜ-suc-inj r
-      (Eq.trans
-        (Eq.cong (⟦ [ r ]ᶜ ⟧) (Eq.sym (⟦↑⟧ (inv-f (₁₊ n) l) (fsuc j))))
-        (Eq.trans
-          (Eq.subst
-            (λ s → ⟦ [ r ]ᶜ ⟧ (⟦ inv-f (₁₊ n) l ↑ ⟧ (fsuc j))
-                 ≡ ⟦ [ s ]ᶜ ⟧ (⟦ inv-f (₁₊ n) l' ↑ ⟧ (fsuc j)))
-            (Eq.sym r≡r')
-            (eq (fsuc j)))
-          (Eq.cong (⟦ [ r ]ᶜ ⟧) (⟦↑⟧ (inv-f (₁₊ n) l') (fsuc j)))))
-
--- Semantic injectivity of inv-f: pointwise-equal denotations imply equal NFs
-private
-  unique-impl : ∀ n {u v : NF n}
-    → (∀ k → ⟦ inv-f n u ⟧ k ≡ ⟦ inv-f n v ⟧ k)
-    → u ≡ v
-  unique-impl 0       {tt}     {tt}      _   = Eq.refl
-  unique-impl 1       {tt}     {tt}      _   = Eq.refl
-  unique-impl (₂₊ n') {l , r} {l' , r'} eq  =
-    ≡×≡⇒≡ (unique-impl (₁₊ n') (make-eqj n' l l' r r' r≡r' eq) , r≡r')
-    where r≡r' = make-r≡r' n' l l' r r' eq
-
-unique-nf : ∀ n →
-  Presentation.Normalization.UniqueNF (PP.word-setoid (_VRel,_===_ n)) (NF n) (nf-of {n}) (inv-f n)
-                         (Perm-setoid n) (⟦_⟧ {n})
-unique-nf n = record
-  { nf     = record { f-cong = lemma-nf-cong ; g∘f=id = lemma-inv-f n }
-  ; unique = unique-impl n
-  }
+  ; inv-nf = inv-nf {n} ; inv-nf∘nf=id = lemma-inv-nf n }
