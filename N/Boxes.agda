@@ -66,8 +66,8 @@ M (₂₊ n) = E × Vec D (₁₊ n)
 LM : (n : ℕ) → Set
 LM 0 = ⊤
 LM 1 = NF1
-LM 2 = Cosets2
-LM (₃₊ n) = M (₃₊ n) × L' (₃₊ n) ⊎ D × LM (₂₊ n) 
+-- LM 2 = Cosets2
+LM (₂₊ n) = (M (₂₊ n) × L (₂₊ n))
 
 
 

@@ -218,9 +218,9 @@ jth-babox {₁₊ j} {₁₊ n} (s≤s j≤n) v a = jth-babox j≤n v a ↑
 [_]ˡᵐ : ∀ {n} → LM n → Word (Gen n)
 [_]ˡᵐ {0} _ = ε
 [_]ˡᵐ {1} lm1 = ⟦ lm1 ⟧₁
-[_]ˡᵐ {2} lm2 = ⟦ lm2 ⟧₂
-[_]ˡᵐ {₃₊ n} (inj₁ (m , l)) = [ m ]ᵐ • [ l ]ˡ'
-[_]ˡᵐ {₃₊ n} (inj₂ (d , lm)) = [ d ]ᵈ • [ lm ]ˡᵐ ↑
+-- New flat structure: an LM box is one (M , L) layer; the NF recursion
+-- stacks the layers.
+[_]ˡᵐ {₂₊ n} (m , l) = [ m ]ᵐ • [ l ]ˡ
 
 [_] : ∀ {n} → NF n → Word (Gen n)
 [_] {0} tt = ε
